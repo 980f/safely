@@ -1,7 +1,7 @@
 #ifndef QUADRATICFILTER_H
 #define QUADRATICFILTER_H
 
-#include "linearfilter.h" //haven't extracted the common base class PolyFilter into its own files
+#include "polyfilter.h"
 
 class QuadraticFilter : public PolyFilter {
   //cached dependents on hw:
@@ -42,7 +42,7 @@ public:
   /** @param slice is search window, presumed to have a filter's worth of channels outside on each side,
       @param peak records the most interesting points in the range
       @param offset is the absolute index of the center of the slice, added to each slice-relative coordinate found */
-  bool scan(const CenteredSlice &slice,PeakFind &peak,int offset);
+  bool scan(const CenteredSlice &slice,/*PeakFind &peak,*/int offset);
 
 };
 

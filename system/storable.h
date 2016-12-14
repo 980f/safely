@@ -4,10 +4,10 @@
 #include "argset.h" //for arrays to mate to hardware structs
 #include "chain.h" //wrap std::vector to cover its sharp pointy sticks.
 #include "changemonitored.h"
-#include "channel.h"
+//#include "channel.h"
 #include "charscanner.h"
 #include "enumerated.h"
-#include "gatedsignal.h"
+//#include "gatedsignal.h"
 #include "iterate.h"
 #include "logger.h"
 #include "numberformatter.h"

@@ -43,6 +43,6 @@ public:
   void put(u32 value);
   void put(double value);//will convert to 32 bit float.
 
-  void insertVersion(void);
+//reimplement as external function with a BigEndianer argument:  void insertVersion(void);
 };
 #endif // BIGENDIANER_H

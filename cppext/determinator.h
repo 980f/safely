@@ -7,8 +7,36 @@
 This was first implemented for use in a not particularly large microcontroller.
 */
 
+
+/** not template portion of Determinator*/
+class DeterminatorCore {
+  int size;
+  bool *ignorer;
+  bool *rower;
+  bool *columner;
+
+  double *Y;
+  double **X;
+  /** these are members for debug, could be locals to descend. */
+  int which; //where on the diagonal
+  bool yish; //whether we are processing a numerator of a Cramer's rule solution.
+
+  DeterminatorCore(
+      int size,
+      bool *rower,
+      bool *columner,
+      bool *ignorer,
+      double ys[], double **xs);
+  /** which column might be replaced with Y data, and whether to do so,
+    * @returns determinant of submatrix */
+  double descend(void);
+public:
+  double compute(int which, bool yish);
+};
+
+/** this template exists to coordinate allocating related structures */
 template <int MaxProblem=4> //maximum matrix size, defaulted to the smallest that isn't hard coded as pre-computed case.
-class Determinator {
+class Determinator: private DeterminatorCore {
   typedef bool Gater[MaxProblem];
   typedef double Column[MaxProblem];
 
@@ -16,18 +44,22 @@ class Determinator {
   Gater rower;   //tracks progress in processing rows
   Gater columner;//tracks progress in processing columns
 
-  double *Y;
-  Column *X;
-  /** the next two being members cause this class's instances to be single threaded*/
-  int which; //where on the diagonal
-  bool yish; //whether we are processing a numerator of a Cramer's rule solution.
+//  double *Y;
+//  Column *X;
 public:
-  Determinator(Gater & ignore, double ys[], Column xs[]);
-  /** which column might be replaced with Y data, and whether to do so,
-    * @returns determinant of submatrix */
-  double compute(int which, bool yish);
-protected:
-  double descend(void);
+  Determinator(Gater&ignore, double ys[], Column xs[]):
+    DeterminatorCore(MaxProblem,rower,columner,ignore,ys,xs){
+    //this class exists to allocate the right sized data and then pass it all to the core.
+  }
+
 };
+
+
+#if 0
+An older compiler allowed a template whose parameter was a value to have functions defined out of line (in a cpp file).
+The internal implementation was of a const field member of the class.
+Sadly that was fixed and now I have to do a bunch of monkeying to explicitly implement that.
+#endif
+
 
 #endif // DETERMINATOR_H

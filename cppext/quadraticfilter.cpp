@@ -13,8 +13,8 @@ QuadraticFilter::QuadraticFilter(unsigned hw):
   EraseThing(Y);//4 debug
   EraseThing(delta);//4 debug
   EraseThing(est);
-  dbg("hw,hw2,S0,R0,S2,R2,S4,D4");
-  dbg("%d,%d,%g,%d,%g,%d,%g,%g",hw,hw2,S0,R0,S2,R2,S4,D4);
+//  dbg("hw,hw2,S0,R0,S2,R2,S4,D4");
+//  dbg("%d,%d,%g,%d,%g,%d,%g,%g",hw,hw2,S0,R0,S2,R2,S4,D4);
 }
 
 double QuadraticFilter::curvature() const{
@@ -90,18 +90,18 @@ void QuadraticFilter::step(CenteredSlice &slice){
 /** @param slice is search window, presumed to have a filter's worth of channels outside on each side,
     @param peak records the most interesting points in the range
     @param offset is the absolute index of the center of the slice, added to each slice-relative coordinate found */
-bool QuadraticFilter::scan(const CenteredSlice &slice,PeakFind &peak,int offset){
+bool QuadraticFilter::scan(const CenteredSlice &slice,/*PeakFind &peak,*/int offset){
   CenteredSlice slider=slice.Endpoint(0,hw);
   Inflection low;
   Inflection high;
   Inflection top;
   init(slider);
-  dbg("location,Y[0],Y[1],Y[2],delta[0],delta[1],delta[2],est[0],est[1],est[2],actual[0],actual[1],actual[2]");
+//  dbg("location,Y[0],Y[1],Y[2],delta[0],delta[1],delta[2],est[0],est[1],est[2],actual[0],actual[1],actual[2]");
   for(int location=-slice.hwidth;location++<slice.hwidth;){//#can post inc as the init call handles the first point.
     bool y2waspos=est[2]>0;
     bool y1waspos=Y[1]>0;
     step(slider);
-    dbg("%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%g,%g,%g",location, Y[0],Y[1],Y[2],delta[0],delta[1],delta[2],est[0],est[1],est[2],amplitude(),slope(),curvature());
+//    dbg("%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%g,%g,%g",location, Y[0],Y[1],Y[2],delta[0],delta[1],delta[2],est[0],est[1],est[2],amplitude(),slope(),curvature());
     if (y2waspos) {
       if(est[2]<0){
         if(low.morePositive(est[1],location)){
@@ -124,20 +124,21 @@ bool QuadraticFilter::scan(const CenteredSlice &slice,PeakFind &peak,int offset)
     }
   }
 
-  if(low.maxrmin>0){//cheaper than a nan detect
-    peak.low=low.absolute(offset);
-    peak.riser=ratio(low.maxrmin,S2);
-  }
-  if(high.maxrmin<0){//cheaper than a nan detect
-    peak.high=high.absolute(offset);
-    peak.faller=-ratio(double(high.maxrmin),double(S2));//#inserted the minus sign for the sake of the gui
-  }
-  if(top.maxrmin>0){
-    peak.center=top.absolute(offset);
-    peak.amplitude=ratio(double(top.maxrmin),double(S0));
-    return true;
-  } else {
-    return false;
-  }
+//  if(low.maxrmin>0){//cheaper than a nan detect
+//    peak.low=low.absolute(offset);
+//    peak.riser=ratio(low.maxrmin,S2);
+//  }
+//  if(high.maxrmin<0){//cheaper than a nan detect
+//    peak.high=high.absolute(offset);
+//    peak.faller=-ratio(double(high.maxrmin),double(S2));//#inserted the minus sign for the sake of the gui
+//  }
+//  if(top.maxrmin>0){
+//    peak.center=top.absolute(offset);
+//    peak.amplitude=ratio(double(top.maxrmin),double(S0));
+//    return true;
+//  } else {
+//    return false;
+//  }
+  return false;
 }
 

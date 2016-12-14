@@ -1,13 +1,13 @@
 #include "enumerated.h"
-#include "uicore.h"
-#include "string.h"
-#include "textkey.h"
+//#include "uicore.h"
+//#include "string.h"
+//#include "textkey.h"
 
 const TextKey Enumerated::InvalidToken="Undefined";
 
-Glib::ustring Enumerated::displayName(int value) const{
-  return translate(token(value));
-}
+//UString Enumerated::displayName(int value) const{
+//  return translate(token(value));
+//}
 
 /////////////////////////
 SequentialEnumeration::SequentialEnumeration(const char *tokenNames[], int numTokens): simpleTokens(numTokens),tokenNames(tokenNames){
