@@ -1,8 +1,10 @@
 #ifndef _ENUMERATED_H_
 #define _ENUMERATED_H_
 
-#include <glibmm.h>
-#include "uicore.h"
+//#include <glibmm.h>
+//#include "uicore.h"
+#include "safely.h"
+#include "textkey.h"
 #include "sequence.h"
 
 /** base class is abstract access to a labeling mechanism */
@@ -21,8 +23,8 @@ public:
   /** @returns the integral value associated with an internal key.*/
   virtual int valueOf(TextKey token) const=0;
 
-  /** @returns user text */
-  virtual Glib::ustring displayName(int value)const;
+//  /** @returns user text */
+//  virtual UString displayName(int value)const;
 
 };
 

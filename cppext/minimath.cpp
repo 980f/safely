@@ -19,11 +19,11 @@ u32 log2Exponent(u32 number){
 
 #include <cmath>
 bool isSignal(double d){
-  return isnan(d);
+  return isNan(d);
 }
 
 bool isNan(double d){
-  return isnan(d);
+  return isNan(d);
 }
 
 bool isNormal(double d){

@@ -2,7 +2,7 @@
 #define ARGSET_H
 
 #include "buffer.h"
-//formerly inlined code? #include "cheapTricks.h"
+#include "cheapTricks.h" //changed()
 #include "safely.h"   		//#library options
 class ArgSet : public Indexer <double> {
 public:

@@ -8,7 +8,7 @@
 //#include <cstdio> //snprintf
 
 #include "numberparser.h"
-#include "asciiframing.h" //todo:2 remove this dependency! (or move the header)
+#include "safely.h" //ascii framing characters
 
 CharFormatter::CharFormatter(char * content):CharScanner(content, content?strlen(content):0){
   //nada

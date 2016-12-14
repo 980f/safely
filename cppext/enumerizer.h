@@ -3,9 +3,9 @@
 
 #include "eztypes.h" //countof()
 #include "buffer.h"
-#include <textkey.h>
-//#include "note.h"
-/** sketch of a textifier for an enum, not closely coupled at the moment.*/
+#include "textkey.h"
+
+/** sketch of a textifer for an enum, not closely coupled at the moment.*/
 class Enumerizer : public Indexer <TextKey> {
 public:
   Enumerizer(const char **tokenSet, int numTokens);

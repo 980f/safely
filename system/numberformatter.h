@@ -1,8 +1,8 @@
 #ifndef NUMBERFORMATTER_H
 #define NUMBERFORMATTER_H
 
-#include <glibmm/ustring.h>
-#include <sigc++/sigc++.h>
+#include "safely.h"
+#include "sigcuser.h"
 
 /** abstract number printer, convert number into text. */
 typedef sigc::slot < Glib::ustring, double /*value*/ > Formatter;

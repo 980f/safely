@@ -25,9 +25,9 @@ void BigEndianer::put(double value){
   put(pun(u32,arf));
 }
 
-void BigEndianer::insertVersion(void){
-  hilo(
-#include "svnrevision.txt"
-      );
-}
+//void BigEndianer::insertVersion(void){
+//  hilo(
+//#include "svnrevision.txt"
+//      );
+//}
 //end of file
