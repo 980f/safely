@@ -23,7 +23,7 @@ bool isSignal(double d){
 }
 
 bool isNan(double d){
-  return isNan(d);
+  return std::isnan(d);
 }
 
 bool isNormal(double d){
