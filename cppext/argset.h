@@ -2,21 +2,25 @@
 #define ARGSET_H
 
 #include "buffer.h"
-#include "cheapTricks.h" //changed()
-#include "safely.h"   		//#library options
-class ArgSet : public Indexer <double> {
+//#include "cheapTricks.h" //changed()
+#include "safely.h"       //ArgsPerMessage maximum copyable set
+
+class ArgSet : public Indexer<double> {
 public:
+/** wrap an existing array of doubles */
   ArgSet(double *d, int sizeofd);
-  /**@return whether @param changed*/
+/** @return whether @param changed*/
   bool applyto(double&d);
-  /**@return whether @param changed*/
+/** @return whether @param changed*/
   bool applyto(int&eye);
-/**@return whether @param changed*/
+/** @return whether @param changed*/
   bool applyto(bool&b);
-  /** add an array of const data, can't just wrap them without lots of syntax*/
+/** append an array of const data, can't just wrap them without lots of syntax*/
   void cat(const double *prefilled,int qty);
-  bool equals(ArgSet args)const;//#yes, construct/copy on call else all callers must 'freeze'
-};
+/** @returns whether this and @param args are same size, and whether corresponding entries are nearly equal.
+ *  @see nearly for @param bits value */
+  bool equals(const ArgSet &args, int bits = 18) const;
+}; // class ArgSet
 
 #define makeArgs(qty) double argv[qty]; fillObject(argv, sizeof(argv), 0); ArgSet args(argv, sizeof(argv))
 
@@ -26,15 +30,13 @@ public:
 #define MessageArgs2 double argv2[ArgsPerMessage]; ArgSet args2(argv2, sizeof(argv2))
 
 
-class ConstArgSet : public Indexer <const double> {
+/** appears to be incomplete, need to look for usages */
+class ConstArgSet : public Indexer<const double> {
 public:
   ConstArgSet(const double *d, int sizeofd);
   ConstArgSet(const ArgSet &other);
   ConstArgSet(const ConstArgSet &other);
-
-//  bool equals(ArgSet args)const;//#yes, construct/copy on call else all callers must 'freeze'
 };
-
 
 
 #endif // ARGSET_H
