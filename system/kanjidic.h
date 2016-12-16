@@ -24,7 +24,7 @@ public:
   static void init(bool forceful = false);
   /** @deprecated, most frequent cases have multiple candidates
    * @return single result for hiragana string, sets length to how much of the trailing part of @param hiraganaFragment was actually
-   *part of the name (may drop this if we choose a strict lookup)*/
+   * part of the name (may drop this if we choose a strict lookup)*/
   static Unichar charFor(const Ustring &hiraganaFragment, int &);
 
   /** @returns fresh listing of kanji whose @param reading is @param name.

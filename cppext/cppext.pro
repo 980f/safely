@@ -112,4 +112,3 @@ HEADERS += cppexttester.h \
     textkey.h \
     polyfilter.h \
     zstring.h
-
