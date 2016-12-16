@@ -1,3 +1,4 @@
+# // *INDENT-OFF*  in case we run uncrustify on this flie
 #-------------------------------------------------
 #
 # Project created by QtCreator 2016-12-14T16:27:12
@@ -13,7 +14,7 @@ CONFIG += console c++11
 CONFIG -= app_bundle
 CONFIG -= qt
 
-INCLUDEPATH += ../cppext
+INCLUDEPATH += ../ ../cppext
 
 SOURCES += systemtester.cpp \
     cachedindextostored.cpp \
@@ -84,3 +85,5 @@ HEADERS += systemtester.h \
 
 unix: CONFIG += link_pkgconfig
 unix: PKGCONFIG += sigc++-2.0
+# the PKGCONFIG line above should have taken care of the following: //todo: remove explicit includepath and debug pkgconfig for sigc.
+INCLUDEPATH += /usr/include/sigc++-2.0
