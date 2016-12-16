@@ -22,16 +22,16 @@ class QuadraticFilter : public PolyFilter {
 public:
   QuadraticFilter(unsigned hw);
   /** actual quadratic term at present point */
-  double curvature()const;
+  double curvature() const;
   /** integer proportional to curvature() */
-  int curvish()const;
+  int curvish() const;
   /** actual linear term at present point: curvature* 3 * (D4/S0) */
-  double slope()const;
-  int signA1()const ;
-  /** smoothed amplitude*/	
-  double amplitude()const;
+  double slope() const;
+  int signA1() const;
+  /** smoothed amplitude*/
+  double amplitude() const;
   /** @returns integer proportional to amplitude at this point. suitable for relative amplitude reasoning.
-	amplitude() * 5 * (D4*S4/S2) */
+   *  amplitude() * 5 * (D4*S4/S2) */
   int ampEstimate() const;
 
   void recordInflection(Inflection &flect) const;
@@ -39,11 +39,9 @@ public:
   void init(const CenteredSlice &slice);
   void step(CenteredSlice &slice);
 
-  /** @param slice is search window, presumed to have a filter's worth of channels outside on each side,
-      @param peak records the most interesting points in the range
-      @param offset is the absolute index of the center of the slice, added to each slice-relative coordinate found */
-  bool scan(const CenteredSlice &slice,/*PeakFind &peak,*/int offset);
+  /** @param slice is search window, presumed to have a filter's worth of channels outside on each side */
+  void scan(const CenteredSlice &slice,ScanReport &report) override;
 
-};
+}; // class QuadraticFilter
 
 #endif // QUADRATICFILTER_H
