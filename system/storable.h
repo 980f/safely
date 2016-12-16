@@ -30,7 +30,7 @@ typedef TextPointer NodeName;
  * Storable supports both polled change detection via ChangeMonitored and change notification callbacks via sigc.
  *
  * Note that a Stored object is stored in a file when saveAll() is called, whereas a Storable object that is not wrapped in Stored
- *will not be saved.
+ * will not be saved.
  *
  */
 
@@ -354,7 +354,7 @@ public:
 
   /** for case of renamed child: upgrade this storage.
    * todo: make a weaker form which doesn't need a template arg by copying value members of oldnode according to typeinfo of new
-   *node.*/
+   * node.*/
   template<typename Scalar> void legacy(const char *oldname, const char *newname){
     if(Storable * legacy = node.existingChild(oldname)) {
       node.child(newname).setNumber(legacy->getNumber<Scalar>());
@@ -427,7 +427,8 @@ public:
 /**
  * class Groupie must implement a constructor that takes a Storable&
  * todo:1 add arguments to the StoredGroup constructor that are then passed to each Groupie as it is instantiated. This will take
- *fancy variadic template work OR a class hierarchy with a derived class for each set of args. Or we could pass in a factory functor
+ * fancy variadic template work OR a class hierarchy with a derived class for each set of args. Or we could pass in a factory
+ * functor
  *... defaulted to a templated creator function (whose syntax alh hasn't yet figured out).
  */
 template<class Groupie> class StoredGroup : public Stored {
@@ -485,7 +486,7 @@ public:
   /** "in class" macros for StoredGroup.
    * outside of StoredGroup use the iterator factory
    * beware that when using this macro you must invoke list.next() in every body else you will spin forever (ie no conditional
-   *invocation of list.next())*/
+   * invocation of list.next())*/
 #define ForValues(list)   for(Scanner list(pod); list.hasNext(); )
 #define ForValuesConstly(list)   for(ConstScanner list(pod); list.hasNext(); )
 
@@ -748,7 +749,7 @@ public:
 
   /** @returns address of entity whose internal name matches key, nullptr if such does not exist.
    * useful for legacy upgrades of known entities within a group, which is pretty much limited to factory defined files, never user
-   *stuff */
+   * stuff */
   Groupie *existing(const char *key){
     Storable *child = node.existingChild(key);
 
@@ -761,7 +762,7 @@ public:
 
   /** @returns node by internal name, creates one if it doesn't exist.
    * useful for legacy upgrades of known entities within a group, which is pretty much limited to factory defined files, never user
-   *stuff */
+   * stuff */
   Groupie &child(const char *key){
     Groupie *child = existing(key);
 

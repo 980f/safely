@@ -63,7 +63,7 @@ public:
                                                                                                                                  * for
                                                                                                                                  * 'same
                                                                                                                                  * as
-                                                                                                                                 * length'*/                           : 0),
+                                                                                                                                 * length'*/: 0),
     buffer(wrapped){
     //#nada
   }

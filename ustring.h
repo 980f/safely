@@ -13,4 +13,6 @@ public:
   char * cstr();
 };
 
+/** replace Glib gunichar*/
+typedef u32 Unichar;
 #endif // USTRING_H

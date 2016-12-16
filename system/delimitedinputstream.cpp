@@ -1,18 +1,18 @@
 #include "delimitedinputstream.h"
 #include "numberparser.h"
 
-#include <string.h>
+#include <stdlib.h>
 
 //private definition of whitespace, input file may not be local.
 
-static Glib::ustring whitespace("\t\r ");
-static bool isWhite(gunichar ch){
+static const char *whitespace = "\t\r ";
+static bool isWhite(int ch){
   //todo: unicode 'iswhite' trait
-  Glib::ustring::size_type undocumentedReturnValue=whitespace.find_first_of(ch);
+  int undocumentedReturnValue = strchr(whitespace,ch);
   return undocumentedReturnValue!= Glib::ustring::npos;//sadness, had to search the web to discover this magic info.
 }
 
-DelimitedInputStream::DelimitedInputStream(std::istream &s):
+DelimitedInputStream::DelimitedInputStream(std::istream &s) :
   separator(','),
   s(s),
   lineCount(0),
@@ -21,51 +21,51 @@ DelimitedInputStream::DelimitedInputStream(std::istream &s):
 }
 
 bool DelimitedInputStream::trimTrailing(){
-  while(s.good()){
+  while(s.good()) {
     gunichar ch(s.get());
-    if(ch==separator){
-      dstate=StartOfField;
+    if(ch==separator) {
+      dstate = StartOfField;
       return true;
     }
-    if(ch=='\n'){
+    if(ch=='\n') {
       ++lineCount;
-      dstate=EndOfLine;
+      dstate = EndOfLine;
       return true;
     }
-    if(isWhite(ch)){
+    if(isWhite(ch)) {
       continue;
     }
     //failure, ignore for now:
     {
       s.unget();
-      dstate=StartOfField;
+      dstate = StartOfField;
       return true;
     }
   }
   return false;
-}
+} // DelimitedInputStream::trimTrailing
 
 bool DelimitedInputStream::trimLeading(){
-  while(s.good()){
+  while(s.good()) {
     gunichar ch(s.get());
-    if(ch==separator){
-      dstate=EmptyField;
+    if(ch==separator) {
+      dstate = EmptyField;
       return true;
     }
-    if(ch=='\n'){
+    if(ch=='\n') {
       ++lineCount;
-      dstate=EndOfLine;//harrumph-also an empty field
+      dstate = EndOfLine;//harrumph-also an empty field
       return true;
     }
-    if(isWhite(ch)){
+    if(isWhite(ch)) {
       continue;
     }
     s.unget();
-    dstate=StartOfField;
+    dstate = StartOfField;
     return true;
   }
   return false;
-}
+} // DelimitedInputStream::trimLeading
 
 bool DelimitedInputStream::hasMoreFields(){
   return dstate!=EndOfLine;
@@ -76,37 +76,37 @@ bool DelimitedInputStream::hasMoreLines(){
 }
 
 bool DelimitedInputStream::endl(){
-  if(dstate==EndOfLine){
+  if(dstate==EndOfLine) {
     return true; //already there.
   }
-  while(s.good()){
+  while(s.good()) {
     gunichar ch(s.get());
-    if(ch=='\n'){
-      dstate=EndOfLine;
+    if(ch=='\n') {
+      dstate = EndOfLine;
       return true;
     }
   }
   return false;
-}
+} // DelimitedInputStream::endl
 
 bool DelimitedInputStream::get(double &value){
   if(!&value) {
     return false;
   }
-  if(trimLeading()){
-    switch(dstate){
+  if(trimLeading()) {
+    switch(dstate) {
     case EmptyField:
     case EndOfLine:
-      value=0.0;
+      value = 0.0;
       return true;
     case StartOfField:
-      s>>value;
+      s >> value;
       trimTrailing();
       return true;
     default:
       return false;//wtf
-    }
+    } // switch
   } else {
     return false;
   }
-}
+} // DelimitedInputStream::get

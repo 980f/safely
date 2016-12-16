@@ -1,3 +1,4 @@
+# // *INDENT-OFF* protects against pretty printers
 #-------------------------------------------------
 #
 # Project created by QtCreator 2016-12-14T15:17:49
@@ -53,7 +54,8 @@ SOURCES += cppexttester.cpp \
     twiddler.cpp \
     utf8.cpp \
     textkey.cpp \
-    polyfilter.cpp
+    polyfilter.cpp \
+    zstring.cpp
 
 HEADERS += cppexttester.h \
     safely.h \
@@ -108,5 +110,6 @@ HEADERS += cppexttester.h \
     twiddler.h \
     utf8.h \
     textkey.h \
-    polyfilter.h
+    polyfilter.h \
+    zstring.h
 
