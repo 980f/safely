@@ -1,0 +1,6 @@
+
+### pre-commit hook runs with cwd repo root
+### git diff below lists files from repo root
+### git lists files that are staged, not sure why 'cached' is the parameter :P
+git diff --cached --name-only | xargs -I filename uncrustify -c safely.uncrustify --replace filename
+
