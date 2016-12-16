@@ -17,6 +17,8 @@ protected:
   timespec stopped;
   bool running;
 public:
+  /** @param beRunning is whether to start timer upon construction.
+      @param realElseProcess is whether to track realtime or thread-active-time */
   StopWatch(bool beRunning=true,bool realElseProcess=false);//defaults are best choice for function timing.
 
   /** @returns elasped time and restarts interval. Use this for cyclic sampling. @param absolutely if not null gets the absolute time reading used in the returned value.*/

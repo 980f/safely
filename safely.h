@@ -2,8 +2,8 @@
 #define SAFELY_H
 
 /**
- * each project using the 'safely' lib can put its compile time preferences in this file.
- * code in this library that need compiletime constants include this header file.
+ * each project using the 'safely' lib can put its compile time preferences in this file,
+ * code in this library that needs compiletime constants include this header file.
 */
 
 
