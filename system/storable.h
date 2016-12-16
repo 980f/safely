@@ -1,32 +1,40 @@
 #ifndef STORABLE_H
 #define STORABLE_H
 
+#include "safely.h"
 #include "argset.h" //for arrays to mate to hardware structs
 #include "chain.h" //wrap std::vector to cover its sharp pointy sticks.
 #include "changemonitored.h"
-//#include "channel.h"
+
 #include "charscanner.h"
 #include "enumerated.h"
-//#include "gatedsignal.h"
+
 #include "iterate.h"
 #include "logger.h"
 #include "numberformatter.h"
 #include "sigcuser.h"
 #include "textpointer.h"
 
-typedef const char *NodeName;
+//class used for keys
+typedef TextPointer NodeName;
+
+#if UseGlib
+//#include "channel.h"
+//#include "gatedsignal.h"
+#endif
 
 /**
-  * non-volatile storage and transport mechanism.
-  * In most instances some derivative of Stored will wrap each Storable to set its type and other attributes.
-  *
-  * Storable supports both polled change detection via ChangeMonitored and change notification callbacks via sigc.
-  *
-  * Note that a Stored object is stored in a file when saveAll() is called, whereas a Storable object that is not wrapped in Stored will not be saved.
-  *
-  */
+ * non-volatile storage and transport mechanism.
+ * In most instances some derivative of Stored will wrap each Storable to set its type and other attributes.
+ *
+ * Storable supports both polled change detection via ChangeMonitored and change notification callbacks via sigc.
+ *
+ * Note that a Stored object is stored in a file when saveAll() is called, whereas a Storable object that is not wrapped in Stored
+ *will not be saved.
+ *
+ */
 
-class Storable: public ChangeMonitored, SIGCTRACKABLE {
+class Storable : public ChangeMonitored, SIGCTRACKABLE {
   friend class Stored; //access to q and the like.
   friend class StoredLabel; //ditto
   friend class StoredEnum;
@@ -49,17 +57,18 @@ public:
   };
 
   /** hook to force tree node to save all pending changes prior to output.
-    * NB: this does not recurse for wads, the caller of this must recurse if the entity is a wad.
-    * we may change that for convenience, but presently all callers of preSave had their own reasons to iterate. */
+   * NB: this does not recurse for wads, the caller of this must recurse if the entity is a wad.
+   * we may change that for convenience, but presently all callers of preSave had their own reasons to iterate. */
   SimpleSignal preSave;
 
-  /** ignore this node (and its children) during change polling detection, only apply to stuff that is automatically reconstructed or purely diagnostic. Doesn't affect change watching, only polling. */
+  /** ignore this node (and its children) during change polling detection, only apply to stuff that is automatically reconstructed
+   * or purely diagnostic. Doesn't affect change watching, only polling. */
   bool isVolatile;
 protected:
   Type type;
   Quality q;
   double number;
-  Glib::ustring text;
+  Ustring text;
 public:
   //made public for sibling access, could hide it with some explicit sibling methods.
   /** used primarily for debugging, don't have to unwind stack to discover source of a wtf herein. */
@@ -68,7 +77,7 @@ public:
   bool strictlyOrdered;
 protected:
   /** whether wad is dynamically reorganized to allow for binary search for a child.
-    * the parser should not set this, only the present program logic should control it.*/
+   * the parser should not set this, only the present program logic should control it.*/
   bool sorted;
 protected:
   /** cached coordinate of this item in its parent's wad, updated by parent when that parent reorganizes its wad.*/
@@ -77,13 +86,13 @@ protected:
   Chain<Storable> wad;
   /** set by StoredEnum when one is created, maintains parallel text.*/
   const Enumerated *enumerated; //expected to be a globally shared one
-  mutable int recursionCounter=0;
+  mutable int recursionCounter = 0;
   mutable GatedSignal watchers; //# mutable so that we can freeze and thaw
   mutable GatedSignal childwatchers; //# mutable, see @watchers.
 
   /** calls watchers */
-  void notify()const;
-  void recursiveNotify()const;
+  void notify() const;
+  void recursiveNotify() const;
 private:
   /* non-copyable */
   Storable(const Storable &noncopyable); // non construction-copyable
@@ -138,7 +147,7 @@ public:
     bool childrenToo;
     bool onlyChildren;
     Storable &node;
-  public:
+public:
     Freezer(Storable &node, bool childrenToo = true, bool onlyChildren = false);
     ~Freezer();
     /** permenently freeze a node, such as when we are going to chop one up for export then discard it.*/
@@ -152,29 +161,32 @@ public:
   /** set the value of a numerical node */
   double setValue(double value, Quality quality = Edited);
   // functions that apply to numbers
-  /** sets numerical value, if node has an enumerated then the text is set to match, if no enumerated then node type is set to numerical with gay disregard for its previous type. */
-  template <typename Numeric> Numeric setNumber(Numeric value, Quality quality = Edited){
+  /** sets numerical value, if node has an enumerated then the text is set to match, if no enumerated then node type is set to
+   * numerical with gay disregard for its previous type. */
+  template<typename Numeric> Numeric setNumber(Numeric value, Quality quality = Edited){
     setValue(static_cast<double>(value), quality);
     return static_cast<Numeric>(number);
   }
 
-  template <typename Numeric> Numeric getNumber() const {
+  template<typename Numeric> Numeric getNumber() const {
     return static_cast<Numeric>(number);
   }
 
   /** if not set from file or program execution then set a value on the node */
-  template <typename Numeric> Numeric setDefault(Numeric value){
+  template<typename Numeric> Numeric setDefault(Numeric value){
     if(q == Empty || q == Defaulted) {
       setNumber(value, Storable::Defaulted);
     }
     return getNumber<Numeric>();
   }
+
   /** @return a functor that when invoked will set this object's value to what is passed at this time.*/
-  template <typename Numeric> sigc::slot<Numeric> getLater(){ //a sigc expert might be able to get rid of this and castTo.
+  template<typename Numeric> sigc::slot<Numeric> getLater(){  //a sigc expert might be able to get rid of this and castTo.
     return MyHandler(Storable::getNumber<Numeric> );
   }
+
   /** hook up to send changes to a simple variable. */
-  template <typename Numeric> sigc::connection sendChanges(Numeric &target, bool kickme = false){
+  template<typename Numeric> sigc::connection sendChanges(Numeric &target, bool kickme = false){
     if(kickme) {
       target = getNumber<Numeric>();
     }
@@ -193,6 +205,7 @@ public:
   int numChildren() const { //useful with array-like nodes.
     return wad.quantity();
   }
+
   /** @returns an iterator over the children, in ascending order*/
   ChainScanner<Storable> kinder();
   /** @returns an iterator over the children, in ascending order*/
@@ -201,13 +214,15 @@ public:
   bool has(int ordinal) const {
     return ordinal >= 0 && ordinal < numChildren();
   }
+
   /** @returns null pointer if no child by given name exists, else pointer to the child*/
   Storable *existingChild(NodeName childName);
   /** @see existingChild() non const version */
   const Storable *existingChild(NodeName childName) const;
 
-  /** if @param autocreate is true then call child() on each piece of the @param path, else call existingChild() until either a member is missing or the child is found.
-   *FYI: tolerates null this! */
+  /** if @param autocreate is true then call child() on each piece of the @param path, else call existingChild() until either a
+   * member is missing or the child is found.
+   * FYI: tolerates null this! */
   Storable *findChild(NodeName path, bool autocreate = true); /* true as default is legacy from method this replaced.*/
   /** creates node if not present.*/
   Storable &child(NodeName childName);
@@ -238,13 +253,14 @@ public:
 
   /** remove all children */
   void filicide();
-  /** packs child values into the given @param args, if purify is true then argset entries in excess of the number of this node's children are zeroed, else they are left unmodified  */
+  /** packs child values into the given @param args, if purify is true then argset entries in excess of the number of this node's
+   * children are zeroed, else they are left unmodified  */
   void getArgs(ArgSet &args, bool purify = false);
   /** overwrite child nodes setting them to the given values, adding nodes as necessary to store all of the args.*/
   void setArgs(ArgSet &args);
 private:
   Storable &finishCreatingChild(Storable &noob);
-};
+}; // class Storable
 
 /** iterate over the children of given node (kinder is german  plural for child, like kindergarten) */
 #define ForKinder(node) for(auto list(node.kinder()); list.hasNext(); )
@@ -252,21 +268,22 @@ private:
 
 
 /** usage as filter: sigc::bind(&byName, sigc::ref(name)) */
-template <class Groupie> bool byName(const Glib::ustring &name, const Groupie & /*child*/, const Glib::ustring &seeking){
+template<class Groupie> bool byName(const Glib::ustring &name, const Groupie & /*child*/, const Glib::ustring &seeking){
   return name == seeking;
 }
 
 /**
-  * base class for interpreter of a storage node.
-  * wrapper instead of extending Storable, to lighten each instance's memory footprint.
-  * Only extend from this when program logic will alter values versus gui edit screens as the latter work directly on the nodes.*/
-class Stored: SIGCTRACKABLE {
+ * base class for interpreter of a storage node.
+ * wrapper instead of extending Storable, to lighten each instance's memory footprint.
+ * Only extend from this when program logic will alter values versus gui edit screens as the latter work directly on the nodes.*/
+class Stored : SIGCTRACKABLE {
   Stored();
   Stored(const Stored &cantbecopied);
 protected:
   /** used to per-class disable notification causing onParse' to be called before all children exist.*/
   bool duringConstruction;
-  // you must add the following lines to your constructor, can't be a base class function as the virtual table isn't operational yet:
+  // you must add the following lines to your constructor, can't be a base class function as the virtual table isn't operational
+  // yet:
   //    duringConstruction=false;
   //    onParse();
 public:
@@ -274,9 +291,10 @@ public:
   Stored(Storable &node);
   virtual ~Stored();
   /** hook for actions to perform when node is written to disk.
-    * @returns success, if false then the write must be reported as partially failed.*/
+   * @returns success, if false then the write must be reported as partially failed.*/
   virtual void onPrint(){
   }
+
   //hook for actions when storage node is altered:
   virtual void onParse(){
   }
@@ -333,20 +351,23 @@ public:
   Glib::ustring image() const {
     return node.image();
   }
+
   /** for case of renamed child: upgrade this storage.
-    * todo: make a weaker form which doesn't need a template arg by copying value members of oldnode according to typeinfo of new node.*/
-  template <typename Scalar> void legacy(const char *oldname, const char *newname){
+   * todo: make a weaker form which doesn't need a template arg by copying value members of oldnode according to typeinfo of new
+   *node.*/
+  template<typename Scalar> void legacy(const char *oldname, const char *newname){
     if(Storable * legacy = node.existingChild(oldname)) {
       node.child(newname).setNumber(legacy->getNumber<Scalar>());
       node.remove(legacy->index);
     }
   }
-};
+
+}; // class Stored
 
 #define ConnectChild(varname, ...) varname(node.child( # varname ), ## __VA_ARGS__)
 #define ConnectSibling(varname, ...) varname(node.parent->child( # varname ), ## __VA_ARGS__)
 
-class StoredLabel: public Stored {
+class StoredLabel : public Stored {
 public:
   StoredLabel(Storable &node, const Glib::ustring &fallback = Glib::ustring());
   void setDefault(const Glib::ustring &deftext);
@@ -374,10 +395,10 @@ public:
   sigc::connection onChange(sigc::slot<void, const char *> slotty);
   /** a slot that will set the value of this */
   sigc::slot<void, const char *> setter();
-};
+}; // class StoredLabel
 
 /** auto creating iterator that provides for deleting the unscanned items.
-  * todo:2 construction option to invoked done() in destructor. Handy for for loops, but not not always desired..*/
+ * todo:2 construction option to invoked done() in destructor. Handy for for loops, but not not always desired..*/
 class StoredListReuser {
   Storable &node;
   int wadding;
@@ -403,17 +424,20 @@ public:
 #include <functional>
 
 
-
 /**
-  * class Groupie must implement a constructor that takes a Storable&
-  * todo:1 add arguments to the StoredGroup constructor that are then passed to each Groupie as it is instantiated. This will take fancy variadic template work OR a class hierarchy with a derived class for each set of args. Or we could pass in a factory functor ... defaulted to a templated creator function (whose syntax alh hasn't yet figured out).
-  */
-template <class Groupie> class StoredGroup: public Stored {
+ * class Groupie must implement a constructor that takes a Storable&
+ * todo:1 add arguments to the StoredGroup constructor that are then passed to each Groupie as it is instantiated. This will take
+ *fancy variadic template work OR a class hierarchy with a derived class for each set of args. Or we could pass in a factory functor
+ *... defaulted to a templated creator function (whose syntax alh hasn't yet figured out).
+ */
+template<class Groupie> class StoredGroup : public Stored {
   Chain<Groupie> pod;
   /** bool remove (else add at end) , int*/
   sigc::signal<void, bool, int> dependents;
 
-  /** some actions that might have been added to the dependents list need to finish before another set can be run (such as subordinate creations) so in the absence of a priority mechanism in the signal we have an additional signal. Also many change handlers only care about additions.*/
+  /** some actions that might have been added to the dependents list need to finish before another set can be run (such as
+   * subordinate creations) so in the absence of a priority mechanism in the signal we have an additional signal. Also many change
+   * handlers only care about additions.*/
   sigc::signal<void, Groupie &> oncreation;
   /** for removal we want to have already destroyed object before calling some of the change watchers.*/
   sigc::signal<void, int> onremoval;
@@ -428,21 +452,28 @@ public:
   sigc::connection permissionToRemove(sigc::slot<bool, Groupie &> tester){
     return preremoval.connect(tester);
   }
+
   sigc::connection permissionToAdd(sigc::slot<bool> tester){
     return preaddition.connect(tester);
   }
+
 public:
-  /** the guy which is the index calls this on the indexed class passing the thing indexed.e.g. analytes.indexes(calsamples); acquisitions.indexes(calsamples); indexedBy might be movable into a non-template base class but the syntax for calling it is annoying.
-    */
+  /** the guy which is the index calls this on the indexed class passing the thing indexed.e.g. analytes.indexes(calsamples);
+   * acquisitions.indexes(calsamples); indexedBy might be movable into a non-template base class but the syntax for calling it is
+   * annoying.
+   */
 
   //trying to work around some syntax stuff for indexedBy, and hey-why not add a feature of sorts?
-  template <class PrimeContent> void createFor(PrimeContent &indexItem){
+  template<class PrimeContent> void createFor(PrimeContent &indexItem){
     create(indexItem.getName());
   }
 
-  /** hooks up primary group (the operand) to manage allocation of this group's items which are 1:1 with the indexer group's items. @see indexes for swapping the args for syntactic convenenience. */
-  template <class PrimeContent> void indexedBy(StoredGroup<PrimeContent> &indexer){
-    //by doing these instead of registering a dependent using (nor removed) onReorg all onAdditions take place before any whenReorganized's are invoked, so dependent objects are all created before whenReorganized's are invoked. Must check that all non-creation onAddition stuff doesn't need to wait.
+  /** hooks up primary group (the operand) to manage allocation of this group's items which are 1:1 with the indexer group's items.
+   * @see indexes for swapping the args for syntactic convenenience. */
+  template<class PrimeContent> void indexedBy(StoredGroup<PrimeContent> &indexer){
+    //by doing these instead of registering a dependent using (nor removed) onReorg all onAdditions take place before any
+    // whenReorganized's are invoked, so dependent objects are all created before whenReorganized's are invoked. Must check that all
+    // non-creation onAddition stuff doesn't need to wait.
     indexer.onRemoval(MyHandler(StoredGroup<Groupie>::remove));
     indexer.onAddition(MyHandler(StoredGroup<Groupie>::createFor<PrimeContent> ), false);
     setSize(indexer.quantity()); //at time of attachment we resize the indexed entity
@@ -452,8 +483,9 @@ public:
   typedef ConstChainScanner<Groupie> ConstScanner;
 
   /** "in class" macros for StoredGroup.
-    * outside of StoredGroup use the iterator factory
-    * beware that when using this macro you must invoke list.next() in every body else you will spin forever (ie no conditional invocation of list.next())*/
+   * outside of StoredGroup use the iterator factory
+   * beware that when using this macro you must invoke list.next() in every body else you will spin forever (ie no conditional
+   *invocation of list.next())*/
 #define ForValues(list)   for(Scanner list(pod); list.hasNext(); )
 #define ForValuesConstly(list)   for(ConstScanner list(pod); list.hasNext(); )
 
@@ -468,7 +500,7 @@ public:
   /**added to suppress warnings on things that are too difficult to properly "index" */
   bool autocreate;
 
-  StoredGroup(Storable &node): Stored(node), autocreate(false){
+  StoredGroup(Storable &node) : Stored(node), autocreate(false){
     if(node.setType(Storable::Wad)) { //needed in case group is presently empty, so that proper change watching is set up.
       dbg("Empty group?");
     }
@@ -539,8 +571,9 @@ public:
     return reinterpret_cast<StoredGroup<Stored> *>(this); //#compiler cannot see that all template args must be derived from Stored.
   }
 
-  /** @param listner will be called on each add or remove, and if @param addAllNow is true it will be called as an add for all present entities.
-    * @returns a connection object by which this callback registration can be cancelled. */
+  /** @param listner will be called on each add or remove, and if @param addAllNow is true it will be called as an add for all
+   * present entities.
+   * @returns a connection object by which this callback registration can be cancelled. */
   sigc::connection whenReorganized(const Watcher &listner, bool addAllNow = false){
     if(addAllNow) {
       ForCountInOrder(*this){
@@ -570,15 +603,17 @@ public:
 
   /**add a new node and build a new thing from it.*/
   Groupie &create(NodeName prename = ""){
-    if(preaddition.empty() || preaddition()){
-      Storable::Freezer autothaw(node, true, true); //#must NOT allow change watchers to execute on node add until we create the object that they may come looking for. Without this the change actions will execute before the new object exists instead of after.
+    if(preaddition.empty() || preaddition()) {
+      Storable::Freezer autothaw(node, true, true); //#must NOT allow change watchers to execute on node add until we create the
+                                                    // object that they may come looking for. Without this the change actions will
+                                                    // execute before the new object exists instead of after.
       wrapNode(node.addChild(prename));
     }
     return last();
   }
 
   /** add a copy of an existing node, build a new thing from it and hence a copy of that thing.
-    * generally that existing node is from some other instance of a group of the same type as this group*/
+   * generally that existing node is from some other instance of a group of the same type as this group*/
   Groupie &clone(const Groupie &extant){
     wrapNode(node.createChild(extant.node));
     return last();
@@ -595,7 +630,7 @@ public:
   }
 
   /** create enough records that quantity() == size
-    * @returns the number of additions (if positive) or removals (if negative), 0 on no change.*/
+   * @returns the number of additions (if positive) or removals (if negative), 0 on no change.*/
   int setSize(int size){
     int changes(0);
 
@@ -612,7 +647,8 @@ public:
 
   /** remove something from given place in list. This DELETES the item, beware of use-after-free.*/
   virtual void remove(int which){
-    if(has(which)) { //#while the pod and node can take care of bad indexes locally we don't want to do the notifies if the index is bad. And now preremoval depends on this check.
+    if(has(which)) { //#while the pod and node can take care of bad indexes locally we don't want to do the notifies if the index is
+                     // bad. And now preremoval depends on this check.
       if(preremoval(operator [](which))) {
         //We actually delete the objects before we signal removal so iterations show it already gone
         pod.removeNth(which); //deletes Stored entity
@@ -621,7 +657,7 @@ public:
         dependents(true, which);
       }
     }
-  }
+  } // remove
 
   /** remove something from given place in list. This DELETES the item, beware of use-after-free.*/
   void removeItem(Groupie &member){ //this method was CREATING a new node!
@@ -636,7 +672,9 @@ public:
   /** remove any member for which the slot is true, @return quantity removed. This DELETES the item, beware of use-after-free.*/
   int removeIf(const sigc::slot<bool, Groupie &> &killit){
     int deaths = 0; //nice diagnostic versus a simple bool.
-    Storable::Freezer autothaw(node, false); //since node watch doesn't know what is removed wait until possibly multiple removes are done before triggering its watchers (important when some watchers are gui redraws)
+    Storable::Freezer autothaw(node, false); //since node watch doesn't know what is removed wait until possibly multiple removes
+                                             // are done before triggering its watchers (important when some watchers are gui
+                                             // redraws)
 
     for(int which = quantity(); which-- > 0; ) { //#keep reverse iteration, can do remove's with it.
       Groupie &victim(*pod[which]);
@@ -709,7 +747,8 @@ public:
   }
 
   /** @returns address of entity whose internal name matches key, nullptr if such does not exist.
-    * useful for legacy upgrades of known entities within a group, which is pretty much limited to factory defined files, never user stuff */
+   * useful for legacy upgrades of known entities within a group, which is pretty much limited to factory defined files, never user
+   *stuff */
   Groupie *existing(const char *key){
     Storable *child = node.existingChild(key);
 
@@ -721,7 +760,8 @@ public:
   }
 
   /** @returns node by internal name, creates one if it doesn't exist.
-    * useful for legacy upgrades of known entities within a group, which is pretty much limited to factory defined files, never user stuff */
+   * useful for legacy upgrades of known entities within a group, which is pretty much limited to factory defined files, never user
+   *stuff */
   Groupie &child(const char *key){
     Groupie *child = existing(key);
 
@@ -780,6 +820,7 @@ public:
   bool refreshDone(){
     return removeIf(&Stored::notRefreshed);
   }
+
 private:
   StoredGroup(const StoredGroup &notallowed); //no basis for knowing what node to start from.
 
@@ -801,7 +842,7 @@ private:
     doSoon(sigc::bind(watcher, removal, arg), 0, 1);
   }
 
-};
+}; // class StoredGroup
 
 #define INDEXER(group) *group.basecast()
 

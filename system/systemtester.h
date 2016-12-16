@@ -3,8 +3,7 @@
 
 #include "storable.h"
 
-class SystemTester
-{
+class SystemTester {
 
 public:
   SystemTester();
@@ -13,13 +12,13 @@ public:
     node.child("a chld").setNumber(15.678);
     printf("Stored: ",node.image().c_str());
   }
-};
+
+}; // class SystemTester
 
 
 int main(int argc,char *argv[]){
   SystemTester tester;
 
 }
-
 
 #endif // SYSTEMTESTER_H

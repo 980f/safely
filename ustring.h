@@ -2,8 +2,8 @@
 #define USTRING_H
 
 /** wrapper for common subset of classes like Glib::ustring and std::string
-the implementation file here is a simple one, but may integrate with UTF* processing classes.
-*/
+ *  the implementation file here is a simple one, but may integrate with UTF* processing classes.
+ */
 class Ustring {
 public:
   Ustring();

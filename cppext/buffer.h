@@ -1,5 +1,5 @@
-#ifndef bufferH
-#define bufferH
+#ifndef BUFFER_H
+#define BUFFER_H
 
 #include "eztypes.h"
 #include "minimath.h"
@@ -7,23 +7,34 @@
 #include "ordinator.h"
 
 /**
-  * Thing stuff[7];
-  * Indexer<Thing> index(stuff, sizeof(stuff));//computes item length in constructor
-  * usage:
-  * for(index.rewind();index.hasNext();){//no rewind needed if index isn't used between creation and this loop
-  *   Thing &scan= index.next();
-  *   scan.dickWithIt();
-  * }
-  *
-  * //often this is all you will do:
-  * for(Indexer<Thing> index(stuff, sizeof(stuff));index.hasNext();){
-  *  index.next().dickWithIt();
-  * }
-  */
+ *  This class is used to prevent buffer overflows.
+ *  Instances are passed a pointer to a buffer and its length and provide pointer-like syntax for modifying and accessing said
+ * buffer, but won't incremented the pointer outside the allocated range.
+ *  This class does not CONTAIN the data, it is a pointer into data allocated elsewhere.
+ *
+ *
+ *  todo: many of the functions were named for first use, not how they work. As such the names eventually did not match other
+ * usages.
+ *  todo: C++11 and C++14 iterator and lambda helpers.
+ *  todo: const versions of some methods.
+ *
+ * Thing stuff[7];
+ * Indexer<Thing> index(stuff, sizeof(stuff));//computes item length in constructor
+ * usage:
+ * for(index.rewind();index.hasNext();){//no rewind needed if index isn't used between creation and this loop
+ *   Thing &scan= index.next();
+ *   scan.dickWithIt();
+ * }
+ *
+ * //often this is all you will do:
+ * for(Indexer<Thing> index(stuff, sizeof(stuff));index.hasNext();){
+ *  index.next().dickWithIt();
+ * }
+ */
 
-template <typename Content> class CircularIndexer; //so we can cyclically access a subset of one of the following.
+template<typename Content> class CircularIndexer;  //so we can cyclically access a subset of one of the following.
 
-template <typename Content> class Indexer: public LatentSequence<Content>, public Ordinator {
+template<typename Content> class Indexer : public LatentSequence<Content>, public Ordinator {
   friend class CircularIndexer<Content>; //so we can cyclically access a subset of one of these.
 protected:
   Content *buffer;
@@ -36,28 +47,36 @@ private:
       skip(qty);
     }
   }
+
 public:
-  Indexer(void): Ordinator(0),
+  Indexer(void) : Ordinator(0),
     buffer(0){
     //#nada
   }
 
-  /** 1st arg is const'ed even though the class doesn't guarantee that it won't hand out a pointer to an element later, user beware*/
+  /** 1st arg is const'ed even though the class doesn't guarantee that it won't hand out a pointer to an element later, user
+   * beware*/
   //#below: truncating divide, omit attempt to have partial last element.
-  Indexer(Content *wrapped, unsigned int sizeofBuffer, bool wrap = false): Ordinator(sizeofBuffer / sizeof(Content), wrap ? -1 /*-1: key value for 'same as length'*/ : 0),
+  Indexer(Content *wrapped, unsigned int sizeofBuffer, bool wrap = false) : Ordinator(sizeofBuffer / sizeof(Content), wrap ? -1 /*-1:
+                                                                                                                                 * key
+                                                                                                                                 * value
+                                                                                                                                 * for
+                                                                                                                                 * 'same
+                                                                                                                                 * as
+                                                                                                                                 * length'*/                           : 0),
     buffer(wrapped){
     //#nada
   }
 
   /* if @param content is true then the new indexer covers just the data before the old one's pointer minus the clip value,
-    * some would call that a left subset of the used part.
-    * else if  it covers the old one's allocated range truncated by the clip value (left subset of allocated)*/
-  Indexer(const Indexer &other, bool justContent = true, unsigned int clip = 0): Ordinator((justContent ? other.pointer : other.length) - clip),
+   * some would call that a left subset of the used part.
+   * else if  it covers the old one's allocated range truncated by the clip value (left subset of allocated)*/
+  Indexer(const Indexer &other, bool justContent = true, unsigned int clip = 0) : Ordinator((justContent ? other.pointer : other.length) - clip),
     buffer(other.buffer){
   }
 
   /** reworks this one to be active region of @param other.
-    *   carefully implemented so that idx.snap(idx) works sensibly.*/
+   *   carefully implemented so that idx.snap(idx) works sensibly.*/
   void snap(const Indexer &other){
     buffer = other.buffer;
     length = other.pointer;
@@ -65,17 +84,17 @@ public:
   }
 
   /** substring starting from present pointer, if requested length overruns end of buffer return value is truncated */
-  Indexer<Content> subset(unsigned fieldLength,bool removing=true){
-    int length=lesser(fieldLength,freespace());
+  Indexer<Content> subset(unsigned fieldLength,bool removing = true){
+    int length = lesser(fieldLength,freespace());
     Indexer<Content> sub(&peek(),length);
-    if(removing){
+    if(removing) {
       skip(length);
     }
     return sub;
   }
 
   /** reduce length to be that used and reset pointer.
-    * useful for converting from a write buffer to a read buffer, but note that the original buffer dimensions is lost.*/
+   * useful for converting from a write buffer to a read buffer, but note that the original buffer dimensions is lost.*/
   void freeze(){
     snap(*this);
   }
@@ -94,7 +113,7 @@ public:
   }
 
   /** reworks this one to be just like @param other. snap() usually is what you want rather than this.
-    * this is useful for threadsafeness, especially over keeping a pointer to the other.*/
+   * this is useful for threadsafeness, especially over keeping a pointer to the other.*/
   void clone(const Indexer &other){
     buffer = other.buffer;
     length = other.length;
@@ -122,16 +141,16 @@ public:
   }
 
   /** reworks this one to be a byte accessor of the filled portion of another one,
-    * which usually only makes sense if this one's Content type is 8 bit.
-    * hmm, can do 32 <->16 bit conversions if both types are little endian.*/
-  template <typename Other> void punt(const Indexer<Other> &other){
+   * which usually only makes sense if this one's Content type is 8 bit.
+   * hmm, can do 32 <->16 bit conversions if both types are little endian.*/
+  template<typename Other> void punt(const Indexer<Other> &other){
     buffer = reinterpret_cast<Content *>(other.buffer);
     length = other.pointer * sizeof(Other) / sizeof(Content); //always nice if Content is byte
     pointer = 0;
   }
 
   /** append a null terminated series, but do NOT include the null itself.
-    */
+   */
   void cat(const Content *prefilled){
     if(prefilled) {
       while(!(*prefilled == 0)) {
@@ -177,6 +196,7 @@ public:
   Content &operator [](unsigned int index) const {
     return buffer[index < length ? index : index % length];
   }
+
   //syntactic sugar:
   operator bool() const {
     return hasNext();
@@ -200,6 +220,7 @@ public:
   unsigned int used(void) const {
     return ordinal();
   }
+
   /**@return reference to item most likely delivered by last call to next()*/
   Content &previous(void){
     return buffer[pointer >= length ? length - 1 : (pointer ? pointer - 1 : 0)];
@@ -219,8 +240,8 @@ public:
   }
 
   /** remove at most the given number of items preceding next.
-    *  first use is processing escaped chars in a string
-    */
+   *  first use is processing escaped chars in a string
+   */
   Indexer &remove(unsigned int amount){
     if(amount > pointer) {
       amount = pointer;
@@ -249,7 +270,7 @@ public:
   }
 
   /** append @param other 's pointer through length-1 to this, but will append all or none.
-    * Suitable for picking up the end of a partially copied buffer */
+   * Suitable for picking up the end of a partially copied buffer */
   Indexer appendRemaining(Indexer<Content> &other){
     int qty = other.emptySpace();
     if(stillHas(qty)) {
@@ -267,7 +288,7 @@ public:
     return *this;
   }
 
-};
+}; // class Indexer
 
 //the following probably doesn't work, or only works for simple types:
 #define IndexerWrap(thingy, wrapper) Indexer<typeof(thingy)> wrapper(&thingy, sizeof(thingy))

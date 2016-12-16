@@ -1,9 +1,9 @@
 #ifndef POLYFILTER_H
 #define POLYFILTER_H
 
-
 #include "centeredslice.h"
-/** polynomial filter, first implemenation uses Savitsky-Golay algorithm as optimized by Andy Heilveil */
+
+/** polynomial filter, first implemenations use Savitsky-Golay algorithm as optimized by Andy Heilveil */
 class PolyFilter {
 protected:
   PolyFilter(unsigned hw);
@@ -26,17 +26,23 @@ public:
     bool moreNegative(int newvalue,int newlocation);
   };
 
-  virtual double slope()const=0;
-  virtual int signA1()const =0;
-  virtual double amplitude()const =0;
-  virtual void init(const CenteredSlice &slice)=0;
-  virtual void step(CenteredSlice &slice)=0;
+  virtual double slope() const = 0;
+  virtual int signA1() const = 0;
+  virtual double amplitude() const = 0;
+  virtual void init(const CenteredSlice &slice) = 0;
+  virtual void step(CenteredSlice &slice) = 0;
+
+  struct ScanReport {
+    bool meaningful;
+    Inflection low;
+    Inflection high;
+    Inflection top;
+  };
 
   /** @param slice is search window, presumed to have a filter's worth of channels outside on each side,
-//todo: recorder mechanism      @param peak records the most interesting points in the range
-      @param offset is the absolute index of the center of the slice, added to each slice-relative coordinate found */
-  virtual bool scan(const CenteredSlice &slice,/*PeakFind &peak,*/int offset)=0;
+   *   @param report is fed obtuse data on a found peak, code fragment to make use of it is in comments in quadfilter.cpp */
+  virtual void scan(const CenteredSlice &slice, ScanReport &report) = 0;
 
-};
+}; // class PolyFilter
 
 #endif // POLYFILTER_H

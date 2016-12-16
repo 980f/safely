@@ -2,9 +2,9 @@
 #define ARGSET_H
 
 #include "buffer.h"
-//#include "cheapTricks.h" //changed()
 #include "safely.h"       //ArgsPerMessage maximum copyable set
 
+/** used as an intermediate representation of a struct made of only numbers (no text) */
 class ArgSet : public Indexer<double> {
 public:
 /** wrap an existing array of doubles */

@@ -4,45 +4,24 @@
 #include "eztypes.h" //sized ints
 #include "buffer.h" //for indexing access to data block
 
-class BigEndianer : public Indexer <u8> {
+
+/** utility for packing and unpacking binary values in byte order that might not match the platform order */
+class BigEndianer : public Indexer<u8> {
 public:
-  BigEndianer(u8 * allocation, int length) : Indexer <u8> (allocation, length){}
-  BigEndianer(Indexer <u8> other, bool justContent=true, int clip=0):Indexer<u8>(other, justContent , clip ){}
-
-  int getU16(void){
-    if(stillHas(2)) {
-      u8 high = next();
-      u8 low = next();
-      return high << 8 | low;
-    } else {
-      return -1;
-    }
+  BigEndianer(u8 * allocation, int length) : Indexer<u8>(allocation, length){
   }
 
-  int getI16(void){
-    if(stillHas(2)) {
-      s8 high = next();
-      u8 low = next();
-      return high << 8 | low;
-    } else {
-      return -1;
-    }
+  BigEndianer(Indexer<u8> other, bool justContent = true, int clip = 0) : Indexer<u8>(other, justContent, clip ){
   }
 
-  void hilo(u16 datum){
-    if(stillHas(2)) {
-      next() = datum >> 8;
-      next() = datum;
-    } else {
-      //not using exceptions ....
-    }
-  }
-
+  int getU16(void);
+  int getI16(void);
+  void hilo(u16 datum);
   u32 getu32(void);
   double getFloat(void);
   void put(u32 value);
+  /** put 32 bit ieee format number into byte array. You might get a Nan for extreme @param value */
   void put(double value);//will convert to 32 bit float.
 
-//reimplement as external function with a BigEndianer argument:  void insertVersion(void);
-};
+}; // class BigEndianer
 #endif // BIGENDIANER_H
