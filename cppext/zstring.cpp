@@ -4,51 +4,43 @@
 #include "malloc.h"
 #include "textkey.h"
 
-Zstring::Zstring(char *str):str(str)
-{
+Zstring::Zstring(char *str) : str(str){
 
 }
 
-int Zstring::len() const
-{
-  return str?strlen(str):0;
+int Zstring::len() const {
+  return str ? strlen(str) : 0;
 }
 
-char *Zstring::chr(int chr) const
-{
-  if(str){
+char *Zstring::chr(int chr) const {
+  if(str) {
     return strchr(str,chr);
   } else {
     return nullptr;
   }
 }
 
-int Zstring::cmp(const char *rhs) const
-{
-  if(str){
-    if(rhs){
+int Zstring::cmp(const char *rhs) const {
+  if(str) {
+    if(rhs) {
       return strcmp(str,rhs);
     } else {
-      return *str? 1 : 0;
+      return *str ? 1 : 0;
     }
   } else {
-    return
-        nonTrivial(rhs)?-1:0;
+    return nonTrivial(rhs) ? -1 : 0;
   }
-}
+} // Zstring::cmp
 
-bool Zstring::operator ==(const char *rhs) const
-{
+bool Zstring::operator ==(const char *rhs) const {
   return same(str,rhs);
 }
 
-char *Zstring::cstr() const
-{
+char *Zstring::cstr() const {
   return str;
 }
 
-void Zstring::free()
-{
+void Zstring::free(){
   ::free(str);
-  str=nullptr;
+  str = nullptr;
 }
