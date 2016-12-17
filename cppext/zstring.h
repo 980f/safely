@@ -11,8 +11,10 @@
 class Zstring {
 protected: //
   char *str;
+  bool owned;
 public:
-  Zstring(char *str);
+  Zstring(char *str, bool makeCopy=false);
+  Zstring(unsigned len=0);
   int len() const;
   char *chr(int chr) const;
 
@@ -29,7 +31,7 @@ public:
   //syntactic sugar for use in replacing std::string and similar classes
   char *cstr() const;
 
-  //for when you know this was pointing to a malloc'd string and you wish to free it
+  /** for when you know this was pointing to a malloc'd string and you wish to free it. Nulls internal pointer to prevent use-after-free's */
   void free();
 }; // class Zstring
 
