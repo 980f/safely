@@ -5,22 +5,22 @@
 
 using namespace std;
 
-DelimitingOutputStream::DelimitingOutputStream(std::ostream &os, bool withBom, bool crlfs):
-  os(os),lineTerminator(crlfs?"\r\n":"\n"){
-  linestarted=false;
+DelimitingOutputStream::DelimitingOutputStream(std::ostream &os, bool withBom, bool crlfs) :
+  os(os),lineTerminator(crlfs ? "\r\n" : "\n"){
+  linestarted = false;
   bom(withBom);
 }
 
 void DelimitingOutputStream::separator(){
-  if(linestarted){
-    os<<',';
+  if(linestarted) {
+    os << ',';
   }
-  linestarted=true;
+  linestarted = true;
 }
 
 DelimitingOutputStream & DelimitingOutputStream::endl(){
-  os<<lineTerminator;
-  linestarted=false;
+  os << lineTerminator;
+  linestarted = false;
   return *this;
 }
 
@@ -39,28 +39,28 @@ DelimitingOutputStream & DelimitingOutputStream::gs(){
 
 DelimitingOutputStream &DelimitingOutputStream::put(int val){
   separator();
-  os<<val;
+  os << val;
   return *this;
 }
 
 DelimitingOutputStream &DelimitingOutputStream::put(float val, int sigfig){
   separator();
-  os<<setprecision(sigfig);
-  os<<val;
+  os << setprecision(sigfig);
+  os << val;
   return *this;
 }
 
 DelimitingOutputStream &DelimitingOutputStream::put(double val, int sigfig){
   separator();
-  os<<setprecision(sigfig);
-  os<<val;
+  os << setprecision(sigfig);
+  os << val;
   return *this;
 }
 
 DelimitingOutputStream &DelimitingOutputStream::put(const char *text){
   separator();
   os << '"';
-  while(char c=*text++) {
+  while(char c = *text++) {
     if(c == '"') {
       os << '"'; // quotes are escaped by MORE QUOTES!
     }
@@ -68,10 +68,11 @@ DelimitingOutputStream &DelimitingOutputStream::put(const char *text){
   }
   os << '"';
   return *this;
-}
+} // DelimitingOutputStream::put
 
 #ifndef NO_GLIB
-DelimitingOutputStream &DelimitingOutputStream::put(const Glib::ustring &text) {
+DelimitingOutputStream &DelimitingOutputStream::put(const Ustring &text){
   return put(text.c_str());
 }
+
 #endif

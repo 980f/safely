@@ -12,14 +12,15 @@ bool alwaysTrue(){
   return true;
 }
 
-
 /** @see invertSignal.*/
 static void complement(bool value,BooleanSlot slot){
   slot(!value);
 }
+
 BooleanSlot invertSignal(BooleanSlot slot){
   return bind(&complement,slot);
 }
+
 //end complement signal
 
 BooleanSlot assigner(bool &target){
@@ -27,7 +28,7 @@ BooleanSlot assigner(bool &target){
 }
 
 void onEdge(slot<bool> source,bool edge,SimpleSlot action){
-  if(edge==source()){
+  if(edge==source()) {
     action();
   }
 }
@@ -42,7 +43,7 @@ SimpleSlot eventually(SimpleSlot toDefer){
 
 ///////////////////////////////////
 
-RunOnceSlot::RunOnceSlot(SimpleSlot continuation):continuation(continuation){
+RunOnceSlot::RunOnceSlot(SimpleSlot continuation) : continuation(continuation){
   //#nada
 }
 
@@ -52,21 +53,22 @@ SimpleSlot RunOnceSlot::getInstance(sigc::slot<void> continuation){
 }
 
 void RunOnceSlot::run(){
-  DeleteOnReturn<RunOnceSlot>dor(this);//in case of survivable exceptions
+  DeleteOnReturn<RunOnceSlot> dor(this);//in case of survivable exceptions
   continuation();
 }
 
 ///////////////////////////////////
-Finally::Finally(const SimpleSlot &action):action(action){
+Finally::Finally(const SimpleSlot &action) : action(action){
   //#nada
 }
 
 Finally::~Finally(){
   action();
 }
+
 //////////////////////////////////
-ConnectionLocker::ConnectionLocker(sigc::connection &conn):conn(conn){
-  wasBlocked=conn.block();
+ConnectionLocker::ConnectionLocker(sigc::connection &conn) : conn(conn){
+  wasBlocked = conn.block();
 }
 
 ConnectionLocker::operator bool(){
@@ -74,7 +76,7 @@ ConnectionLocker::operator bool(){
 }
 
 ConnectionLocker::~ConnectionLocker(){
-  if(!wasBlocked){//then we were the one that blocked it
+  if(!wasBlocked) {//then we were the one that blocked it
     conn.unblock();
   }
 }

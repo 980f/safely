@@ -1,20 +1,20 @@
-#include <iomanip> //for setprecision
 #include "numberformatter.h"
 
-using namespace std;
-using namespace Glib;
+#include <iomanip> //for setprecision
 
-NumberFormatter::NumberFormatter(bool fp, int precision, const ustring &postfix):
+
+NumberFormatter::NumberFormatter(bool fp, int precision, const Ustring &postfix) :
   fp(fp),
   precision(precision),
-  postfix(postfix) {
+  postfix(postfix){
   //#nada
 }
 
-ustring NumberFormatter::format(double value,bool addone) const {
-  if(fp) {
-    return ustring::format(setprecision(precision+(addone?1:0)), value, " ", postfix);
-  } else {
-    return ustring::format(fixed, setprecision(precision+(addone?1:0)), value, " ", postfix);
-  }
+Ustring NumberFormatter::format(double value,bool addone) const {
+//  if(fp) {
+//    return Ustring::format(setprecision(precision+(addone?1:0)), value, " ", postfix);
+//  } else {
+//    return Ustring::format(fixed, setprecision(precision+(addone?1:0)), value, " ", postfix);
+//  }
+  return Ustring("NYI");
 }

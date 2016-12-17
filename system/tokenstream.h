@@ -20,14 +20,14 @@ public:
   };
 
   Type type;
-  Glib::ustring string;
+  Ustring string;
   double number;
 
   Token();
   static Token getToken(std::istream &is);
-};
+}; // class Token
 
-class TokenStream: public Glib::Object {
+class TokenStream : public Glib::Object {
   std::istream &is;
   Token me;
   SmartPtr< TokenStream > _next;
@@ -37,6 +37,6 @@ public:
   static SmartPtr< TokenStream > create(std::istream &is);
   Token get();
   SmartPtr< TokenStream > next();
-};
+}; // class TokenStream
 
 #endif // TOKENSTREAM_H

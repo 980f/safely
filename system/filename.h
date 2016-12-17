@@ -5,10 +5,10 @@
 #include <ustring.h>
 
 /**
-  * somewhere else, typically where the main() resides, you must declare the absolute root:
-  * const char *FileName::root = "/nexqc/";
-  */
-class FileName: public Ustring {
+ * somewhere else, typically where the main() resides, you must declare the absolute root:
+ * const char *FileName::root = "/nexqc/";
+ */
+class FileName : public Ustring {
 public:
   static const Ustring root;
 public:
@@ -20,17 +20,17 @@ public:
   /** make sure string ends with given token*/
   FileName &assure(char token);
   /** misnamed, adds another path element preceding it with / if needed*/
-  FileName &folder(const Ustring &s,bool escapeit=false);
+  FileName &folder(const Ustring &s,bool escapeit = false);
   /** add a dot if one isn't present then add given text.*/
-  FileName &ext(const Ustring &s,bool escapeit=false);
+  FileName &ext(const Ustring &s,bool escapeit = false);
 //  FileName&operator = (const FileName &other);
-  /** reset to be just our globally enforced root directory*/
+/** reset to be just our globally enforced root directory*/
   FileName &slash();
   /** a value that if passed into FileName() will give the same value as this has now*/
   Glib::ustring relative() const;
 public:
   gunichar lastChar() const;
-};
+}; // class FileName
 
 /** useful for managing a recursively named file set.*/
 struct NameStacker {
@@ -51,7 +51,8 @@ public:
 };
 
 
-//todo: wrap the following (remainder of this file!) inside FileName class, where it all used to be, so that we didn't have such broad linkage to glib/gio and these members themselves were'nt really supposed to be global in use.
+//todo: wrap the following (remainder of this file!) inside FileName class, where it all used to be, so that we didn't have such broad linkage to glib/gio and these
+// members themselves were'nt really supposed to be global in use.
 //#include "glibmm/refptr.h"
 //#include "giomm/file.h"
 
@@ -60,8 +61,8 @@ public:
 //extern Glib::RefPtr< Gio::File > nexqcExternal;
 
 /** some places didn't like this inlined:
-path under our project root which mounts removable media or an nfs.
-*/
-const char External[]="external";
+ *  path under our project root which mounts removable media or an nfs.
+ */
+const char External[] = "external";
 
 #endif // FILENAME_H

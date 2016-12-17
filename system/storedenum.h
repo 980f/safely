@@ -2,7 +2,7 @@
 #define STOREDENUM_H
 
 #include "storable.h"
-class StoredEnum: public Stored {
+class StoredEnum : public Stored {
 public:
   StoredEnum(Storable &node, const Enumerated &enumerated, int def);
   operator int() const;
@@ -13,7 +13,7 @@ public:
     return setto(newnum);
   }
 
-  Glib::ustring toString();
+  Ustring toString();
 
   /** @return a functor that when invoked will set this object's value to what is passed at this time.*/
   SimpleSlot setLater(int value);
@@ -26,9 +26,9 @@ public:
   SimpleSlot applyTo(sigc::slot<void,int> functor);
 
   /** hook up to send changes to the @param given functor, and if @param kickme call that functor now*/
-  sigc::connection sendChanges(sigc::slot<void,int> functor,bool kickme=false);
+  sigc::connection sendChanges(sigc::slot<void,int> functor,bool kickme = false);
 
   /** added for a semi-pathological case in physicalSignal stuff*/
   void reEnumerate(const Enumerated &enumerated);
-};
+}; // class StoredEnum
 #endif // STOREDENUM_H

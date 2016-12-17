@@ -12,7 +12,7 @@
 
 int numIDs(const char *list){
   int num(0);
-  while(*list++){
+  while(*list++) {
     ++num;
   }
   return num;
@@ -20,27 +20,27 @@ int numIDs(const char *list){
 
 int ordinalOfID(const char* list, ID id){
   int i(0);
-  while(char thing=*list++){
-    if(thing==id){
+  while(char thing = *list++) {
+    if(thing==id) {
       return i;
     } else {
       ++i;
     }
   }
   return -1; //not found
+} // ordinalOfID
+
+HasSettings::HasSettings(const char *plist) ://
+  pMap(plist){
 }
 
-HasSettings::HasSettings(const char *plist)://
-  pMap(plist) {
-}
-
-void HasSettings::touch(ID /*ignored*/) {
+void HasSettings::touch(ID /*ignored*/){
   //in the absence of override touch the whole unit.
   also(true);
 }
 
-void HasSettings::suppressField(ID fieldID) {
-  if(fieldID=='*'){//added this to suppress useless emissions from qchardware.cpp
+void HasSettings::suppressField(ID fieldID){
+  if(fieldID=='*') {//added this to suppress useless emissions from qchardware.cpp
     pMap.queue.markAll(false);
     return;
   }
@@ -48,17 +48,17 @@ void HasSettings::suppressField(ID fieldID) {
   bit = 0;
 }
 
-void HasSettings::oobData(ID /*fieldId*/, CharFormatter &/*p*/) {
+void HasSettings::oobData(ID /*fieldId*/, CharFormatter & /*p*/){
   //#ignore.
 }
 
-void HasSettings::startOOBdata(CharFormatter &response) {
+void HasSettings::startOOBdata(CharFormatter &response){
   if(response.removeTerminator()) {
     response.next() = OOBmarker;
   }
 }
 
-bool HasSettings::blockCheck(HasSettings &desired, ID fieldID) {
+bool HasSettings::blockCheck(HasSettings &desired, ID fieldID){
   if(differs(desired)) {
     return post(fieldID);
   }
@@ -66,7 +66,7 @@ bool HasSettings::blockCheck(HasSettings &desired, ID fieldID) {
 }
 
 //overload if you can't print args, such as for spectra.
-bool HasSettings::printField(ID fieldID, CharFormatter &response, bool master) {
+bool HasSettings::printField(ID fieldID, CharFormatter &response, bool master){
   MessageArgs;
   response.printChar(fieldID);
   if(getParam(fieldID, args)) {
@@ -77,14 +77,14 @@ bool HasSettings::printField(ID fieldID, CharFormatter &response, bool master) {
   } else {
     return false;
   }
-}
+} // HasSettings::printField
 
-bool HasSettings::post(char fieldID) {
+bool HasSettings::post(char fieldID){
   return pMap.post(fieldID);
 }
 
-bool HasSettings::differs(const HasSettings &other)const {
-  for(Indexer<const char> fields(pMap.unitMap, pMap.quantity); fields.hasNext();) {
+bool HasSettings::differs(const HasSettings &other) const {
+  for(Indexer<const char> fields(pMap.unitMap, pMap.quantity); fields.hasNext(); ) {
     ID fieldID = fields.next();
     MessageArgs;
     MessageArgs2;
@@ -95,10 +95,10 @@ bool HasSettings::differs(const HasSettings &other)const {
     }
   }
   return false;
-}
+} // HasSettings::differs
 
-void HasSettings::copy(const HasSettings &other) {
-  for(Indexer<const char> fields(pMap.unitMap, pMap.quantity); fields.hasNext();) {
+void HasSettings::copy(const HasSettings &other){
+  for(Indexer<const char> fields(pMap.unitMap, pMap.quantity); fields.hasNext(); ) {
     ID fieldID = fields.next();
     MessageArgs;
     other.getParam(fieldID, args);
@@ -107,12 +107,12 @@ void HasSettings::copy(const HasSettings &other) {
   }
 }
 
-bool HasSettings::differed(const HasSettings &other) {
+bool HasSettings::differed(const HasSettings &other){
   copy(other);
   return wasModified();
 }
 
-bool HasSettings::parseArgstring(ArgSet &args, CharFormatter &p) {
+bool HasSettings::parseArgstring(ArgSet &args, CharFormatter &p){
   while(args.hasNext()) {
     double arg = p.parseDouble();
     if(!isSignal(arg)) { //#isnormal inconveniently excludes zero.
@@ -132,16 +132,16 @@ bool HasSettings::parseArgstring(ArgSet &args, CharFormatter &p) {
     }
   }
   return false;//should never get here. "more data than room for it"
-}
+} // HasSettings::parseArgstring
 
 ////////////
 
-GroupMapper::GroupMapper(const char *unitMap):
-  units(unitMap) {
+GroupMapper::GroupMapper(const char *unitMap) :
+  units(unitMap){
   lastReporter = 0; //units exists, but peer is null at this time.
 }
 
-ParamKey GroupMapper::nextReport() {
+ParamKey GroupMapper::nextReport(){
   OLM *scanner = lastReporter;
   ParamKey nexrep;//note: debugger display the address of this variable instead of its value.
   while(!(nexrep = scanner->nextReport())) {
@@ -157,9 +157,9 @@ ParamKey GroupMapper::nextReport() {
     lastReporter = scanner;
   }
   return nexrep;
-}
+} // GroupMapper::nextReport
 
-void GroupMapper::markAll(bool send) {
+void GroupMapper::markAll(bool send){
   for(OLM *scanner = units.peer; scanner; scanner = scanner->peer) {
     scanner->queue.markAll(send);
   }
@@ -169,18 +169,19 @@ void GroupMapper::markAll(bool send) {
 ////////////
 
 /** while it seems wasted effort to build a string that we are then going to pull apart, the textual frequency in the source code makes this sensible.*/
-bool Poster::postMessage(const char *twochar) {
+bool Poster::postMessage(const char *twochar){
   return postKey(ParamKey(twochar));
 }
+
 ///////////////
 
-SettingsGrouper::SettingsGrouper(const char *unitList):
-  grouper(unitList) {
+SettingsGrouper::SettingsGrouper(const char *unitList) :
+  grouper(unitList){
   //#subordinate units may not yet be constructed so this is too soon to init the lookup mechanism.
   imLinkMaster = false;
 }
 
-void SettingsGrouper::init() {
+void SettingsGrouper::init(){
   for(const char *scanner = grouper.units.unitMap; *scanner; ++scanner) {
     HasSettings *unit = unit4(ID(*scanner));
     if(!unit) {
@@ -193,9 +194,9 @@ void SettingsGrouper::init() {
     peer->init();
     grouper.link(*(peer->grouper.units.peer));//1st child of next group
   }
-}
+} // SettingsGrouper::init
 
-bool &SettingsGrouper::reportFor(const ParamKey &ID) {
+bool &SettingsGrouper::reportFor(const ParamKey &ID){
   static bool trashme;
   HasSettings *unit = unit4(ID.unit);
   if(unit) {
@@ -205,11 +206,11 @@ bool &SettingsGrouper::reportFor(const ParamKey &ID) {
 }
 
 /** @return scoreboard index for given field's report*/
-bool &SettingsGrouper::bitFor(const char *twochar) {
+bool &SettingsGrouper::bitFor(const char *twochar){
   return reportFor(ParamKey(twochar));
 }
 
-bool SettingsGrouper::printParam(CharFormatter &response, const ParamKey &Id, bool master) {
+bool SettingsGrouper::printParam(CharFormatter &response, const ParamKey &Id, bool master){
   HasSettings *unit = unit4(Id.unit, true);
   if(unit) {
     //maydo: a transactional buffer around response starting here.
@@ -220,11 +221,11 @@ bool SettingsGrouper::printParam(CharFormatter &response, const ParamKey &Id, bo
   }
 }
 
-bool SettingsGrouper::printReport(CharFormatter &response, const ParamKey &key) {
+bool SettingsGrouper::printReport(CharFormatter &response, const ParamKey &key){
   return printParam(response, key, imLinkMaster);
 }
 
-bool SettingsGrouper::getParam(const ParamKey &key,ArgSet &args) {
+bool SettingsGrouper::getParam(const ParamKey &key,ArgSet &args){
   if(HasSettings *unit = unit4(key.unit, true)) {
     return unit->getParam(key.field, args);
   } else {
@@ -232,7 +233,7 @@ bool SettingsGrouper::getParam(const ParamKey &key,ArgSet &args) {
   }
 }
 
-bool SettingsGrouper::postKey(const ParamKey &parm) {
+bool SettingsGrouper::postKey(const ParamKey &parm){
   HasSettings *unit = unit4(parm.unit);
   if(unit) {
     return unit->post(parm.field);
@@ -240,21 +241,21 @@ bool SettingsGrouper::postKey(const ParamKey &parm) {
   return false;
 }
 
-ParamKey SettingsGrouper::nextReport() {
+ParamKey SettingsGrouper::nextReport(){
   return grouper.nextReport();
 }
 
-void SettingsGrouper::sendAll(/*todo: const char*except*/) {
+void SettingsGrouper::sendAll(/*todo: const char*except*/){
   grouper.markAll();
 }
 
 const char * SettingsGrouper::stuff(const ParamKey &param, CharFormatter p){
-  HasSettings *unit= unit4(param.unit,false);
-  if(unit){
+  HasSettings *unit = unit4(param.unit,false);
+  if(unit) {
     MessageArgs;
     if(HasSettings::parseArgstring(args,p)) { //execute
       ArgSet clipped(args);
-      if(unit->setParam(param.field, clipped)){
+      if(unit->setParam(param.field, clipped)) {
         return 0;
       } else {
         return "bad fieldID";
@@ -265,13 +266,13 @@ const char * SettingsGrouper::stuff(const ParamKey &param, CharFormatter p){
   } else {
     return "bad unitID";
   }
-}
+} // SettingsGrouper::stuff
 
 const char * SettingsGrouper::stuff(const ParamKey &param, ArgSet &args){
-  HasSettings *unit= unit4(param.unit,false);
-  if(unit){
+  HasSettings *unit = unit4(param.unit,false);
+  if(unit) {
     ArgSet clipped(args);
-    if(unit->setParam(param.field, clipped)){
+    if(unit->setParam(param.field, clipped)) {
       return 0;
     } else {
       return "bad fieldID";
@@ -279,23 +280,23 @@ const char * SettingsGrouper::stuff(const ParamKey &param, ArgSet &args){
   } else {
     return "bad unitID";
   }
-}
+} // SettingsGrouper::stuff
 
 CharScanner &HasSettings::customReport(ID /*ignored*/) const {
   return CharScanner::Null;
 }
 
 //////////////////////////
-OLM &OLM::locate(ID code) {
+OLM &OLM::locate(ID code){
   prefix = code;
   return *this;
 }
 
-OLM::OLM(const char *unitMap):
+OLM::OLM(const char *unitMap) :
   unitMap(unitMap), //
   quantity(numIDs(unitMap)),//
 //  queue(new bool[quantity](), quantity * sizeof(bool)) {
-  queue(StaticBuffer(bool, quantity)) {
+  queue(StaticBuffer(bool, quantity)){
   prefix = 0;
 }
 
@@ -306,7 +307,7 @@ OLM::~OLM(){
 
 int OLM::lookup(char ch, int nemo) const {
   int ordinal = ordinalOfID(unitMap, ch);
-  return ordinal>=0 ? ordinal:nemo;
+  return ordinal>=0 ? ordinal : nemo;
 }
 
 int OLM::operator()(ID asciiId) const {
@@ -322,7 +323,7 @@ char OLM::operator[](unsigned index) const {
 }
 
 /** fieldID for next pending report, 0 for none*/
-ParamKey OLM::nextReport() {
+ParamKey OLM::nextReport(){
   int nexrep = queue.next();
   if(nexrep < 0) {
     return ParamKey();
@@ -330,4 +331,5 @@ ParamKey OLM::nextReport() {
     return ParamKey(prefix, encode(nexrep));
   }
 }
+
 ///////////////////

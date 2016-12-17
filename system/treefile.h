@@ -6,10 +6,10 @@
 
 class TreeFile {
 public:
-  Glib::ustring filename;
+  Ustring filename;
   Storable &root;
 
-  TreeFile(const Glib::ustring &fname, Storable &root);
+  TreeFile(const Ustring &fname, Storable &root);
   TreeFile(FileName &fname, Storable &root);
 
   bool parseTreeFile(void);
@@ -18,7 +18,7 @@ public:
   double svn();
   //diagnostic convenience: make a file from any sub-tree
   static bool dumpStorage(Storable&root, const char *location);
-};
+}; // class TreeFile
 
 /** build id of this binary */
 double svn();

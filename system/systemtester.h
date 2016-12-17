@@ -10,7 +10,7 @@ public:
   void testStorable(){
     Storable node("safely system library");
     node.child("a chld").setNumber(15.678);
-    printf("Stored: ",node.image().c_str());
+    printf("Stored: %s",node.image().c_str());
   }
 
 }; // class SystemTester

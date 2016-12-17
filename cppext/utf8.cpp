@@ -1,6 +1,9 @@
 #include "utf8.h"
 
-//placeholder, to force build for library.
+
+/** first byte tells you how many follow, number of leadings ones -2 FE and FF are both 5
+ *  subsequent bytes start with 0b10xx xxxx 80..BF, which are not legal single byte chars.
+ */
 
 
 bool UTF8::numAlpha() const {
@@ -24,7 +27,7 @@ int UTF8::numFollowers() const {
     return 4;
   }
   return 5;
-}
+} // UTF8::numFollowers
 
 int UTF8::numFollowers(u32 unichar){
   if(unichar < 0x80) {
@@ -34,22 +37,22 @@ int UTF8::numFollowers(u32 unichar){
   while(fieldMask(num * 6) < unichar) {
     ++num;
   }
-  return num-1; //don't include leading byte
+  return num - 1; //don't include leading byte
 }
 
 u8 UTF8::firstByte(u32 unichar, int followers){
   u8 acc(0xFC);//init for 5 followers
-  acc<<=(5-followers);
-  unichar >>= (6*followers);
+  acc <<= (5 - followers);
+  unichar >>= (6 * followers);
   return acc |= unichar;
 }
 
 u8 UTF8::nextByte(u32 unichar, int followers){
-  int shift = 6*followers;
+  int shift = 6 * followers;
   unichar >>= shift;
   unichar &= fieldMask(6);
-  unichar|=0x80;
-  return unichar;
+  unichar |= 0x80;
+  return static_cast<u8>(unichar);//# truncate to 8 bits.
 }
 
 bool UTF8::in(const char *tokens) const {

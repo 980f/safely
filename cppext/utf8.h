@@ -1,10 +1,17 @@
 #ifndef UTF8_H
 #define UTF8_H
 
-#include "eztypes.h"
+
+#include "eztypes.h"  //~stdint
+
+/** an int that can hold a UTF32 character
+ * replace Glib gunichar usages */
+typedef u32 Unichar;
+
 #include "cheapTricks.h" //isPresent
 #include "ctype.h"
 
+/** represents one byte of a UTF8 multibyte character, not to be confused with a Unicode character which is a 32 bit entity*/
 class UTF8 {
 public:
   char raw;
@@ -33,7 +40,7 @@ public:
 //    return raw;
 //  }
 
-  operator char(void)const{ //cuts down on compiler complaints, except in switches.
+  operator char(void) const { //cuts down on compiler complaints, except in switches.
     return raw;
   }
 
@@ -41,7 +48,7 @@ public:
 //    return raw != 0;
 //  }
 
-  /** numeric constant or enum name */
+  /** is allowed in numeric constant or enum name */
   bool numAlpha() const;
 
   bool isWhite() const {
@@ -67,6 +74,6 @@ public:
 
   bool in(const char *tokens) const;
 
-};
+}; // class UTF8
 
 #endif // UTF8_H
