@@ -3,9 +3,10 @@
 #include "interval.h"
 #include "settable.h" //argset
 
-/**intended for perfect cases such as analog to digital conversion.
-see LinearFit for calibration uses.*/
-class LinearMapping:public Settable {
+/** bilinear mapping, with transport handle.
+ * intended for perfect cases such as analog to digital conversion.
+ *  see LinearFit for gauge calibration uses.*/
+class LinearMapping : public Settable {
 public:
   LinearMapping();
 public:
@@ -14,22 +15,28 @@ public:
   Interval yaxis;
 public:
   LinearMapping& operator = (const LinearMapping &other);
-  /** x clamped then converted to y */
-  double y(double x) const ;
-  /** y clamped then converted to x */
-  double x(double y) const ;
-  double yraw(double x) const ;
-  double xraw(double y) const ;
-  bool seemsTrivial() const ;
-  void init(float ymax, float ymin, float xmax, float xmin);
+  /** @returns x clamped then converted to y */
+  double y(double x) const;
+  /** @returns y clamped then converted to x */
+  double x(double y) const;
 
-  int numParams()const{
-    return 2*xaxis.numParams();
+  /** @returns y(x) ignoring bounds */
+  double yraw(double x) const;
+  /** @returns x(y) ignoring bounds */
+  double xraw(double y) const;
+
+  bool seemsTrivial() const;
+  /** set for diagonal given by the parameters. */
+  void init(float ymax, float ymin, float xmax, float xmin);
+///////////// Settable ///////////////
+  int numParams() const {
+    return 2 * xaxis.numParams();
   }
+
 /** @returns whether settings are changed.*/
   bool setParams(ArgSet&args);
-  void getParams(ArgSet&args)const;
+  void getParams(ArgSet&args) const;
 
-};
+}; // class LinearMapping
 
 #endif // LINEARMAPPING_H

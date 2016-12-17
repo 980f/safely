@@ -13,8 +13,11 @@ protected: //
   char *str;
   bool owned;
 public:
-  Zstring(char *str, bool makeCopy=false);
-  Zstring(unsigned len=0);
+  /** if @param is makecopy then @see strdup is called and this class will free-on-delete */
+  Zstring(char *str, bool makeCopy = false);
+  /** allocate len+1 bytes and clear it, remember that we did the allocation and free on delete.*/
+  Zstring(unsigned len = 0);
+  ~Zstring();
   int len() const;
   char *chr(int chr) const;
 

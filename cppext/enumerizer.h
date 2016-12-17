@@ -1,19 +1,20 @@
 #ifndef ENUMERIZER_H
 #define ENUMERIZER_H
 
-#include "eztypes.h" //countof()
-#include "buffer.h"
 #include "textkey.h"
+#include "buffer.h"
 
-/** sketch of a textifer for an enum, not closely coupled at the moment.*/
-class Enumerizer : public Indexer <TextKey> {
+/** use an indexer to implement a text<->index mapping */
+class Enumerizer : public Indexer<TextKey> {
 public:
-  Enumerizer(const char **tokenSet, int numTokens);
+  Enumerizer(TextKey tokenSet[], int quantity);
   Enumerizer(const Enumerizer &other);
   TextKey token(unsigned ordinal) const;
   int ordinal(TextKey token) /*const */;
 };
 
+
+// *INDENT-OFF*   unbalanced braces in the macros piss off uncrustify
 //this goes into a header file
 #define ENUM(name) name ## _Text
 #define DECLARE_ENUM(name) extern Enumerizer name ## _Text;

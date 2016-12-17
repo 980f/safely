@@ -1,3 +1,4 @@
+# // *INDENT-OFF*
 # Uncrustify 0.64
 
 #
@@ -16,7 +17,7 @@ mod_full_brace_function         = ignore   # ignore/add/remove/force
 # Add or remove braces on single-line 'if' statement. Will not remove the braces if they contain an 'else'.
 mod_full_brace_if               = force   # ignore/add/remove/force
 
-#the next two true *removes* braces on simple one line if's 
+#the next two true *removes* braces on simple one line if's
 # Make all if/elseif/else statements in a chain be braced or not. Overrides mod_full_brace_if.
 # If any must be braced, they are all braced.  If all can be unbraced, then the braces are removed.
 mod_full_brace_if_chain         = false    # false/true
@@ -1680,7 +1681,7 @@ mod_remove_empty_return         = true    # false/true
 #
 
 # Try to wrap comments at cmt_width columns
-cmt_width                       = 132        # number
+cmt_width                       = 168        # number
 
 # Set the comment reflow mode (default: 0)
 # 0: no reflowing (apart from the line wrapping due to cmt_width)
@@ -1881,4 +1882,3 @@ warn_level_tabs_found_in_verbatim_string_literals = 2        # number
 #
 # option(s) with 'not default' value: 0
 #
-
