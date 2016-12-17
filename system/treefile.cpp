@@ -1,5 +1,5 @@
 #include <fstream>
-#include <giomm.h>
+//#include <giomm.h>
 #include "logger.h"
 #include "perftimer.h"
 #include "treefile.h"
@@ -13,43 +13,40 @@ using namespace Gio;
 using namespace Glib;
 using namespace std;
 
-TreeFile::TreeFile(const ustring &fname, Storable &root):
+TreeFile::TreeFile(const ustring &fname, Storable &root) :
   filename(fname),
-  root(root) {
+  root(root){
 }
 
-TreeFile::TreeFile(FileName &fname, Storable &root):
+TreeFile::TreeFile(FileName &fname, Storable &root) :
   filename(fname),
-  root(root) {
+  root(root){
 }
 
-bool TreeFile::parseTreeFile(void) {
+bool TreeFile::parseTreeFile(void){
   PerfTimer perf(ustring::compose("parse tree %1", filename).c_str());
   Filer file;
   if(file.openFile(filename.c_str(),O_RDONLY,false)) {
     if(file.readall(20000000)) {
       JsonStore parser(root);
       ByteScanner scanner(file.contents());
-      bool parsedok=parser.parse(scanner);
+      bool parsedok = parser.parse(scanner);
       root.wasModified();//to clear flags set by parsing;
       return parsedok;
-    }
-    else {
+    } else {
       dbg("Filename %s too big to be parsed.", filename.c_str());
       return false;
     }
-  }
-  else {
+  } else {
     dbg("Cannot open file <%s>.", filename.c_str());
     return false;
   }
 
 } /* parseTreeFile */
 
-
-bool TreeFile::printTree(bool blocking, bool debug) {
+bool TreeFile::printTree(bool blocking, bool debug){
   PerfTimer perf(ustring::compose("printTree %1", filename).c_str());
-  StoredReal(root("svnnumber"))=::svn();//update to current svn.
+  StoredReal(root("svnnumber")) = ::svn();//update to current svn.
   FileName temp_path("var/printTree.tmp");
   fstream fs(temp_path.c_str(), fstream::out);
   if(!fs) {
@@ -74,7 +71,7 @@ bool TreeFile::printTree(bool blocking, bool debug) {
   }
   root.wasModified();
   return true;
-}
+} // TreeFile::printTree
 
 double TreeFile::svn(){
   return StoredReal(root("svnnumber"));
@@ -87,9 +84,8 @@ bool TreeFile::dumpStorage(Storable&root, const char *location){
   return writer.printTree(false);
 }
 
-
-double svn() {
+double svn(){
   return
     #include "svnrevision.txt"
-      ;
+  ;
 }

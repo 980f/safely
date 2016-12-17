@@ -3,12 +3,12 @@
 using namespace std;
 using namespace Glib;
 
-Token::Token():
+Token::Token() :
   type(ERROR),
-  number() {
+  number(){
 }
 
-Token &Token::parseError(std::istream &is) {
+Token &Token::parseError(std::istream &is){
 //todo: abstract logger
   fprintf(stderr, "Parse error at %d\n", int(is.tellg()));
   type = ERROR;
@@ -16,7 +16,7 @@ Token &Token::parseError(std::istream &is) {
   return *this;
 }
 
-Token Token::getToken(istream &is) {
+Token Token::getToken(istream &is){
   Token token;
   char c;
 
@@ -78,7 +78,7 @@ Token Token::getToken(istream &is) {
           token.string += '\t';
           break;
         case 'u':
-          gunichar uc = 0;
+          Unichar uc = 0;
           for(int i = 0; i < 4; i++) {
             uc <<= 4;
             if(!is.good()) {
@@ -96,7 +96,7 @@ Token Token::getToken(istream &is) {
             }
           }
           token.string += uc;
-        }
+        } // switch
       } else {
         token.string += c;
       }
@@ -124,24 +124,24 @@ Token Token::getToken(istream &is) {
     }
     token.string.clear();//may drop this line so that unaltered numerical nodes can be written back out without infinitesmal changes due just to parsing.
     return token;
-  }
+  } // switch
   return token.parseError(is);
+} // Token::getToken
+
+TokenStream::TokenStream(istream &is) :
+  is(is){
 }
 
-TokenStream::TokenStream(istream &is):
-  is(is) {
-}
-
-SmartPtr< TokenStream > TokenStream::create(istream &is) {
+SmartPtr< TokenStream > TokenStream::create(istream &is){
   return SmartPtr< TokenStream >(new TokenStream(is));
 }
 
-Token TokenStream::get() {
+Token TokenStream::get(){
   next();
   return me;
 }
 
-SmartPtr< TokenStream > TokenStream::next() {
+SmartPtr< TokenStream > TokenStream::next(){
   if(!_next) {
     me = Token::getToken(is);
     _next = create(is);

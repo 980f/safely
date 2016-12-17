@@ -8,8 +8,8 @@
 static const char *whitespace = "\t\r ";
 static bool isWhite(int ch){
   //todo: unicode 'iswhite' trait
-  int undocumentedReturnValue = strchr(whitespace,ch);
-  return undocumentedReturnValue!= Glib::ustring::npos;//sadness, had to search the web to discover this magic info.
+  const char *which = strchr(whitespace,ch);
+  return which!=nullptr;
 }
 
 DelimitedInputStream::DelimitedInputStream(std::istream &s) :
@@ -22,7 +22,7 @@ DelimitedInputStream::DelimitedInputStream(std::istream &s) :
 
 bool DelimitedInputStream::trimTrailing(){
   while(s.good()) {
-    gunichar ch(s.get());
+    Unichar ch(s.get());
     if(ch==separator) {
       dstate = StartOfField;
       return true;
@@ -47,7 +47,7 @@ bool DelimitedInputStream::trimTrailing(){
 
 bool DelimitedInputStream::trimLeading(){
   while(s.good()) {
-    gunichar ch(s.get());
+    Unichar ch(s.get());
     if(ch==separator) {
       dstate = EmptyField;
       return true;
@@ -80,7 +80,7 @@ bool DelimitedInputStream::endl(){
     return true; //already there.
   }
   while(s.good()) {
-    gunichar ch(s.get());
+    Unichar ch(s.get());
     if(ch=='\n') {
       dstate = EndOfLine;
       return true;

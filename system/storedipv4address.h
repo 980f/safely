@@ -4,11 +4,11 @@
 #include "storable.h"
 #include "storednumeric.h"
 
-#include "glibmm/ustring.h"
+#include "ustring.h"
 
 /** stored IP address.
-  initially only supports dotted decimal, does not locally do DNS
-*/
+ *  initially only supports dotted decimal, does not locally do DNS
+ */
 
 class StoredIPV4Address : public Stored {
   void makeNumber();
@@ -20,7 +20,7 @@ public:
   /** the dotted decimal representation of this address/*/
   StoredLabel dotted;
   /** @returns dotted decimal text given resolved address */
-  static Glib::ustring dotstring(u32 ipv4);
-};
+  static Ustring dotstring(u32 ipv4);
+}; // class StoredIPV4Address
 
 #endif // STOREDIPV4ADDRESS_H

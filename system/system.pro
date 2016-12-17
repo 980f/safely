@@ -22,13 +22,10 @@ SOURCES += systemtester.cpp \
     delimitedinputstream.cpp \
     delimitingoutputstream.cpp \
     dyndeterminator.cpp \
-    jsonstore.cpp \
-    kanjidic.cpp \
     linearfilter.cpp \
     logger.cpp \
     matrixinverter.cpp \
     measure.cpp \
-    networkscanner.cpp \
     numberformatter.cpp \
     perftimer.cpp \
     stopwatch.cpp \
@@ -42,9 +39,9 @@ SOURCES += systemtester.cpp \
     storedsettable.cpp \
     textkey.cpp \
     textpointer.cpp \
-    tokenstream.cpp \
     treefile.cpp \
-    peakfindrecords.cpp
+    peakfindrecords.cpp \
+    gatedsignal.cpp
 
 HEADERS += systemtester.h \
     cachedindextostored.h \
@@ -64,7 +61,6 @@ HEADERS += systemtester.h \
     networkscanner.h \
     numberformatter.h \
     perftimer.h \
-    smartptr.h \
     stopwatch.h \
     storable.h \
     storageexporter.h \
@@ -81,7 +77,8 @@ HEADERS += systemtester.h \
     treefile.h \
     watchable.h \
     peakfindrecords.h \
-    sigcuser.h
+    sigcuser.h \
+    gatedsignal.h
 
 unix: CONFIG += link_pkgconfig
 unix: PKGCONFIG += sigc++-2.0

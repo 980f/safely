@@ -13,14 +13,17 @@
 #include "logger.h"
 #include "numberformatter.h"
 #include "sigcuser.h"
+#include "gatedsignal.h"
+
 #include "textpointer.h"
 
-//class used for keys
+//class used for keys, copies but doesn't support editing.
 typedef TextPointer NodeName;
+
 
 #if UseGlib
 //#include "channel.h"
-//#include "gatedsignal.h"
+
 #endif
 
 /**
@@ -112,7 +115,7 @@ public:
   // functions that apply to all types
   // getters and setters
   /** @returns untyped pointer to this, handy for gui access.*/
-  gpointer raw();
+  void * raw();
   /** @return whether the type actually changed */
   bool setType(Type newtype);
   Type getType() const;
@@ -129,9 +132,9 @@ public:
   // more involved functions
   bool wasModified();
   /** @return number of changes */
-  int listModified(sigc::slot<void, Glib::ustring> textViewer) const;
+  int listModified(sigc::slot<void, Ustring> textViewer) const;
 
-  Glib::ustring fullName() const;
+  Ustring fullName() const;
   /** the index is often not meaningful, but always is valid. It is -1 for a root node.*/
   int ownIndex() const {
     return index;
@@ -195,11 +198,11 @@ public:
 
   // functions that apply to text
   void setImageFrom(const char *value, Quality quality = Edited);
-  void setImage(const Glib::ustring &value, Quality quality = Edited);
-  Glib::ustring image(void) const;
-  void setDefault(const Glib::ustring &value);
+  void setImage(const Ustring &value, Quality quality = Edited);
+  Ustring image(void) const;
+  void setDefault(const Ustring &value);
   /** @return whether text value of node textually equals @param zs (at one time a null terminated string) */
-  bool operator ==(const Glib::ustring &zs);
+  bool operator ==(const Ustring &zs);
 
   /** @returns number of child nodes. using int rather than size_t to reduce number of casts required */
   int numChildren() const { //useful with array-like nodes.
@@ -249,7 +252,7 @@ public:
   /** remove a child of the wad, only makes sense for use with StoredGroup (or legacy cleanup) */
   bool remove(int which);
   bool removeChild(Storable &node);
-  //  bool removeChild(const Glib::ustring &name);
+  //  bool removeChild(const Ustring &name);
 
   /** remove all children */
   void filicide();
@@ -268,7 +271,7 @@ private:
 
 
 /** usage as filter: sigc::bind(&byName, sigc::ref(name)) */
-template<class Groupie> bool byName(const Glib::ustring &name, const Groupie & /*child*/, const Glib::ustring &seeking){
+template<class Groupie> bool byName(const Ustring &name, const Groupie & /*child*/, const Ustring &seeking){
   return name == seeking;
 }
 
@@ -344,11 +347,11 @@ public:
   void markTrivial();
 
   /** @return type-free pointer to underlying storage node, handy for gui builder.*/
-  gpointer raw() const {
-    return static_cast<gpointer>(&node);
+  void *raw() const {
+    return static_cast<void *>(&node);
   }
 
-  Glib::ustring image() const {
+  Ustring image() const {
     return node.image();
   }
 
@@ -369,23 +372,23 @@ public:
 
 class StoredLabel : public Stored {
 public:
-  StoredLabel(Storable &node, const Glib::ustring &fallback = Glib::ustring());
-  void setDefault(const Glib::ustring &deftext);
+  StoredLabel(Storable &node, const Ustring &fallback = Ustring());
+  void setDefault(const Ustring &deftext);
   const char *c_str() const;
   //this cast operator created "ambiguous overload" due to the various operator == methods.
   //  operator const char *() const{
   //    return c_str();
   //  }
-  Glib::ustring toString() const;
-  operator Glib::ustring() const {
+  Ustring toString() const;
+  operator Ustring() const {
     return toString();
   }
 
   bool isTrivial() const;
   void operator =(const StoredLabel &other);
   bool operator ==(const StoredLabel &other) const;
-  void operator =(const Glib::ustring &zs);
-  bool operator ==(const Glib::ustring &zs) const;
+  void operator =(const Ustring &zs);
+  bool operator ==(const Ustring &zs) const;
   void operator =(const char *zs);
   bool operator ==(const char *zs) const;
 
@@ -666,7 +669,7 @@ public:
   }
 
   /** caller better be damned sure the row is the storage node of a Groupie from this group.*/
-  void removeAnonymously(gpointer node){
+  void removeAnonymously(void * node){
     remove(ordinalOf(*static_cast<Storable *>(node)));
   }
 
@@ -787,7 +790,7 @@ public:
   }
 
   /** @deprecated need to get rid of these as they generate warnings:*/
-  void forEach(const sigc::slot<void, const Glib::ustring &, const Groupie &, int> &action) const {
+  void forEach(const sigc::slot<void, const Ustring &, const Groupie &, int> &action) const {
     ForValues(list){
       Groupie &item(list.next());
 

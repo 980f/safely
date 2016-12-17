@@ -6,8 +6,8 @@ const char *JsonStore::Lexer::separator(":,{}[]"); //maydo: bare newline is a co
 #define CEscape(ch) replace(pointer - 1, 2, 1, ch )  //may be off by one
 
 /** consumes bytes from string to get a hex constant. Bytes are NOT removed.
-  * *@param pointer points to first char after last hex char. read code for failure cases.
-  */
+ * *@param pointer points to first char after last hex char. read code for failure cases.
+ */
 u32 parseHex(unsigned pointer, const std::string&image, int numDigits){
   if(pointer + numDigits <= image.length()) {
     u32 packed(0);
@@ -83,19 +83,18 @@ void processEscapes(std::string&tokenImage){
       case 'u': {
         replaceUEscape(tokenImage, ++pointer, 4);
       }
-        break;
+      break;
       case 'U': { //same as little u but with 8 chars
         //          u32 packed(parseHex(pointer,tokenImage,8));
         //todo:0 see little u and do the same thing here
       }
-        break;
+      break;
       } // switch
     }
   }
 } // processEscapes
 
-
-JsonStore::Lexer::Lexer(JsonStore::Parser&parser): parser(parser){
+JsonStore::Lexer::Lexer(JsonStore::Parser&parser) : parser(parser){
   start();
 }
 
@@ -105,8 +104,8 @@ void JsonStore::Lexer::start(){
   state = PreWhite;
 }
 
-JsonStore::JsonStore(Storable&rootNode): parser(rootNode), lexer(parser)
-{}
+JsonStore::JsonStore(Storable&rootNode) : parser(rootNode), lexer(parser){
+}
 
 bool JsonStore::parse(ByteScanner&is){
   while(is.hasNext()) {
@@ -169,8 +168,7 @@ void JsonStore::Lexer::accept(char ch){
   } // switch
 } // accept
 
-
-JsonStore::Parser::Parser(Storable&rootNode): notStarted(true), node(&rootNode){
+JsonStore::Parser::Parser(Storable&rootNode) : notStarted(true), node(&rootNode){
   //#nada
 }
 
@@ -220,21 +218,21 @@ bool JsonStore::Parser::acceptToken(std::string&tokenImage, UTF8 term){
   //if value (comma or end brace) then NOW we process \ escapes.
   //and then create a child with the name ...
   // ... and processed value.
-  //maydo: recognize the the text is that of a number and make the node a number here. If not then Storable itself will need to do the conversion when someone access a Text number with a number accessor. Legacy says we should do it here.
+  //maydo: recognize the the text is that of a number and make the node a number here. If not then Storable itself will need to do the conversion when someone access a
+  // Text number with a number accessor. Legacy says we should do it here.
 } // acceptToken
 
 ///////////////////////
 
 
-JsonStore::Printer::Printer(Storable&node, std::ostream&os): tablevel(0), os(os), node(&node)
-{}
+JsonStore::Printer::Printer(Storable&node, std::ostream&os) : tablevel(0), os(os), node(&node){
+}
 
 void JsonStore::Printer::indent(){
   for(int tabs = tablevel; tabs-- > 0; ) {
     os << '\t'; //or we could use spaces
   }
 }
-
 
 //this macro did not compile.
 #define CSLASH( slasher )  case '\## slasher ##': os << # slasher; continue
@@ -249,15 +247,15 @@ void JsonStore::Printer::printText(const char *p, bool forceQuote){
     case '\t': os << "\\t"; continue;
     case '\r': os << "\\r"; continue;
     case '\n': os << "\\n"; continue;
-      //more C slashes later, if we can get a macro to work.
+    //more C slashes later, if we can get a macro to work.
     case '"':  os << "\\\""; continue;
     case '\\': os << "\\\\"; continue;
 
     }
     if(c.isMultibyte()) {
-      if(0){//1:suppress generating unicode escapes
+      if(0) {//1:suppress generating unicode escapes
         os << c;
-        for(int i = c.numFollowers(); i >0; --i){
+        for(int i = c.numFollowers(); i >0; --i) {
           os << *p++;
         }
         continue;
@@ -269,7 +267,7 @@ void JsonStore::Printer::printText(const char *p, bool forceQuote){
       mask &= c.raw;
       packer |= mask; //pick bits from utf lead byte
       while(numf-- > 0) {
-        if(c==0){
+        if(c==0) {
           if(forceQuote) {
             os << '"';
           }
@@ -289,16 +287,16 @@ void JsonStore::Printer::printText(const char *p, bool forceQuote){
         os << "\\u";
         for(int digit = 4; digit-- > 0; ) {
           int nibble = (packer >> (digit * 4)) & 0xF;
-          os << static_cast <char> ((nibble < 10) ? ('0' + nibble) : ('A' - 10 + nibble));
+          os << static_cast<char>((nibble < 10) ? ('0' + nibble) : ('A' - 10 + nibble));
         }
       } else {
         os << "\\U";
         for(int digit = 8; digit-- > 0; ) {
           int nibble = (packer >> (digit * 4)) & 0xF;
-          os << static_cast <char> ((nibble < 10) ? ('0' + nibble) : ('A' - 10 + nibble));
+          os << static_cast<char>((nibble < 10) ? ('0' + nibble) : ('A' - 10 + nibble));
         }
       }
-    }  else {
+    } else {
       os << c.raw;
     }
   }
@@ -319,13 +317,12 @@ bool JsonStore::Printer::printName(){
     os << ':';
     return true;
   }
-}
-
+} // JsonStore::Printer::printName
 
 void JsonStore::Printer::printWad(){
   os << '{' << std::endl;
   ++tablevel;
-  ChainScanner <Storable> scanner(node->kinder());
+  ChainScanner<Storable> scanner(node->kinder());
   while(scanner.hasNext()) {
     node = &scanner.next();
     if(printValue()) { //if node actual was emitted into the output stream
@@ -340,7 +337,6 @@ void JsonStore::Printer::printWad(){
   indent();
   os << '}';
 } /* printWad */
-
 
 bool JsonStore::Printer::printValue(){
   if(!node) { //COA
@@ -364,7 +360,7 @@ bool JsonStore::Printer::printValue(){
 
   case Storable::Numerical: {
     printName();
-    double number = node->getNumber <double> ();
+    double number = node->getNumber<double>();
     //todo:1 output nans as keyword
     if(int(number) == number) {
       os << int(number); //makes small numbers more readable.
@@ -374,7 +370,7 @@ bool JsonStore::Printer::printValue(){
       os << number; //high precision must be set by the creator of the os.
     }
   }
-    break;
+  break;
 
   case Storable::Textual:
     printName();
@@ -392,7 +388,7 @@ bool JsonStore::Printer::printValue(){
 
 #if 0
 
-void parseEscapedString(Glib::ustring&utf8, CharScanner&encoded){
+void parseEscapedString(Ustring&utf8, CharScanner&encoded){
   while(encoded.hasNext()) {
     char c = encoded.next();
     if(c == '\\') {
@@ -426,7 +422,7 @@ void parseEscapedString(Glib::ustring&utf8, CharScanner&encoded){
         token.string += '\t';
         break;
       case 'u':
-        gunichar uc = 0;
+        Unichar uc = 0;
         for(int i = 0; i < 4; i++) {
           uc <<= 4;
           if(!is.good()) {
@@ -451,13 +447,11 @@ void parseEscapedString(Glib::ustring&utf8, CharScanner&encoded){
   }
 } // parseEscapedString
 
-
-JsonStore::JsonStore()
-{}
-
+JsonStore::JsonStore(){
+}
 
 /** @returns next non-white character, modifying @param is to point past it.*/
-static UTF8 findNext(Sequence <char>&is){
+static UTF8 findNext(Sequence<char>&is){
   while(is.hasNext()) {
     UTF8 ch = is.next();
     if(!ch.isWhite()) {
@@ -467,7 +461,7 @@ static UTF8 findNext(Sequence <char>&is){
   return 0; //error
 }
 
-UTF8 JsonStore::parseValue(Storable&parent, LatentSequence <char>&is){
+UTF8 JsonStore::parseValue(Storable&parent, LatentSequence<char>&is){
   UTF8 ch = findNext(is);
 
   switch(int(ch)) {
@@ -483,15 +477,14 @@ UTF8 JsonStore::parseValue(Storable&parent, LatentSequence <char>&is){
       q = Parsed;
     }
     return ch;
-    //todo:3 case '<': embedded file, seek ending '>' and then open file and parse it.
+  //todo:3 case '<': embedded file, seek ending '>' and then open file and parse it.
 
   case '}':
     //could perhaps deal with nominally illegal trailing comma here instead of where it is now.
     return ch;
-  case '{':
-  {
+  case '{': {
     parent.addChild()
-    }
+  }
     type = Wad;
     return parseWad(is);
 
@@ -538,9 +531,9 @@ UTF8 JsonStore::parseValue(Storable&parent, LatentSequence <char>&is){
       q = Errorneous;
       return cleanEOL(ch, is);
     }
-  {
-    return cleanEOL(0, is); //attempt resync.
-  }
+    {
+      return cleanEOL(0, is); //attempt resync.
+    }
   } /* switch */
 } /* parseValue */
 
@@ -549,7 +542,7 @@ UTF8 JsonStore::parseValue(Storable&parent, LatentSequence <char>&is){
 #if 0
 
 
-UTF8 Storable::findNext(Sequence <char>&is){
+UTF8 Storable::findNext(Sequence<char>&is){
   while(is.hasNext()) {
     UTF8 ch = is.next();
     if(!ch.isWhite()) {
@@ -559,8 +552,7 @@ UTF8 Storable::findNext(Sequence <char>&is){
   return 0; //error
 }
 
-
-UTF8 Storable::parseWad(LatentSequence <char>&is){
+UTF8 Storable::parseWad(LatentSequence<char>&is){
   UTF8 term;
 
   type = Wad;
@@ -592,7 +584,7 @@ UTF8 Storable::parseWad(LatentSequence <char>&is){
 } /* parseWad */
 
 //not called until after a leading '"' has been scarfed up.
-UTF8 Storable::parseText(CharScanner&text, Sequence <char>&is, char endQuote){
+UTF8 Storable::parseText(CharScanner&text, Sequence<char>&is, char endQuote){
   UTF8 ch;
 
   while(is.hasNext()) {
@@ -641,7 +633,7 @@ void Storable::parseLogical(bool truth){
 } /* parseLogical */
 
 //returns char that stopped the parsing
-UTF8 Storable::parseValue(LatentSequence <char>&is){
+UTF8 Storable::parseValue(LatentSequence<char>&is){
   UTF8 ch = findNext(is);
 
   switch(int(ch)) {
@@ -677,7 +669,7 @@ UTF8 Storable::parseValue(LatentSequence <char>&is){
       q = Parsed;
     }
     return ch;
-    //todo:3 case '<': embedded file, seek ending '>' and then open file and parse it.
+  //todo:3 case '<': embedded file, seek ending '>' and then open file and parse it.
   case ',':
     if(name.isBlank()) { //fixing legacy trash, isolated comma
       return parseValue(is); //cheap loopback, trying to make this field disappear
@@ -721,19 +713,18 @@ UTF8 Storable::parseValue(LatentSequence <char>&is){
       q = Errorneous;
       return cleanEOL(ch, is);
     }
-  {
-    return cleanEOL(0, is); //attempt resync.
-  }
+    {
+      return cleanEOL(0, is); //attempt resync.
+    }
   } /* switch */
 } /* parseValue */
 
-UTF8 Storable::cleanEOL(UTF8 ch, LatentSequence <char>&is){
+UTF8 Storable::cleanEOL(UTF8 ch, LatentSequence<char>&is){
   if(ch.isWhite()) {
     ch = findNext(is); //stifle false alarm on last member of block.
   }
   return ch;
 }
-
 
 static void tabit(int tablevel, std::ostream&os){
   for(int tabs = tablevel; tabs-- > 0; ) {
@@ -753,7 +744,7 @@ void Storable::printText(std::ostream&os, CharFormatter&textish){
     case '\\':
     case '\"':
       os << '\\';
-      // fallthrough
+    // fallthrough
     default:
       os << *p;
       break;
@@ -882,9 +873,5 @@ bool TreeFile::printTree(){
     return false;
   }
 } /* printTree */
-
-
-
-
 
 #endif // if 0

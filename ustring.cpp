@@ -12,6 +12,6 @@ Ustring::Ustring(const Ustring &other){
 
 }
 
-char *Ustring::cstr(){
+char *Ustring::c_str() const {
   return nullptr;
 }
