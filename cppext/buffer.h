@@ -9,27 +9,35 @@
 /**
  *  This class is used to prevent buffer overflows.
  *  Instances are passed a pointer to a buffer and its length and provide pointer-like syntax for modifying and accessing said
- * buffer, but won't incremented the pointer outside the allocated range.
+ * buffer, but won't increment the pointer outside the allocated range.
  *  This class does not CONTAIN the data, it is a pointer into data allocated elsewhere.
  *
+ *  There are two major modalities of use, writing and reading.
  *
- *  todo: many of the functions were named for first use, not how they work. As such the names eventually did not match other
- * usages.
+ *  Writing starts with the pointer at zero and stuff is added until done or the pointer is at the end of allocation.
+ *  One then uses the copy constructor to create a reader, with the pointer at zero and its allocation where the writer's pointer ended.
+ *  Copy constructing a reader from another reader to get two pointers into the same content is done by using the copy constructor with justContent=false.
+ *  A parser with lookahead is an example of why you would do that.
+ *
+ *
+ *  todo: many of the functions were named for first use, not how they work. As such the names eventually did not match other usages.
  *  todo: C++11 and C++14 iterator and lambda helpers.
  *  todo: const versions of some methods.
  *
  * Thing stuff[7];
- * Indexer<Thing> index(stuff, sizeof(stuff));//computes item length in constructor
- * usage:
- * for(index.rewind();index.hasNext();){//no rewind needed if index isn't used between creation and this loop
- *   Thing &scan= index.next();
+ * Indexer<Thing> index(stuff, sizeof(stuff));//note sizeof, not countof.
+ *
+ * while(newstuffIncoming()&&index.hasNext()){
+ *   Thing &fill= index.next();
+ *   fill.load(newestuff);
+ * }
+ *
+ * Indexer<Thing> scanner(index); //default args are to make a reader from a writer
+ * for(scanner.rewind();scanner.hasNext();){//no rewind needed if index isn't used between creation and this loop
+ *   Thing &scan= scanner.next(); //creating a local reference isn't always needed ...
  *   scan.dickWithIt();
  * }
  *
- * //often this is all you will do:
- * for(Indexer<Thing> index(stuff, sizeof(stuff));index.hasNext();){
- *  index.next().dickWithIt();
- * }
  */
 
 template<typename Content> class CircularIndexer;  //so we can cyclically access a subset of one of the following.
@@ -39,7 +47,7 @@ template<typename Content> class Indexer : public LatentSequence<Content>, publi
 protected:
   Content *buffer;
 private:
-  /** copy @param qty from start of source to end of this */
+  /** copy @param qty from start of source to end of this. This is a raw copy, no new objects are created */
   void catFrom(Indexer<Content> &source, unsigned qty){
     if(stillHas(qty) && qty <= source.used()) {
       copyObject(&source.peek(), &peek(), qty * sizeof(Content));
@@ -49,33 +57,26 @@ private:
   }
 
 public:
+  /** make a useless one */
   Indexer(void) : Ordinator(0),
     buffer(0){
     //#nada
   }
 
-  /** 1st arg is const'ed even though the class doesn't guarantee that it won't hand out a pointer to an element later, user
-   * beware*/
-  //#below: truncating divide, omit attempt to have partial last element.
-  Indexer(Content *wrapped, unsigned int sizeofBuffer, bool wrap = false) : Ordinator(sizeofBuffer / sizeof(Content), wrap ? -1 /*-1:
-                                                                                                                                 * key
-                                                                                                                                 * value
-                                                                                                                                 * for
-                                                                                                                                 * 'same
-                                                                                                                                 * as
-                                                                                                                                 * length'*/: 0),
-    buffer(wrapped){
+  /** 1st arg is const'ed even though the class doesn't guarantee that it won't hand out a pointer to an element later, user beware*/
+  //#below: truncating divide, omit attempt to have partial last element.  /*-1: key value for 'same as length'*/
+  Indexer(Content *wrapped, unsigned int sizeofBuffer, bool wrap = false) : Ordinator(sizeofBuffer / sizeof(Content), wrap ? -1 : 0), buffer(wrapped){
     //#nada
   }
 
   /* if @param content is true then the new indexer covers just the data before the old one's pointer minus the clip value,
    * some would call that a left subset of the used part.
-   * else if  it covers the old one's allocated range truncated by the clip value (left subset of allocated)*/
+   * else if it covers the old one's allocated range truncated by the clip value (left subset of allocated)*/
   Indexer(const Indexer &other, bool justContent = true, unsigned int clip = 0) : Ordinator((justContent ? other.pointer : other.length) - clip),
     buffer(other.buffer){
   }
 
-  /** reworks this one to be active region of @param other.
+  /** reworks this one to be used region of @param other.
    *   carefully implemented so that idx.snap(idx) works sensibly.*/
   void snap(const Indexer &other){
     buffer = other.buffer;
@@ -83,7 +84,14 @@ public:
     pointer = 0;
   }
 
-  /** substring starting from present pointer, if requested length overruns end of buffer return value is truncated */
+  /** reduce length to be that used and reset pointer.
+   * useful for converting from a write buffer to a read buffer, but note that the original buffer size is lost.*/
+  void freeze(){
+    snap(*this);
+  }
+
+  /** substring starting from present pointer, if requested length overruns end of buffer return value is truncated.
+   * This does not 'new' anything, the compiler hopefully can skip the implied copy  */
   Indexer<Content> subset(unsigned fieldLength,bool removing = true){
     int length = lesser(fieldLength,freespace());
     Indexer<Content> sub(&peek(),length);
@@ -91,17 +99,6 @@ public:
       skip(length);
     }
     return sub;
-  }
-
-  /** reduce length to be that used and reset pointer.
-   * useful for converting from a write buffer to a read buffer, but note that the original buffer dimensions is lost.*/
-  void freeze(){
-    snap(*this);
-  }
-
-  /** number of bytes in object, ignores pointer */
-  int allocated() const {
-    return length;
   }
 
   /** forget present buffer and record start and length of some other one. */
@@ -174,6 +171,16 @@ public:
     }
   }
 
+  /** number of bytes in object, ignores pointer */
+  int allocated() const {
+    return length;
+  }
+
+  /** @return index of next which is typically the same as the number of times 'next()' has been called*/
+  unsigned int used(void) const {
+    return ordinal();
+  }
+
   //publish parts of ordinator:
   bool hasNext(void){
     return Ordinator::hasNext();
@@ -206,7 +213,7 @@ public:
     return buffer[pointer < length ? pointer : length - 1];
   }
 
-  /** you should avoid using this for anything except diagnostics*/
+  /** you should avoid using this value for anything except diagnostics, it allows you to bypass the bounds checking which is the reason for existence of this class. */
   Content *internalBuffer(void) const {
     return buffer;
   }
@@ -214,11 +221,6 @@ public:
   /** @return current object ('s reference), rigged for sensible behavior when buffer is used circularly*/
   Content &peek(void){
     return buffer[pointer < length ? pointer : 0];
-  }
-
-  /** @return index of next which is typically the same as the number of times 'next()' has been called*/
-  unsigned int used(void) const {
-    return ordinal();
   }
 
   /**@return reference to item most likely delivered by last call to next()*/
@@ -230,6 +232,7 @@ public:
     return previous();
   }
 
+  /** undo last next, undo at zero is still at 0. */
   void unget(void){
     Ordinator::rewind(1);
   }
@@ -251,7 +254,10 @@ public:
     return *this;
   }
 
-  /** only safe to call with Content that tolerates 'operator='*/
+  /** if next() has been called at least once then replace the item that next() return with the given one.
+   * this is only safe to call with Content that tolerates 'operator='
+   *  if the pointer is at the end then the last item gets clobbered.
+   */
   void replacePrevious(Content &item){
     if(hasPrevious()) {
       buffer[pointer - 1] = item;
@@ -298,6 +304,8 @@ public:
 
 #define BytesOf(thingy) IndexBytesOf(, thingy)
 
+// iterate. todo: replce with C++11/14 stuff.
 #define ForIndexed(classname, indexer) for(Indexer<classname> list(indexer); list.hasNext(); )
+
 
 #endif // bufferH

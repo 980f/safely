@@ -1,17 +1,18 @@
 #include "enumerizer.h"
 
 
-Enumerizer::Enumerizer(const char **tokenSet, int numTokens): Indexer <TextKey> (tokenSet, numTokens){
-  dump();//so that token() works.
+Enumerizer::Enumerizer(TextKey tokenSet[], int quantity) : Indexer<TextKey>(tokenSet, quantity){
+  dump();//so that token() works, the constructor of the Indexer indicates all are empty but we know that none are.
 }
 
-Enumerizer::Enumerizer(const Enumerizer &other):Indexer <TextKey> (other,false){
+Enumerizer::Enumerizer(const Enumerizer &other) : Indexer<TextKey>(other,false){
   //#always want the entire allocation regardless of state of other
   //#no dump() since we usually do this to get an iterator over the enum.
 }
 
 const char *Enumerizer::token(unsigned ordinal) const {
-  if(canContain(ordinal)) {//changed to not allow short-sheeting of the enum since the gui stuff is insisting on copying enums at unpredictable times (and hence I can't slip in the fix to call dump()
+  if(canContain(ordinal)) {//changed to not allow short-sheeting of the enum since the gui stuff is insisting on copying enums at
+                           // unpredictable times (and hence I can't slip in the fix to call dump()
     return buffer[ordinal];
   }
   return "Undefined";
@@ -27,4 +28,5 @@ int Enumerizer::ordinal(const char *token){
   }
   return -1;
 } /* ordinal */
+
 //end of file
