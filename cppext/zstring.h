@@ -31,8 +31,9 @@ public:
   bool operator == (const Zstring &rhs) const;
 
 
-  //syntactic sugar for use in replacing std::string and similar classes
-  char *cstr() const;
+  /** syntactic sugar for use in replacing std::string and similar classes
+  The value returned here should not be retained, it might get freed */
+  char *c_str() const;
 
   /** for when you know this was pointing to a malloc'd string and you wish to free it. Nulls internal pointer to prevent use-after-free's */
   void free();

@@ -21,7 +21,7 @@ Zstring::Zstring(unsigned len) : str(static_cast<char *>(calloc(len + 1,1))),own
   }
 }
 
-/** use free() method to reduce impact of some using this after deleted. */
+/** uses free() method to [reduce impact/make uniform crash out] of someone using this after deleted. */
 Zstring::~Zstring(){
   if(owned) {
     free();
@@ -40,14 +40,15 @@ char *Zstring::chr(int chr) const {
   }
 }
 
+/** attempt to match the reasoning of the @see same() function with respect to comparing null strings and empty strings */
 int Zstring::cmp(const char *rhs) const {
   if(str) {
     if(rhs) {
       return strcmp(str,rhs);
-    } else {
+    } else {//rhs is nullptr
       return *str ? 1 : 0;
     }
-  } else {
+  } else {//this is nullptr
     return nonTrivial(rhs) ? -1 : 0;
   }
 } // Zstring::cmp
