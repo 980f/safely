@@ -29,11 +29,11 @@ Zstring::~Zstring(){
 }
 
 int Zstring::len() const {
-  return str ? static_cast<int>(strlen(str)) : 0;
+  return notNull() ? static_cast<int>(strlen(str)) : 0;
 }
 
 char *Zstring::chr(int chr) const {
-  if(str) {
+  if(notNull()) {
     return strchr(str,chr);
   } else {
     return nullptr;
@@ -42,7 +42,7 @@ char *Zstring::chr(int chr) const {
 
 /** attempt to match the reasoning of the @see same() function with respect to comparing null strings and empty strings */
 int Zstring::cmp(const char *rhs) const {
-  if(str) {
+  if(notNull()) {
     if(rhs) {
       return strcmp(str,rhs);
     } else {//rhs is nullptr
@@ -54,14 +54,38 @@ int Zstring::cmp(const char *rhs) const {
 } // Zstring::cmp
 
 bool Zstring::operator ==(const char *rhs) const {
-  return same(str,rhs);
+  return notNull() && same(str,rhs);
+}
+
+void Zstring::clear()
+{
+  if(this!=nullptr){
+    if(owned){
+      free();
+    } else {
+      str=nullptr;
+    }
+  }
+}
+
+Zstring &Zstring::copy(const Zstring &other){
+  if(notNull()){
+    clear();
+    if(nonTrivial(other.str)){
+      str=strdup(other.str);
+      owned=str!=nullptr;
+    }
+  }
+  return *this;
 }
 
 char *Zstring::c_str() const {
-  return str;
+  return notNull()?str:nullptr;
 }
 
 void Zstring::free(){
-  ::free(str);
-  str = nullptr;
+  if(notNull()){
+    ::free(str);
+    str = nullptr;
+  }
 }

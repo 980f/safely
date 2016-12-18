@@ -3,7 +3,7 @@
 
 #include "storable.h"
 #include "settable.h"
-#include "hasSettings.h"
+#include "hassettings.h"
 
 template<class SettableClass> class StoredSettable : public Stored  {
 public:
