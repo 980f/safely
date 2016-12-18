@@ -37,7 +37,6 @@ SOURCES += systemtester.cpp \
     storednumeric.cpp \
     storedrange.cpp \
     storedsettable.cpp \
-    textkey.cpp \
     textpointer.cpp \
     treefile.cpp \
     peakfindrecords.cpp \

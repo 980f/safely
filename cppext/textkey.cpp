@@ -6,7 +6,6 @@ bool nonTrivial(const TextKey t){
   return t != nullptr && *t != 0;
 }
 
-
 bool same(const TextKey a, const TextKey b){
   if(a == b) {
     return true;

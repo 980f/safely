@@ -2,17 +2,21 @@
 #define HASSETTINGS_H
 
 #include "buffer.h"
+#include "chained.h" //can't use the better chain as we don't have a heap.
 #include "charformatter.h"
 
-#include "chained.h" //can't use the better chain as we don't have a heap.
-
-#include "debuggable.h" //platform specific trace support.
-
 typedef char ID;
-//not using strlen because the firmware linker catches the proverbial whale (printf)
-int numIDs(const char *list);
-int ordinalOfID(const char* list, ID id);
 
+/** primitive human readable transport format
+ *  simple enough to parse for a computer, simple enough to type for a human.
+ *  limited to communicating sets of numbers, no text or tokens of any kind.
+ *  Includes 'dirty' bit logic and a means for prioritizing sending dirty values without implementing a queue.
+ *
+ *  What should be tables assenbled by a linker are implemented with a linked list assembled by consrtuction of a static object.
+ *  If we could get the linker tamed this all would be nicer to use.
+ */
+
+/** the key for our maps */
 struct ParamKey {
   ID unit;
   ID field;
@@ -32,6 +36,8 @@ struct ParamKey {
 
 };
 
+/** @returns strict less than compare.
+  No known use, guessing a disgnostic tool wanted an alpha sort */
 inline
 bool operator<(const ParamKey& lhs, const ParamKey& rhs){
   if(lhs.unit == rhs.unit) {
@@ -41,6 +47,8 @@ bool operator<(const ParamKey& lhs, const ParamKey& rhs){
   }
 }
 
+/** @returns strict greater than compare.
+ * No known use, guessing a disgnostic tool wanted an alpha sort */
 inline
 bool operator>(const ParamKey& lhs, const ParamKey& rhs){
   if(lhs.unit == rhs.unit) {
@@ -50,13 +58,16 @@ bool operator>(const ParamKey& lhs, const ParamKey& rhs){
   }
 }
 
-typedef const char * MnemonicSet;
+/** because bare const char *'s are deprecated for code review reasons, we typedef each class of use thereof:*/
+typedef const ID * MnemonicSet;
+
 
 #include "roundrobiner.h"
 /** One Letter Mnemonic */
 class OLM : public Chained<OLM>{
 private:
   void operator =(int){
+    //not sensible, these are used as dispatch table indices.
   }
 
 public: //for use on GroupMapper by Settings grouper init //todo:3 friend?
@@ -68,11 +79,11 @@ public:
 public: //todo:2 make read-only
   ID prefix;
 public:
-  OLM(const char *unitMap);
+  OLM(MnemonicSet unitMap);
   OLM &locate(ID code);
   ~OLM();//uses permalloc
   /** report offset for given char*/
-  int lookup(ID ch,int nemo = -1) const;
+  int lookup(ID ch,int nemo = ~0) const;
   /** @see lookup*/
   int operator()(ID asciiId) const;
   /** char for nth param*/
@@ -205,7 +216,7 @@ public:
   bool postKey(const ParamKey &parm);
 
   /** next queued item's code.*/
-  virtual ParamKey nextReport();
+  ParamKey nextReport();
   /** @return null on success, else error message*/
   const char * stuff(const ParamKey &param, CharFormatter p);
   const char * stuff(const ParamKey &param, ArgSet &args);
@@ -215,8 +226,6 @@ public:
   bool printParam(CharFormatter&response, const ParamKey &Id,bool master); //exporting reporting from command responder to allow for deferred reports
   /** by default returns a pointer to a shared buffer, don't call printReport until the previous usage has been finished*/
   bool printReport(CharFormatter&response, const ParamKey &nexrep);
-  /** get values for a named thing. @returns whether @param key was valid. This will not include any OutOfBand data. */
-  bool getParam(const ParamKey &key,ArgSet &args);
 
 }; // class SettingsGrouper
 

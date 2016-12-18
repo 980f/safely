@@ -56,7 +56,8 @@ SOURCES += cppexttester.cpp \
     utf8.cpp \
     textkey.cpp \
     polyfilter.cpp \
-    zstring.cpp
+    zstring.cpp \
+    hassettings.cpp
 
 HEADERS += cppexttester.h \
     safely.h \
@@ -112,4 +113,5 @@ HEADERS += cppexttester.h \
     utf8.h \
     textkey.h \
     polyfilter.h \
-    zstring.h
+    zstring.h \
+    hasSettings.h
