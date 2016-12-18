@@ -17,7 +17,7 @@ Zstring::Zstring(char *str, bool makeCopy) : str(str),owned(makeCopy){
 
 Zstring::Zstring(unsigned len) : str(static_cast<char *>(calloc(len + 1,1))),owned(true){
   if(!str) {
-    owned = false; //not critical but its nice to be able to breakpoint in incidents like this
+    owned = false; //not critical but its nice to be able to breakpoint on attempts to wrap a nullptr
   }
 }
 
@@ -57,7 +57,7 @@ bool Zstring::operator ==(const char *rhs) const {
   return same(str,rhs);
 }
 
-char *Zstring::cstr() const {
+char *Zstring::c_str() const {
   return str;
 }
 
