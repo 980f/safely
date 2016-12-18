@@ -2,17 +2,12 @@
 #include "stdlib.h"
 #include "string.h"
 
-bool nonTrivial(TextKey t){
+bool nonTrivial(const TextKey t){
   return t != nullptr && *t != 0;
 }
 
-//void denull(TextKey &t){
-//  if(t == 0) {
-//    t = ""; //hopefully compiler creates a shared one of these empty strings.
-//  }
-//}
 
-bool same(TextKey a, TextKey b){
+bool same(const TextKey a, const TextKey b){
   if(a == b) {
     return true;
   }
@@ -29,7 +24,7 @@ bool same(TextKey a, TextKey b){
   }
 } // same
 
-double toDouble(TextKey rawText, bool *impure){
+double toDouble(const TextKey rawText, bool *impure){
   char *end(nullptr);  //setting value for debug purposes
   /*todo:1 set locale to one that doesn't have triplet separators */
   double d = strtod(rawText, &end);
