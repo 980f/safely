@@ -294,6 +294,14 @@ public:
     return *this;
   }
 
+  /** set unused content to 0. pointer is unmodified
+   * only makes sense if Content=0 assignment makes sense*/
+  void clearUnused()const{
+    for(int i=pointer;i<allocated();i++){
+      buffer[i]=0;
+    }
+  }
+
 }; // class Indexer
 
 //the following probably doesn't work, or only works for simple types:
@@ -304,7 +312,7 @@ public:
 
 #define BytesOf(thingy) IndexBytesOf(, thingy)
 
-// iterate. todo: replce with C++11/14 stuff.
+// iterate. todo: replace with C++11/14 stuff.
 #define ForIndexed(classname, indexer) for(Indexer<classname> list(indexer); list.hasNext(); )
 
 

@@ -1,6 +1,3 @@
 #include "bitwise.h"
 
-Bitwise::Bitwise()
-{
-
-}
+//placeholder for qt builder

@@ -57,7 +57,9 @@ SOURCES += argset.cpp \
     textkey.cpp \
     polyfilter.cpp \
     zstring.cpp \
-    hassettings.cpp
+    hassettings.cpp \
+    pathname.cpp \
+    bitwise.cpp
 
 HEADERS += safely.h \
     argset.h \
@@ -113,4 +115,6 @@ HEADERS += safely.h \
     textkey.h \
     polyfilter.h \
     zstring.h \
-    hassettings.h
+    hassettings.h \
+    pathname.h \
+    bitwise.h

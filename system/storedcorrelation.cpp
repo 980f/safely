@@ -31,14 +31,19 @@ void StoredCorrelation::onPrint(){
   sumCross=RealCorrelation::sumCross;
 }
 
-sigc::connection StoredCorrelation::whenUpdated(SimpleSlot slott, bool kickme){
+WatchedCorrelation::WatchedCorrelation(Storable &node):StoredCorrelation (node)
+{
+
+}
+
+sigc::connection WatchedCorrelation::whenUpdated(SimpleSlot slott, bool kickme){
   if(kickme){
     slott();
   }
   return watchers.connect(slott);
 }
 
-void StoredCorrelation::updateComplete(){
+void WatchedCorrelation::updateComplete(){
   onPrint();
   watchers();
 }

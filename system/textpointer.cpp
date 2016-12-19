@@ -3,7 +3,6 @@
 #include "stdlib.h"
 
 
-
 TextPointer::TextPointer(): ptr(0){
   //all is well
 }
@@ -16,10 +15,10 @@ TextPointer::~TextPointer(){
   clear();
 }
 
-const char *TextPointer::operator =(const char *ptr){
+TextKey TextPointer::operator =(TextKey ptr){
   if(this->ptr != ptr) { //# if not same object (not a content compare)
     clear();
-    if(nonTrivial(ptr)) { //todo: see if strcmp is fast enough to use here.
+    if(nonTrivial(ptr)) {
       this->ptr = strdup(ptr);
     }
   }
@@ -27,15 +26,14 @@ const char *TextPointer::operator =(const char *ptr){
 }
 
 TextPointer::operator const char *() const {
-  return ptr ? : "";
+  return ptr ?: "";
 }
-
 
 bool TextPointer::empty() const {
   return !nonTrivial(ptr);
 }
 
-bool TextPointer::is(const char *other) const {
+bool TextPointer::is(TextKey other) const {
   if(ptr == other) {//same object
     return true;
   }
@@ -52,12 +50,12 @@ bool TextPointer::is(const char *other) const {
   }
 } // is
 
-bool TextPointer::startsWith(const char *other) const {
+bool TextPointer::startsWith(TextKey other) const {
+  if(ptr == nullptr) {
+    return other==nullptr || *other == 0;
+  }
   if(ptr == other) {
     return true;
-  }
-  if(ptr == nullptr) {
-    return *other == 0;
   }
   if(other == nullptr) {//all strings start with nothing, for grep '*' case.
     return true;
@@ -69,7 +67,7 @@ bool TextPointer::startsWith(const char *other) const {
     if(!m){
       return false;//other is longer than this
     }
-    if(c!=*s++){
+    if(c!=m){
       return false;//mismatch on existing chars
     }
   }
@@ -77,7 +75,7 @@ bool TextPointer::startsWith(const char *other) const {
 }
 
 void TextPointer::clear(){
-  if(ptr) {
+  if(ptr) {//checking for debug
     free(const_cast<char *>(ptr));
     ptr = nullptr;
   }

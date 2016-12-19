@@ -3,12 +3,13 @@
 
 #include "filename.h"
 #include "storable.h"
+#include "storednumeric.h" //version number
 
 class TreeFile {
 public:
   Ustring filename;
   Storable &root;
-
+  StoredReal svnnumber;
   TreeFile(const Ustring &fname, Storable &root);
   TreeFile(FileName &fname, Storable &root);
 

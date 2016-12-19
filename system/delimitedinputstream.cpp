@@ -1,15 +1,14 @@
 #include "delimitedinputstream.h"
 #include "numberparser.h"
 
-#include <stdlib.h>
+#include <string.h>
 
 //private definition of whitespace, input file may not be local.
 
 static const char *whitespace = "\t\r ";
 static bool isWhite(int ch){
   //todo: unicode 'iswhite' trait
-  const char *which = strchr(whitespace,ch);
-  return which!=nullptr;
+  return strchr(whitespace,ch)!=nullptr;
 }
 
 DelimitedInputStream::DelimitedInputStream(std::istream &s) :

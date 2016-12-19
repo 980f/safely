@@ -216,20 +216,23 @@ struct KanjiLookup : public ArtFile {
   /** from unicode website tr38:
    *
    *  X is used in both SC and TC and is unchanged when mapping between them. An example would be 井 U+4E95. This is the most common case, and is indicated by both the
-   *kSimplifiedVariant and kTraditionalVariant fields being empty.
+   * kSimplifiedVariant and kTraditionalVariant fields being empty.
    *  X is used in TC but not SC, that is, it is changed when converting from TC to SC, but not vice versa. In this case, the kSimplifiedVariant field lists the
-   *character(s) to which it is mapped and the kTraditionalVariant field is empty. An example would be 書 U+66F8 whose kSimplifiedVariant field is 书 U+4E66.
+   * character(s) to which it is mapped and the kTraditionalVariant field is empty. An example would be 書 U+66F8 whose kSimplifiedVariant field is 书 U+4E66.
    *  X is used in SC but not TC, that is, it is changed when converting from SC to TC, but not vice versa. In this case, the kTraditionalVariant field lists the
-   *character(s) to which it is mapped and the kSimplifiedVariant field is empty. An example would be 学 U+5B66 whose kTraditionalVariant field is 學 U+5B78.
+   * character(s) to which it is mapped and the kSimplifiedVariant field is empty. An example would be 学 U+5B66 whose kTraditionalVariant field is 學 U+5B78.
    *  X is used in both SC and TC and may be changed when mapping between them. This is the most complex case, because there are two distinct sub-cases:
    *     X may be mapped to itself or to another character when converting between SC and TC. In this case, the character is its own simplification as well as the
-   *simplification for other characters. An example would be 后 U+540E, which is the simplification for itself and for 後 U+5F8C. When mapping TC to SC, it is left alone,
-   *but when mapping SC to TC it may or may not be changed, depending on context. In this case, both kTraditionalVariant and kSimplifiedVariant fields are defined and X
-   *is included among the values for both.
+   * simplification for other characters. An example would be 后 U+540E, which is the simplification for itself and for 後 U+5F8C. When mapping TC to SC, it is left
+   *alone,
+   * but when mapping SC to TC it may or may not be changed, depending on context. In this case, both kTraditionalVariant and kSimplifiedVariant fields are defined and
+   *X
+   * is included among the values for both.
    *     X is used for different words in SC and TC. When converting between the two, it is always changed. An example would be 苧 U+82E7. In traditional Chinese, it is
-   *pronounced zhù and refers to a kind of nettle. In simplified Chinese, it is pronounced níng and means limonene (a chemical found in the rinds of lemons and other
-   *citrus fruits). When converting TC to SC it is mapped to 苎 U+82CE, and when converting SC to TC it is mapped to 薴 U+85B4. In this case, both kTraditionalVariant and
-   *kSimplifiedVariant fields are defined but X is not included in the values for either.
+   * pronounced zhù and refers to a kind of nettle. In simplified Chinese, it is pronounced níng and means limonene (a chemical found in the rinds of lemons and other
+   * citrus fruits). When converting TC to SC it is mapped to 苎 U+82CE, and when converting SC to TC it is mapped to 薴 U+85B4. In this case, both kTraditionalVariant
+   *and
+   * kSimplifiedVariant fields are defined but X is not included in the values for either.
    *
    *  all we need is:
    *  if exists kTraditionalVariant then remove from simplified
@@ -533,7 +536,7 @@ struct KanjiLookup : public ArtFile {
 
   /** @deprecated was used to test parsing, not useful to our customers.
    * @return single result for hiragana string, sets length to how much of the trailing part of @param hiraganaFragment was actually part of the name (may drop this if
-   *we choose a strict lookup)*/
+   * we choose a strict lookup)*/
 //  Unichar charFor(const Glib::ustring &hiraganaFragment,int &length){
 //    init();
 //    Storable *entry=KUN.existingChild(hiraganaFragment.c_str());

@@ -24,6 +24,7 @@ Logger::~Logger(){
 }
 
 void show(FILE * stdf,const char *prefix,const char *msg,va_list &args){
+
   if(prefix){
     fputs(prefix,stdf);
     fputs("::",stdf);
@@ -37,20 +38,6 @@ void Logger::operator() (const char *msg, ...){
   va_list args;
   va_start(args, msg);
   show(stout, prefix, msg, args);
-  //Precise timer to show when messages are coming to the millisecond
-  #ifdef PRECISE_TIME
-    long            ms; // Milliseconds
-    time_t          s;  // Seconds
-    struct timespec spec;
-
-    clock_gettime(CLOCK_REALTIME, &spec);
-    ms = round(spec.tv_nsec / 1.0e6); // Convert nanoseconds to milliseconds
-    s  = spec.tv_sec;
-    std::cout<< "time: " << s << ".";
-    std::cout.fill( '0' );
-    std::cout.width( 3 );
-    std::cout << ms << std::endl;
-  #endif
   va_end(args);
 }
 

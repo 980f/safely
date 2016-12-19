@@ -40,7 +40,6 @@ SOURCES += \
     storedrange.cpp \
     storedsettable.cpp \
     textpointer.cpp \
-    treefile.cpp \
     peakfindrecords.cpp \
     gatedsignal.cpp
 
@@ -52,8 +51,6 @@ HEADERS += \
     delimitedinputstream.h \
     delimitingoutputstream.h \
     dyndeterminator.h \
-    jsonstore.h \
-    kanjidic.h \
     linearfilter.h \
     logger.h \
     mapiterator.h \

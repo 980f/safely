@@ -6,7 +6,7 @@
 #include "minimath.h" //for power
 #include <cmath>  //floot, log10
 //#include <cstdio> //snprintf
-
+#include "string.h"
 #include "numberparser.h"
 #include "safely.h" //ascii framing characters
 
@@ -159,13 +159,13 @@ bool CharFormatter::printNumber(double d, int sigfig){
     return printString("+Inf");//we need a sign in various usages to even call this guy.
   }
   TransactionalBuffer <char > checker(*this);
-  if(d < 0) {
+  if(d < 0) {//print optional sign
     checker&=printChar('-');
     d = -d;
   }
-  double dint=floor(d);
+  double dint=floor(d);//print integer part of value
   bool is32= (d == dint && d < _2gig);//todo:1 much better detection of fixed point versus scientific format.
-  if(is32){
+  if(is32){//try to preserve integers that were converted to double.
     checker&=printUnsigned(d);
   } else {
     double logd=log10(d);
