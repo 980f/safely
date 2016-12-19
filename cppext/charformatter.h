@@ -45,7 +45,7 @@ public:
   bool removeTerminator();
   /** Prints decimal representation of @param value, prepending it with spaces until the total length == @param width.
    *@returns false if there wasn't enough space. or if the number of digits is larger than the specified width in which latter case this function will fill the field
-   *with asterisks */
+   * with asterisks */
   bool printAtWidth(unsigned int value, unsigned width);
   /** print @param width least significant hex digits of @param value, @returns whether there were width positions available, if not then nothing is written */
   bool printHex(unsigned value, unsigned width);

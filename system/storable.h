@@ -31,6 +31,8 @@ typedef TextPointer NodeName;
  * Note that a Stored object is stored in a file when saveAll() is called, whereas a Storable object that is not wrapped in Stored
  * will not be saved.
  *
+ * Made sigctrackable as these are often the objects of watched updates.
+ *
  */
 
 class Storable : public ChangeMonitored, SIGCTRACKABLE {
@@ -57,14 +59,18 @@ public:
     Edited, //modified by program action
   };
 
-  /** hook to force tree node to save all pending changes prior to output.
-   * NB: this does not recurse for wads, the caller of this must recurse if the entity is a wad.
-   * we may change that for convenience, but presently all callers of preSave had their own reasons to iterate. */
-  SimpleSignal preSave;
-
   /** ignore this node (and its children) during change polling detection, only apply to stuff that is automatically reconstructed
    * or purely diagnostic. Doesn't affect change watching, only polling. */
   bool isVolatile;
+
+  /** hook to force tree node to save all pending changes prior to output.
+   * NB: this does not recurse for wads, the caller of this must recurse if the entity is a wad.
+   * we may change that for convenience, but presently all callers of preSave had their own reasons to iterate.
+This is essential for Stored's functioning.
+*/
+  SimpleSignal preSave;
+
+
 protected:
   /** stored value is like a union, although we didn't actually use a union so that a text image of the value can be maintained for debug of parsing and such. */
   Type type;
@@ -78,7 +84,7 @@ public:   //made public for sibling access, could hide it with some explicit sib
   /** used primarily for debugging, don't have to unwind stack to discover source of a wtf herein. */
   Storable *parent;
   /** whether items must be transfered to/from storage in the order they are in the wad. '{' vs '{' in json files.
- presently this has not been relied upon as we don't use a hashmap for a wad.*/
+   *  presently this has not been relied upon as we don't use a hashmap for a wad.*/
   bool strictlyOrdered;
 protected:
   /** whether wad is dynamically reorganized to allow for binary search for a child.

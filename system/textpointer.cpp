@@ -33,9 +33,8 @@ bool TextPointer::empty() const {
   return !nonTrivial(ptr);
 }
 
-int TextPointer::length() const
-{
-  return nonTrivial(ptr)?strlen(ptr):0;
+int TextPointer::length() const {
+  return nonTrivial(ptr) ? strlen(ptr) : 0;
 }
 
 bool TextPointer::is(TextKey other) const {
