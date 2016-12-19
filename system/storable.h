@@ -46,9 +46,10 @@ public:
   static int instances;
 
   enum Type {  //referring to the type of data in the node
-    NotKnown,
-    Numerical,
-    Textual,
+    NotKnown,   //construction error, parse error
+    Numerical, //asked to be a number, converts image to number when this is set
+    Uncertain, //parsed, not yet evaluated as to type (defering a step of the original parser to lazyinit code in setType.
+    Textual,   //asked to be text, or was found quoted during parse
     Wad,  //any node that has children is a wad
   };
 
