@@ -38,8 +38,10 @@ class Storable : public ChangeMonitored, SIGCTRACKABLE {
   friend class StoredLabel; //ditto
   friend class StoredEnum;
 public:
-
-  static int instances;  //number of storables in existence.  For debug.
+  /** path seperator for looking up child by name */
+  static const char slasher;
+  /** number of storables in existence.  For debug of memory leaks. */
+  static int instances;
 
   enum Type {  //referring to the type of data in the node
     NotKnown,

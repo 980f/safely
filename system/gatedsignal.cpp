@@ -1,6 +1,6 @@
 #include "gatedsignal.h"
 #include "logger.h"
-#include "cheapTricks.h"
+#include "cheaptricks.h"
 
 GatedSignal::GatedSignal() :
   gateCounter(0),

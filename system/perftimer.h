@@ -5,8 +5,8 @@
 #include "stopwatch.h"
 
 /** A stopwatch with start and stop tied to construction and destruction.
- * Those events log messages keyed with text provided to the constructor.
- * starts timer when constructed, reports elapsed time when destructed. */
+* Those events log messages keyed with text provided to the constructor.
+* starts timer when constructed, reports elapsed time when destructed. */
 struct PerfTimer {
   StopWatch swatch;
   TextPointer note;

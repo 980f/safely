@@ -1,5 +1,5 @@
 #include "roundrobiner.h"
-#include "cheapTricks.h"
+#include "cheaptricks.h"
 #include "minimath.h" //fill's clear's
 
 RoundRobiner::RoundRobiner(bool *Scoreboard, int quantity): Scoreboard(Scoreboard), quantity(quantity){

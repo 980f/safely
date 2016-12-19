@@ -6,8 +6,8 @@
 class RealStatistic {
 public://until we can get friend stuff worked out
 /** sum of data */
-    double sum;
-    /** sum of squares of data */
+  double sum;
+  /** sum of squares of data */
   double sumSquares;
   /** number of points in the sums*/
   int count;
@@ -29,10 +29,11 @@ public:
   double ssd() const;
   /** std, pop-std etc depending upon @param used*/
   double sxd(int used) const;
-  int N() const{
+  int N() const {
     return count;
   }
-};
+
+}; // class RealStatistic
 
 /** standard statistics on paired data */
 class RealCorrelation {
@@ -57,8 +58,8 @@ public:
   /** -log10(r-squared) */
   double nines(void) const;
   /** sum of squares of differences */
-  double ssd()const;
+  double ssd() const;
   /** @returns square root of chi^2 divided by @param adj defaulted for linear fit */
-  double var(int adj=2) const;
-};
+  double var(int adj = 2) const;
+}; // class RealCorrelation
 #endif // REALSTATISTIC_H

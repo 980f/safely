@@ -2,7 +2,7 @@
 #define WATCHABLE_H
 
 #include "sigcuser.h"
-#include "cheapTricks.h"
+#include "cheaptricks.h"
 /**
   Stange names herein are done to match StoredBoolean of which this is a spiritual base class.
 we must be an instance of the scalar instead of watching one in case the entity of which the scalar is a member gets delete'd.

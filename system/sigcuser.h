@@ -2,7 +2,7 @@
 #define SIGCUSER_H
 
 #include <sigc++/sigc++.h>
-#include "eztypes.h" //for deleteonreturn
+#include "cheaptricks.h" //for deleteonreturn
 
 //sigc trackable should be inherited from virtually in so many cases that we always shall
 #define SIGCTRACKABLE virtual public sigc::trackable
