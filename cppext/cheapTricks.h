@@ -6,20 +6,27 @@
 bool isPresent(const char *flags, char flag);
 
 
-
 /** creation of one of these increments the related integer, destroying one decrements it.
- * Used as a base class, with argument a relatively persistant item to count the number of extant objects of that class.*/
-class CountedFlagger {
-  int &flag;
-public:
-  CountedFlagger(int &flag):flag(flag){
-    ++flag;
-  }
+ * Used as a base class, with argument a relatively persistant item to count the number of extant objects of that class.
+once upon a time there was a duplicate class CountedFlagger
 
-  ~CountedFlagger(){
-    --flag;
+This is all inlined because the compiler can optimize it to just the inc and dec code. Once LTO cna do that we can put the class out-of-line.
+*/
+class CountedLock {
+  int &counter;
+public:
+  CountedLock(int &counter):counter(counter){
+    ++counter;
+  }
+  ~CountedLock(){
+    --counter;
+  }
+  /** can reference but not alter via this class.*/
+  operator int()const{
+    return counter;
   }
 };
+
 
 /** @returns whether assigning @param newvalue to @param target changes the latter. the compare is for nearly @param bits, not an exact number. If nearly the same then the assignment does not occur.
 This is handy when converting a value to ascii and back, it tells you whether that was significantly corrupting.
@@ -119,5 +126,45 @@ inline bool notAlready(bool &varb){
     return false;
   }
 }
+
+
+/** usage: DeleteOnReturn<typeofinstance>moriturus(&instance);
+for functions with multiple exits, or that might get hit with exceptions.
+NB: you must name an instance else it immediately deletes after construction.
+*/
+template <typename Deletable>
+class DeleteOnReturn {
+  Deletable*something;
+public:
+  DeleteOnReturn (Deletable*something):something(something){
+
+  }
+  DeleteOnReturn (Deletable&something):something(&something){
+
+  }
+  Deletable &object(){
+    return *something;
+  }
+
+  /** cuteness, that lets us actually use the DOR object instead of getting a warning */
+  operator Deletable &(){
+    return object();
+  }
+  operator Deletable *(){
+    return something;
+  }
+  operator const Deletable &() const {
+    return *something;
+  }
+
+  operator bool () const {
+    return something!=nullptr;
+  }
+
+  ~DeleteOnReturn(){
+    delete something;
+  }
+};
+
 
 #endif // CHEAPTRICKS_H
