@@ -1,0 +1,9 @@
+#
+# using git's pre-commit hook left the reformatted files out of the commit, changes are what are committed- not files per se.
+cd /d/work/safely
+. ./cleancommit
+if [[ $# > 0 ]]; then  
+git commit -a -m\"$*\"
+else
+git commit -a 
+fi
