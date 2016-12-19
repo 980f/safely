@@ -333,7 +333,7 @@ public:
   NodeName getName() const;
 
 //deprecated to try to make node name's const.  void setName(NodeName name);
-  //ArgSet stuff is interface to our hardware device protocol
+//ArgSet stuff is interface to our hardware device protocol
   void getArgs(ArgSet &args);
   void setArgs(ArgSet &args);
   sigc::connection watchArgs(const SimpleSlot &watcher, bool kickme = false);
