@@ -66,10 +66,14 @@ public:
   /** hook to force tree node to save all pending changes prior to output.
    * NB: this does not recurse for wads, the caller of this must recurse if the entity is a wad.
    * we may change that for convenience, but presently all callers of preSave had their own reasons to iterate.
-This is essential for Stored's functioning.
-*/
+   *  This is essential for Stored's functioning.
+   */
   SimpleSignal preSave;
+protected:
 
+  mutable GatedSignal watchers; //# mutable so that we can freeze and thaw
+  mutable GatedSignal childwatchers; //# mutable, see @watchers.
+  mutable int recursionCounter = 0;
 
 protected:
   /** stored value is like a union, although we didn't actually use a union so that a text image of the value can be maintained for debug of parsing and such. */
@@ -83,13 +87,8 @@ protected:
 public:   //made public for sibling access, could hide it with some explicit sibling methods.
   /** used primarily for debugging, don't have to unwind stack to discover source of a wtf herein. */
   Storable *parent;
-  /** whether items must be transfered to/from storage in the order they are in the wad. '{' vs '{' in json files.
-   *  presently this has not been relied upon as we don't use a hashmap for a wad.*/
-  bool strictlyOrdered;
-protected:
-  /** whether wad is dynamically reorganized to allow for binary search for a child.
-   * the parser should not set this, only the present program logic should control it.*/
-  bool sorted;
+
+
 protected:
   /** cached coordinate of this item in its parent's wad, updated by parent when that parent reorganizes its wad.*/
   int index;
@@ -97,9 +96,7 @@ protected:
   Chain<Storable> wad;
   /** set by StoredEnum when one is created, maintains parallel text.*/
   const Enumerated *enumerated; //expected to be a globally shared one
-  mutable int recursionCounter = 0;
-  mutable GatedSignal watchers; //# mutable so that we can freeze and thaw
-  mutable GatedSignal childwatchers; //# mutable, see @watchers.
+
 
   /** calls watchers */
   void notify() const;
@@ -112,7 +109,7 @@ private:
   Storable &precreate(NodeName name);
 public:
   /** this is *almost* const, need to work on clone() to make it so.*/
-  TextPointer name;
+  const TextPointer name;
   void setName(NodeName name);
   /** @param isVolatile was added here to get it set earlier for debug convenience */
   Storable(NodeName name, bool isVolatile = false);
@@ -122,7 +119,7 @@ public:
 
   // functions that apply to all types
   // getters and setters
-  /** @returns untyped pointer to this, handy for gui access.*/
+  /** @returns untyped pointer to this, handy for gtk gui access.*/
   void * raw();
   /** @return whether the type actually changed */
   bool setType(Type newtype);
@@ -166,7 +163,9 @@ public:
   };
 
   /** make this node have same structure as givennode, but leave name and present children intact*/
+private: //@deprecated, need use case
   void clone(const Storable &other);
+public:
   /** like an operator = */
   void assignFrom(const Storable &other);
   /** set the value of a numerical node */
@@ -332,7 +331,8 @@ public:
 
   /** handy for diagnostics, and occasionally abused for feeding gui*/
   NodeName getName() const;
-  void setName(NodeName name);
+
+//deprecated to try to make node name's const.  void setName(NodeName name);
   //ArgSet stuff is interface to our hardware device protocol
   void getArgs(ArgSet &args);
   void setArgs(ArgSet &args);
