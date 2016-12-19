@@ -4,6 +4,7 @@
 
 int Storable::instances(0);
 
+const char Storable::slasher('.');// '.' gives java property naming, '/' would allow use of filename classes.
 using namespace sigc;
 //using namespace Glib;
 
@@ -425,10 +426,10 @@ const Storable *Storable::existingChild(NodeName childName) const {
 
 Storable *Storable::findChild(NodeName path, bool autocreate){
   TextPointer splitbuf(path);//makes a copy, so that we can poke nulls into it.
-  CharScanner splitter(splitbuf.buffer(),1 + strlen(path));
+  CharScanner splitter(splitbuf.buffer(),1 + splitbuf.length());
   Storable *searcher = this;
   while(searcher) {
-    CharScanner split = splitter.split('|'); //#these are internal node names, not user entered text, so we can use any seperator char we wish.
+    CharScanner split = splitter.split(slasher); //#these are internal node names, not user entered text, so we can use any seperator char we wish.
     if(split.hasNext()) {
       if(autocreate) {
         searcher = &searcher->child(split.internalBuffer());//we can use internalBuffer as the splitter and the 1+strlen above together ensure null termination.

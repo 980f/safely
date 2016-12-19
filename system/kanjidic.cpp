@@ -224,14 +224,14 @@ struct KanjiLookup : public ArtFile {
    *  X is used in both SC and TC and may be changed when mapping between them. This is the most complex case, because there are two distinct sub-cases:
    *     X may be mapped to itself or to another character when converting between SC and TC. In this case, the character is its own simplification as well as the
    * simplification for other characters. An example would be 后 U+540E, which is the simplification for itself and for 後 U+5F8C. When mapping TC to SC, it is left
-   *alone,
+   * alone,
    * but when mapping SC to TC it may or may not be changed, depending on context. In this case, both kTraditionalVariant and kSimplifiedVariant fields are defined and
-   *X
+   * X
    * is included among the values for both.
    *     X is used for different words in SC and TC. When converting between the two, it is always changed. An example would be 苧 U+82E7. In traditional Chinese, it is
    * pronounced zhù and refers to a kind of nettle. In simplified Chinese, it is pronounced níng and means limonene (a chemical found in the rinds of lemons and other
    * citrus fruits). When converting TC to SC it is mapped to 苎 U+82CE, and when converting SC to TC it is mapped to 薴 U+85B4. In this case, both kTraditionalVariant
-   *and
+   * and
    * kSimplifiedVariant fields are defined but X is not included in the values for either.
    *
    *  all we need is:

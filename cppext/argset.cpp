@@ -1,5 +1,5 @@
 #include "argset.h"
-#include "cheapTricks.h" //changed()
+#include "cheaptricks.h" //changed()
 
 ArgSet::ArgSet(double* d, int sizeofd) : Indexer <double> (d, sizeofd){
   //#nada

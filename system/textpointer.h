@@ -27,21 +27,24 @@ public:
   TextKey operator =(TextKey ptr);
 
   /** @returns pointer member  */
-  operator TextKey () const;
+  operator TextKey() const;
 
   /** @returns whether content is non-existent or trivial */
   bool empty () const;
+
+  /** @returns length, 0 if ptr is null */
+  int length() const;
 
   /** @returns whether @param other exactly matches this' content */
   bool is(TextKey other) const;
 
   /** needed by changed() template function */
-  bool operator !=(TextKey other)const{
+  bool operator !=(TextKey other) const {
     return !is(other);
   }
 
   /** needed by changed() template function if we kill the != one*/
-  bool operator ==(TextKey other)const{
+  bool operator ==(TextKey other) const {
     return is(other);
   }
 

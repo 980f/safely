@@ -3,7 +3,7 @@
 
 //minimath takes care of this, limits.h implemenations weren't standard enough: #include <limits.h>
 #include "minimath.h"
-#include "cheapTricks.h"
+#include "cheaptricks.h"
 
 /**
   * integer types are half open: open on the high end

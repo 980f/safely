@@ -15,7 +15,7 @@
 
 Logger dbg;
 
-Logger::Logger():prefix(0){
+Logger::Logger() : prefix(0){
   //ctor
 }
 
@@ -25,7 +25,7 @@ Logger::~Logger(){
 
 void show(FILE * stdf,const char *prefix,const char *msg,va_list &args){
 
-  if(prefix){
+  if(prefix) {
     fputs(prefix,stdf);
     fputs("::",stdf);
   }
@@ -41,8 +41,7 @@ void Logger::operator() (const char *msg, ...){
   va_end(args);
 }
 
-
-void fatalHandler(int signal, siginfo_t *signalInfo, void *data) {
+void fatalHandler(int signal, siginfo_t *signalInfo, void *data){
   bool fatal = false;
   if(SIGSEGV == signal) {
     fatal = true;
@@ -75,7 +74,7 @@ void fatalHandler(int signal, siginfo_t *signalInfo, void *data) {
   if(fatal) {
     _exit(-1);
   }
-}
+} // fatalHandler
 
 void dumpStack(const char *prefix){
   dbg("StackTrace requested by %s",prefix);
@@ -83,7 +82,7 @@ void dumpStack(const char *prefix){
 }
 
 void Logger::ClassInit(bool trapSignals){
-  if(trapSignals){
+  if(trapSignals) {
     struct sigaction sa;
     sa.sa_sigaction = &fatalHandler;
     sigemptyset(&sa.sa_mask);
@@ -91,10 +90,11 @@ void Logger::ClassInit(bool trapSignals){
     sigaction(SIGILL, &sa, nullptr);
     sigaction(SIGUSR1, &sa, nullptr);
     sigaction(SIGSEGV, &sa, nullptr);
-//SIGPIPE's were screwing up our graceful restart on socat disconnect. Note that gdb turns the signal back on but you can defeat that with the gdb command: handle SIGPIPE nostop
+//SIGPIPE's were screwing up our graceful restart on socat disconnect. Note that gdb turns the signal back on but you can defeat that with the gdb command: handle
+// SIGPIPE nostop
     sigignore(SIGPIPE);
   }
-}
+} // Logger::ClassInit
 
 void wtf(const char *msg, ...){
   va_list args;

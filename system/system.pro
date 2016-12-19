@@ -19,7 +19,6 @@ LIBS += -L.. -lcppext
 
 
 SOURCES += \
-    cachedindextostored.cpp \
     cpshelpers.cpp \
     delimitedinputstream.cpp \
     delimitingoutputstream.cpp \

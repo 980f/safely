@@ -1,5 +1,5 @@
 #include "stopwatch.h"
-#include "cheapTricks.h"
+#include "cheaptricks.h"
 
 __time_t StopWatch::epoch=0;
 

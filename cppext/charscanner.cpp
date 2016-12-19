@@ -211,7 +211,7 @@ void CharScanner::trimNulls(void){
     unget();
   }
 }
-#include "cheapTricks.h"
+#include "cheaptricks.h"
 bool CharScanner::isBlank(){
   if(length==0){
     return true;

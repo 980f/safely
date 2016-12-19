@@ -26,7 +26,7 @@ SOURCES += argset.cpp \
     centeredslice.cpp \
     charformatter.cpp \
     charscanner.cpp \
-    cheapTricks.cpp \
+    cheaptricks.cpp \
     core-atomic.cpp \
     crc16m.cpp \
     cycler.cpp \
@@ -70,7 +70,7 @@ HEADERS += safely.h \
     changemonitored.h \
     charformatter.h \
     charscanner.h \
-    cheapTricks.h \
+    cheaptricks.h \
     circularbuffer.h \
     circularindexer.h \
     core-atomic.h \

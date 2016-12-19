@@ -8,7 +8,7 @@
  * replace Glib gunichar usages */
 typedef u32 Unichar;
 
-#include "cheapTricks.h" //isPresent
+#include "cheaptricks.h" //isPresent
 #include "ctype.h"
 
 /** represents one byte of a UTF8 multibyte character, not to be confused with a Unicode character which is a 32 bit entity*/

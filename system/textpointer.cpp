@@ -3,11 +3,11 @@
 #include "stdlib.h"
 
 
-TextPointer::TextPointer(): ptr(0){
+TextPointer::TextPointer() : ptr(0){
   //all is well
 }
 
-TextPointer::TextPointer(const char *ptr): ptr(0){
+TextPointer::TextPointer(const char *ptr) : ptr(0){
   operator =(ptr);
 }
 
@@ -31,6 +31,11 @@ TextPointer::operator const char *() const {
 
 bool TextPointer::empty() const {
   return !nonTrivial(ptr);
+}
+
+int TextPointer::length() const
+{
+  return nonTrivial(ptr)?strlen(ptr):0;
 }
 
 bool TextPointer::is(TextKey other) const {
@@ -62,17 +67,17 @@ bool TextPointer::startsWith(TextKey other) const {
   }
   //could do the following with strlen and strncmp, but that is more execution. A variant of strcmp which returns the index of mismatch would be handy.
   const char *s(ptr);
-  while(char c=*other++){
-    char m=*s++;
-    if(!m){
+  while(char c = *other++) {
+    char m = *s++;
+    if(!m) {
       return false;//other is longer than this
     }
-    if(c!=m){
+    if(c!=m) {
       return false;//mismatch on existing chars
     }
   }
   return true;
-}
+} // TextPointer::startsWith
 
 void TextPointer::clear(){
   if(ptr) {//checking for debug
