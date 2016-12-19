@@ -22,10 +22,17 @@ class StoredCorrelation:public LinearFit, public Stored {
   StoredStatistic xx;
   StoredStatistic yy;
   StoredReal sumCross;
-  SimpleSignal watchers;
+
 public:
   StoredCorrelation(Storable &node);
   void onPrint();
+
+};
+
+class WatchedCorrelation:public StoredCorrelation {
+  SimpleSignal watchers;
+public:
+  WatchedCorrelation(Storable &node);
   sigc::connection whenUpdated(SimpleSlot slott,bool kickme=false);
   void updateComplete();
 };

@@ -1,5 +1,5 @@
 #include "utf8.h"
-
+#include "bitwise.h" //bitfields
 
 /** first byte tells you how many follow, number of leadings ones -2 FE and FF are both 5
  *  subsequent bytes start with 0b10xx xxxx 80..BF, which are not legal single byte chars.

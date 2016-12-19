@@ -10,12 +10,18 @@ class CharFormatter : public CharScanner {
 public:
   /** unsafe version, uses strlen */
   CharFormatter(char * content);
+  /** @parm size as given must be the size allocated with @param content */
   CharFormatter(char * content, int size);
+  /** construct around buffer associated with @param other, shares the buffer!*/
   CharFormatter(CharScanner &other);
+  /** construct around buffer associated with @param other, shares the buffer!*/
   CharFormatter(ByteScanner &other);
 
+  /** parse a double from current pointer */
   double parseDouble(void);
+
   s64 parse64(s64 def=0);
+
   int parseInt(int def=-1);
 
   /** all of the print... functions make sure that the number doesn't get truncated,

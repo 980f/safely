@@ -4,11 +4,12 @@
 //platform differences manager
 
 #include <stdint.h>  //<cstdint> not available on micro.
-#include "string.h"  //for strcmp()
+
 typedef uint8_t u8;
 //old std lib stuff wants plain char *'s, grrr:
 #define U8S(plaincharstar) (reinterpret_cast <const u8 *> (plaincharstar))
 #define U8Z(u8star) (reinterpret_cast <const char *> (u8star))
+
 typedef uint16_t u16;
 typedef uint32_t u32;
 typedef uint64_t u64;
@@ -24,56 +25,10 @@ typedef int64_t s64;
 //lord it would be nice if C would make a standard operator for this:
 #define countof(array) (sizeof(array) / sizeof((array)[0]))
 
-//for non-bit addressable items:
-inline bool bit(int patter, unsigned bitnumber){
-  return (patter & (1 << bitnumber)) != 0;
-}
+//marker class for zero terminated string, probably a piece of code. Include textkey for a more comprehensive treatment thereof.
+typedef const char * Cstr;
 
-inline unsigned int fieldMask(int width){
-  return (1 << width) - 1;
-}
 
-/** use the following when offset or width are NOT constants, else you should be able to define bit fields in a struct and let the compiler to any inserting*/
-inline unsigned int insertField(unsigned int target, unsigned int source, unsigned int offset, unsigned int width){
-  unsigned int mask = fieldMask(width);
-
-  mask <<= offset;
-  return (target & ~mask) | ((source << offset) & mask);
-}
-
-inline unsigned int extractField(unsigned int source, unsigned int offset, unsigned int width){
-  unsigned int mask = fieldMask(width);
-
-  return (source >> offset) & mask;
-}
-
-//////////// inline stringy stuff /////////////
-#define ERRLOC(moretext) __FILE__ "::" moretext
-
-// some unicode chars frequently used by us mathematical types:
-#define Degree "\u00b0"
-#define Sup2   "\u00B2"
-//Alpha was used as a variable name in some sacred code :(
-#define AlphaChar "\u03b1"
-#define Beta  "\u03b2"
-#define Gamma "\u03b3"
-#define Delta "\u03b4"
-
-#define Mu    "\u03bc"
-#define Sigma "\u03c3"
-#define DegreeC Degree "C"
-
-//////////// frequently used constructs ////////
-class Boolish {
-public:
-  virtual bool operator = (bool truth) = 0;
-  virtual operator bool(void) = 0;
-};
-
-/** @returns whether the @param string exists and is not just a null terminator */
-inline bool isTrivial(const char *string){
-  return string==0 || *string==0;
-}
 
 /** instantiate one of these as a local variable at the start of a compound statement to ensure the given 'lock' bit is set to !polarity for all exit paths of that block
   */
@@ -92,59 +47,6 @@ class BitLock {
   }
 };
 
-/** ensure matched increment and decrement */
-class CountedLock {
-  int &counter;
-public:
-  CountedLock(int &counter):counter(counter){
-    ++counter;
-  }
-  ~CountedLock(){
-    --counter;
-  }
-  /** can reference but not alter via this class.*/
-  operator int()const{
-    return counter;
-  }
-};
-
-/** usage: DeleteOnReturn<typeofinstance>moriturus(&instance);
-for functions with multiple exits, or that might get hit with exceptions.
-NB: you must name an instance else it immediately deletes after construction.
-*/
-template <typename Deletable>
-class DeleteOnReturn {
-  Deletable*something;
-public:
-  DeleteOnReturn (Deletable*something):something(something){
-
-  }
-  DeleteOnReturn (Deletable&something):something(&something){
-
-  }
-  Deletable &object(){
-    return *something;
-  }
-
-  /** cuteness, that lets us actually use the DOR object instead of getting a warning */
-  operator Deletable &(){
-    return object();
-  }
-  operator Deletable *(){
-    return something;
-  }
-  operator const Deletable &() const {
-    return *something;
-  }
-
-  operator bool () const {
-    return something!=nullptr;
-  }
-
-  ~DeleteOnReturn(){
-    delete something;
-  }
-};
 
 /** delete an object and zero the pointer that pointed to it.
 attempts to make it a function were painful. Should try templating

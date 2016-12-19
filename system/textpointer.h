@@ -8,51 +8,52 @@
  *  it does NOT rely upon such arguments beyond the execution of any method, this class was first used to keep copies of the content
  * of strings that might be de-allocated by future actions.
  *  it should perhaps not be in a library with 'safely' in its name.
+ * For a more paranoid version @see Zstring.
  */
 class TextPointer {
 private:
-  const char *ptr;
+  TextKey ptr;
 public:
   /** creates an 'empty' one */
   TextPointer();
 
   /** makes a copy of the @param given content */
-  TextPointer(const char *ptr);
+  TextPointer(TextKey ptr);
 
   /** deletes its copy of the content copied by the constructor */
   ~TextPointer();
 
   /** deletes present content (if any) and copies @param ptr content (if any) */
-  const char *operator =(const char *ptr);
+  TextKey operator =(TextKey ptr);
 
   /** @returns pointer member  */
-  operator const char *() const;
+  operator TextKey () const;
 
   /** @returns whether content is non-existent or trivial */
   bool empty () const;
 
   /** @returns whether @param other exactly matches this' content */
-  bool is(const char *other) const;
+  bool is(TextKey other) const;
 
   /** needed by changed() template function */
-  bool operator !=(const char *other){
+  bool operator !=(TextKey other)const{
     return !is(other);
   }
 
   /** needed by changed() template function if we kill the != one*/
-  bool operator ==(const char *other){
+  bool operator ==(TextKey other)const{
     return is(other);
   }
 
   /** @returns whether this' content matches @param other for all of the chars of other */
-  bool startsWith(const char *other) const;
+  bool startsWith(TextKey other) const;
 
   /** discard internal content (if any) */
   void clear();
 
   /** @returns internal pointer suitably typecast for use by old str' functions which ask for non-const char*'s even though they
    * don't alter the chars.
-   * NB: avoid use of this as it allows you to alter const data. */
+   */
   char *buffer() const;
 }; // class TextPointer
 

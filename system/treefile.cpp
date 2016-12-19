@@ -1,22 +1,22 @@
+#include "treefile.h"
+#include "logger.h"
+#include "storednumeric.h"  //version number
+
 #include <fstream>
 //#include <giomm.h>
-#include "logger.h"
-#include "perftimer.h"
-#include "treefile.h"
+
 #include "jsonstore.h"
 #include "filer.h"
 #include "fcntl.h"
-#include "storednumeric.h"
+
+#include "perftimer.h"
+
+/** expects a supplier of a linear number such as svn produces. */
 extern double svn();
 
 //using namespace Gio;
 //using namespace Glib;
 //using namespace std;
-
-TreeFile::TreeFile(const ustring &fname, Storable &root) :
-  filename(fname),
-  root(root){
-}
 
 TreeFile::TreeFile(FileName &fname, Storable &root) :
   filename(fname),
@@ -24,7 +24,7 @@ TreeFile::TreeFile(FileName &fname, Storable &root) :
 }
 
 bool TreeFile::parseTreeFile(void){
-  PerfTimer perf(ustring::compose("parse tree %1", filename).c_str());
+//  PerfTimer perf(ustring::compose("parse tree %1", filename).c_str());
   Filer file;
   if(file.openFile(filename.c_str(),O_RDONLY,false)) {
     if(file.readall(20000000)) {

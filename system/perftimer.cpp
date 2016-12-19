@@ -1,7 +1,10 @@
 #include "perftimer.h"
 #include "logger.h"
 #include "string.h"
+
+
 bool PerfTimer::all=true;
+//# only available via debugger:
 bool showStarts=false;
 
 PerfTimer::PerfTimer(TextKey note, bool enabled):
