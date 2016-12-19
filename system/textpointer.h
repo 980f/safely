@@ -32,7 +32,8 @@ public:
   /** @returns whether content is non-existent or trivial */
   bool empty () const;
 
-  /** @returns length, 0 if ptr is null */
+  /** @returns length, 0 if ptr is null.
+ not using size_t due to textual analysis of frequency of casts. Using signed int as in enough places we use -1 as a signal to go find the length.*/
   int length() const;
 
   /** @returns whether @param other exactly matches this' content */

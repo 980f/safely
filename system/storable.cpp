@@ -17,19 +17,15 @@ using namespace sigc;
 #define ForWadConstly ForKidsConstly(list)
 
 
-Storable::Storable(NodeName name, bool isVolatile) : isVolatile(isVolatile), type(NotKnown), q(Empty), number(0), parent(nullptr), strictlyOrdered(false), sorted(false), index(-1), enumerated(nullptr), name(name){
+Storable::Storable(NodeName name, bool isVolatile) : isVolatile(isVolatile), type(NotKnown), q(Empty), number(0), parent(nullptr), index(-1), enumerated(nullptr), name(name){
   ++instances;
   if(isVolatile) {
     dbg("creating volatile node %s", fullName().c_str());
   }
 }
 
-Storable::Storable(bool isVolatile) : isVolatile(isVolatile), type(NotKnown), q(Empty), number(0), parent(nullptr), strictlyOrdered(false), sorted(false), index(-1), enumerated(nullptr), name(""){
-  ++instances;
-  if(isVolatile) {
-    dbg("creating volatile node %s", fullName().c_str());
-  }
-}
+//requires gcc >=4.7
+Storable::Storable(bool isVolatile) : Storable("",isVolatile){}
 
 Storable::~Storable(){
   --instances;
@@ -74,9 +70,9 @@ Storable &Storable::precreate(NodeName name){
   return noob;
 } // precreate
 
-void Storable::setName(NodeName name){
-  this->name = name;
-}
+//void Storable::setName(NodeName name){
+//  this->name = name;
+//}
 
 void *Storable::raw(){
   return static_cast<void *>(this);
@@ -262,14 +258,15 @@ connection Storable::addChangeMother(const SimpleSlot &watcher, bool kickme) con
   return childwatchers.connect(watcher);
 }
 
+//this is a piece of copy constructor.
 void Storable::clone(const Storable &other){ //todo:2 try to not trigger false change indications.
   filicide(); //dump the present wad, we are cloning, not merging
   type = other.type; //# don't use setType(), skip error notice etc since cloning is done to reuse storage.
   q = other.q; //# don't use setQuality()
-  setName(other.name);
+//  setName(other.name);
   enumerated = other.enumerated;
   switch(other.type) {
-  default:
+//trust compiler to bitch if case missing  default:
   case NotKnown:
     dbg("!Unknown node in tree being copied");
     return; //
@@ -801,6 +798,6 @@ NodeName Stored::getName() const {
   return node.name;
 }
 
-void Stored::setName(NodeName name){
-  node.setName(name);
-}
+//void Stored::setName(NodeName name){
+//  node.setName(name);
+//}
