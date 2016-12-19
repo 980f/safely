@@ -5,23 +5,23 @@ CharScanner CharScanner::Null;
 
 //note: we check for null termination here, so if the length is too long, we bail
 int ourStrncmp(const char *one, const char *two, unsigned length){
-  for(unsigned i=0; i<length; ++i){
-    if(one[i] == '\0' || two[i] == '\0'){
+  for(unsigned i = 0; i<length; ++i) {
+    if(one[i] == '\0' || two[i] == '\0') {
       return ~0; //the function encountered a null and assumes it's a terminator.
     }
-    if(one[i] > two[i]){
+    if(one[i] > two[i]) {
       return 1;
     }
-    if(one[i] < two[i]){
+    if(one[i] < two[i]) {
       return -1;
     }
   }
   return 0;
-}
+} // ourStrncmp
 
 bool ByteScanner ::putBytes(unsigned value, int numBytes){
   if(stillHas(numBytes)) {
-    const u8 *p = reinterpret_cast <const u8 *> (&value);
+    const u8 *p = reinterpret_cast<const u8 *>(&value);
     while(numBytes-- > 0) {
       next() = *p++;
     }
@@ -41,37 +41,36 @@ u32 ByteScanner ::getU(int numBytes, u32 def){
   } else {
     return def;
   }
-}
+} // ByteScanner::getU
 
 void ByteScanner::grab(CharScanner &other){
   //#invalid cast:    grab(reinterpret_cast<ByteScanner>(other));
   buffer = reinterpret_cast<u8*>(other.buffer);
-  if(other.ordinal()>0){//want front end.
+  if(other.ordinal()>0) {//want front end.
     length = other.pointer;
     pointer = 0;
   } else { //was already rewound and truncated
     length = other.length;
     pointer = other.pointer;
   }
-}
+} // ByteScanner::grab
 
-ByteScanner::ByteScanner(void): Indexer <u8 > (){
+ByteScanner::ByteScanner(void) : Indexer<u8 >(){
   //#nada
 }
 
-ByteScanner::ByteScanner(u8  *content, int size, bool wrap ): Indexer <u8 > (content, size, wrap){
+ByteScanner::ByteScanner(u8  *content, int size, bool wrap ) : Indexer<u8 >(content, size, wrap){
   //#nada
 }
 
-ByteScanner::ByteScanner(const ByteScanner&other, bool justContent, unsigned int clip ): Indexer <u8 > (other, justContent, clip){
+ByteScanner::ByteScanner(const ByteScanner&other, bool justContent, unsigned int clip ) : Indexer<u8 >(other, justContent, clip){
   //#nada
 }
 
-ByteScanner::ByteScanner(const CharScanner&other ): //choices herein are for first use which is in type casting a ready-to-send string.
-  Indexer <u8 > ( reinterpret_cast<u8*>(other.internalBuffer()), other.used()){
+ByteScanner::ByteScanner(const CharScanner&other ) : //choices herein are for first use which is in type casting a ready-to-send string.
+  Indexer<u8 >( reinterpret_cast<u8*>(other.internalBuffer()), other.used()){
   //#nada
 }
-
 
 u16 ByteScanner ::getU16(u16 def){
   return getU(2, def);
@@ -98,41 +97,41 @@ bool ByteScanner ::putU32(unsigned value){
 }
 
 ByteScanner ByteScanner::subset(unsigned fieldLength, bool removing){
-  Indexer<u8>punter(Indexer<u8>::subset(fieldLength,removing));
+  Indexer<u8> punter(Indexer<u8>::subset(fieldLength,removing));
   return ByteScanner(punter.internalBuffer(),punter.allocated(),false);
 }
 
-void ByteScanner::chuckSpaces() {
-  while(hasNext() && this->   next() == ' '){
+void ByteScanner::chuckSpaces(){
+  while(hasNext() && this->next() == ' ') {
     //remain calm
   }
   previous();  //we want to be pointing at the space just before the next item, so a call to next() will return the first relevant character
 }
 
 ///////////////////
-CharScanner::CharScanner(void): Indexer <char > (){
+CharScanner::CharScanner(void) : Indexer<char >(){
   //#nada
 }
 
-CharScanner::CharScanner(char  *content, int size, bool wrap ): Indexer <char > (content, size, wrap){
+CharScanner::CharScanner(char  *content, int size, bool wrap ) : Indexer<char >(content, size, wrap){
   //#nada
 }
 
-CharScanner::CharScanner(const CharScanner&other, bool justContent, unsigned int clip ): Indexer <char > (other, justContent, clip){
+CharScanner::CharScanner(const CharScanner&other, bool justContent, unsigned int clip ) : Indexer<char >(other, justContent, clip){
   //#nada
 }
 
 /** grabs used part */
-CharScanner::CharScanner(const ByteScanner&other, bool justContent): //
-  Indexer <char > (reinterpret_cast<char *>(other.internalBuffer()),justContent?other.used():other.allocated()){
+CharScanner::CharScanner(const ByteScanner&other, bool justContent) : //
+  Indexer<char >(reinterpret_cast<char *>(other.internalBuffer()),justContent ? other.used() : other.allocated()){
   //#nada
-  pointer=0;
+  pointer = 0;
 }
 
 /** ensure content is null terminated at present pointer.
-  * maydo: return null if we can't put a null at the end
-  * maydo: add argument for 'urgent' or not, and if not urgent see if there is a null before the end, not just at the end
-  */
+ * maydo: return null if we can't put a null at the end
+ * maydo: add argument for 'urgent' or not, and if not urgent see if there is a null before the end, not just at the end
+ */
 const char *CharScanner::asciiz(void){
   if(length == 0) { //then we don't have a place for a terminating null
     return ""; //so point to a universal empty string.
@@ -152,7 +151,7 @@ bool CharScanner::isTerminal(){
   return !hasNext() || buffer[pointer]==0;
 }
 
-bool CharScanner::operator == (const CharScanner &rhs)const {
+bool CharScanner::operator == (const CharScanner &rhs) const {
   CharScanner me(*this);
   CharScanner other(rhs);
   while(me.hasNext()) {
@@ -165,27 +164,26 @@ bool CharScanner::operator == (const CharScanner &rhs)const {
     }
   }
   return !other.hasNext() || !other.next(); //this is shorter
-}
+} // ==
 
 /** for use with trusted rhs strings */
 #include "string.h"
-bool CharScanner::operator == (const char *literal)const {
+bool CharScanner::operator == (const char *literal) const {
   if(!literal) {
     return used()==0; //null pointer matches empty string
   }
   /** todo: get rid of the following strncmp */
-  if(0==ourStrncmp(internalBuffer(),literal,used())){//then we MIGHT have a match
+  if(0==ourStrncmp(internalBuffer(),literal,used())) {//then we MIGHT have a match
     //strncmp stops at first null in either string, or after 'used' items
-    if(buffer[pointer-1]){//no null terminator
+    if(buffer[pointer - 1]) {//no null terminator
       return literal[pointer]==0;
     } else {
-      return literal[pointer-1]==0;
+      return literal[pointer - 1]==0;
     }
   } else {
     return false;
   }
-}
-
+} // ==
 
 bool CharScanner::matches(const char *s){
   if(!s) {
@@ -193,13 +191,13 @@ bool CharScanner::matches(const char *s){
   }
   CharScanner me(*this);
 
-  while(me.hasNext() && *s){
-    if(*s++!=me.next()){
+  while(me.hasNext() && *s) {
+    if(*s++!=me.next()) {
       return false;
     }
   }
   return !me.hasNext()||me.next()==0;//occasionally we get a null term on our counted string.
-}
+} // CharScanner::matches
 
 void CharScanner::operator =(CharScanner &other){
   rewind();
@@ -211,29 +209,29 @@ void CharScanner::trimNulls(void){
     unget();
   }
 }
+
 #include "cheaptricks.h"
 bool CharScanner::isBlank(){
-  if(length==0){
+  if(length==0) {
     return true;
   }
   CharScanner content(*this);
-  while(content.hasNext()){
+  while(content.hasNext()) {
     char ch(content.next());
-    if(!ch){
+    if(!ch) {
       return true;//c string rule
     }
-    if(!isPresent("\t\n ",ch)){
+    if(!isPresent("\t\n ",ch)) {
       return false;
     }
   }
   return true;
-}
+} // CharScanner::isBlank
 
 ///////////////////
-ByteLooker::ByteLooker(const u8  *content, int size, bool wrap ): Indexer <const u8 > (content, size, wrap){
+ByteLooker::ByteLooker(const u8  *content, int size, bool wrap ) : Indexer<const u8 >(content, size, wrap){
   //#nada
 }
-
 
 u32 ByteLooker ::getU(int numBytes, u32 def){
   //using a pointer to a local precludes compiler optimizing for register use.
@@ -246,4 +244,3 @@ u32 ByteLooker ::getU(int numBytes, u32 def){
     return def;
   }
 } /* getU */
-
