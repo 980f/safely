@@ -2,10 +2,13 @@
 #define CHEAPTRICKS_H
 #include "eztypes.h"
 
-bool isPresent(const char *flags, const char flag);
+/** like strchr but with idiot checks on the parameters */
+bool isPresent(const char *flags, char flag);
 
-bool changed(double&target, double newvalue,int bits=32);
 
+
+/** creation of one of these increments the related integer, destroying one decrements it.
+ * Used as a base class, with argument a relatively persistant item to count the number of extant objects of that class.*/
 class CountedFlagger {
   int &flag;
 public:
@@ -18,6 +21,12 @@ public:
   }
 };
 
+/** @returns whether assigning @param newvalue to @param target changes the latter. the compare is for nearly @param bits, not an exact number. If nearly the same then the assignment does not occur.
+This is handy when converting a value to ascii and back, it tells you whether that was significantly corrupting.
+*/
+bool changed(double&target, double newvalue,int bits=32);
+
+/** @returns whether assigning @param newvalue to @param target changes the latter */
 template <typename Scalar1, typename Scalar2> bool changed(Scalar1 &target, const Scalar2 &newvalue){
   if(target != newvalue) {
     target = newvalue;
@@ -47,6 +56,7 @@ public:
   }
 };
 
+/** Clears a flag when destroyed */
 class AutoFlag: public ClearOnExit<bool> {
 public:
   AutoFlag(bool & toBeCleared);
@@ -83,7 +93,7 @@ template <typename Scalar> Scalar postAssign(Scalar&varb, Scalar value){
 template <typename Scalar> Scalar flagged(Scalar&varb) ISRISH;
 
 template <typename Scalar> Scalar flagged(Scalar&varb) {
-/** this implementation isn't actually atomic, we managed to single thread our whole codebase */
+/** this implementation isn't actually atomic, we managed to single thread our whole codebase. */
   Scalar was = varb;
   varb = 0;
   return was;

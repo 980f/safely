@@ -9,10 +9,11 @@
 #include "charscanner.h"
 #include "enumerated.h"
 
-#include "iterate.h"
+//#include "iterate.h"
 #include "logger.h"
 #include "numberformatter.h"
 #include "sigcuser.h"
+
 #include "gatedsignal.h"
 
 #include "textpointer.h"
@@ -20,11 +21,6 @@
 //class used for keys, copies but doesn't support editing.
 typedef TextPointer NodeName;
 
-
-#if UseGlib
-//#include "channel.h"
-
-#endif
 
 /**
  * non-volatile storage and transport mechanism.
@@ -68,15 +64,19 @@ public:
    * or purely diagnostic. Doesn't affect change watching, only polling. */
   bool isVolatile;
 protected:
+  /** stored value is like a union, although we didn't actually use a union so that a text image of the value can be maintained for debug of parsing and such. */
   Type type;
+  /** for debug of file read and write stuff, not used in application logic (as far as we know) */
   Quality q;
+  /** value if type is numeric or enum */
   double number;
+  /** value if type is textual or enum, also used for class diagnostics */
   Ustring text;
-public:
-  //made public for sibling access, could hide it with some explicit sibling methods.
+public:   //made public for sibling access, could hide it with some explicit sibling methods.
   /** used primarily for debugging, don't have to unwind stack to discover source of a wtf herein. */
   Storable *parent;
-  /** whether items must be transfered to/from storage in the order they are in the wad. '{' vs '{' in json files. */
+  /** whether items must be transfered to/from storage in the order they are in the wad. '{' vs '{' in json files.
+ presently this has not been relied upon as we don't use a hashmap for a wad.*/
   bool strictlyOrdered;
 protected:
   /** whether wad is dynamically reorganized to allow for binary search for a child.

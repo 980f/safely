@@ -2,7 +2,8 @@
 #include "cheapTricks.h"
 #include <errno.h>
 #include <syslog.h>
-#include <stdarg.h>
+//#include <stdarg.h>
+#include "vargs.h"
 
 PosixWrapper::PosixWrapper(){
   errornumber = 0;
@@ -10,11 +11,8 @@ PosixWrapper::PosixWrapper(){
 }
 
 void PosixWrapper::logmsg(const char *fmt, ...){
-  va_list args;
-
-  va_start(args, fmt);
+  PFlist args(fmt);
   vsyslog(debug, fmt, args);
-  va_end(args);
 }
 
 bool PosixWrapper::failure(bool passthrough){
@@ -28,13 +26,12 @@ bool PosixWrapper::failure(bool passthrough){
 
 bool PosixWrapper::failed(int zeroorminus1){
   if(zeroorminus1 == -1){
-    if(changed(errornumber ,errno)){
+    if(changed(errornumber ,errno)){//only log message if different than previous, prevents spam at the loss of occasional meaningful duplicates. If you think you might duplicae an error then clear errornumber before a call.
       syslog(debug, "Failed: %m");
     }
     return true;
-
   } else {
-    errornumber =0;
+    errornumber = 0;
     return false;
   }
 }

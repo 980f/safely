@@ -5,18 +5,20 @@
 #
 #-------------------------------------------------
 
-TARGET = system
-
+#TARGET = system
 QT       -= core gui
 
-TEMPLATE = app
-CONFIG += console c++11
+TEMPLATE = lib
+CONFIG += staticlib
 CONFIG -= app_bundle
 CONFIG -= qt
+CONFIG += c++11
 
-INCLUDEPATH += ../ ../cppext
+INCLUDEPATH += .. ../cppext
+LIBS += -L.. -lcppext
 
-SOURCES += systemtester.cpp \
+
+SOURCES += \
     cachedindextostored.cpp \
     cpshelpers.cpp \
     delimitedinputstream.cpp \
@@ -42,7 +44,7 @@ SOURCES += systemtester.cpp \
     peakfindrecords.cpp \
     gatedsignal.cpp
 
-HEADERS += systemtester.h \
+HEADERS += \
     cachedindextostored.h \
     chain.h \
     chainsorter.h \

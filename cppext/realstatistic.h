@@ -5,7 +5,7 @@
 
 class RealStatistic {
   friend class RealCorrelation;
-  friend class StoredStatistic; //for saving and loading, and perhaps editing
+//  friend class StoredStatistic; //for saving and loading, and perhaps editing
 protected:
   double sum;
   double sumSquares;
