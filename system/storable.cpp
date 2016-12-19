@@ -137,6 +137,9 @@ bool Storable::convertToNumber(bool ifPure){
 } // Storable::convertToNumber
 
 bool Storable::resolve(){
+
+
+
   if(is(Storable::Uncertain)) {
     if(convertToNumber(true)) {//if is an image of a pure number (no units text)
       return true;
