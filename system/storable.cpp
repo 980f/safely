@@ -25,7 +25,8 @@ Storable::Storable(NodeName name, bool isVolatile) : isVolatile(isVolatile), typ
 }
 
 //requires gcc >=4.7
-Storable::Storable(bool isVolatile) : Storable("",isVolatile){}
+Storable::Storable(bool isVolatile) : Storable("",isVolatile){
+}
 
 Storable::~Storable(){
   --instances;
