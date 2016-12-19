@@ -57,34 +57,33 @@ bool Zstring::operator ==(const char *rhs) const {
   return notNull() && same(str,rhs);
 }
 
-void Zstring::clear()
-{
-  if(this!=nullptr){
-    if(owned){
+void Zstring::clear(){
+  if(this!=nullptr) {
+    if(owned) {
       free();
     } else {
-      str=nullptr;
+      str = nullptr;
     }
   }
 }
 
 Zstring &Zstring::copy(const Zstring &other){
-  if(notNull()){
+  if(notNull()) {
     clear();
-    if(nonTrivial(other.str)){
-      str=strdup(other.str);
-      owned=str!=nullptr;
+    if(nonTrivial(other.str)) {
+      str = strdup(other.str);
+      owned = str!=nullptr;
     }
   }
   return *this;
 }
 
 char *Zstring::c_str() const {
-  return notNull()?str:nullptr;
+  return notNull() ? str : nullptr;
 }
 
 void Zstring::free(){
-  if(notNull()){
+  if(notNull()) {
     ::free(str);
     str = nullptr;
   }

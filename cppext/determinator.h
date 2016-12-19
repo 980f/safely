@@ -11,9 +11,9 @@ This was first implemented for use in a not particularly large microcontroller.
 /** not template portion of Determinator*/
 class DeterminatorCore {
   int size;
-  bool *ignorer;
   bool *rower;
   bool *columner;
+  bool *ignorer;
 
   double *Y;
   double **X;

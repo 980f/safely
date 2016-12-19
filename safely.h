@@ -15,5 +15,4 @@
 #define FS  ','
 #define EOL 10
 
-
 #endif // SAFELY_H

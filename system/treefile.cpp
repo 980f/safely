@@ -9,9 +9,9 @@
 #include "storednumeric.h"
 extern double svn();
 
-using namespace Gio;
-using namespace Glib;
-using namespace std;
+//using namespace Gio;
+//using namespace Glib;
+//using namespace std;
 
 TreeFile::TreeFile(const ustring &fname, Storable &root) :
   filename(fname),
@@ -82,10 +82,4 @@ bool TreeFile::dumpStorage(Storable&root, const char *location){
   rootname.folder(location).ext("art");
   TreeFile writer(rootname, root);
   return writer.printTree(false);
-}
-
-double svn(){
-  return
-    #include "svnrevision.txt"
-  ;
 }

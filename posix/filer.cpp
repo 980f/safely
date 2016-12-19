@@ -7,7 +7,7 @@
 #include "logger.h"
 #include "string.h"
 
-#include "shell.h"
+//#include "shell.h"
 #include "safestr.h"
 
 #include "textkey.h"
@@ -106,27 +106,7 @@ bool Filer::cp(const char *src, const char *target, bool dashf, bool dashr){
   FileName from(src);
   FileName to(target);
 
-#if UseShellClass
-  std::vector<std::string> argv;
-  argv.push_back("cp");
-  if(dashf) {
-    argv.push_back("-f");
-  }
-  if(dashr) {
-    argv.push_back("-r");
-  }
-  argv.push_back("--");
-  argv.push_back(from);
-  argv.push_back(to);
-  int arf = Shell::run(argv);
-  if(0 != arf) {
-    argv.clear();
-    argv.push_back("sync");
-    Shell::run(argv);
-  }
-  return arf != 0;
 
-#else // if UseShellClass
   SafeStr<512> command;
   command.cat("cp ");
   if(dashf && dashr) {

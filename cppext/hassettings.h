@@ -5,6 +5,13 @@
 #include "chained.h" //can't use the better chain as we don't have a heap.
 #include "charformatter.h"
 
+
+// message#extraneous data seperator
+#define OOBmarker '#'
+
+// message|checksum seperator
+#define FrameBreak '|'
+
 typedef char ID;
 
 /** primitive human readable transport format
@@ -37,7 +44,7 @@ struct ParamKey {
 };
 
 /** @returns strict less than compare.
-  No known use, guessing a disgnostic tool wanted an alpha sort */
+ *  No known use, guessing a disgnostic tool wanted an alpha sort */
 inline
 bool operator<(const ParamKey& lhs, const ParamKey& rhs){
   if(lhs.unit == rhs.unit) {
@@ -168,7 +175,7 @@ public:
   static void startOOBdata(CharFormatter &);
 }; // class HasSettings
 
-#define OOBmarker '#'
+
 
 struct CustomFormatter {
   virtual int printOn(CharFormatter &buf) const = 0;

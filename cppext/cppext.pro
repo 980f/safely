@@ -7,12 +7,13 @@
 
 QT -= core gui
 
-TEMPLATE = app
-CONFIG += console c++11
+TEMPLATE = lib
+CONFIG += c++11
+CONFIG += staticlib
 CONFIG -= app_bundle
 CONFIG -= qt
 
-TARGET = cppext
+#//TARGET = ../libcppext.a
 
 #permalloc needs a define: this is only non-zero in microcontrollers (heapless systems)
 DEFINES += PermAllocPool=0
@@ -20,8 +21,7 @@ DEFINES += PermAllocPool=0
 #project settings include files are above the directories that share them, might be able to justify moving them into cppext since all other folders use stuff from there. also newly created files without a clear home go there.
 INCLUDEPATH += ..
 
-SOURCES += cppexttester.cpp \
-    argset.cpp \
+SOURCES += argset.cpp \
     bigendianer.cpp \
     centeredslice.cpp \
     charformatter.cpp \
@@ -59,8 +59,7 @@ SOURCES += cppexttester.cpp \
     zstring.cpp \
     hassettings.cpp
 
-HEADERS += cppexttester.h \
-    safely.h \
+HEADERS += safely.h \
     argset.h \
     bigendianer.h \
     buffer.h \
@@ -114,4 +113,4 @@ HEADERS += cppexttester.h \
     textkey.h \
     polyfilter.h \
     zstring.h \
-    hasSettings.h
+    hassettings.h
