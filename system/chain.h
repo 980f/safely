@@ -195,8 +195,9 @@ public:
 };
 
 #include "sequence.h"
-/**
-a cheap-enough to copy java-like iteration aid for vectors of pointers, such as Chain<> is.
+/** a cheap-enough to copy java-like iteration aid for vectors of pointers, such as Chain<> is.
+ * This works better than std::vector::iterator as it properly deals with items being removed during iteration.
+ *
 */
 template <typename T> class ChainScanner:public ::Sequence<T> {
   Chain<T> &list;
@@ -224,7 +225,7 @@ public:
   }
 
   /** move pointer back. If value is bad then pointer goes to 0!*/
-  void rewind(unsigned int backup=0-1){//default arg '0-1' is a cheap way of saying 'max unsigned int' that works for all sizes of int.
+  void rewind(unsigned int backup=~0){//default arg '~0' is a cheap way of saying 'max unsigned int' that works for all sizes of int.
     if(backup <= steps) {
       steps -= backup;
     } else {
@@ -280,7 +281,7 @@ public:
     return steps;
   }
 
-  void rewind(unsigned int backup=0-1){
+  void rewind(unsigned backup=~0){
     if(backup <= steps) {
       steps -= backup;
     } else {

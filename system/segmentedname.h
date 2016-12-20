@@ -7,8 +7,9 @@
 
 /** base pathname class, storage manager. @see Pathname for something useful */
 class SegmentedName: public Chain<Cstr> {
-    /** whether the path is prefixed with the seperator char when merged */
-    bool rooted;
+public: //non-critical, can add setter and getter later if someone ever messes up.
+  /** whether the path is prefixed with the seperator char when merged */
+  bool rooted;
 public:
   SegmentedName(bool rooted=true);
   /** caller is responsible for not freeing stuff passed as TextKey until after this is deleted.
@@ -35,6 +36,8 @@ Use case: strings embedded in source code don't go away and don't need to be del
 
   /** @returns an indexer, that can alter this */
   ChainScanner<Cstr> indexer();
+
+  ConstChainScanner<Cstr> indexer()const;
 };
 
 #endif // SEGMENTEDNAME_H

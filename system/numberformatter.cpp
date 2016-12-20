@@ -1,20 +1,25 @@
 #include "numberformatter.h"
 
-#include <iomanip> //for setprecision
+#include "charformatter.h"
 
-
-NumberFormatter::NumberFormatter(bool fp, int precision, const Ustring &postfix) :
+NumberFormatter::NumberFormatter(bool fp, int precision, TextKey postfix) :
   fp(fp),
   precision(precision),
   postfix(postfix){
   //#nada
 }
 
-Ustring NumberFormatter::format(double value,bool addone) const {
-//  if(fp) {
-//    return Ustring::format(setprecision(precision+(addone?1:0)), value, " ", postfix);
-//  } else {
-//    return Ustring::format(fixed, setprecision(precision+(addone?1:0)), value, " ", postfix);
-//  }
-  return Ustring("NYI");
+Text NumberFormatter::format(double value,bool addone) const {
+  char widest[17+1+1+precision+postfix.length()];//gross overestimate of maximum number as text
+  CharFormatter workspace(widest,sizeof (widest));
+  if(fp){
+    if(workspace.printNumber(value,precision+addone)){//don't add units if number failed to print
+      workspace.printString(postfix);
+    }
+  } else {
+//    if(workspace.printSigned(int(value),precision+addone)){//don't add units if number failed to print
+//      workspace.printString(postfix);
+//    }
+  }
+  return Text(workspace.internalBuffer());
 }

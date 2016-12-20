@@ -26,7 +26,6 @@ SOURCES += \
     linearfilter.cpp \
     logger.cpp \
     matrixinverter.cpp \
-    measure.cpp \
     numberformatter.cpp \
     perftimer.cpp \
     stopwatch.cpp \
@@ -43,7 +42,10 @@ SOURCES += \
     gatedsignal.cpp \
     storejson.cpp \
     segmentedname.cpp \
-    utf8text.cpp
+    utf8text.cpp \
+    storedlabel.cpp \
+    storedgroup.cpp \
+    pathparser.cpp
 
 HEADERS += \
     cachedindextostored.h \
@@ -80,7 +82,9 @@ HEADERS += \
     sigcuser.h \
     gatedsignal.h \
     storejson.h \
-    utf8text.h
+    utf8text.h \
+    storedlabel.h \
+    pathparser.h
 
 unix: CONFIG += link_pkgconfig
 unix: PKGCONFIG += sigc++-2.0

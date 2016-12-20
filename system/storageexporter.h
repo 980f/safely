@@ -4,6 +4,7 @@
 #include "fstream"
 #include "delimitingoutputstream.h"
 #include "storable.h"
+#include "storedgroup.h"
 #include "settable.h"
 
 class StorageExporter {

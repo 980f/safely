@@ -31,3 +31,8 @@ ChainScanner<Cstr> SegmentedName::indexer()
   return ChainScanner<Cstr>(*this);
 }
 
+ConstChainScanner<Cstr> SegmentedName::indexer() const
+{
+  return ConstChainScanner<Cstr>(*this);
+}
+

@@ -24,9 +24,9 @@ public:
   virtual TextKey operator =(TextKey ptr);
 
   /** @returns pointer member  */
-  operator const char *() const;
+  operator TextKey() const;
 
-  /** cast */
+  /** explicit conversion for replacing glib::ustring and std::string */
   const char *c_str()const;
 
   /** @returns whether content is non-existent or trivial */
