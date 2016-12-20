@@ -59,7 +59,8 @@ SOURCES += argset.cpp \
     hassettings.cpp \
     pathname.cpp \
     bitwise.cpp \
-    cstr.cpp
+    cstr.cpp \
+    testcppextbuild.cpp
 
 HEADERS += safely.h \
     argset.h \
@@ -119,4 +120,5 @@ HEADERS += safely.h \
     pathname.h \
     bitwise.h \
     segmentedname.h \
-    cstr.h
+    cstr.h \
+    testcppextbuild.h

@@ -42,7 +42,8 @@ SOURCES += \
     peakfindrecords.cpp \
     gatedsignal.cpp \
     storejson.cpp \
-    segmentedname.cpp
+    segmentedname.cpp \
+    utf8text.cpp
 
 HEADERS += \
     cachedindextostored.h \
@@ -78,7 +79,8 @@ HEADERS += \
     peakfindrecords.h \
     sigcuser.h \
     gatedsignal.h \
-    storejson.h
+    storejson.h \
+    utf8text.h
 
 unix: CONFIG += link_pkgconfig
 unix: PKGCONFIG += sigc++-2.0

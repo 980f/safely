@@ -9,7 +9,7 @@ bool UTF8::numAlpha() const {
   return isalnum(raw) || isPresent("+-.", raw);
 }
 
-int UTF8::numFollowers() const {
+unsigned UTF8::numFollowers() const {
   if(u8(raw) < 0xC0) { //80..BF are illegal raw, we ignore that here, C0 and C1  are not specfied so lump them in as well
     return 0;   //7 bits    128
   }
@@ -28,7 +28,7 @@ int UTF8::numFollowers() const {
   return 5; //not yet used
 } // UTF8::numFollowers
 
-int UTF8::numFollowers(u32 unichar){
+unsigned UTF8::numFollowers(u32 unichar){
   if(unichar < (1U<<7)) {
     return 0;
   }
@@ -51,18 +51,22 @@ int UTF8::numFollowers(u32 unichar){
   return 0;//not yet implementing invalid extensions.
 }
 
-u8 UTF8::firstByte(u32 unichar, int followers){
-  u8 prefix(0xFE);//init for 5 followers
-  prefix <<= (5 - followers);
-  unichar >>= (6 * followers);
-  return prefix |= unichar;
+u8 UTF8::firstByte(u32 unichar, unsigned followers){
+  if(followers){
+    u8 prefix(0xFC);
+    prefix <<= (5 - followers);//1->C0, 2->E0 3->F0 4->F8
+    unichar >>= (6 * followers);
+    return prefix |= unichar;
+  } else {
+    return static_cast<u8>(unichar);//only the one byte needed.
+  }
 }
 
-u8 UTF8::nextByte(u32 unichar, int followers){
-  int shift = 6 * followers;
+u8 UTF8::nextByte(u32 unichar, unsigned followers){
+  unsigned shift = 6 * followers;
   unichar >>= shift;
   unichar &= fieldMask(6);
-  unichar |= 0x80;
+  unichar |= (1<<7);
   return static_cast<u8>(unichar);//# truncate to 8 bits.
 }
 

@@ -142,10 +142,13 @@ public:
   bool isModified() const;
   // more involved functions
   bool wasModified();
+
+#if StorableDebugStringy
   /** @return number of changes */
   int listModified(sigc::slot<void, Ustring> textViewer) const;
+#endif
+  Text fullName() const;
 
-  SegmentedName fullName() const;
   /** the index is often not meaningful, but always is valid. It is -1 for a root node.*/
   int ownIndex() const {
     return index;
@@ -387,23 +390,23 @@ public:
 
 class StoredLabel : public Stored {
 public:
-  StoredLabel(Storable &node, const Ustring &fallback = Ustring());
-  void setDefault(const Ustring &deftext);
+  StoredLabel(Storable &node, const TextString  &fallback = TextString ());
+  void setDefault(const TextString  &deftext);
   const char *c_str() const;
   //this cast operator created "ambiguous overload" due to the various operator == methods.
   //  operator const char *() const{
   //    return c_str();
   //  }
-  Ustring toString() const;
-  operator Ustring() const {
+  TextString toString() const;
+  operator TextString () const {
     return toString();
   }
 
   bool isTrivial() const;
   void operator =(const StoredLabel &other);
   bool operator ==(const StoredLabel &other) const;
-  void operator =(const Ustring &zs);
-  bool operator ==(const Ustring &zs) const;
+  void operator =(const TextString  &zs);
+  bool operator ==(const TextString  &zs) const;
   void operator =(const char *zs);
   bool operator ==(const char *zs) const;
 
