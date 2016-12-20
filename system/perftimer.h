@@ -9,7 +9,7 @@
 * starts timer when constructed, reports elapsed time when destructed. */
 struct PerfTimer {
   StopWatch swatch;
-  TextPointer note;
+  Text note;
   bool enabled;
 public:
   /** global/master enable */

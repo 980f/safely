@@ -40,7 +40,9 @@ SOURCES += \
     storedsettable.cpp \
     textpointer.cpp \
     peakfindrecords.cpp \
-    gatedsignal.cpp
+    gatedsignal.cpp \
+    storejson.cpp \
+    segmentedname.cpp
 
 HEADERS += \
     cachedindextostored.h \
@@ -75,7 +77,8 @@ HEADERS += \
     watchable.h \
     peakfindrecords.h \
     sigcuser.h \
-    gatedsignal.h
+    gatedsignal.h \
+    storejson.h
 
 unix: CONFIG += link_pkgconfig
 unix: PKGCONFIG += sigc++-2.0

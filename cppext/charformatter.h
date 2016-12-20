@@ -11,7 +11,7 @@ public:
   /** unsafe version, uses strlen */
   CharFormatter(char * content);
   /** @parm size as given must be the size allocated with @param content */
-  CharFormatter(char * content, int size);
+  CharFormatter(char * content, unsigned size);
   /** construct around buffer associated with @param other, shares the buffer!*/
   CharFormatter(CharScanner &other);
   /** construct around buffer associated with @param other, shares the buffer!*/

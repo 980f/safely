@@ -56,10 +56,10 @@ SOURCES += argset.cpp \
     utf8.cpp \
     textkey.cpp \
     polyfilter.cpp \
-    zstring.cpp \
     hassettings.cpp \
     pathname.cpp \
-    bitwise.cpp
+    bitwise.cpp \
+    cstr.cpp
 
 HEADERS += safely.h \
     argset.h \
@@ -117,4 +117,6 @@ HEADERS += safely.h \
     zstring.h \
     hassettings.h \
     pathname.h \
-    bitwise.h
+    bitwise.h \
+    segmentedname.h \
+    cstr.h

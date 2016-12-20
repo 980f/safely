@@ -60,7 +60,7 @@ public:
     return raw & 0x80; //treating illegals as multibyte.
   }
 
-  /** only valid if first char of a sequence */
+  /** only valid if first char of a UTF8 sequence */
   int numFollowers(void) const;
 
   /** @returns number of 10xxxxxx bytes needed for given @param unichar unicode char*/

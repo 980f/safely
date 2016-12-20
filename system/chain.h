@@ -202,7 +202,7 @@ public:
   ChainScanner(Chain<T> &list):list(list),steps(0){
   }
 
-  bool hasNext(){ //const here causes a problem, class was proclaimed abstract because Sequence<t> didn't offer a const hasNext().
+  bool hasNext()const{ //const here causes a problem, class was proclaimed abstract because Sequence<t> didn't offer a const hasNext().
     return steps<list.quantity();
   }
 
@@ -256,7 +256,7 @@ public:
   ConstChainScanner(const Chain<T> &list):list(list),steps(0){
   }
 
-  bool hasNext(){
+  bool hasNext()const{
     return steps<list.quantity();
   }
 
@@ -264,7 +264,7 @@ public:
     return *list[steps++];
   }
 
-  const T &current(void){
+  const T &current(void)const{
     return *list[steps];
   }
 

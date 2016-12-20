@@ -36,7 +36,7 @@ public:
 //  Glib::ustring relative() const;
 
 
-  void addNode(Cstr node);
+  //void addNode(Cstr node);
 };
 
 #endif // PATHNAME_H

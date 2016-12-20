@@ -10,9 +10,13 @@ struct CharScanner : public Indexer <char> {
 public:
   static CharScanner Null;
   CharScanner(void);
-  CharScanner(char  * content, int size, bool wrap = false);
-  CharScanner(const CharScanner &other, bool justContent = true, unsigned int clip = 0);
-  CharScanner(const ByteScanner &other, bool justContent = true);
+  CharScanner(char  * content, unsigned size);
+  /** make a new pointer into an existing buffer, the portion of thereof selected by
+   * @param portion is -1 for 0 to pointer, +1 for pointer to allocated, 0 for 0 to allocated.
+   * E.G. parsing a buffer that was just filled
+ */
+  CharScanner(const CharScanner &other, int portion);
+  CharScanner(const ByteScanner &other, int portion);
 
   /**intended to undo asciiz() before cat'ing more content*/
   void trimNulls(void);//.
@@ -53,8 +57,8 @@ public:
 /** concrete class wrapped around a template, for added functions*/
 struct ByteScanner : public Indexer <u8> {
   ByteScanner (void);
-  ByteScanner (u8  * content, int size, bool wrap = false);
-  ByteScanner (const ByteScanner &other, bool justContent = true, unsigned int clip = 0);
+  ByteScanner (u8  * content, unsigned size);
+  ByteScanner (const ByteScanner &other, int clip = 0);
   //casting constructor, pointer to existing content like a snap().
   ByteScanner (const CharScanner &other);
 
@@ -90,9 +94,9 @@ struct ByteScanner : public Indexer <u8> {
 };
 
 struct ByteLooker : public Indexer <const u8> {
-  //ByteLooker (void);
-  ByteLooker (const u8 * content, int size, bool wrap = false);
-  ByteLooker(const ByteLooker &other, bool justContent = true, unsigned int clip = 0);
+  ~ByteLooker ();
+  ByteLooker (const u8 * content, unsigned size);
+  ByteLooker(const ByteLooker &other, int clip = 0);
   //casting constructor, pointer to existing content like a snap().
   ByteLooker (const CharScanner &other);
 

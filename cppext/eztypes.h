@@ -25,10 +25,6 @@ typedef int64_t s64;
 //lord it would be nice if C would make a standard operator for this:
 #define countof(array) (sizeof(array) / sizeof((array)[0]))
 
-//marker class for zero terminated string, probably a piece of code. Include textkey for a more comprehensive treatment thereof.
-typedef const char * Cstr;
-
-
 /** instantiate one of these as a local variable at the start of a compound statement to ensure the given 'lock' bit is set to !polarity for all exit paths of that
  * block
  */
