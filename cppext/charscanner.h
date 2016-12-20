@@ -12,7 +12,7 @@ public:
   CharScanner(void);
   CharScanner(char  * content, unsigned size);
   /** make a new pointer into an existing buffer, the portion of thereof selected by
-   * @param portion is -1 for 0 to pointer, +1 for pointer to allocated, 0 for 0 to allocated.
+   * @param portion is -1 (~0) for 0 to pointer, +1 for pointer to allocated, 0 for 0 to allocated.
    * E.G. parsing a buffer that was just filled
  */
   CharScanner(const CharScanner &other, int portion);

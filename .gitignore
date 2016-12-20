@@ -4,3 +4,4 @@ build-*
 *unc-backup*
 lib*.a
 svnrevision.txt
+svnbranch.txt

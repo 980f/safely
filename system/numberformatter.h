@@ -3,19 +3,27 @@
 
 #include "safely.h"
 #include "sigcuser.h"
-#include "ustring.h"
+#include "textpointer.h"
 
 /** abstract number printer, convert number into text. */
-typedef sigc::slot< Ustring, double /*value*/ > Formatter;
+typedef sigc::slot< Text, double /*value*/ > Formatter;
 
 struct NumberFormatter {
+  /** meaning of @see precision field */
   bool fp; //else fixed decimals
+  /** if fp then number of decimals, else field width right aligned. */
   int precision;//exposed for dynamic control
-  Ustring postfix;
-  NumberFormatter(bool fp, int precision, const Ustring &postfix = ""); //else fixed decimals
+  /** commonly used for unit-of-measure or SI multiplier. Note: this does not automatically add a space between the digits and this text, do that yourself. */
+  Text postfix;
 
-  //right alignment is only available for fp==false, force fixed number of decimals with trailing zeroes.
-  Ustring format(double value,bool addone = false) const;
+  NumberFormatter(bool fp, int precision, TextKey postfix = "");
+
+  /** @param addone if true adds one to use value of precision without altering the field */
+  Text format(double value,bool addone = false) const;
+
+  Text operator ()(double value,bool addone = false) const {
+    return format(value,addone);
+  }
 };
 
 
