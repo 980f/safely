@@ -10,23 +10,24 @@
 
 class Cstr {
 protected://we are a base class
-  char *ptr;
+  const char *ptr;
   /** pointer to a shared null char. */
   static constexpr const char *const emptyString = "";
 
 public:
   Cstr();
-  Cstr(char * target);
+  Cstr(TextKey target);
+
   //virtual destructor as this is a base for classes which may do smart things with the pointer on destruction.
   virtual ~Cstr();
   /** change internal pointer */
   virtual TextKey operator =(TextKey ptr);
 
-//  /** @returns pointer member  */
-//  operator char *() const;
-
   /** @returns pointer member  */
   operator const char *() const;
+
+  /** cast */
+  const char *c_str()const;
 
   /** @returns whether content is non-existent or trivial */
   bool empty() const;
@@ -61,10 +62,10 @@ public:
   int rindex(char ch) const;
 
   /** @returns pointer to first character in this string which matches ch. */
-  char *chr(int chr) const;
+  const char *chr(int chr) const;
 
   /** @returns pointer to first character in this string which matches ch. */
-  char *rchr(int chr) const;
+  const char *rchr(int chr) const;
 
 
   /** forget the target */

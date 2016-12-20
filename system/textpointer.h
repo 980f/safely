@@ -11,8 +11,10 @@ public:
   /** creates an 'empty' one */
   Text();
 
-  /** makes a copy of the @param given content */
-  Text(TextKey ptr);
+  /** makes a copy of the @param given content if @param takeit is false, else presumes the caller is happy with this maintaining the lifetime. */
+  Text(TextKey ptr,bool takeit=false);
+
+  Text(unsigned size);
 
   /** deletes its copy of the content copied by the constructor */
   ~Text();
@@ -21,6 +23,11 @@ public:
    * @returns the param pointer, not a pointer to self or the copy made.
    */
   TextKey operator =(TextKey other) override;
+
+  /** take ownership of a buffer */
+  void take(TextKey other);
+
+  void copy(TextKey other);
 
   /** discard internal content (if any) */
   void clear() override;

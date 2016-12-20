@@ -1,10 +1,10 @@
 #include "logger.h"
 #include "storable.h"
-//#include "uuid.h"
-
+#include "charformatter.h"
 int Storable::instances(0);
 
 const char Storable::slasher('.');// '.' gives java property naming, '/' would allow use of filename classes.
+
 using namespace sigc;
 //using namespace Storable;
 
@@ -213,6 +213,7 @@ bool Storable::wasModified(){
   } // switch
 } // wasModified
 
+#if StorableDebugStringy
 int Storable::listModified(sigc::slot<void, Ustring> textViewer) const {
   if(isVolatile) {
     return 0;
@@ -236,6 +237,7 @@ int Storable::listModified(sigc::slot<void, Ustring> textViewer) const {
     return changes;
   }
   case Numerical:
+  case Uncertain:
   case Textual:
     if(ChangeMonitored::isModified()) {
       textViewer(Ustring::compose("%1:%2", fullName(), image()));
@@ -243,14 +245,27 @@ int Storable::listModified(sigc::slot<void, Ustring> textViewer) const {
     }
     return 0;
   } // switch
-} // listModified
+}
+#endif
 
-Ustring Storable::fullName() const {
-  Ustring path(parent ? parent->fullName() : "root");
+Text Storable::fullName() const {
+  //non-recursive,
+  SegmentedName collector(true);
+  const Storable *scan=this;
 
-  path.append("|");
-  path.append(name.empty() ? Ustring::compose("[%1]", index) : Ustring(name));
-  return path;
+  do{
+    collector.prefix(scan->name);
+  } while((scan=scan->parent));
+
+  unsigned bytesNeeded=collector.mallocLength(1);
+  char *path(static_cast<char *>( malloc(bytesNeeded+1)));
+  CharFormatter packer(path,bytesNeeded);
+  auto feeder(collector.indexer());
+  while (feeder.hasNext()) {
+    packer.next()='/';
+    packer.printString(feeder.next());
+  }
+  return Text(path);
 }
 
 connection Storable::addChangeWatcher(const SimpleSlot&watcher, bool kickme) const {
@@ -324,7 +339,7 @@ void Storable::assignFrom(const Storable&other){
       if(older) {
         kid.assignFrom(*older);
       } else {
-        wtf("missing node in assignFrom: this %s, other %s, node %s ", this->fullName().c_str(), other.fullName().c_str(), kid.name.empty() ? "(nameless)" : kid.name.buffer());
+        wtf("missing node in assignFrom: this %s, other %s, node %s ", this->fullName(), other.fullName(), kid.name.empty() ? "(nameless)" : kid.name);
       }
     }
     break;
@@ -366,8 +381,8 @@ void Storable::setImageFrom(const char *value, Storable::Quality quality){
   }
 } // setImageFrom
 
-void Storable::setImage(const Ustring&value, Quality quality){
-  setImageFrom(value.c_str(), quality);
+void Storable::setImage(const TextKey &value, Quality quality){
+  setImageFrom(value, quality);
 }
 
 TextString Storable::image(void) const {
@@ -674,7 +689,7 @@ SimpleSlot Stored::notifier(){
 
 //////////////////////
 
-StoredLabel::StoredLabel(Storable&node, const Ustring&fallback) : Stored(node){
+StoredLabel::StoredLabel(Storable&node, const TextString &fallback) : Stored(node){
   if(node.setType(Storable::Textual)) {
     if(node.is(Storable::Parsed)) {
       dbg("Attaching StoredLabel to non-textual Storable, node %s", node.fullName().c_str());
@@ -683,7 +698,7 @@ StoredLabel::StoredLabel(Storable&node, const Ustring&fallback) : Stored(node){
   setDefault(fallback);
 }
 
-void StoredLabel::setDefault(const Ustring&deftext){
+void StoredLabel::setDefault(const TextString &deftext){
   node.setDefault(deftext);
 }
 
@@ -691,7 +706,7 @@ const char *StoredLabel::c_str() const {
   return node.image().c_str();
 }
 
-Ustring StoredLabel::toString() const {
+TextString StoredLabel::toString() const {
   return node.image();
 }
 
@@ -707,11 +722,11 @@ void StoredLabel::operator =(const StoredLabel&other){
   }
 }
 
-void StoredLabel::operator =(const Ustring&zs){
+void StoredLabel::operator =(const TextString &zs){
   node.setImage(zs);
 }
 
-bool StoredLabel::operator ==(const Ustring&zs) const {
+bool StoredLabel::operator ==(const TextString &zs) const {
   return node.image() == zs;
 }
 

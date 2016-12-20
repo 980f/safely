@@ -7,7 +7,12 @@ Text::Text() : Cstr(nullptr){
   //all is well
 }
 
-Text::Text(const char *ptr) : Cstr(nonTrivial(ptr) ? strdup(ptr) : nullptr){
+Text::Text(unsigned size):Cstr ( static_cast<TextKey>( calloc(size+1,1)))
+{
+
+}
+
+Text::Text(const char *ptr,bool takeit) : Cstr(nonTrivial(ptr) ? (takeit? ptr : strdup(ptr)) : nullptr){
 
 }
 
@@ -16,13 +21,22 @@ Text::~Text(){
 }
 
 TextKey Text::operator =(TextKey other){
+  copy(other);
+  return other;
+}
+
+void Text::take(TextKey other){
+  clear();
+  ptr=other;
+}
+
+void Text::copy(TextKey other){
   if(ptr != other) { //# if not passed self as a pointer to this' storage.
     clear();
     if(nonTrivial(other)) {
       ptr = strdup(other);
     }
   }
-  return other;
 }
 
 void Text::clear(){

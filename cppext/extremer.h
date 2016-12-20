@@ -6,8 +6,7 @@
 //todo: move 'not found' values into constructor args
 */
 
-template <typename Scalar>
-class Extremer {
+template <typename Scalar> class Extremer {
 public:
 /** whether we are seeking smallest else largest */
   bool negatory;

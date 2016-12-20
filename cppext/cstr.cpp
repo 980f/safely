@@ -2,7 +2,7 @@
 
 #include "string.h"
 
-Cstr::Cstr(char *target) : ptr(target){
+Cstr::Cstr(TextKey target):ptr(target){
 
 }
 
@@ -60,7 +60,7 @@ bool Cstr::startsWith(TextKey other) const {
 } // Cstr::startsWith
 
 int Cstr::index(char ch) const {
-  if(char *candidate = chr(ch)) {
+  if(const char *candidate = chr(ch)) {
     return candidate - ptr;
   } else {
     return -1;
@@ -68,14 +68,14 @@ int Cstr::index(char ch) const {
 }
 
 int Cstr::rindex(char ch) const {
-  if(char *candidate = rchr(ch)) {
+  if(const char *candidate = rchr(ch)) {
     return candidate - ptr;
   } else {
     return -1;
   }
 }
 
-char *Cstr::chr(int chr) const {
+const char *Cstr::chr(int chr) const {
   if(nonTrivial(ptr)) {
     return strchr(ptr,chr);
   } else {
@@ -83,7 +83,7 @@ char *Cstr::chr(int chr) const {
   }
 }
 
-char *Cstr::rchr(int chr) const {
+const char *Cstr::rchr(int chr) const {
   if(nonTrivial(ptr)) {
     return strrchr(ptr,chr);
   } else {
