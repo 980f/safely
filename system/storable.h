@@ -6,7 +6,6 @@
 #include "chain.h" //wrap std::vector to cover its sharp pointy sticks.
 #include "changemonitored.h"
 
-#include "charscanner.h"
 #include "enumerated.h"
 
 //#include "iterate.h"
@@ -19,9 +18,12 @@
 #include "textpointer.h"
 
 //class used for keys, copies but doesn't support editing.
-typedef TextPointer NodeName;
+typedef Text NodeName;
 
 
+typedef Text TextString;
+
+#include "segmentedname.h" //for debug reports
 /**
  * non-volatile storage and transport mechanism.
  * In most instances some derivative of Stored will wrap each Storable to set its type and other attributes.
@@ -84,7 +86,7 @@ protected:
   /** value if type is numeric or enum */
   double number;
   /** value if type is textual or enum, also used for class diagnostics */
-  Ustring text;
+  TextString text;
 public:   //made public for sibling access, could hide it with some explicit sibling methods.
   /** used primarily for debugging, don't have to unwind stack to discover source of a wtf herein. */
   Storable *parent;
@@ -110,7 +112,7 @@ private:
   Storable &precreate(NodeName name);
 public:
   /** this is *almost* const, need to work on clone() to make it so.*/
-  const TextPointer name;
+  const Text name;
   void setName(NodeName name);
   /** @param isVolatile was added here to get it set earlier for debug convenience */
   Storable(NodeName name, bool isVolatile = false);
@@ -129,7 +131,10 @@ public:
   /** sets a labeling for a numeric value. NB: the pointer is cached in this class, the item better not be deletable! */
   void setEnumerizer(const Enumerated *enumerated);
   const Enumerated *getEnumerizer() const;
+  /** @returns whether the text value was converted to a number. @param ifPure is whether to restrict the conversion to strings that are just a number, or whether trailing text is to be ignored. */
   bool convertToNumber(bool ifPure);
+/** convert an Unknown to either Numerical or Text depending upon purity, for other types @returns false */
+  bool resolve();
   // various predicate-like things
   bool isTrivial() const;
   bool is(Type ty) const;
@@ -140,7 +145,7 @@ public:
   /** @return number of changes */
   int listModified(sigc::slot<void, Ustring> textViewer) const;
 
-  Ustring fullName() const;
+  SegmentedName fullName() const;
   /** the index is often not meaningful, but always is valid. It is -1 for a root node.*/
   int ownIndex() const {
     return index;
@@ -206,11 +211,11 @@ public:
 
   // functions that apply to text
   void setImageFrom(const char *value, Quality quality = Edited);
-  void setImage(const Ustring &value, Quality quality = Edited);
-  Ustring image(void) const;
-  void setDefault(const Ustring &value);
+  void setImage(const TextString &value, Quality quality = Edited);
+  TextString image(void) const;
+  void setDefault(const TextString &value);
   /** @return whether text value of node textually equals @param zs (at one time a null terminated string) */
-  bool operator ==(const Ustring &zs);
+  bool operator ==(const TextString &zs);
 
   /** @returns number of child nodes. using int rather than size_t to reduce number of casts required */
   int numChildren() const { //useful with array-like nodes.
@@ -250,7 +255,7 @@ private:
 public:
   /** add a new empty node */
   Storable &addChild(NodeName childName = "");
-  Storable &addChild(Indexer<const char> childName);
+//  Storable &addChild(Indexer<const char> childName);
   /** add a new node with content copied from existing one, created to clean up storedGroup entity copy*/
   Storable &createChild(const Storable &other);
 
@@ -312,6 +317,7 @@ public:
 
   /** needed to create slots in base class to call virtual function  */
   void doParse();
+  /** pointer to text value's first char, dangerous! here for some GUI access */
   const char *rawText() const;
   /** @param generation 0 is self, same as plain index() */
   int parentIndex(int generation = 1) const;
@@ -360,7 +366,7 @@ public:
     return static_cast<void *>(&node);
   }
 
-  Ustring image() const {
+  TextString image() const {
     return node.image();
   }
 
@@ -434,6 +440,7 @@ public:
 /////////////////////////////////////
 
 #include <functional>
+#include <segmentedname.h>
 
 
 /**

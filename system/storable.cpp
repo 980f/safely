@@ -137,9 +137,6 @@ bool Storable::convertToNumber(bool ifPure){
 } // Storable::convertToNumber
 
 bool Storable::resolve(){
-
-
-
   if(is(Storable::Uncertain)) {
     if(convertToNumber(true)) {//if is an image of a pure number (no units text)
       return true;
@@ -286,6 +283,7 @@ void Storable::clone(const Storable&other){ //todo:2 try to not trigger false ch
   case Numerical:
     number = other.number;
     break;
+  case Uncertain:
   case Textual:
     text = other.text;
     break;
@@ -372,7 +370,7 @@ void Storable::setImage(const Ustring&value, Quality quality){
   setImageFrom(value.c_str(), quality);
 }
 
-Ustring Storable::image(void) const {
+TextString Storable::image(void) const {
   switch(type) {
   case Textual:
     return text;
@@ -397,7 +395,7 @@ void Storable::setDefault(const Ustring&value){
   }
 }
 
-bool Storable::operator ==(const Ustring&zs){
+bool Storable::operator ==(const TextString &zs){
   return type == Textual && text == zs;
 }
 
@@ -434,7 +432,7 @@ const Storable *Storable::existingChild(NodeName childName) const {
 } // Storable::existingChild
 
 Storable *Storable::findChild(NodeName path, bool autocreate){
-  TextPointer splitbuf(path);//makes a copy, so that we can poke nulls into it.
+  Text splitbuf(path);//makes a copy, so that we can poke nulls into it.
   CharScanner splitter(splitbuf.buffer(), 1 + splitbuf.length());
   Storable *searcher = this;
 

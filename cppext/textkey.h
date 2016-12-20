@@ -1,7 +1,7 @@
 #ifndef TEXTKEY_H
 #define TEXTKEY_H
 
-/** marker for internal tag for text */
+/** marker for internal tag for text, especially useful in getting 'const' onto the correct place */
 typedef const char* TextKey;
 
 //////////// inline stringy stuff /////////////
@@ -20,18 +20,17 @@ typedef const char* TextKey;
 #define Mu    "\u03bc"
 #define Sigma "\u03c3"
 
-/** @returns whether the @param string exists and is not just a null terminator */
-inline bool isTrivial(const char *string){
-  return string==nullptr || *string==0;
-}
+/** @returns whether the @param string is null or just a null terminator */
+bool isTrivial(TextKey key);
 
-/** a token string is nontrivial if the pointer is not null and the first char is not the null terminator*/
-bool nonTrivial(const TextKey t);
+/** @returns whether @param  t is not null and the first char is not the null terminator*/
+bool nonTrivial(TextKey key);
+
 /** compare for equality, with rational behavior when either pointer is null */
-bool same(const TextKey a,const TextKey b);
+bool same(TextKey a,TextKey b);
 
 /** wraps strtod() to regularize use of its 2nd parameter.
  * @param impure if not null gets set to whether the numerical part of the string was followed by more text.*/
-double toDouble(const TextKey rawText, bool* impure);  //apply wherever strtod() is used
+double toDouble(TextKey rawText, bool* impure=nullptr);
 
 #endif // TEXTKEY_H

@@ -59,11 +59,11 @@ ByteScanner::ByteScanner(void) : Indexer<u8 >(){
   //#nada
 }
 
-ByteScanner::ByteScanner(u8  *content, int size, bool wrap ) : Indexer<u8 >(content, size, wrap){
+ByteScanner::ByteScanner(u8  *content, unsigned size ) : Indexer<u8 >(content, size){
   //#nada
 }
 
-ByteScanner::ByteScanner(const ByteScanner&other, bool justContent, unsigned int clip ) : Indexer<u8 >(other, justContent, clip){
+ByteScanner::ByteScanner(const ByteScanner&other, int clip ) : Indexer<u8 >(other, clip){
   //#nada
 }
 
@@ -98,7 +98,7 @@ bool ByteScanner ::putU32(unsigned value){
 
 ByteScanner ByteScanner::subset(unsigned fieldLength, bool removing){
   Indexer<u8> punter(Indexer<u8>::subset(fieldLength,removing));
-  return ByteScanner(punter.internalBuffer(),punter.allocated(),false);
+  return ByteScanner(punter.internalBuffer(),punter.allocated());
 }
 
 void ByteScanner::chuckSpaces(){
@@ -113,17 +113,17 @@ CharScanner::CharScanner(void) : Indexer<char >(){
   //#nada
 }
 
-CharScanner::CharScanner(char  *content, int size, bool wrap ) : Indexer<char >(content, size, wrap){
+CharScanner::CharScanner(char  *content, unsigned size ) : Indexer<char >(content, size){
   //#nada
 }
 
-CharScanner::CharScanner(const CharScanner&other, bool justContent, unsigned int clip ) : Indexer<char >(other, justContent, clip){
+CharScanner::CharScanner(const CharScanner&other, int clip ) : Indexer<char >(other, clip){
   //#nada
 }
 
 /** grabs used part */
-CharScanner::CharScanner(const ByteScanner&other, bool justContent) : //
-  Indexer<char >(reinterpret_cast<char *>(other.internalBuffer()),justContent ? other.used() : other.allocated()){
+CharScanner::CharScanner(const ByteScanner&other, int clip) : //
+  Indexer<char >(reinterpret_cast<char *>(other.internalBuffer()),clip? other.used() : other.allocated()){
   //#nada
   pointer = 0;
 }
@@ -229,7 +229,7 @@ bool CharScanner::isBlank(){
 } // CharScanner::isBlank
 
 ///////////////////
-ByteLooker::ByteLooker(const u8  *content, int size, bool wrap ) : Indexer<const u8 >(content, size, wrap){
+ByteLooker::ByteLooker(const u8  *content, unsigned size ) : Indexer<const u8 >(content, size){
   //#nada
 }
 

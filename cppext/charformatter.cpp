@@ -14,7 +14,7 @@ CharFormatter::CharFormatter(char * content) : CharScanner(content, content ? st
   //nada
 }
 
-CharFormatter::CharFormatter(char * content, int size) : CharScanner(content, size){
+CharFormatter::CharFormatter(char * content, unsigned size) : CharScanner(content, size){
   //nada
 }
 
