@@ -34,7 +34,7 @@ public:
   bool printSigned(int value);
   bool printNumber(double d, int sigfig = 9);//9: 200 million is biggest number that we won't lose a bit of.
 
-  bool printString(const char *s);
+  bool printString(TextKey s);
 
   void printArgs(ArgSet&args,bool master);
   /** useful for collation sequence, -1: this before other, +1: this after other, 0: this same as other*/

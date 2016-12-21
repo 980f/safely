@@ -117,6 +117,11 @@ CharScanner::CharScanner(char  *content, unsigned size ) : Indexer<char >(conten
   //#nada
 }
 
+CharScanner::~CharScanner()
+{
+
+}
+
 CharScanner::CharScanner(const CharScanner&other, int clip ) : Indexer<char >(other, clip){
   //#nada
 }
@@ -128,11 +133,16 @@ CharScanner::CharScanner(const ByteScanner&other, int clip) : //
   pointer = 0;
 }
 
+CharScanner::CharScanner(const CharScanner &other):CharScanner(other,0)
+{
+
+}
+
 /** ensure content is null terminated at present pointer.
  * maydo: return null if we can't put a null at the end
  * maydo: add argument for 'urgent' or not, and if not urgent see if there is a null before the end, not just at the end
  */
-const char *CharScanner::asciiz(void){
+TextKey CharScanner::asciiz(void){
   if(length == 0) { //then we don't have a place for a terminating null
     return ""; //so point to a universal empty string.
   }

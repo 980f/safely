@@ -16,6 +16,7 @@
 #define ForCountInOrder(group) for(int i = 0, ForCountInOrder_end = (group).quantity(); i < ForCountInOrder_end; ++i)
 /////////////////////////////////////
 
+//this is  probably gratuitous since we don't seem to be able to get away from sigc, which has greater functionality:
 #include <functional>
 
 
@@ -27,6 +28,7 @@
  *... defaulted to a templated creator function (whose syntax alh hasn't yet figured out).
  */
 template<class Groupie> class StoredGroup : public Stored {
+  /** Stored<> objects, typically 1:1 with some Storable node's children */
   Chain<Groupie> pod;
 
   /** before addition we ask for permission */
@@ -36,11 +38,11 @@ template<class Groupie> class StoredGroup : public Stored {
    * subordinate creations) so in the absence of a priority mechanism in the signal we have an additional signal. Also many change
    * handlers only care about additions.
    *
-   * passes freshly created item
+   * passes freshly created item to slot
    */
   sigc::signal<void, Groupie &> oncreation;
 
-  /** before removal we ask for permission, need accumulating signal ...*/
+  /** before removal we ask for permission */
   sigc::signal1<bool, Groupie &, AndUntilFalse> preremoval;
 
   /** for removal we want to have already destroyed object before calling some of the change watchers.

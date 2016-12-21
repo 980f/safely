@@ -17,8 +17,8 @@
 
 #include "textpointer.h"
 
-//class used for keys, copies but doesn't support editing.
-typedef Text NodeName;
+//class used for communicating keys, once was also for the actual storage.
+typedef TextKey NodeName;
 
 //class for text value storage.
 typedef Text TextValue;
@@ -215,7 +215,7 @@ public:
   }
 
   // functions that apply to text
-  void setImageFrom(const char *value, Quality quality = Edited);
+  void setImageFrom(TextKey value, Quality quality = Edited);
   void setImage(const TextKey &value, Quality quality = Edited);
   /** this method is not const as we lazily reuse text for image of non-text instances */
   Cstr image(void);
@@ -238,18 +238,18 @@ public:
   }
 
   /** @returns null pointer if no child by given name exists, else pointer to the child*/
-  Storable *existingChild(NodeName childName);
+  Storable *existingChild(TextKey  childName);
   /** @see existingChild() non const version */
-  const Storable *existingChild(NodeName childName) const;
+  const Storable *existingChild(TextKey childName) const;
 
   /** if @param autocreate is true then call child() on each piece of the @param path, else call existingChild() until either a
    * member is missing or the child is found.
    * FYI: tolerates null this! */
   Storable *findChild(TextKey path, bool autocreate = true); /* true as default is legacy from method this replaced.*/
   /** creates node if not present.*/
-  Storable &child(NodeName childName);
+  Storable &child(TextKey childName);
   /** syntactic sugar for @see child(NodeName) */
-  Storable &operator ()(NodeName name);
+  Storable &operator ()(TextKey name);
   //these give nth child
   Storable &operator [](int ordinal);
   const Storable &operator [](int ordinal) const;

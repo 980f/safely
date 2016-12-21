@@ -21,7 +21,7 @@ public:
     wrap(content, Size);
   }
 
-  /** first critical use in Storable::clone */
+  /**copy as much of the @param other content as we have room for */
   template <int Othersize> void operator =(SafeStr<Othersize> &other){
     rewind();
     cat(other.asciiz());

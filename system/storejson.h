@@ -2,7 +2,7 @@
 #define STOREJSON_H
 
 #include "storable.h"
-
+#include "charformatter.h"
 /** parse relatively small blocks of json code. the caller will have to allocate */
 class StoreJSON
 {

@@ -5,7 +5,7 @@
 #include "cheaptricks.h"
 /**
  *  Stange names herein are done to match StoredBoolean of which this is a spiritual base class.
- *  we must be an instance of the scalar instead of watching one in case the entity of which the scalar is a member gets delete'd.
+ *  we must be an instance of the scalar instead of watching one in case the entity of which the scalar is a member gets delete'd, in which case out sigc watchers must be purged of reference and as such must be sigctrackable.
  */
 template<typename Scalar> class Watchable : SIGCTRACKABLE {
 protected:

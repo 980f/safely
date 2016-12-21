@@ -12,7 +12,7 @@ public:
   DelimitingOutputStream dos;
 public:
   StorageExporter(std::ostream &fos);
-  DelimitingOutputStream &exportNode(Storable &node, bool header = false, NodeName name = "");
+  DelimitingOutputStream &exportNode(Storable &node, bool header = false, TextKey name = "");
   DelimitingOutputStream &exportTable(Storable &headers, Storable &rows);
   DelimitingOutputStream &exportSettable(Settable &thing);
   /** line per groupie of a stored group whose grouping node is the given parameter. does not add spacer line after end.

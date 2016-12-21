@@ -1,22 +1,11 @@
 # // *INDENT-OFF*  in case we run uncrustify on this flie
-#-------------------------------------------------
-#
-# Project created by QtCreator 2016-12-14T16:27:12
-#
-#-------------------------------------------------
 
-#TARGET = system
-QT       -= core gui
-
-TEMPLATE = lib
-CONFIG += staticlib
-CONFIG -= app_bundle
-CONFIG -= qt
-CONFIG += c++11
-
-INCLUDEPATH += .. ../cppext
-LIBS += -L.. -lcppext
-
+#magic for making a static lib
+include ("../staticlib.pro")
+#our sibling with heapless code
+include("../cppext.lib.pro")
+#we'll use system sigc code
+include("../sigc.pro")
 
 SOURCES += \
     cpshelpers.cpp \
@@ -45,7 +34,8 @@ SOURCES += \
     utf8text.cpp \
     storedlabel.cpp \
     storedgroup.cpp \
-    pathparser.cpp
+    pathparser.cpp \
+    textformatter.cpp
 
 HEADERS += \
     cachedindextostored.h \
@@ -84,9 +74,6 @@ HEADERS += \
     storejson.h \
     utf8text.h \
     storedlabel.h \
-    pathparser.h
+    pathparser.h \
+    textformatter.h
 
-unix: CONFIG += link_pkgconfig
-unix: PKGCONFIG += sigc++-2.0
-# the PKGCONFIG line above should have taken care of the following: //todo: remove explicit includepath and debug pkgconfig for sigc.
-INCLUDEPATH += /usr/include/sigc++-2.0

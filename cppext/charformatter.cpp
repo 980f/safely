@@ -219,7 +219,7 @@ bool CharFormatter::printNumber(double d, int sigfig){
   return checker.commit();
 } /* printNumber */
 
-bool CharFormatter::printString(const char *s){
+bool CharFormatter::printString(TextKey s){
   TransactionalBuffer<char > checker(*this);
   if(s) {
     while(*s && printChar(*s++)) {

@@ -6,6 +6,7 @@
 
 /** yet another attempt at safe use of str library.
  * This class wraps a pointer and null checks all uses, vs letting str*() lib functions seg fault.
+ * only str* function swhich do NOT alter the string should be wrapped here.
  */
 
 class Cstr {
@@ -23,11 +24,12 @@ public:
   /** change internal pointer */
   virtual TextKey operator =(TextKey ptr);
 
-  /** @returns pointer member  */
+  /** @returns pointer member, allowing you to bypass the checks of this class.  */
   operator TextKey() const;
 
-  /** explicit conversion for replacing glib::ustring and std::string */
-  const char *c_str()const;
+  /** @returns pointer member, allowing you to bypass the checks of this class.
+   * Name is from/for replacing glib::ustring and std::string */
+  TextKey c_str()const;
 
   /** @returns whether content is non-existent or trivial */
   bool empty() const;
@@ -61,15 +63,20 @@ public:
   /** @returns position of last character in this string which matches ch. */
   int rindex(char ch) const;
 
-  /** @returns pointer to first character in this string which matches ch. */
+  /** @returns pointer to first character in this string which matches ch.
+   * If you know the origin of the string this is pointing to you can dare to const_cast<char *> the value here. */
   const char *chr(int chr) const;
 
-  /** @returns pointer to first character in this string which matches ch. */
+  /** @returns pointer to first character in this string which matches ch. @see chr() */
   const char *rchr(int chr) const;
-
 
   /** forget the target */
   virtual void clear();
+
+  /** marker for tedious syntax const_cast<char *>()*/
+  inline static char *violate(TextKey violatus){
+    return const_cast<char *>(violatus);
+  }
 
 }; // class Cstr
 

@@ -184,7 +184,5 @@ void PushedNumberParser::reset(){
   NumberParserState::reset();
   processed = 0;
   skipped = 0;
-  acc = 0; //need to accept 53 bits worth for mantissa of double.
   ch = 0; //init for debug
-
 }
