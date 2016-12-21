@@ -5,9 +5,10 @@
 
 #include "numberformatter.h"
 
+
 Text PathParser::pack(const SegmentedName &pieces, char seperator){
-  unsigned bytesNeeded = pieces.mallocLength(1);
-  char *path(static_cast<char *>( malloc(bytesNeeded + 1)));
+  unsigned bytesNeeded = Zguard(pieces.mallocLength(1));
+  char *path(static_cast<char *>( malloc(bytesNeeded)));
   CharFormatter packer(path,bytesNeeded);
   auto feeder(pieces.indexer());
   if(pieces.rooted && feeder.hasNext()) {
@@ -21,7 +22,7 @@ Text PathParser::pack(const SegmentedName &pieces, char seperator){
 } // PathParser::pack
 
 bool PathParser::parseInto(SegmentedName &pieces, Text &packed, char seperator){
-  CharScanner scan( const_cast<char *>(packed.c_str()),packed.length());
+  CharScanner scan( Cstr::violate(packed.c_str()),packed.length());
   bool rooted(false);
 
   while(scan.hasNext()) {
@@ -44,6 +45,6 @@ bool PathParser::parseInto(SegmentedName &pieces, Text &packed, char seperator){
 } // PathParser::parseInto
 
 Text PathParser::makeNumber(double value){
-  NumberFormatter formatter(true,17);
+  NumberFormatter formatter(17);
   return formatter(value,false);
 }

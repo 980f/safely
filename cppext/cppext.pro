@@ -1,19 +1,7 @@
 # // *INDENT-OFF* protects against pretty printers
-#-------------------------------------------------
-#
-# Project created by QtCreator 2016-12-14T15:17:49
-#
-#-------------------------------------------------
+#magic for making a static lib
 
-QT -= core gui
-
-TEMPLATE = lib
-CONFIG += c++11
-CONFIG += staticlib
-CONFIG -= app_bundle
-CONFIG -= qt
-
-#//TARGET = ../libcppext.a
+include ("../staticlib.pro")
 
 #permalloc needs a define: this is only non-zero in microcontrollers (heapless systems)
 DEFINES += PermAllocPool=0

@@ -4,22 +4,22 @@
 StoredLabel::StoredLabel(Storable&node, const TextValue &fallback) : Stored(node){
   if(node.setType(Storable::Textual)) {
     if(node.is(Storable::Parsed)) {
-      dbg("Attaching StoredLabel to non-textual Storable, node %s", node.bugName);
+      dbg("Attaching StoredLabel to non-textual Storable, node %s", node.fullName().c_str());
     }
   }
   setDefault(fallback);
 }
 
 void StoredLabel::setDefault(const TextValue &deftext){
-  node.setDefault(deftext);
+  node.setDefault(deftext.c_str());
 }
 
-const char *StoredLabel::c_str() const {
-  return node.image().c_str();
+TextKey StoredLabel::c_str() const {
+  return node.image();
 }
 
 TextValue StoredLabel::toString() const {
-  return node.image();
+  return TextValue(node.image());
 }
 
 bool StoredLabel::isTrivial() const {
@@ -54,14 +54,14 @@ bool StoredLabel::operator ==(const StoredLabel&other) const {
   return node.image() == other.node.image();
 }
 
-void StoredLabel::applyTo(sigc::slot<void, const char *> slotty){
+void StoredLabel::applyTo(sigc::slot<void, TextKey> slotty){
   slotty(c_str());
 }
 
-sigc::connection StoredLabel::onChange(sigc::slot<void, const char *> slotty){
+sigc::connection StoredLabel::onChange(sigc::slot<void, TextKey> slotty){
   return node.addChangeWatcher(bind(MyHandler(StoredLabel::applyTo), slotty));
 }
 
-sigc::slot<void, const char *> StoredLabel::setter(){
+sigc::slot<void, TextKey> StoredLabel::setter(){
   return bind(mem_fun(node, &Storable::setImageFrom), Storable::Edited);
 }

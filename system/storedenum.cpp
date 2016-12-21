@@ -19,7 +19,7 @@ int StoredEnum::setto(int newnum){
   return node.setNumber(newnum);
 }
 
-Ustring StoredEnum::toString(){
+Cstr StoredEnum::toString(){
   return node.image();
 }
 
@@ -43,6 +43,6 @@ sigc::connection StoredEnum::sendChanges(sigc::slot<void, int> functor, bool kic
   return onAnyChange(applyTo(functor),kickme);
 }
 
-void StoredEnum::reEnumerate(const Enumerated &enumerated){
-  node.setEnumerizer(&enumerated);//has a side efect of converting stored text to number, but leaves node marked 'textual'
-}
+//void StoredEnum::reEnumerate(const Enumerated &enumerated){
+//  node.setEnumerizer(&enumerated);//has a side efect of converting stored text to number, but leaves node marked 'textual'
+//}

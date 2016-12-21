@@ -2,24 +2,48 @@
 
 #include "charformatter.h"
 
-NumberFormatter::NumberFormatter(bool fp, int precision, TextKey postfix) :
-  fp(fp),
-  precision(precision),
-  postfix(postfix){
-  //#nada
+NumberFormat::NumberFormat(){
+  clear();
 }
 
-Text NumberFormatter::format(double value,bool addone) const {
-  char widest[17+1+1+precision+postfix.length()];//gross overestimate of maximum number as text
-  CharFormatter workspace(widest,sizeof (widest));
-  if(fp){
-    if(workspace.printNumber(value,precision+addone)){//don't add units if number failed to print
-      workspace.printString(postfix);
-    }
+unsigned NumberFormat::needs()const{
+  //todo:0 very bogus math herein
+  if(fieldWidth>0){
+    return fieldWidth;
   } else {
-//    if(workspace.printSigned(int(value),precision+addone)){//don't add units if number failed to print
-//      workspace.printString(postfix);
-//    }
+    return precision>0?17+1+1+precision:-precision; //todo: add space for E-xxxx
   }
-  return Text(workspace.internalBuffer());
+}
+
+void NumberFormat::clear(){
+  fieldWidth=~0;
+  precision=17; //ieee 64bit
+}
+
+void NumberFormat::onUse(){
+  if(usages && !--usages){
+    clear();
+  }
+}
+
+
+NumberFormatter::NumberFormatter(int precision, TextKey postfix) :
+  postfix(postfix){
+  nf.precision=precision;
+}
+
+unsigned NumberFormatter::needs() const{
+  return nf.needs()+postfix.length();
+}
+
+
+Text NumberFormatter::format(double value,bool addone) const {
+  char widest[Zguard(needs())];//gross overestimate of maximum number as text
+  CharFormatter workspace(widest,sizeof(widest));
+
+  if(workspace.printNumber(value,nf.precision+addone)){//don't add units if number failed to print
+    workspace.printString(postfix);
+  }
+
+  return Text(workspace.internalBuffer());//the constructor invoked here copies the content.
 }

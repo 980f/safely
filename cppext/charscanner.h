@@ -2,7 +2,9 @@
 #define CHARSCANNER_H
 
 #include "buffer.h"
+#include "textkey.h"
 
+/** signed char and unsigned char variants need to be translatable to the other */
 class ByteScanner;
 
 struct CharScanner : public Indexer <char> {
@@ -11,6 +13,10 @@ public:
   static CharScanner Null;
   CharScanner(void);
   CharScanner(char  * content, unsigned size);
+  virtual ~CharScanner();
+  /** explicit copy constructor helps compiler out, better than defaulting portion to 0*/
+  CharScanner(const CharScanner &other);
+
   /** make a new pointer into an existing buffer, the portion of thereof selected by
    * @param portion is -1 (~0) for 0 to pointer, +1 for pointer to allocated, 0 for 0 to allocated.
    * E.G. parsing a buffer that was just filled
@@ -24,7 +30,7 @@ public:
     * maydo: return null if we can't put a null at the end
     * maydo: add argument for 'urgent' or not, and if not urgent see if there is a null before the end, not just at the end
     */
-  const char *asciiz(void);
+  TextKey asciiz(void);
   /** pointer past end OR pointing to a null */
   bool isTerminal();
   bool operator == (const CharScanner &rhs)const;

@@ -7,7 +7,7 @@ Text::Text(): Cstr(nullptr){
   //all is well
 }
 
-Text::Text(unsigned size): Cstr( static_cast<TextKey>( calloc(size+1,1))){
+Text::Text(unsigned size): Cstr( static_cast<TextKey>( calloc(Zguard(size),1))){
   //we have allocated a buffer and filled it with 0
 }
 
@@ -54,6 +54,6 @@ TextKey Text::operator =(TextKey other){
 }
 
 void Text::clear(){
-  free(const_cast<char *>(ptr));
+  free(violate(ptr));
   ptr = nullptr;
 }

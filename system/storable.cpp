@@ -364,7 +364,7 @@ double Storable::setValue(double value, Storable::Quality quality){
   return value;
 } // setValue
 
-void Storable::setImageFrom(const char *value, Storable::Quality quality){
+void Storable::setImageFrom(TextKey value, Storable::Quality quality){
   bool notifeye = false;
 
   if(isTrivial()) { //don't notify or detect change, no one is allowed to watch an uninitialized node
@@ -429,7 +429,7 @@ ConstChainScanner<Storable> Storable::kinder() const {
   return ConstChainScanner<Storable>(wad);
 }
 
-Storable *Storable::existingChild(NodeName childName){
+Storable *Storable::existingChild(TextKey childName){
   //nameless nodes might be mixed in with named ones:
   ForWad {
     Storable&one(list.next());
@@ -440,7 +440,7 @@ Storable *Storable::existingChild(NodeName childName){
   return 0;
 }
 
-const Storable *Storable::existingChild(NodeName childName) const {
+const Storable *Storable::existingChild(TextKey childName) const {
   //nameless nodes might be mixed in with named ones:
   if(nonTrivial(childName)) { //added guard to make assignFrom( a wad) easier to code.
     ForWadConstly {
@@ -484,7 +484,7 @@ Storable *Storable::findChild(TextKey path, bool autocreate){
 } // findChild
 
 /** creates node if not present.*/
-Storable&Storable::child(NodeName childName){
+Storable&Storable::child(TextKey childName){
   Storable *child = existingChild(childName);
 
   if(child) {
@@ -493,7 +493,7 @@ Storable&Storable::child(NodeName childName){
   return addChild(childName);
 }
 
-Storable&Storable::operator ()(NodeName name){
+Storable&Storable::operator ()(TextKey name){
   return child(name);
 }
 

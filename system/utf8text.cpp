@@ -11,6 +11,7 @@ int Utf8Text::encodedLength(Cstr utf8s)
   if(utf8s.empty()){
     return 0;
   }
+  int totes(0);
   const char *scan=utf8s;
   while(UTF8 ch=*scan++){
     unsigned followers=ch.numFollowers();
@@ -20,5 +21,6 @@ int Utf8Text::encodedLength(Cstr utf8s)
     }
   }
 
- for()
+ //for()
+  return totes;
 }

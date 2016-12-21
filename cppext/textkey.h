@@ -4,6 +4,13 @@
 /** marker for internal tag for text, especially useful in getting 'const' onto the correct place */
 typedef const char* TextKey;
 
+/** add 1 to reserve space for null terminator
+ * this is a marker for '1+' or '+1'
+*/
+inline unsigned Zguard(unsigned allocation){
+  return 1+allocation;
+}
+
 //////////// inline stringy stuff /////////////
 #define ERRLOC(moretext) __FILE__ "::" moretext
 

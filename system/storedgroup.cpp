@@ -1,5 +1,3 @@
 #include "storedgroup.h"
 
-StoredGroup::StoredGroup(){
-
-}
+//marker for pure template.

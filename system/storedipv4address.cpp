@@ -1,4 +1,7 @@
 #include "storedipv4address.h"
+#include "stdlib.h" //strtol
+
+#include "textformatter.h"
 
 StoredIPV4Address::StoredIPV4Address(Storable &node) : Stored(node),
   ConnectChild(resolved),
@@ -7,14 +10,14 @@ StoredIPV4Address::StoredIPV4Address(Storable &node) : Stored(node),
   dotted.onAnyChange(MyHandler(StoredIPV4Address::makeNumber),true);//on load conflict let dotted win.
 }
 
-Ustring StoredIPV4Address::dotstring(u32 ipv4){
-  u32 accumulator = ipv4;
+Cstr StoredIPV4Address::dotstring(u32 ipv4){
+  u32 accumulator(ipv4);
   u8 bytes[4];
   for(int i = 4; i-->0; ) {
     bytes[i] = accumulator >> 24;
     accumulator <<= 8;
   }
-  return Ustring::compose("%1.%2.%3.%4",bytes[3],bytes[2],bytes[1],bytes[0]);
+  return TextFormatter::compose("%1.%2.%3.%4",bytes[3],bytes[2],bytes[1],bytes[0]);
 }
 
 void StoredIPV4Address::makeText(){
@@ -22,13 +25,13 @@ void StoredIPV4Address::makeText(){
 }
 
 void StoredIPV4Address::makeNumber(){
-  const char *separator = dotted.c_str();
+  char *separator = Cstr::violate(dotted.c_str());//strtol is missing a const
   u32 accumulator = 0;
   while(true) {
-    long int octet = strtol(separator,const_cast<char **>( &separator),10);
+    long int octet = strtol(separator, &separator,10);
     accumulator <<= 8;
     accumulator += octet;
-    if(!(separator&&*separator++=='.')) {
+    if(!separator|| *separator++!='.') {
       break;
     }
   }
