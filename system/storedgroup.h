@@ -449,10 +449,11 @@ private:
     dependents(false, which);
   } // wrapNode
 
-  /** when called via the dependents signal schedule an action:*/
-  static void doLater(bool removal, int arg, Watcher watcher){
-    doSoon(sigc::bind(watcher, removal, arg), 0, 1);
-  }
+//Glib
+//  /** when called via the dependents signal schedule an action:*/
+//  static void doLater(bool removal, int arg, Watcher watcher){
+//    doSoon(sigc::bind(watcher, removal, arg), 0, 1);
+//  }
 
 }; // class StoredGroup
 
