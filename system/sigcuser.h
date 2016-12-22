@@ -98,24 +98,26 @@ BooleanSlot assigner(bool &target);
 /** for use bound into a slot, when invoked it calls the action if the @param source returns the @param edge */
 void onEdge(sigc::slot<bool> source,bool edge,SimpleSlot action);
 
-
+/** a slot that runs once, via deleting itself when run.
+ * It is inadvisable to keep a reference to one of these, expected use to use @see makeInstance in the argumentlist of a signal.connect() call.
+ */
 template< typename ... Args> class RunOnceSlot : SIGCTRACKABLE {
-  typedef sigc::slot< void, Args ... > Slot;
-  Slot slot;
-  RunOnceSlot(Slot slot) :
-    slot(slot){
+  typedef sigc::slot< void, Args ... > Action;
+  Action action;
+  RunOnceSlot(Action slot) :
+    action(slot){
   }
 
   void run(Args ... args){
-    DeleteOnReturn< RunOnceSlot< Args ... >> dor(this);
-    slot(args ...);
+    DeleteOnReturn< RunOnceSlot> dor(this);
+    action(args ...);
   }
 
 public:
   /** make a new self deleting slot runner */
-  static Slot makeInstance(Slot slot){
-    RunOnceSlot &dou(*new RunOnceSlot(slot));
-    return mem_fun(dou, &RunOnceSlot::run);
+  static Action makeInstance(Action slot){
+    RunOnceSlot *dou(new RunOnceSlot(slot));
+    return sigc::mem_fun(dou, &RunOnceSlot::run);
   }
 
 }; // class RunOnceSlot

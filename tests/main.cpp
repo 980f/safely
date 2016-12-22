@@ -22,17 +22,25 @@ void justOnce(int newvalue){
   printf("\njustOnce: %d\n",newvalue);
 }
 
+void justOnceLater(int newvalue){
+  printf("\njustOnceLater: %d\n",newvalue);
+}
 
+#include "runoncenthtime.h"
 void testdemonic(){
-  auto oncer=RunOnceSlot<int>::makeInstance(&justOnce);
-  demonic.onAnyChange(oncer);
+
+  demonic.onAnyChange(RunOnceSlot<int>::makeInstance(&justOnce));
   demonic.onAnyChange(&demonWatcher);
+  //run once on second change
+  demonic.onAnyChange(RunOnceNthTime<int>::makeInstance(&justOnceLater,2));
+
 
   demonic = 0;//should be no change
   demonic = 17;//should print 17
   demonic = 0;//should print 0
+  demonic = 22;//should print 0
 
-}
+} // testdemonic
 
 #include "cheaptricks.h"
 void coe(int &shouldclear){
