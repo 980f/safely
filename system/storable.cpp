@@ -45,12 +45,12 @@ Storable::~Storable(){
 }
 
 void Storable::notify() const {
-  if(++recursionCounter > 1) {
-    wtf("recursing %d in %s", recursionCounter, bugName);
-  }
+//  if(++recursionCounter > 1) {
+//    wtf("recursing %d in %s", recursionCounter, bugName);
+//  }
   watchers.send();
   recursiveNotify();
-  --recursionCounter;
+//  --recursionCounter;
 }
 
 void Storable::recursiveNotify() const {
@@ -143,13 +143,18 @@ bool Storable::convertToNumber(bool ifPure){
   }
 } // Storable::convertToNumber
 
-bool Storable::resolve(){
+bool Storable::resolve(bool recursively){
   if(is(Storable::Uncertain)) {
     if(convertToNumber(true)) {//if is an image of a pure number (no units text)
       return true;
     } else {//it must be text
       setType(Storable::Textual);
       return true;
+    }
+  }
+  if(recursively && is(Wad)){
+    ForKidsConstly(list){
+      list.next().resolve(true);
     }
   }
   return false;
@@ -389,8 +394,8 @@ void Storable::setImage(const TextKey &value, Quality quality){
 Cstr Storable::image(void)  {
   switch(type) {
   case Uncertain:
-    resolve();
-    //#join
+    resolve(false);
+    //JOIN
   case Textual:
     return text;
 
@@ -451,7 +456,18 @@ const Storable *Storable::existingChild(TextKey childName) const {
     }
     return nullptr;
   }
-} // Storable::existingChild
+  //never got here! never asked for trivial name!
+  return nullptr;//can't find a nameless child. Need special functions for that which include a search start index.
+}
+
+Storable *Storable::findNameless(int lastFound){
+  while(lastFound++<wad.quantity()){
+    if(wad[lastFound]->name.empty()){
+      return wad[lastFound];//and user can use the index thereof to pass back to this for the next one.
+    }
+  }
+  return nullptr;
+}
 
 Storable *Storable::findChild(TextKey path, bool autocreate){
   SegmentedName genealogy(false);
@@ -501,7 +517,7 @@ Storable&Storable::operator [](int ordinal){
   if(!has(ordinal)) {
     wtf("nonexisting child of %s referenced by ordinal %d (out of %d).",bugName , ordinal, numChildren());
     dumpStack("nth child doesn't exist");
-    addChild(); //better than an NPE so deep in the hierarchy that we don't know where it comes from.
+    addChild(""); //better than an NPE so deep in the hierarchy that we don't know where it comes from.
     return *wad.last();
   }
   return *wad[ordinal];
@@ -553,7 +569,7 @@ void Storable::presize(int qty, Storable::Type type){
   int i = qty - numChildren();
 
   while(i-- > 0) {
-    Storable&kid = addChild();
+    Storable&kid = addChild("");
     kid.setType(type);
     //and allow constructed default values to persist
     setQuality(Defaulted); //not using Empty as that often masks the type being set.
@@ -579,9 +595,17 @@ bool Storable::removeChild(Storable&node){
   return remove(indexOf(node));
 }
 
-void Storable::filicide(){
+bool Storable::removeChild(Cstr name){
+  Storable *moriturus=existingChild(name);
+  return moriturus && remove(moriturus->index);
+}
+
+void Storable::filicide(bool notify){
   also(numChildren() != 0); //mark for those who poll changes...
   wad.clear(); //remove WITHOUT notification, we only call filicide when we are cloning
+  if(notify){
+    watchers.send();
+  }
 }
 
 void Storable::getArgs(ArgSet&args, bool purify){
@@ -623,7 +647,7 @@ void Stored::doParse(){
 }
 
 //this is a dangerous function, the returned pointer must not be retained-data might be freed later.
-const char *Stored::rawText() const {
+TextKey Stored::rawText() const {
   return node.text.c_str();
 }
 
@@ -718,7 +742,7 @@ Storable&StoredListReuser::next(){
   if(wadding) {
     return node.addWad(wadding);
   } else {
-    return node.addChild();
+    return node.addChild("");
   }
 } // next
 

@@ -36,12 +36,14 @@ template<typename T> bool always(bool b,T /*ignored*/){
   return b;
 }
 
+#if NO_VARIADIC_TEMPLATES
 /** an adaptor to add a fixed return value to a slot that didn't have one.*/
 template<typename T> T callAndReturn(SimpleSlot &voidly,T fixedReturn){
   voidly();
   return fixedReturn;
 }
 
+/** @returns a slot that when invoked returns @param fixedReturn*/
 template<typename T> sigc::slot<T> addReturn(SimpleSlot &voidly,T fixedReturn){
   return sigc::bind(&callAndReturn<T>,voidly,fixedReturn);//#do NOT use ref here, let original slot evaporate.
 }
@@ -55,6 +57,19 @@ template<typename T,typename A> T call1AndReturn(sigc::slot<void,A> &voidly,T fi
 template<typename T,typename A> sigc::slot<T,A> addReturn1(sigc::slot<void,A> &voidly,T fixedReturn){
   return sigc::bind(&call1AndReturn<T,A>,voidly,fixedReturn);//#do NOT use ref here, let original slot evaporate.
 }
+#else
+//now that we have variadic templates tamed:
+/** an adaptor to add a fixed return value to a slot that didn't have one.*/
+template<typename T,typename ... Args> T call1AndReturn(sigc::slot<void,Args ...> &voidly,T fixedReturn){
+  voidly();
+  return fixedReturn;
+}
+
+template<typename T,typename ... Args> sigc::slot<T,Args...> addReturn(sigc::slot<void,Args ...> &voidly,T fixedReturn){
+  return sigc::bind(&call1AndReturn<T,Args...>,voidly,fixedReturn);//#do NOT use ref here, let original slot evaporate.
+}
+#endif
+
 
 /** adaptor to call a function and assign it to a stored native-like target */
 template<typename T> void assignTo(T &target,sigc::slot<T> getter){

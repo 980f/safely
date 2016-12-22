@@ -3,7 +3,7 @@
 cd /d/work/safely
 . ./cleancommit
 if [[ $# > 0 ]]; then  
-echo git commit -a -m\"$*\"
+git commit -a -m \"$*\"
 else
 echo git commit -a 
 fi

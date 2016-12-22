@@ -1,19 +1,28 @@
 #include "storejson.h"
 #include "utf8.h"
 
-StoreJSON::StoreJSON()
-{
 
+static
+UTF8 skipwhite(CharScanner &scanner){
+  while (scanner.hasNext()) {//space leading name or value
+    UTF8 ch=scanner.next()  ;
+    if(!ch.isWhite()){
+      return ch;
+    }
+  }
+  return 0;
 }
 
-void StoreJSON::parse(char *buffer, int length, Storable &parent)
+
+JSONparser::JSONparser(char *buffer, unsigned length, Storable &parent):
+  token(buffer,length),
+  lookahead(buffer,length),
+  parent(parent)
 {
- CharScanner lookahead(buffer,length);
- //skip whitespace
+  parse();
+}
 
- while (lookahead.hasNext()) {
- UTF8 ch=lookahead.next()  ;
-
- }
+void JSONparser::parse(){
  //expect name or value
+
 }

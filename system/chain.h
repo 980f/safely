@@ -226,7 +226,7 @@ public:
 
   /** move pointer back. If value is bad then pointer goes to 0!*/
   void rewind(unsigned int backup=~0){//default arg '~0' is a cheap way of saying 'max unsigned int' that works for all sizes of int.
-    if(backup <= steps) {
+    if(backup <= unsigned(steps)) {
       steps -= backup;
     } else {
       steps = 0;

@@ -2,7 +2,11 @@
 #define STORABLE_H
 
 #include "safely.h"
+
+#if StoreArgsFeatured
 #include "argset.h" //for arrays to mate to hardware structs
+#endif
+
 #include "chain.h" //wrap std::vector to cover its sharp pointy sticks.
 #include "changemonitored.h"
 
@@ -71,11 +75,14 @@ public:
    *  This is essential for Stored's functioning.
    */
   SimpleSignal preSave;
-protected:
 
+private: //#the watchers must be mutable because sigc needs to be able to cull dead slots from its internal lists.
+  /** sent when value changes, or quantity of wad changes*/
   mutable GatedSignal watchers; //# mutable so that we can freeze and thaw
+  /** sent when any child changes, allows setting a watch on children that may not exist. */
   mutable GatedSignal childwatchers; //# mutable, see @watchers.
-  mutable int recursionCounter = 0;
+
+//was hunting a bug  mutable int recursionCounter = 0;
 
 protected:
   /** stored value is like a union, although we didn't actually use a union so that a text image of the value can be maintained for debug of parsing and such. */
@@ -135,7 +142,8 @@ public:
   /** @returns whether the text value was converted to a number. @param ifPure is whether to restrict the conversion to strings that are just a number, or whether trailing text is to be ignored. */
   bool convertToNumber(bool ifPure);
 /** convert an Unknown to either Numerical or Text depending upon purity, for other types @returns false */
-  bool resolve();
+  bool resolve(bool recursively);
+
   // various predicate-like things
   bool isTrivial() const;
   bool is(Type ty) const;
@@ -155,7 +163,7 @@ public:
     return index;
   }
 
-  /** watch this node: if wad change is only adds and removes. */
+  /** watch this node's value, if wad the only change here is adds and removes. */
   sigc::connection addChangeWatcher(const SimpleSlot &watcher, bool kickme = false) const;
   /** watch all children: (NB: can't unwatch individual kids) */
   sigc::connection addChangeMother(const SimpleSlot &watcher, bool kickme = false) const;
@@ -242,12 +250,21 @@ public:
   /** @see existingChild() non const version */
   const Storable *existingChild(TextKey childName) const;
 
+  /** find nameless nodes, starting at &param lastFound. Pass ~0 for 'beginning`.
+   * To walk the list:
+   * for(Storable *nemo=node.findNameless();nemo;nemo=node.findNameless(nemo.ownIndex())) dosomething(nemo); //nemo will not be null
+   * @deprecated untested
+*/
+  Storable *findNameless(int lastFound=~0);
+
   /** if @param autocreate is true then call child() on each piece of the @param path, else call existingChild() until either a
    * member is missing or the child is found.
    * FYI: tolerates null this! */
   Storable *findChild(TextKey path, bool autocreate = true); /* true as default is legacy from method this replaced.*/
+
   /** creates node if not present.*/
   Storable &child(TextKey childName);
+
   /** syntactic sugar for @see child(NodeName) */
   Storable &operator ()(TextKey name);
   //these give nth child
@@ -260,21 +277,22 @@ private:
   int indexOf(const Storable &node) const;
 public:
   /** add a new empty node */
-  Storable &addChild(TextKey childName = "");
-//  Storable &addChild(Indexer<const char> childName);
+  Storable &addChild(TextKey childName);//removed default, nameless nodes are rare, make them stand out.
+
   /** add a new node with content copied from existing one, created to clean up storedGroup entity copy*/
   Storable &createChild(const Storable &other);
 
   //combined presize and addChild to stifle trivial debug spew when adding a row to a table.
   Storable &addWad(int qty, Storable::Type type = NotKnown, TextKey name = "");
   void presize(int qty, Storable::Type type = NotKnown);
+
   /** remove a child of the wad, only makes sense for use with StoredGroup (or legacy cleanup) */
   bool remove(int which);
   bool removeChild(Storable &node);
-  //  bool removeChild(const Ustring &name);
+  bool removeChild(Cstr name);
 
   /** remove all children */
-  void filicide();
+  void filicide(bool notify=false);
   /** packs child values into the given @param args, if purify is true then argset entries in excess of the number of this node's
    * children are zeroed, else they are left unmodified  */
   void getArgs(ArgSet &args, bool purify = false);
@@ -299,41 +317,48 @@ template<class Groupie> bool byName(const TextKey &name, const Groupie & /*child
  * wrapper instead of extending Storable, to lighten each instance's memory footprint.
  * Only extend from this when program logic will alter values versus gui edit screens as the latter work directly on the nodes.*/
 class Stored : SIGCTRACKABLE {
-  Stored();
-  Stored(const Stored &cantbecopied);
+  Stored();//# we must attache to a storable, we exist to wrap access to one with type-safety.
+  Stored(const Stored &cantbecopied);//can't copy a subset of a tree, not generically.
 protected:
-  /** used to per-class disable notification causing onParse' to be called before all children exist.*/
+  /** used to per-class disable notification causing onParse' to be called before all children exist.
+   * Only a few situations have needed to do this.
+*/
   bool duringConstruction;
   // you must add the following lines to your constructor, can't be a base class function as the virtual table isn't operational
   // yet:
   //    duringConstruction=false;
   //    onParse();
 public:
+  /** being a reference there is little danger in exposing it. It was handy having it available without the extra () of a getter.*/
   Storable &node;
+  /** the essential constructor. */
   Stored(Storable &node);
+  /** sigc needs this, you probably do for other reasons as well. */
   virtual ~Stored();
-  /** hook for actions to perform when node is written to disk.
-   * @returns success, if false then the write must be reported as partially failed.*/
+  /** hook for actions to perform prior to export (do any deferred updates)
+   */
   virtual void onPrint(){
   }
 
-  //hook for actions when storage node is altered:
+  /** hook to cache anything dependent upon underlying storage, probably should deprecate and use watchers.*/
   virtual void onParse(){
   }
 
-  /** needed to create slots in base class to call virtual function  */
+  /** this is needed to create slots in base class to call onParse due to it being a virtual function  */
   void doParse();
-  /** pointer to text value's first char, dangerous! here for some GUI access */
-  const char *rawText() const;
-  /** @param generation 0 is self, same as plain index() */
+  /** pointer to text value's first char, dangerous! here for some GUI access. */
+  TextKey rawText() const;
+  /** @param generation 0 is self, same as plain index()
+ @returns ordinal within parent wad of this item. Useful for parallel array stuff */
   int parentIndex(int generation = 1) const;
+  /** @returns ordinal of the wrapped node.  */
   int index() const;
+  /** @returns whether this node's ordinal is @param index */
   bool indexIs(int index) const;
-  /** @return a functor that when called returns the present index of this item.*/
+  /** @returns a functor that when called returns the present index of this item.*/
   sigc::slot<int> liveindex() const;
 
-
-  /** used by stored group refresh operations, to track no-longer relevent items */
+  /** The next stuff is used by stored group refresh operations, to track no-longer relevent items */
 protected:
   bool refreshed;
 public:
@@ -341,11 +366,11 @@ public:
   void isRefreshed();
   /** created for use by StoredGroup::removeIf()*/
   bool notRefreshed() const;
+//end refresh logic.
 
-  /** handy for diagnostics, and occasionally abused for feeding gui*/
+  /** @returns *copy* of underlying node's name. Since the node name is const as of late 2016 this will stay the name, but manipulating it will not alter the node's name. */
   NodeName getName() const;
 
-//deprecated to try to make node name's const.  void setName(NodeName name);
 //ArgSet stuff is interface to our hardware device protocol
   void getArgs(ArgSet &args);
   void setArgs(ArgSet &args);

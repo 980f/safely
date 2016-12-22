@@ -43,6 +43,11 @@ int main(int argc, char *argv[]){
     printf("\n%d: %s",argc,argv[argc]);
   }
   demonic.onAnyChange(&demonWatcher);
+
+  demonic=0;//should be no change
+  demonic=17;
+  demonic=0;
+
   int coedata(42);
   coe(coedata);
   printf("\ncoe: %d should be 0",coedata);
