@@ -35,7 +35,8 @@ SOURCES += \
     storedgroup.cpp \
     pathparser.cpp \
     textformatter.cpp \
-    sigcuser.cpp
+    sigcuser.cpp \
+    runoncenthtime.cpp
 
 HEADERS += \
     cachedindextostored.h \
@@ -75,5 +76,6 @@ HEADERS += \
     utf8text.h \
     storedlabel.h \
     pathparser.h \
-    textformatter.h
+    textformatter.h \
+    runoncenthtime.h
 
