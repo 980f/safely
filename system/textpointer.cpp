@@ -3,19 +3,23 @@
 #include "stdlib.h"  //free
 
 
-Text::Text(): Cstr(nullptr){
+Text::Text() : Cstr(){
   //all is well
 }
 
-Text::Text(unsigned size): Cstr( static_cast<TextKey>( calloc(Zguard(size),1))){
+Text::Text(TextKey other){
+  copy(other);
+}
+
+Text::Text(unsigned size) : Cstr( static_cast<TextKey>( calloc(Zguard(size),1))){
   //we have allocated a buffer and filled it with 0
 }
 
-Text::Text(Text &other):Cstr(other){
+Text::Text(Text &other) : Cstr(other){
   other.clear();
 }
 
-Text::Text(const char *ptr,bool takeit): Cstr( nonTrivial(ptr) ? (takeit? ptr : strdup(ptr)) : nullptr){
+Text::Text(const char *ptr,bool takeit) : Cstr( nonTrivial(ptr) ? (takeit ? ptr : strdup(ptr)) : nullptr){
   //we now own what was passed, or the duplicate we created.
 }
 
@@ -30,7 +34,7 @@ Text::operator TextKey() const {
 void Text::take(TextKey other){
   if(ptr != other) { //# if not passed self as a pointer to this' storage.
     clear();
-    ptr=other;
+    ptr = other;
   }
   //else self and we already own ourself.
 }
@@ -46,7 +50,7 @@ void Text::copy(TextKey other){
       ptr = strdup(other);//don't delete!
     }
   }
-}
+} // Text::copy
 
 TextKey Text::operator =(TextKey other){
   copy(other);

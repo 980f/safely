@@ -15,11 +15,11 @@ public:
   Text(TextKey ptr,bool takeit);
 
   /** makes a copy of the @param given content */
-  Text(TextKey ptr);
-
+  Text(TextKey other);
 
   Text(unsigned size);
-public: //to detect compiler autogenerating these
+
+  /** take contents of @param other, hence other cannot be const */
   Text(Text &other);
 
 public:
@@ -35,10 +35,10 @@ public:
    */
   TextKey operator =(TextKey other) override;
 
-  /** take ownership of a buffer */
+  /** take ownership of a buffer, i.e. deleting this Text object will free @param other */
   void take(TextKey other);
 
-  /** make a copy of @param other. If other points to the same memory as this ... we might screw up*/
+  /** make a copy of @param other. If other points to the same memory as this ... we might screw up */
   void copy(TextKey other);
 
   /** discard internal content (if any) */
