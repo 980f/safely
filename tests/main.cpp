@@ -18,12 +18,20 @@ void demonWatcher(int newvalue){
   printf("\ndemonic: %d\n",newvalue);
 }
 
+void justOnce(int newvalue){
+  printf("\njustOnce: %d\n",newvalue);
+}
+
+
 void testdemonic(){
+  auto oncer=RunOnceSlot<int>::makeInstance(&justOnce);
+  demonic.onAnyChange(oncer);
   demonic.onAnyChange(&demonWatcher);
 
   demonic = 0;//should be no change
   demonic = 17;//should print 17
   demonic = 0;//should print 0
+
 }
 
 #include "cheaptricks.h"
