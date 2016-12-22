@@ -2,8 +2,25 @@
 
 #include "string.h"
 
-Cstr::Cstr(TextKey target):ptr(target){
+Cstr::Cstr() : ptr(nullptr){
+  //#nada
+}
 
+Cstr::Cstr(TextKey target) : ptr(target){
+  //#nada
+}
+
+Cstr::~Cstr(){
+  //#need explicit instantiation for vtable to get emitted.
+}
+
+TextKey Cstr::operator =(TextKey ptr){
+  this->ptr = ptr;
+  return ptr;
+}
+
+TextKey Cstr::c_str() const {
+  return ptr;
 }
 
 Cstr::operator const char *() const {

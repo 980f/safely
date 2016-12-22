@@ -2,12 +2,13 @@
 #include "stdlib.h"
 #include "string.h"
 
-bool nonTrivial(TextKey t){
-  return t != nullptr && *t != 0;
-}
 
 bool isTrivial(const char *string){
   return string==nullptr || *string==0;
+}
+
+bool nonTrivial(TextKey t){
+  return t != nullptr && *t != 0;
 }
 
 bool same(TextKey a, TextKey b){

@@ -12,10 +12,18 @@ Indexer<SafeStr<10>> pressure;
 
 #include "watchable.h"
 
-Watchable<int> demonic;
+static Watchable<int> demonic;
 
 void demonWatcher(int newvalue){
   printf("\ndemonic: %d\n",newvalue);
+}
+
+void testdemonic(){
+  demonic.onAnyChange(&demonWatcher);
+
+  demonic = 0;//should be no change
+  demonic = 17;//should print 17
+  demonic = 0;//should print 0
 }
 
 #include "cheaptricks.h"
@@ -23,6 +31,26 @@ void coe(int &shouldclear){
   ClearOnExit<int> raii(shouldclear);
   shouldclear *= 5;
 }
+
+#include "textpointer.h"
+class DeleteOnExitTestData {
+  Text message;
+public:
+  DeleteOnExitTestData(TextKey msg) : message(msg){
+  }
+
+  ~DeleteOnExitTestData(){
+    printf("\nDeleteOnExitTestData.%s",TextKey(message));
+  }
+
+  static void testme(){
+    DeleteOnExitTestData &doe(*new DeleteOnExitTestData("I'm dying here!"));
+    DeleteOnReturn<DeleteOnExitTestData> dor(doe);
+    printf("\nthis should be followed with another printout");
+  }
+
+}; // class DeleteOnExitTestData
+
 
 #include "extremer.h"
 void extremely(){
@@ -42,15 +70,15 @@ int main(int argc, char *argv[]){
   while(argc-->0) {
     printf("\n%d: %s",argc,argv[argc]);
   }
-  demonic.onAnyChange(&demonWatcher);
 
-  demonic=0;//should be no change
-  demonic=17;
-  demonic=0;
+  DeleteOnExitTestData::testme();
+
+  testdemonic();
 
   int coedata(42);
   coe(coedata);
   printf("\ncoe: %d should be 0",coedata);
+
   extremely();
   printf("\ntests completed \n");
   return 0;
