@@ -8,7 +8,6 @@ include("../cppext.lib.pro")
 include("../sigc.pro")
 
 SOURCES += \
-    cpshelpers.cpp \
     delimitedinputstream.cpp \
     delimitingoutputstream.cpp \
     dyndeterminator.cpp \
@@ -35,7 +34,8 @@ SOURCES += \
     storedlabel.cpp \
     storedgroup.cpp \
     pathparser.cpp \
-    textformatter.cpp
+    textformatter.cpp \
+    sigcuser.cpp
 
 HEADERS += \
     cachedindextostored.h \

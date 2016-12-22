@@ -57,7 +57,19 @@ template<typename T,typename A> T call1AndReturn(sigc::slot<void,A> &voidly,T fi
 template<typename T,typename A> sigc::slot<T,A> addReturn1(sigc::slot<void,A> &voidly,T fixedReturn){
   return sigc::bind(&call1AndReturn<T,A>,voidly,fixedReturn);//#do NOT use ref here, let original slot evaporate.
 }
-#else
+
+/** creates a slot that when executed/invoked removes that slot from any signal.*/
+//class RunOnceSlot : SIGCTRACKABLE {
+//  SimpleSlot action;
+//  /** construction of a useful one requires a little post construction work, so use @see makeInstance */
+//  RunOnceSlot(SimpleSlot action);
+//  void run();
+//public:
+//  /** make a new self deleting slot runner.  */
+//  static SimpleSlot makeInstance(SimpleSlot action);
+//};
+
+#else // if NO_VARIADIC_TEMPLATES
 //now that we have variadic templates tamed:
 /** an adaptor to add a fixed return value to a slot that didn't have one.*/
 template<typename T,typename ... Args> T call1AndReturn(sigc::slot<void,Args ...> &voidly,T fixedReturn){
@@ -65,10 +77,11 @@ template<typename T,typename ... Args> T call1AndReturn(sigc::slot<void,Args ...
   return fixedReturn;
 }
 
-template<typename T,typename ... Args> sigc::slot<T,Args...> addReturn(sigc::slot<void,Args ...> &voidly,T fixedReturn){
-  return sigc::bind(&call1AndReturn<T,Args...>,voidly,fixedReturn);//#do NOT use ref here, let original slot evaporate.
+template<typename T,typename ... Args> sigc::slot<T,Args ...> addReturn(sigc::slot<void,Args ...> &voidly,T fixedReturn){
+  return sigc::bind(&call1AndReturn<T,Args ...>,voidly,fixedReturn);//#do NOT use ref here, let original slot evaporate.
 }
-#endif
+
+#endif // if NO_VARIADIC_TEMPLATES
 
 
 /** adaptor to call a function and assign it to a stored native-like target */
@@ -85,36 +98,27 @@ BooleanSlot assigner(bool &target);
 /** for use bound into a slot, when invoked it calls the action if the @param source returns the @param edge */
 void onEdge(sigc::slot<bool> source,bool edge,SimpleSlot action);
 
-/** creates a slot that when executed/invoked removes that slot from any signal.*/
-class RunOnceSlot : SIGCTRACKABLE {
-  SimpleSlot continuation;
-  RunOnceSlot(SimpleSlot continuation);
-  void run();
-public:
-  /** make a new self deleting slot runner */
-  static SimpleSlot getInstance(sigc::slot< void > continuation);
-};
 
-template< typename T_arg1 > class RunOnceSlot1 : SIGCTRACKABLE {
-  typedef sigc::slot< void, T_arg1 > Slot;
+template< typename ... Args> class RunOnceSlot : SIGCTRACKABLE {
+  typedef sigc::slot< void, Args ... > Slot;
   Slot slot;
-  RunOnceSlot1(Slot slot) :
+  RunOnceSlot(Slot slot) :
     slot(slot){
   }
 
-  void run(T_arg1 arg1){
-    DeleteOnReturn< RunOnceSlot1< T_arg1 >> dor(this);
-    slot(arg1);
+  void run(Args ... args){
+    DeleteOnReturn< RunOnceSlot< Args ... >> dor(this);
+    slot(args ...);
   }
 
 public:
   /** make a new self deleting slot runner */
-  static Slot getInstance(Slot slot){
-    RunOnceSlot1 &dou(*new RunOnceSlot1(slot));
-    return mem_fun(dou, &RunOnceSlot1::run);
+  static Slot makeInstance(Slot slot){
+    RunOnceSlot &dou(*new RunOnceSlot(slot));
+    return mem_fun(dou, &RunOnceSlot::run);
   }
 
-}; // class RunOnceSlot1
+}; // class RunOnceSlot
 
 
 /** usage: Finally d(slot);
@@ -137,10 +141,11 @@ public:
   operator bool();
 };
 
-void doSoon(SimpleSlot slot,int howSoon = 0,int howurgently = 1);
-/** @return a slot that when invoked will schedule execution of the @param given slot.
- *  deleting objects referenced by the toDefer slot should be interesting ;) */
-SimpleSlot eventually(SimpleSlot toDefer);
+//these required Glib stuff --
+//void doSoon(SimpleSlot slot,int howSoon = 0,int howurgently = 1);
+///** @return a slot that when invoked will schedule execution of the @param given slot.
+// *  deleting objects referenced by the toDefer slot should be interesting ;) */
+//SimpleSlot eventually(SimpleSlot toDefer);
 
 /** a signal accumulator that invokes all slots, anding the result */
 struct AndAll {

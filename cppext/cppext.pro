@@ -47,8 +47,7 @@ SOURCES += argset.cpp \
     hassettings.cpp \
     pathname.cpp \
     bitwise.cpp \
-    cstr.cpp \
-    testcppextbuild.cpp
+    cstr.cpp
 
 HEADERS += safely.h \
     argset.h \
