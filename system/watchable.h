@@ -21,19 +21,10 @@ protected:
 
 public:
   Scalar set(Scalar newvalue){
-    if(changed(newvalue)) {
-      post();
-    }
-    return varb;
-  }
-
-  /** if different then assign and @return true after watchers are invoked */
-  bool changed(const Scalar &newvalue){
     if(::changed(varb,newvalue)) {
       post();
-      return true;
     }
-    return false;
+    return varb;//return persistent value, in case 'changed' does a 'close enough' compare rather than an exact one.
   }
 
   operator Scalar() const {
@@ -65,6 +56,7 @@ public:
     return onAnyChange(sigc::hide(action),kickme);
   }
 
+  /** action will be called when this equals @param value.*/
   sigc::connection onChangeTo(Scalar value,sigc::slot<void,Scalar> action,bool kickme = false){
     if(kickme) {
       gater(action,value);
@@ -96,9 +88,14 @@ public:
     return set(varb + 1);
   }
 
+  /** pre decrement */
+  Scalar operator --(){
+    return set(varb - 1);
+  }
+
+
   //post increment doesn't play well with the concept of watching
 
-//someday add compares and such: #define watchcompare(op) bool operator op (Scalar othervalue) const { return varb op othervalue;}
 
 }; // class Watchable
 

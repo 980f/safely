@@ -6,6 +6,10 @@
  * code in this library that needs compiletime constants include this header file.
 */
 
+//#define JOIN
+#define JOIN  [[clang::fallthrough]];
+
+
 
 /// maximum number of values that 'Settings' protocol can handle.
 #define MAXARGS 15

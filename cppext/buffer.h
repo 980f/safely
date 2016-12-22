@@ -302,7 +302,7 @@ public:
   /** set unused content to 0. pointer is unmodified
    * only makes sense if Content=0 assignment makes sense*/
   void clearUnused() const {
-    for(int i = pointer; i<allocated(); i++) {
+    for(unsigned i = pointer; i<allocated(); i++) {
       buffer[i] = 0;
     }
   }
