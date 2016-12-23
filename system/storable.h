@@ -400,7 +400,7 @@ public:
   /** @returns nominally constant text image.
    * IN a prior implementation this was a connection to an editable item, we now force old-timey seperate read and write.
    * I.E. you cannot alter the content without using setImage() and triggering watchers. When this returned a reference to an intelligent string class the change detect
-   *was potentially bypassed.
+   * was potentially bypassed.
    */
   Cstr image() const {
     return node.image();
