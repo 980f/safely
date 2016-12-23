@@ -1,15 +1,15 @@
 #include "roundrobiner.h"
-#include "cheapTricks.h"
+#include "cheaptricks.h"
 #include "minimath.h" //fill's clear's
 
-RoundRobiner::RoundRobiner(bool *Scoreboard, int quantity): Scoreboard(Scoreboard), quantity(quantity){
+RoundRobiner::RoundRobiner(bool *Scoreboard, int quantity) : Scoreboard(Scoreboard), quantity(quantity){
   markAll(0);
-  last=~0;
+  last = ~0;
 }
 
 bool *RoundRobiner::deallocate(){
-  last=~0;
-  quantity=0;
+  last = ~0;
+  quantity = 0;
   return Scoreboard;
 }
 
@@ -20,10 +20,10 @@ int RoundRobiner::next(void){
       return last = n; //#assign and return
     }
   }
-  return last=~0; //magic value for 'none'
+  return last = ~0; //magic value for 'none'
 } /* next */
 
-bool &RoundRobiner::bit(int id)const{
+bool &RoundRobiner::bit(int id) const {
   static bool trashme;
   if(id < 0 || id >= quantity) {
     return trashme;
@@ -32,19 +32,18 @@ bool &RoundRobiner::bit(int id)const{
 }
 
 bool RoundRobiner::post(int id){
-  if(id==~0){//hack for occasional "reportAll" functionality.
+  if(id==~0) {//hack for occasional "reportAll" functionality.
     markAll();
     return true;
   }
   if(id < 0 || id >= quantity) {
     return false;
   }
-  Scoreboard[id]=true;
+  Scoreboard[id] = true;
   return true;
-}
+} // RoundRobiner::post
 
 void RoundRobiner::markAll(bool thesame){
-  fillObject(Scoreboard,quantity*sizeof(bool),thesame);
+  fillObject(Scoreboard,quantity * sizeof(bool),thesame);
   //#leave last alone! resetting it here will short the cycle if markAll is called faster than the queue can empty.
 }
-

@@ -1,59 +1,49 @@
 #ifndef TEXTPOINTER_H
 #define TEXTPOINTER_H
 
-#include "textkey.h"
+#include "cstr.h"
 
-/** manages a mallocated chunk of text, without knowing its allocated size.
- *  it relies upon char * arguments to its methods to be properly null terminated.
- *  it does NOT rely upon such arguments beyond the execution of any method, this class was first used to keep copies of the content
- * of strings that might be de-allocated by future actions.
- *  it should perhaps not be in a library with 'safely' in its name.
+/** adds strdup'ing to Cstr functionality, i.e. makes a copy on construction and assignement vs Cstr which just looks at someone else's allocated memory.
  */
-class TextPointer {
-private:
-  const char *ptr;
+class Text : public Cstr {
+
 public:
   /** creates an 'empty' one */
-  TextPointer();
+  Text();
+
+  /** makes a copy of the @param given content if @param takeit is false, else presumes the caller is happy with this maintaining the lifetime. */
+  Text(TextKey ptr,bool takeit);
 
   /** makes a copy of the @param given content */
-  TextPointer(const char *ptr);
+  Text(TextKey other);
+
+  Text(unsigned size);
+
+  /** take contents of @param other, hence other cannot be const */
+  Text(Text &other);
+
+public:
 
   /** deletes its copy of the content copied by the constructor */
-  ~TextPointer();
+  ~Text();
 
-  /** deletes present content (if any) and copies @param ptr content (if any) */
-  const char *operator =(const char *ptr);
+  /** useful for forcing a copy when constructing, the copy constructor is used for moving. */
+  operator TextKey() const;
 
-  /** @returns pointer member  */
-  operator const char *() const;
+  /** deletes present content (if owned) and copies @param ptr content (if any).
+   * @returns the @param pointer, not a pointer to self or the copy made.
+   */
+  TextKey operator =(TextKey other) override;
 
-  /** @returns whether content is non-existent or trivial */
-  bool empty () const;
+  /** take ownership of a buffer, i.e. deleting this Text object will free @param other */
+  void take(TextKey other);
 
-  /** @returns whether @param other exactly matches this' content */
-  bool is(const char *other) const;
-
-  /** needed by changed() template function */
-  bool operator !=(const char *other){
-    return !is(other);
-  }
-
-  /** needed by changed() template function if we kill the != one*/
-  bool operator ==(const char *other){
-    return is(other);
-  }
-
-  /** @returns whether this' content matches @param other for all of the chars of other */
-  bool startsWith(const char *other) const;
+  /** make a copy of @param other. If other points to the same memory as this ... we might screw up */
+  void copy(TextKey other);
 
   /** discard internal content (if any) */
-  void clear();
+  void clear() override;
 
-  /** @returns internal pointer suitably typecast for use by old str' functions which ask for non-const char*'s even though they
-   * don't alter the chars.
-   * NB: avoid use of this as it allows you to alter const data. */
-  char *buffer() const;
 }; // class TextPointer
 
 #endif // TEXTPOINTER_H

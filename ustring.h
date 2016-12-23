@@ -82,7 +82,7 @@ private: //template varargs majick
 
 public:
 
-  /** @returns composition of translation of each argument as a Glib::ustring */
+  /** @returns composition of args */
   template<typename ... Args> static Ustring compose(TextKey format, const Args ... args){
     Ustring result(format);
 

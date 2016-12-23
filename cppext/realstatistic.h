@@ -2,20 +2,25 @@
 #define REALSTATISTIC_H
 
 /** standard statistics on a real number */
-
 class RealStatistic {
-  friend class RealCorrelation;
-//  friend class StoredStatistic; //for saving and loading, and perhaps editing
-protected:
+public://until we can get friend stuff worked out
+/** sum of data */
   double sum;
+  /** sum of squares of data */
   double sumSquares;
-  int count;//changed to ease mating to StoredInt.
+  /** number of points in the sums*/
+  int count;
 public:
   RealStatistic(void);
+  /** zero all internal data */
   void reset(void);
+  /** include @param datum in the stats */
   void insert(double datum);
+  /** remove @param datum in the stats, trusting that it was a value once entered via insert */
   void remove(double datum);
+  /** remove @param older, insert @param newer */
   void replace(double older, double newer);
+  /** compute and return the average */
   double mean(void) const;
   /** common subexpression of other members */
   double Lform(void) const;
@@ -34,8 +39,9 @@ class RealCorrelation {
 public:
   RealStatistic xx;
   RealStatistic yy;
+public: //until we get friendship worked out, then should protect.
   double sumCross;
-
+public:
   RealCorrelation(void);
   void reset();
   /** add a point to the data set*/

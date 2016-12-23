@@ -1,11 +1,19 @@
 #include "logger.h"
 #include "storable.h"
-//#include "uuid.h"
+#include "charformatter.h"
+
+#include "segmentedname.h" //for debug reports
+
 
 int Storable::instances(0);
 
+const char Storable::slasher('.');// '.' gives java property naming, '/' would allow use of filename classes.
+
+#define bugName "name goes here"
+//fullName().c_str()
+
 using namespace sigc;
-//using namespace Glib;
+//using namespace Storable;
 
 //the following are only usable within Storable
 #define ForKidsConstly(list) for(ConstChainScanner<Storable> list(wad); list.hasNext(); )
@@ -16,36 +24,33 @@ using namespace sigc;
 #define ForWadConstly ForKidsConstly(list)
 
 
-Storable::Storable(NodeName name, bool isVolatile) : isVolatile(isVolatile), type(NotKnown), q(Empty), number(0), parent(nullptr), strictlyOrdered(false), sorted(false), index(-1), enumerated(nullptr), name(name){
+Storable::Storable(TextKey name, bool isVolatile) : isVolatile(isVolatile), type(NotKnown), q(Empty), number(0), parent(nullptr), index(-1), enumerated(nullptr), name(name){
   ++instances;
   if(isVolatile) {
-    dbg("creating volatile node %s", fullName().c_str());
+    dbg("creating volatile node %s", bugName);
   }
 }
 
-Storable::Storable(bool isVolatile) : isVolatile(isVolatile), type(NotKnown), q(Empty), number(0), parent(nullptr), strictlyOrdered(false), sorted(false), index(-1), enumerated(nullptr), name(""){
-  ++instances;
-  if(isVolatile) {
-    dbg("creating volatile node %s", fullName().c_str());
-  }
+//requires gcc >=4.7
+Storable::Storable(bool isVolatile) : Storable("", isVolatile){
 }
 
 Storable::~Storable(){
   --instances;
-  if(instances<0) {
-    wtf("freed more storables than we created!");//which can happen if we double free.
+  if(instances < 0) {
+    wtf("freed more storables than we created!");                //which can happen if we double free.
   }
   wad.clear(); //while this is automatic I sometimes want to watch it happen just for this class.
   //remove all subnodes but send no signals.
 }
 
 void Storable::notify() const {
-  if(++recursionCounter>1) {
-    wtf("recursing %d in %s",recursionCounter,fullName().c_str());
-  }
+//  if(++recursionCounter > 1) {
+//    wtf("recursing %d in %s", recursionCounter, bugName);
+//  }
   watchers.send();
   recursiveNotify();
-  --recursionCounter;
+//  --recursionCounter;
 }
 
 void Storable::recursiveNotify() const {
@@ -58,24 +63,16 @@ void Storable::recursiveNotify() const {
   }
 }
 
-Storable &Storable::precreate(NodeName name){
+Storable&Storable::precreate(TextKey name){
   setType(Wad); //if we are adding a child we must be a wad.
   if(q == Empty) {
     q = Defaulted;
   }
   also(!isVolatile); //we altered the number of entities contained
-  Storable &noob(*new Storable(name, false)); //only parent needs volatile flag as that stops recursive looking at the children.
+  Storable&noob(*new Storable(name, false)); //only parent needs volatile flag as that stops recursive looking at the children.
   noob.parent = this;
-  //  //the following trick was devised when 'parent' was dropped,
-  //  noob.addChangeMother(childwatchers.propagator());//any change to children propagates to parent's childwatchers
-  //  noob.addChangeWatcher(childwatchers.propagator());//any change to self triggers parent's childwatchers
-  //  //end of trick.
   return noob;
 } // precreate
-
-void Storable::setName(NodeName name){
-  this->name = name;
-}
 
 void *Storable::raw(){
   return static_cast<void *>(this);
@@ -87,7 +84,7 @@ bool Storable::setType(Type newtype){
     return false; //changing the type of an empty item is not worthy of note.
   }
   if(changed(type, newtype)) { //actually changed a non-trivial node
-    // dbg("changed type for %s", fullName().c_str());
+    // dbg("changed type for %s", );
     return true;
   }
   return false;
@@ -108,13 +105,13 @@ bool Storable::setQuality(Quality quality){
 void Storable::setEnumerizer(const Enumerated *enumerated){
   if(changed(Storable::enumerated, enumerated)) {
     if(enumerated) {
-      if(q >= Parsed && is(Storable::Textual)) { //if already has a text value
+      if((q >= Parsed) && is(Storable::Textual)) { //if already has a text value
         number = enumerated->valueOf(text.c_str()); //reconcile numeric value
       } else {
         if(type == NotKnown) {
           setType(Storable::Textual); //todo:1 probably should be numeric and numeric should check for presence of enumerated, or add a specific Storable::Enumerated to
-                                      // reduce redundant checks.
         }
+        // reduce redundant checks.
         text = enumerated->token(number);
       }
     } else {
@@ -131,12 +128,12 @@ const Enumerated *Storable::getEnumerizer() const {
 //return whether node was altered
 bool Storable::convertToNumber(bool ifPure){
   if(is(Storable::Numerical)) {
-    return false;
-  } else {
+    return false;//already a number
+  } else {//convert image to number,
     bool impure(true);
     double ifNumber(toDouble(text.c_str(), &impure));
 
-    if(!ifPure || !impure) {
+    if(!ifPure || !impure) {//if we don't care if it is a pure number, or if it is pure
       setType(Storable::Numerical);
       setNumber(ifNumber, q);
       return true;
@@ -144,6 +141,23 @@ bool Storable::convertToNumber(bool ifPure){
       return false;
     }
   }
+} // Storable::convertToNumber
+
+bool Storable::resolve(bool recursively){
+  if(is(Storable::Uncertain)) {
+    if(convertToNumber(true)) {//if is an image of a pure number (no units text)
+      return true;
+    } else {//it must be text
+      setType(Storable::Textual);
+      return true;
+    }
+  }
+  if(recursively && is(Wad)){
+    ForKidsConstly(list){
+      list.next().resolve(true);
+    }
+  }
+  return false;
 } // convertToNumber
 
 bool Storable::isTrivial() const {
@@ -176,6 +190,7 @@ bool Storable::isModified() const {
     }
   //#join:
   case Numerical:
+  //#join
   case Textual:
     return ChangeMonitored::isModified();
   } // switch
@@ -192,21 +207,25 @@ bool Storable::wasModified(){
   case NotKnown:
     return false;
 
-  case Wad: { //investigate all children:
+  case Wad: { //investigate all children:  //need bracing to keep 'changes' local.
     int changes = 0;   //only count node's own changed if no child is changed
     ForKids(list){
       if(list.next().wasModified()) {
         ++changes;
       }
     }
+
     return changes > 0 || thiswas;
   }
+  break;
   case Numerical:
+  //#join
   case Textual:
     return thiswas;
   } // switch
 } // wasModified
 
+#if StorableDebugStringy
 int Storable::listModified(sigc::slot<void, Ustring> textViewer) const {
   if(isVolatile) {
     return 0;
@@ -219,7 +238,7 @@ int Storable::listModified(sigc::slot<void, Ustring> textViewer) const {
   case Wad: {
     int changes = 0;
     ForKidsConstly(list){
-      const Storable &child(list.next());
+      const Storable&child(list.next());
 
       changes += child.listModified(textViewer);   //recurse
     }
@@ -230,6 +249,7 @@ int Storable::listModified(sigc::slot<void, Ustring> textViewer) const {
     return changes;
   }
   case Numerical:
+  case Uncertain:
   case Textual:
     if(ChangeMonitored::isModified()) {
       textViewer(Ustring::compose("%1:%2", fullName(), image()));
@@ -237,38 +257,46 @@ int Storable::listModified(sigc::slot<void, Ustring> textViewer) const {
     }
     return 0;
   } // switch
-} // listModified
+}
+#endif
 
-Ustring Storable::fullName() const {
-  Ustring path(parent ? parent->fullName() : "root");
 
-  path.append("|");
-  path.append(name.empty() ? Ustring::compose("[%1]", ownIndex()) : Ustring(name));
-  return path;
+#include "pathparser.h"
+Text Storable::fullName() const {
+  //non-recursive,
+  SegmentedName collector(false);
+  const Storable *scan=this;
+
+  do{
+    collector.prefix(scan->name);
+  } while((scan=scan->parent));
+
+  return PathParser::pack(collector,slasher);
 }
 
-connection Storable::addChangeWatcher(const SimpleSlot &watcher, bool kickme) const {
+connection Storable::addChangeWatcher(const SimpleSlot&watcher, bool kickme) const {
   if(kickme) {
     watcher();
   }
   return watchers.connect(watcher);
 }
 
-connection Storable::addChangeMother(const SimpleSlot &watcher, bool kickme) const {
+connection Storable::addChangeMother(const SimpleSlot&watcher, bool kickme) const {
   if(kickme) {
     watcher();
   }
   return childwatchers.connect(watcher);
 }
 
-void Storable::clone(const Storable &other){ //todo:2 try to not trigger false change indications.
+//this is a piece of copy constructor.
+void Storable::clone(const Storable&other){ //todo:2 try to not trigger false change indications.
   filicide(); //dump the present wad, we are cloning, not merging
-  type = other.type; //# don't use setType(), skip error notice etc since cloning is done to reuse storage.
+  type = other.type; //# don't use setType()
   q = other.q; //# don't use setQuality()
-  setName(other.name);
+//  setName(other.name);
   enumerated = other.enumerated;
   switch(other.type) {
-  default:
+//trust compiler to bitch if case missing:--  default:
   case NotKnown:
     dbg("!Unknown node in tree being copied");
     return; //
@@ -276,6 +304,7 @@ void Storable::clone(const Storable &other){ //todo:2 try to not trigger false c
   case Numerical:
     number = other.number;
     break;
+  case Uncertain:
   case Textual:
     text = other.text;
     break;
@@ -287,12 +316,12 @@ void Storable::clone(const Storable &other){ //todo:2 try to not trigger false c
   } /* switch */
 } // clone
 
-void Storable::assignFrom(const Storable &other){
-  if(&other==nullptr) {
-    return; //breakpoint, probably a pathological case.
+void Storable::assignFrom( Storable&other){
+  if(&other == nullptr) {
+    return;                     //breakpoint, probably a pathological case.
   }
   switch(type) {
-  default:
+  case Uncertain:
   case NotKnown:
     if(other.is(Numerical)) {
       setNumber(other.number);
@@ -311,12 +340,12 @@ void Storable::assignFrom(const Storable &other){
     //we can't trust node order, we must name-match to handle classes built with different versions of software.
     //we must pull values from other, other may have stale nodes (in intended use).
     ForWad {
-      Storable &kid(list.next());//from datum?
-      const Storable* older(nonTrivial(kid.name) ? other.existingChild(kid.name) : other.wad[kid.ownIndex()]);
+      Storable&kid(list.next());//from datum?
+      Storable *older(nonTrivial(kid.name) ? other.existingChild(kid.name) : other.wad[kid.ownIndex()]);
       if(older) {
         kid.assignFrom(*older);
       } else {
-        wtf("missing node in assignFrom: this %s, other %s, node %s ",this->fullName().c_str(),other.fullName().c_str(),kid.name.empty() ? "(nameless)" : kid.name.buffer());
+        //wtf("missing node in assignFrom: this %s, other %s, node %s ", this->fullName(), other.fullName(), kid.name.empty() ? "(nameless)" : kid.name);
       }
     }
     break;
@@ -340,7 +369,7 @@ double Storable::setValue(double value, Storable::Quality quality){
   return value;
 } // setValue
 
-void Storable::setImageFrom(const char *value, Storable::Quality quality){
+void Storable::setImageFrom(TextKey value, Storable::Quality quality){
   bool notifeye = false;
 
   if(isTrivial()) { //don't notify or detect change, no one is allowed to watch an uninitialized node
@@ -358,36 +387,42 @@ void Storable::setImageFrom(const char *value, Storable::Quality quality){
   }
 } // setImageFrom
 
-void Storable::setImage(const Ustring &value, Quality quality){
-  setImageFrom(value.c_str(), quality);
+void Storable::setImage(const TextKey &value, Quality quality){
+  setImageFrom(value, quality);
 }
 
-Ustring Storable::image(void) const {
+Cstr Storable::image(void)  {
   switch(type) {
+  case Uncertain:
+    resolve(false);
+    //JOIN
   case Textual:
     return text;
 
   case Numerical:
     if(enumerated) {
-      return enumerated->token(number);
+      return enumerated->token(number);//don't update text, this is much more efficient since enumerated is effectively static.
     } else {
-      return Ustring::format(/*std::setprecision(12),*/ number);
+      //set the internal image without triggering change detect
+      text=PathParser::makeNumber(number);
+      return text;
     }
   case Wad:
-    return Ustring::compose("[%1] Value(s)", numChildren());
+    text=PathParser::makeNumber(numChildren());
+    return text;
 
   default:
     return "(unknown)";
   } // switch
 } // image
 
-void Storable::setDefault(const Ustring &value){
-  if(q == Empty || q == Defaulted) {
+void Storable::setDefault(TextKey value){
+  if((q == Empty) || (q == Defaulted)) {
     setImage(value, Defaulted);
   }
 }
 
-bool Storable::operator ==(const Ustring &zs){
+bool Storable::operator ==(TextKey zs){
   return type == Textual && text == zs;
 }
 
@@ -399,10 +434,10 @@ ConstChainScanner<Storable> Storable::kinder() const {
   return ConstChainScanner<Storable>(wad);
 }
 
-Storable *Storable::existingChild(NodeName childName){
+Storable *Storable::existingChild(TextKey childName){
   //nameless nodes might be mixed in with named ones:
   ForWad {
-    Storable &one(list.next());
+    Storable&one(list.next());
     if(one.name.is(childName)) {
       return &one;
     }
@@ -410,87 +445,109 @@ Storable *Storable::existingChild(NodeName childName){
   return 0;
 }
 
-const Storable *Storable::existingChild(NodeName childName) const {
+const Storable *Storable::existingChild(TextKey childName) const {
   //nameless nodes might be mixed in with named ones:
-  if(nonTrivial(childName)) {//added guard to make assignFrom( a wad) easier to code.
+  if(nonTrivial(childName)) { //added guard to make assignFrom( a wad) easier to code.
     ForWadConstly {
-      const Storable &one(list.next());
+      const Storable&one(list.next());
       if(one.name.is(childName)) {
         return &one;
       }
     }
+    return nullptr;
   }
-  return nullptr;
-} // Storable::existingChild
+  //never got here! never asked for trivial name!
+  return nullptr;//can't find a nameless child. Need special functions for that which include a search start index.
+}
 
-Storable *Storable::findChild(NodeName path, bool autocreate){
-  TextPointer splitbuf(path);//makes a copy, so that we can poke nulls into it.
-  CharScanner splitter(splitbuf.buffer(),1 + strlen(path));
-  Storable *searcher = this;
-  while(searcher) {
-    CharScanner split = splitter.split('|'); //#these are internal node names, not user entered text, so we can use any seperator char we wish.
-    if(split.hasNext()) {
-      if(autocreate) {
-        searcher = &searcher->child(split.internalBuffer());//we can use internalBuffer as the splitter and the 1+strlen above together ensure null termination.
-      } else {
-        searcher = searcher->existingChild(split.internalBuffer());
-      }
-    } else {
-      break;
+Storable *Storable::findNameless(int lastFound){
+  while(lastFound++<wad.quantity()){
+    if(wad[lastFound]->name.empty()){
+      return wad[lastFound];//and user can use the index thereof to pass back to this for the next one.
     }
   }
+  return nullptr;
+}
 
+Storable *Storable::findChild(TextKey path, bool autocreate){
+  SegmentedName genealogy(false);
+  Text parsable(path);
+  PathParser::parseInto(genealogy,parsable,slasher);
+
+  auto progeny(genealogy.indexer());
+  Storable *searcher = this;
+  //ignoring rootedness, theoretically could find a parent from here and get to a sibling, not a particulary good idea.
+
+  while(progeny.hasNext()){
+    Storable * found=searcher->findChild(progeny.next());
+    if(found){
+      searcher=found;
+      continue;
+    } else {
+      if(autocreate) {
+        progeny.rewind(1);
+        //build children
+        while(progeny.hasNext()){
+          searcher=&(searcher->addChild(progeny.next()));
+        }
+        return searcher;//could break, but nice to have a seperate exit for this case.
+      } else {
+        return nullptr;
+      }
+    }
+  }
   return searcher;
 } // findChild
 
 /** creates node if not present.*/
-Storable &Storable::child(NodeName childName){
+Storable&Storable::child(TextKey childName){
   Storable *child = existingChild(childName);
+
   if(child) {
     return *child;
   }
   return addChild(childName);
 }
 
-Storable &Storable::operator ()(NodeName name){
+Storable&Storable::operator ()(TextKey name){
   return child(name);
 }
 
-Storable &Storable::operator [](int ordinal){
+Storable&Storable::operator [](int ordinal){
   if(!has(ordinal)) {
-    wtf("nonexisting child of %s referenced by ordinal %d (out of %d).", fullName().c_str(), ordinal, numChildren());
+    wtf("nonexisting child of %s referenced by ordinal %d (out of %d).",bugName , ordinal, numChildren());
     dumpStack("nth child doesn't exist");
-    addChild(); //better than an NPE so deep in the hierarchy that we don't know where it comes from.
+    addChild(""); //better than an NPE so deep in the hierarchy that we don't know where it comes from.
     return *wad.last();
   }
   return *wad[ordinal];
 }
 
-const Storable &Storable::nth(int ordinal) const {
+const Storable&Storable::nth(int ordinal) const {
   if(!has(ordinal)) {
     wtf("nonexisting child referenced by ordinal %d (out of %d).", ordinal, numChildren());
   }
   return *wad[ordinal];
 }
 
-int Storable::indexOf(const Storable &node) const {
+int Storable::indexOf(const Storable&node) const {
   return wad.indexOf(&node);
 }
 
-Storable &Storable::addChild(NodeName childName){
-  Storable &noob(precreate(childName));
+Storable&Storable::addChild(TextKey childName){
+  Storable&noob(precreate(childName));
 
   return finishCreatingChild(noob);
 }
 
-Storable &Storable::createChild(const Storable &other){
-  Storable &noob(precreate(other.name));
+Storable&Storable::createChild(const Storable&other){
+  Storable&noob(precreate(other.name));
 
   noob.clone(other);
   return finishCreatingChild(noob);
 }
 
-Storable &Storable::finishCreatingChild(Storable &noob){
+Storable&Storable::finishCreatingChild(Storable&noob){
   noob.index = wad.quantity();
   wad.append(&noob); //todo:sorted insert
   /* notify on add caused more problems than it solved. Only StoredGroups should need watchers that care about new entities (for things like a sum). Adding a new member
@@ -501,8 +558,8 @@ Storable &Storable::finishCreatingChild(Storable &noob){
   return noob;
 }
 
-Storable &Storable::addWad(int qty, Storable::Type type, NodeName name){
-  Storable &noob(precreate(name));
+Storable&Storable::addWad(int qty, Storable::Type type, TextKey name){
+  Storable&noob(precreate(name));
 
   noob.presize(qty, type);
   return finishCreatingChild(noob);
@@ -512,7 +569,7 @@ void Storable::presize(int qty, Storable::Type type){
   int i = qty - numChildren();
 
   while(i-- > 0) {
-    Storable &kid = addChild();
+    Storable&kid = addChild("");
     kid.setType(type);
     //and allow constructed default values to persist
     setQuality(Defaulted); //not using Empty as that often masks the type being set.
@@ -534,16 +591,24 @@ bool Storable::remove(int which){
   }
 } // remove
 
-bool Storable::removeChild(Storable &node){
+bool Storable::removeChild(Storable&node){
   return remove(indexOf(node));
 }
 
-void Storable::filicide(){
-  also(numChildren() != 0); //mark for those who poll changes...
-  wad.clear(); //remove WITHOUT notification, we only call filicide when we are cloning
+bool Storable::removeChild(Cstr name){
+  Storable *moriturus=existingChild(name);
+  return moriturus && remove(moriturus->index);
 }
 
-void Storable::getArgs(ArgSet &args, bool purify){
+void Storable::filicide(bool notify){
+  also(numChildren() != 0); //mark for those who poll changes...
+  wad.clear(); //remove WITHOUT notification, we only call filicide when we are cloning
+  if(notify){
+    watchers.send();
+  }
+}
+
+void Storable::getArgs(ArgSet&args, bool purify){
   ForKids(list){
     if(!args.hasNext()) {
       break;
@@ -557,7 +622,7 @@ void Storable::getArgs(ArgSet &args, bool purify){
   }
 } // getArgs
 
-void Storable::setArgs(ArgSet &args){
+void Storable::setArgs(ArgSet&args){
   while(args.hasNext()) {
     int which = args.ordinal();
     if(has(which)) {
@@ -568,7 +633,7 @@ void Storable::setArgs(ArgSet &args){
 
 /////////////////
 
-Stored::Stored(Storable &node) : duringConstruction(true), node(node), refreshed(true){
+Stored::Stored(Storable&node) : duringConstruction(true), node(node), refreshed(true){
   onAnyChange(MyHandler(Stored::doParse), false); //# can't call onParse here as required children might not exist.
   node.preSave.connect(MyHandler(Stored::onPrint));
 }
@@ -582,7 +647,7 @@ void Stored::doParse(){
 }
 
 //this is a dangerous function, the returned pointer must not be retained-data might be freed later.
-const char *Stored::rawText() const {
+TextKey Stored::rawText() const {
   return node.text.c_str();
 }
 
@@ -621,16 +686,16 @@ sigc::slot<int> Stored::liveindex() const {
   return mem_fun(node, &Storable::ownIndex); //faster
 }
 
-void Stored::getArgs(ArgSet &args){
+void Stored::getArgs(ArgSet&args){
   node.getArgs(args);
 }
 
-void Stored::setArgs(ArgSet &args){
+void Stored::setArgs(ArgSet&args){
   node.setArgs(args);
 }
 
 /** watcher is invoked on first call to watchArgs but not subsequent ones, should move that to caller*/
-sigc::connection Stored::watchArgs(const SimpleSlot &watcher, bool kickme){
+sigc::connection Stored::watchArgs(const SimpleSlot&watcher, bool kickme){
   return onAnyChange(watcher, kickme);
 }
 
@@ -638,12 +703,12 @@ void Stored::allocArgs(int qty){
   node.presize(qty, Storable::Numerical);
 }
 
-void Stored::getArgs(NodeName child, ArgSet &args){
+void Stored::getArgs(NodeName child, ArgSet&args){
   node.child(child).getArgs(args, false);
 }
 
-void Stored::setArgs(NodeName child, ArgSet &args){
-  Storable &array = node.child(child);
+void Stored::setArgs(NodeName child, ArgSet&args){
+  Storable&array = node.child(child);
 
   array.setArgs(args);
 }
@@ -661,83 +726,15 @@ SimpleSlot Stored::notifier(){
 }
 
 ///////////////////////
-
-//////////////////////
-
-StoredLabel::StoredLabel(Storable &node, const Ustring &fallback) : Stored(node){
-  if(node.setType(Storable::Textual)) {
-    if(node.is(Storable::Parsed)) {
-      dbg("Attaching StoredLabel to non-textual Storable, node %s", node.fullName().c_str());
-    }
-  }
-  setDefault(fallback);
-}
-
-void StoredLabel::setDefault(const Ustring &deftext){
-  node.setDefault(deftext);
-}
-
-const char *StoredLabel::c_str() const {
-  return node.image().c_str();
-}
-
-Ustring StoredLabel::toString() const {
-  return node.image();
-}
-
-bool StoredLabel::isTrivial() const {
-  return isEmpty() || node.image().empty();
-}
-
-void StoredLabel::operator =(const StoredLabel &other){
-  if(&other) {
-    node.setImage(other.node.image());
-  } else {
-    wtf("null rhs in StoredLabel operator =");
-  }
-}
-
-void StoredLabel::operator =(const Ustring &zs){
-  node.setImage(zs);
-}
-
-bool StoredLabel::operator ==(const Ustring &zs) const {
-  return node.image() == zs;
-}
-
-void StoredLabel::operator =(const char *zs){
-  node.setImage(zs);
-}
-
-bool StoredLabel::operator ==(const char *zs) const {
-  return node.image() == zs;
-}
-
-bool StoredLabel::operator ==(const StoredLabel &other) const {
-  return node.image() == other.node.image();
-}
-
-void StoredLabel::applyTo(sigc::slot<void, const char *> slotty){
-  slotty(c_str());
-}
-
-sigc::connection StoredLabel::onChange(sigc::slot<void, const char *> slotty){
-  return node.addChangeWatcher(bind(MyHandler(StoredLabel::applyTo), slotty));
-}
-
-sigc::slot<void, const char *> StoredLabel::setter(){
-  return bind(mem_fun(node, &Storable::setImageFrom), Storable::Edited);
-}
-
 ///////////////////////
-StoredListReuser::StoredListReuser(Storable &node, int wadding) : node(node), wadding(wadding), pointer(0){
+StoredListReuser::StoredListReuser(Storable&node, int wadding) : node(node), wadding(wadding), pointer(0){
   //#nada
 }
 
-Storable &StoredListReuser::next(){
+Storable&StoredListReuser::next(){
   if(node.has(pointer)) {
     if(wadding) {
-      node[pointer].presize(wadding);//wadding is minimum size of nodes to be created.
+      node[pointer].presize(wadding);          //wadding is minimum size of nodes to be created.
     }
     return node[pointer++]; //expedite frequent case
   }
@@ -745,7 +742,7 @@ Storable &StoredListReuser::next(){
   if(wadding) {
     return node.addWad(wadding);
   } else {
-    return node.addChild();
+    return node.addChild("");
   }
 } // next
 
@@ -760,7 +757,7 @@ int StoredListReuser::done(){
 }
 
 //////////////////////
-Storable::Freezer::Freezer(Storable &node, bool childrenToo, bool onlyChildren) : childrenToo(childrenToo), onlyChildren(onlyChildren), node(node){
+Storable::Freezer::Freezer(Storable&node, bool childrenToo, bool onlyChildren) : childrenToo(childrenToo), onlyChildren(onlyChildren), node(node){
   freezeNode(node);
 }
 
@@ -773,7 +770,7 @@ Storable::Freezer::~Freezer(){
   }
 }
 
-void Storable::Freezer::freezeNode(Storable &node, bool childrenToo, bool onlyChildren){
+void Storable::Freezer::freezeNode(Storable&node, bool childrenToo, bool onlyChildren){
   if(!onlyChildren) {
     node.watchers.gate();
   }
@@ -800,6 +797,6 @@ NodeName Stored::getName() const {
   return node.name;
 }
 
-void Stored::setName(NodeName name){
-  node.setName(name);
-}
+//void Stored::setName(NodeName name){
+//  node.setName(name);
+//}

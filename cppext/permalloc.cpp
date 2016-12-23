@@ -1,5 +1,13 @@
 #include "permalloc.h"
 
+/**
+heapless systems are hard to reconcile with those which do have one.
+this module allows sharing of code under the strict conditions that
+one never delete any object that uses this non-heap heap.
+Usually that means only static and local-to-main objects can be permalloc users.
+*/
+
+
 #ifndef PermAllocPool
 #error PermAllocPool must be defined in your build manager.
 #endif

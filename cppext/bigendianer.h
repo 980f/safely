@@ -8,10 +8,10 @@
 /** utility for packing and unpacking binary values in byte order that might not match the platform order */
 class BigEndianer : public Indexer<u8> {
 public:
-  BigEndianer(u8 * allocation, int length) : Indexer<u8>(allocation, length){
+  BigEndianer(u8 * allocation, unsigned length) : Indexer<u8>(allocation, length){
   }
 
-  BigEndianer(Indexer<u8> other, bool justContent = true, int clip = 0) : Indexer<u8>(other, justContent, clip ){
+  BigEndianer(Indexer<u8> other, int clip = 0) : Indexer<u8>(other, clip ){
   }
 
   int getU16(void);

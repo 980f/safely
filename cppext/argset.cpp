@@ -1,7 +1,7 @@
 #include "argset.h"
-#include "cheapTricks.h" //changed()
+#include "cheaptricks.h" //changed()
 
-ArgSet::ArgSet(double* d, int sizeofd) : Indexer <double> (d, sizeofd){
+ArgSet::ArgSet(double* d, int sizeofd) : Indexer<double>(d, sizeofd){
   //#nada
 }
 
@@ -53,7 +53,7 @@ bool ArgSet::equals(const ArgSet &args, int bits) const {
   return true;
 } // ArgSet::equals
 
-ConstArgSet::ConstArgSet(const double* d, int sizeofd) : Indexer <const double> (d, sizeofd){
+ConstArgSet::ConstArgSet(const double* d, int sizeofd) : Indexer<const double>(d, sizeofd){
 }
 
 ConstArgSet::ConstArgSet(const ArgSet &other) : Indexer<const double>(other.internalBuffer(),other.allocated() * sizeof(double)){

@@ -3,6 +3,7 @@
 
 #include "storable.h"
 #include "storednumeric.h"
+#include "storedlabel.h"
 
 #include "ustring.h"
 
@@ -20,7 +21,7 @@ public:
   /** the dotted decimal representation of this address/*/
   StoredLabel dotted;
   /** @returns dotted decimal text given resolved address */
-  static Ustring dotstring(u32 ipv4);
+  static Cstr dotstring(u32 ipv4);
 }; // class StoredIPV4Address
 
 #endif // STOREDIPV4ADDRESS_H

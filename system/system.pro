@@ -1,33 +1,19 @@
 # // *INDENT-OFF*  in case we run uncrustify on this flie
-#-------------------------------------------------
-#
-# Project created by QtCreator 2016-12-14T16:27:12
-#
-#-------------------------------------------------
 
-#TARGET = system
-QT       -= core gui
-
-TEMPLATE = lib
-CONFIG += staticlib
-CONFIG -= app_bundle
-CONFIG -= qt
-CONFIG += c++11
-
-INCLUDEPATH += .. ../cppext
-LIBS += -L.. -lcppext
-
+#magic for making a static lib
+include ("../staticlib.pro")
+#our sibling with heapless code
+include("../cppext.lib.pro")
+#we'll use system sigc code
+include("../sigc.pro")
 
 SOURCES += \
-    cachedindextostored.cpp \
-    cpshelpers.cpp \
     delimitedinputstream.cpp \
     delimitingoutputstream.cpp \
     dyndeterminator.cpp \
     linearfilter.cpp \
     logger.cpp \
     matrixinverter.cpp \
-    measure.cpp \
     numberformatter.cpp \
     perftimer.cpp \
     stopwatch.cpp \
@@ -40,9 +26,17 @@ SOURCES += \
     storedrange.cpp \
     storedsettable.cpp \
     textpointer.cpp \
-    treefile.cpp \
     peakfindrecords.cpp \
-    gatedsignal.cpp
+    gatedsignal.cpp \
+    storejson.cpp \
+    segmentedname.cpp \
+    utf8text.cpp \
+    storedlabel.cpp \
+    storedgroup.cpp \
+    pathparser.cpp \
+    textformatter.cpp \
+    sigcuser.cpp \
+    runoncenthtime.cpp
 
 HEADERS += \
     cachedindextostored.h \
@@ -52,8 +46,6 @@ HEADERS += \
     delimitedinputstream.h \
     delimitingoutputstream.h \
     dyndeterminator.h \
-    jsonstore.h \
-    kanjidic.h \
     linearfilter.h \
     logger.h \
     mapiterator.h \
@@ -79,9 +71,11 @@ HEADERS += \
     watchable.h \
     peakfindrecords.h \
     sigcuser.h \
-    gatedsignal.h
+    gatedsignal.h \
+    storejson.h \
+    utf8text.h \
+    storedlabel.h \
+    pathparser.h \
+    textformatter.h \
+    runoncenthtime.h
 
-unix: CONFIG += link_pkgconfig
-unix: PKGCONFIG += sigc++-2.0
-# the PKGCONFIG line above should have taken care of the following: //todo: remove explicit includepath and debug pkgconfig for sigc.
-INCLUDEPATH += /usr/include/sigc++-2.0
