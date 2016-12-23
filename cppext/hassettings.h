@@ -176,7 +176,6 @@ public:
 }; // class HasSettings
 
 
-
 struct CustomFormatter {
   virtual int printOn(CharFormatter &buf) const = 0;
 };

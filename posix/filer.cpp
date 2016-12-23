@@ -20,7 +20,6 @@ Filer::~Filer(){
   delete[]  buffer;
 }
 
-
 bool Filer::mkDirDashP(const char *path, bool itsparent){
   FileName dirpath(path);
 
@@ -46,7 +45,6 @@ bool Filer::mkDirDashP(const char *path, bool itsparent){
     return false;
   }
 } // mkDirDashP
-
 
 bool Filer::openFile(const char *fname, int o_flags, bool makeDirs){
   if(fd.open(fname, o_flags)) {
@@ -101,7 +99,6 @@ bool Filer::readall(int maxalloc){
   return failure();
 } /* readall */
 
-
 bool Filer::cp(const char *src, const char *target, bool dashf, bool dashr){
   FileName from(src);
   FileName to(target);
@@ -121,7 +118,7 @@ bool Filer::cp(const char *src, const char *target, bool dashf, bool dashr){
   command.cat(to.c_str());
   int arf = system(command.asciiz());
   if(arf) {//todo:1 this 'if' statement seems to be inverted, went through false branch after a successful copy.
-    arf=system("sync");
+    arf = system("sync");
     return true;
   } else {
     return false;
@@ -183,7 +180,6 @@ bool Filer::exists(const char *name){
   }
 } // exists
 
-
 void Filer::killfileIfOK(bool ok, const char *pathname){
   if(ok) {
     FileName filname(pathname);
@@ -207,7 +203,6 @@ static void finishCopy(Glib::RefPtr<Gio::AsyncResult> &result, const sigc::slot<
   whendone(success);
 } // finishCopy
 
-
 void Filer::moveFile(const char *from, const char *to){
   if(exists(from)) {
     Glib::RefPtr<Gio::File> destination = Gio::File::create_for_path(to);
@@ -215,7 +210,6 @@ void Filer::moveFile(const char *from, const char *to){
     source->copy_async(destination, sigc::bind(&finishCopy, sigc::bind(&killfileIfOK, strdup(from))), Gio::FILE_COPY_OVERWRITE);
   }
 }
-
 
 int Filer::mv(const char *src, const char *target){
   return rename(src, target); //todo:1 capture errno etc stuff.

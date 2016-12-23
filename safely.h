@@ -4,7 +4,7 @@
 /**
  * each project using the 'safely' lib can put its compile time preferences in this file,
  * code in this library that needs compiletime constants include this header file.
-*/
+ */
 
 
 /// maximum number of values that 'Settings' protocol can handle.

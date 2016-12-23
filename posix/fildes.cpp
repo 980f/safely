@@ -9,7 +9,7 @@ Fildes::Fildes(){
   errornumber = 0;
   lastRead = lastWrote = 0;
   fd = BADFD;
-  amOwner=false;
+  amOwner = false;
 }
 
 bool Fildes::assignFd(int anFD){
@@ -21,13 +21,13 @@ bool Fildes::assignFd(int anFD){
 
 /** since we close on going out of scope if you share an fd you must take care to use pointer or reference*/
 Fildes::~Fildes(){
-  if(amOwner){
+  if(amOwner) {
     close();
   }
 }
 
 bool Fildes::open(const char *devname, int O_stuff){//todo:3 expose 3rd argument
-  amOwner=true;
+  amOwner = true;
   return assignFd(::open(devname, O_stuff,0777));//3rd arg is only relevant if O_stuff includes O_Creat. The (3) 7's lets umask provide the argument.
 }
 
@@ -37,12 +37,12 @@ bool Fildes::open(const char *devname, int O_stuff){//todo:3 expose 3rd argument
 //}
 
 FILE *Fildes::getfp(const char *fargs){
-  return ::fdopen(fd,fargs?:"r");//todo:2 make string to match present state of fd's flags
+  return ::fdopen(fd,fargs ?: "r");//todo:2 make string to match present state of fd's flags
 }
 
 bool Fildes::preopened(int fd,bool urit){
   close();
-  amOwner=urit;
+  amOwner = urit;
   return assignFd(fd);
 }
 
@@ -71,7 +71,7 @@ bool Fildes::setSingleFlag(int bitfield, bool one) const {
 
 int Fildes::close(void){
   if(amOwner&&isOpen()) {
-    amOwner=false;
+    amOwner = false;
     return ::close(fd);
   } else {
     return 0; //not an error to close something that isn't open
@@ -93,30 +93,30 @@ bool Fildes::isMarked(FDset&fdset) const {
 int Fildes::read(ByteScanner&p){
   if(isOpen()) {
     lastRead = ::read(fd, &p.peek(), p.freespace());
-    if(lastRead>=0){
+    if(lastRead>=0) {
       p.skip(lastRead);
     } else {
       failure();
     }
-    return lastRead;    
+    return lastRead;
   } else {
-    return lastRead=-1;//todo:2 ensure errno is 'file not open'
+    return lastRead = -1;//todo:2 ensure errno is 'file not open'
   }
-}
+} // Fildes::read
 
 int Fildes::write(ByteScanner&p){
   if(isOpen()) {
     lastWrote = ::write(fd, &p.peek(), p.freespace());
-    if(lastWrote>=0){
+    if(lastWrote>=0) {
       p.skip(lastWrote);
     } else {
       failure();
     }
     return lastWrote;
   } else {
-    return lastWrote=-1; //todo:2 error code
+    return lastWrote = -1; //todo:2 error code
   }
-}
+} // Fildes::write
 
 //todo:3 configuration parameter for how much we are willing to transfer before checking other channels
 #define CHUNK 3000
