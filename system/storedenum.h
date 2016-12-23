@@ -13,7 +13,7 @@ public:
     return setto(newnum);
   }
 
-  Ustring toString();
+  Cstr toString();
 
   /** @return a functor that when invoked will set this object's value to what is passed at this time.*/
   SimpleSlot setLater(int value);
@@ -29,6 +29,6 @@ public:
   sigc::connection sendChanges(sigc::slot<void,int> functor,bool kickme = false);
 
   /** added for a semi-pathological case in physicalSignal stuff*/
-  void reEnumerate(const Enumerated &enumerated);
+//--  void reEnumerate(const Enumerated &enumerated);
 }; // class StoredEnum
 #endif // STOREDENUM_H

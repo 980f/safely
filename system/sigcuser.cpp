@@ -4,7 +4,7 @@
 **************************************************************************/
 
 #include "sigcuser.h"
-#include <gtkmm.h> //signal timeout
+//#include <gtkmm.h> //signal timeout
 
 using namespace sigc;
 
@@ -33,29 +33,29 @@ void onEdge(slot<bool> source,bool edge,SimpleSlot action){
   }
 }
 
-void doSoon(SimpleSlot slot, int howSoon, int howurgently){
-  Glib::signal_timeout().connect_once(slot, howSoon,Glib::PRIORITY_DEFAULT_IDLE - howurgently);
-}
+//void doSoon(SimpleSlot slot, int howSoon, int howurgently){
+//  Glib::signal_timeout().connect_once(slot, howSoon,Glib::PRIORITY_DEFAULT_IDLE - howurgently);
+//}
 
-SimpleSlot eventually(SimpleSlot toDefer){
-  return bind(&doSoon,toDefer,0,1);
-}
+//SimpleSlot eventually(SimpleSlot toDefer){
+//  return bind(&doSoon,toDefer,0,1);
+//}
 
-///////////////////////////////////
+/////////////////////////////////////
 
-RunOnceSlot::RunOnceSlot(SimpleSlot continuation) : continuation(continuation){
-  //#nada
-}
+//RunOnceSlot::RunOnceSlot(SimpleSlot action) : action(action){
+//  //#nada
+//}
 
-SimpleSlot RunOnceSlot::getInstance(sigc::slot<void> continuation){
-  RunOnceSlot &dou(*new RunOnceSlot(continuation));
-  return mem_fun(dou,&RunOnceSlot::run);
-}
+//SimpleSlot RunOnceSlot::makeInstance(SimpleSlot action){
+//  RunOnceSlot &dou(*new RunOnceSlot(action));
+//  return mem_fun(dou,&RunOnceSlot::run);
+//}
 
-void RunOnceSlot::run(){
-  DeleteOnReturn<RunOnceSlot> dor(this);//in case of survivable exceptions
-  continuation();
-}
+//void RunOnceSlot::run(){
+//  DeleteOnReturn<RunOnceSlot> dor(this);//in case of survivable exceptions
+//  action();
+//}
 
 ///////////////////////////////////
 Finally::Finally(const SimpleSlot &action) : action(action){

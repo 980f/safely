@@ -1,88 +1,63 @@
 #include "textpointer.h"
-#include "string.h"
-#include "stdlib.h"
+#include "string.h"  //strdup
+#include "stdlib.h"  //free
 
 
-
-TextPointer::TextPointer(): ptr(0){
+Text::Text() : Cstr(){
   //all is well
 }
 
-TextPointer::TextPointer(const char *ptr): ptr(0){
-  operator =(ptr);
+Text::Text(TextKey other){
+  copy(other);
 }
 
-TextPointer::~TextPointer(){
-  clear();
+Text::Text(unsigned size) : Cstr( static_cast<TextKey>( calloc(Zguard(size),1))){
+  //we have allocated a buffer and filled it with 0
 }
 
-const char *TextPointer::operator =(const char *ptr){
-  if(this->ptr != ptr) { //# if not same object (not a content compare)
+Text::Text(Text &other) : Cstr(other){
+  other.clear();
+}
+
+Text::Text(const char *ptr,bool takeit) : Cstr( nonTrivial(ptr) ? (takeit ? ptr : strdup(ptr)) : nullptr){
+  //we now own what was passed, or the duplicate we created.
+}
+
+Text::~Text(){
+  clear(); //using clear instead of just free as a guard against using this after it is free'd.
+}
+
+Text::operator TextKey() const {
+  return Cstr::c_str();
+}
+
+void Text::take(TextKey other){
+  if(ptr != other) { //# if not passed self as a pointer to this' storage.
     clear();
-    if(nonTrivial(ptr)) { //todo: see if strcmp is fast enough to use here.
-      this->ptr = strdup(ptr);
+    ptr = other;
+  }
+  //else self and we already own ourself.
+}
+
+void Text::copy(TextKey other){
+  if(ptr != other) { //# if not passed self as a pointer to this' storage.
+    clear();
+    if(nonTrivial(other)) {
+      ptr = strdup(other);
+    }
+  } else {//pointing to our own data (or both ptr's null)
+    if(nonTrivial(other)) {//definitely same data
+      ptr = strdup(other);//don't delete!
     }
   }
-  return ptr;
+} // Text::copy
+
+TextKey Text::operator =(TextKey other){
+  copy(other);
+  return other;
 }
 
-TextPointer::operator const char *() const {
-  return ptr ? : "";
-}
-
-
-bool TextPointer::empty() const {
-  return !nonTrivial(ptr);
-}
-
-bool TextPointer::is(const char *other) const {
-  if(ptr == other) {//same object
-    return true;
-  }
-  if(ptr == nullptr) {// null pointer matches empty string
-    return *other == 0;
-  }
-  if(other == nullptr) {//empty string matches null pointer
-    return *ptr == 0;
-  }
-  if(0 == strcmp(ptr, other)) {
-    return true;
-  } else {
-    return false;
-  }
-} // is
-
-bool TextPointer::startsWith(const char *other) const {
-  if(ptr == other) {
-    return true;
-  }
-  if(ptr == nullptr) {
-    return *other == 0;
-  }
-  if(other == nullptr) {//all strings start with nothing, for grep '*' case.
-    return true;
-  }
-  //could do the following with strlen and strncmp, but that is more execution. A variant of strcmp which returns the index of mismatch would be handy.
-  const char *s(ptr);
-  while(char c=*other++){
-    char m=*s++;
-    if(!m){
-      return false;//other is longer than this
-    }
-    if(c!=*s++){
-      return false;//mismatch on existing chars
-    }
-  }
-  return true;
-}
-
-void TextPointer::clear(){
-  if(ptr) {
-    free(const_cast<char *>(ptr));
-    ptr = nullptr;
-  }
-}
-
-char *TextPointer::buffer() const {
-  return const_cast<char *>(ptr);
+void Text::clear(){
+  free(violate(ptr));
+  ptr = nullptr;
 }

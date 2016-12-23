@@ -8,7 +8,7 @@
  * replace Glib gunichar usages */
 typedef u32 Unichar;
 
-#include "cheapTricks.h" //isPresent
+#include "cheaptricks.h" //isPresent
 #include "ctype.h"
 
 /** represents one byte of a UTF8 multibyte character, not to be confused with a Unicode character which is a 32 bit entity*/
@@ -60,20 +60,32 @@ public:
     return raw & 0x80; //treating illegals as multibyte.
   }
 
-  /** only valid if first char of a sequence */
-  int numFollowers(void) const;
+  /** only valid if first char of a UTF8 sequence */
+  unsigned numFollowers(void) const;
 
   /** @returns number of 10xxxxxx bytes needed for given @param unichar unicode char*/
-  static int numFollowers(u32 unichar);
+  static unsigned numFollowers(u32 unichar);
 
-  /** @returns 1st byte of sequence @given @param followers value returned from @see numFollowers(u32)*/
-  static u8 firstByte(u32 unichar,int followers);
+  /** @returns 1st byte of sequence given @param followers value returned from @see numFollowers(u32)*/
+  static u8 firstByte(u32 unichar,unsigned followers);
 
   /** @returns intermediate or final byte, @param followers is 0 for the final one */
-  static u8 nextByte(u32 unichar,int followers);
+  static u8 nextByte(u32 unichar,unsigned followers);
 
   bool in(const char *tokens) const;
 
 }; // class UTF8
+
+#if 0
+
+to stream a Unichar:
+
+  int followers=numFollowers(unichar);
+out<<firstByte(unichar,followers);
+while(followers-->0){
+  out<<nextByte(unichar,followers);
+}
+
+#endif
 
 #endif // UTF8_H

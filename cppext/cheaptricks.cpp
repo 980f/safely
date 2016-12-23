@@ -1,4 +1,4 @@
-#include "cheapTricks.h"
+#include "cheaptricks.h"
 #include "minimath.h"
 
 bool isPresent(const char *flags, char flag){

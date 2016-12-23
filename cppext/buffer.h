@@ -57,23 +57,39 @@ private:
   }
 
 public:
+
+  /** forget present buffer and record start and length of some other one. */
+  Indexer<Content> &wrap(Content *wrapped, unsigned int sizeofBuffer){
+    pointer = 0;
+    length = sizeofBuffer / sizeof(Content);
+    buffer = wrapped;
+    return *this;
+  }
+
+
   /** make a useless one */
   Indexer(void) : Ordinator(0),
     buffer(0){
     //#nada
   }
 
-  /** 1st arg is const'ed even though the class doesn't guarantee that it won't hand out a pointer to an element later, user beware*/
+  /** */
   //#below: truncating divide, omit attempt to have partial last element.  /*-1: key value for 'same as length'*/
-  Indexer(Content *wrapped, unsigned int sizeofBuffer, bool wrap = false) : Ordinator(sizeofBuffer / sizeof(Content), wrap ? -1 : 0), buffer(wrapped){
+  Indexer(Content *wrapped, unsigned sizeofBuffer) : Ordinator(sizeofBuffer / sizeof(Content), 0), buffer(wrapped){
     //#nada
   }
 
-  /* if @param content is true then the new indexer covers just the data before the old one's pointer minus the clip value,
+
+  /* if @param clip is negative then the new indexer covers just the data before the old one's pointer minus the ~clip value:
+   * e.g a clip of ~0 gets everything beneath the pointer, ~1 ends the new Indexer one shy of the oldone's pointer
+   * a clip of 0 gets you a new one that goes from [0..pointer)
+   * a clip of +1 gets you allocated-pointer-clip elements starting at pointer+clip-1
    * some would call that a left subset of the used part.
    * else if it covers the old one's allocated range truncated by the clip value (left subset of allocated)*/
-  Indexer(const Indexer &other, bool justContent = true, unsigned int clip = 0) : Ordinator((justContent ? other.pointer : other.length) - clip),
-    buffer(other.buffer){
+  Indexer(const Indexer &other, int clip = 0) :
+    Ordinator( other,clip),
+    // the -~ below allows +1 to stand for 'remove nothing' == 'starting after last next()'
+    buffer(clip<0 ? other.buffer : other.buffer + (other.pointer - ~clip)){
   }
 
   /** reworks this one to be used region of @param other.
@@ -83,6 +99,22 @@ public:
     length = other.pointer;
     pointer = 0;
   }
+
+  /** reworks this one to be just like @param other. snap() usually is what you want rather than this.
+   * this is useful for threadsafeness, especially over keeping a pointer to the other.*/
+  void clone(const Indexer &other){
+    buffer = other.buffer;
+    length = other.length;
+    pointer = other.pointer;
+  }
+
+  /** tail end of other, without 'removing' it from other. Very suitable for a lookahead parser */
+  void grab(const Indexer &other){
+    pointer = 0;
+    buffer = &other.peek();
+    length = other.freespace();
+  }
+
 
   /** reduce length to be that used and reset pointer.
    * useful for converting from a write buffer to a read buffer, but note that the original buffer size is lost.*/
@@ -101,34 +133,7 @@ public:
     return sub;
   }
 
-  /** forget present buffer and record start and length of some other one. */
-  Indexer<Content> &wrap(Content *wrapped, unsigned int sizeofBuffer){
-    pointer = 0;
-    length = sizeofBuffer / sizeof(Content);
-    buffer = wrapped;
-    return *this;
-  }
 
-  /** reworks this one to be just like @param other. snap() usually is what you want rather than this.
-   * this is useful for threadsafeness, especially over keeping a pointer to the other.*/
-  void clone(const Indexer &other){
-    buffer = other.buffer;
-    length = other.length;
-    pointer = other.pointer;
-  }
-
-  /** if @param other has a non-zero pointer (such as one that is being written to) then this is set to the front end of the other,
-   * else this wraps the whole of the other */
-  void grab(Indexer &other){
-    buffer = other.buffer;
-    if(other.pointer > 0) { //want front end.
-      length = other.pointer;
-      pointer = 0;
-    } else { //was already rewound and truncated
-      length = other.length;
-      pointer = other.pointer;
-    }
-  }
 
   /** actually put 0's into the buffer starting at @param ender */
   void truncate(unsigned ender){
@@ -172,7 +177,7 @@ public:
   }
 
   /** number of bytes in object, ignores pointer */
-  int allocated() const {
+  unsigned allocated() const {
     return length;
   }
 
@@ -182,7 +187,7 @@ public:
   }
 
   //publish parts of ordinator:
-  bool hasNext(void){
+  bool hasNext(void)const {
     return Ordinator::hasNext();
   }
 
@@ -219,16 +224,16 @@ public:
   }
 
   /** @return current object ('s reference), rigged for sensible behavior when buffer is used circularly*/
-  Content &peek(void){
+  Content &peek(void)const{
     return buffer[pointer < length ? pointer : 0];
   }
 
   /**@return reference to item most likely delivered by last call to next()*/
-  Content &previous(void){
+  Content &previous(void)const{
     return buffer[pointer >= length ? length - 1 : (pointer ? pointer - 1 : 0)];
   }
 
-  operator Content(){
+  operator Content()const{
     return previous();
   }
 
@@ -294,6 +299,14 @@ public:
     return *this;
   }
 
+  /** set unused content to 0. pointer is unmodified
+   * only makes sense if Content=0 assignment makes sense*/
+  void clearUnused() const {
+    for(unsigned i = pointer; i<allocated(); i++) {
+      buffer[i] = 0;
+    }
+  }
+
 }; // class Indexer
 
 //the following probably doesn't work, or only works for simple types:
@@ -304,7 +317,7 @@ public:
 
 #define BytesOf(thingy) IndexBytesOf(, thingy)
 
-// iterate. todo: replce with C++11/14 stuff.
+// iterate. todo: replace with C++11/14 stuff.
 #define ForIndexed(classname, indexer) for(Indexer<classname> list(indexer); list.hasNext(); )
 
 

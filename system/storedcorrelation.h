@@ -22,10 +22,18 @@ class StoredCorrelation : public LinearFit, public Stored {
   StoredStatistic xx;
   StoredStatistic yy;
   StoredReal sumCross;
-  SimpleSignal watchers;
+
 public:
   StoredCorrelation(Storable &node);
   void onPrint();
+};
+
+
+/** hooks just the updateComplete notification, not all the little changes that are part of an update. */
+class WatchedCorrelation : public StoredCorrelation {
+  SimpleSignal watchers;
+public:
+  WatchedCorrelation(Storable &node);
   sigc::connection whenUpdated(SimpleSlot slott,bool kickme = false);
   void updateComplete();
 }; // class StoredCorrelation

@@ -8,7 +8,7 @@ StorageExporter::StorageExporter(std::ostream &fos) : dos(fos){
 
 //#define dout(label,value) header ? dos.put(label) : dos.put(value)
 //'as header line' only works if master object provided is well-formed.
-DelimitingOutputStream &StorageExporter::exportNode(Storable &node, bool header, NodeName name){
+DelimitingOutputStream &StorageExporter::exportNode(Storable &node, bool header, TextKey name){
   node.preSave();
   if(node.is(Storable::Numerical)) {
     dout(name, node.getNumber< double >());

@@ -4,9 +4,12 @@
 #include <vector>
 
 /**
- *  Safe(r) and convenient wrapper around a vector of pointers.
- *  It is very suited for container managed persistence, i.e. all objects of a class are tracked herein and removal from here results in deletion of object.
- */
+Safe(r) and convenient wrapper around a vector of pointers.
+It is very suited for container managed persistence, i.e. all objects of a class can be tracked herein and removal from here results in deletion of object.
+ *
+ * Since all references to the content class are pointer-like this container handles polymorphic sets of classes with ease.
+*/
+
 template< typename T > class Chain {
 
 protected:
@@ -19,19 +22,21 @@ public:
     //#nada
   }
 
-  /** add @param thing to the end of this chain if it is not null. @return thing.
-   *  Factories for type T call this integral with calling new T(...) */
-  T *append(T *thing){
-    if(thing) {//should never get nulls here, but if so don't add them to list.(helps with debug)
+  /** add @param thing to the end of this chain if it is not null.
+   * @returns thing.
+  Factories for type T call this integral with calling new T(...) */
+  T *append(T *thing) {
+    if(thing){//should never get nulls here, but if so don't add them to list.(helps with debug)
       v.push_back(thing);
     }
     return thing;
   }
 
-  /** insert @param thing at 0-based @param location if it is not null. @return thing */
-  T *insert(T *thing,int location){
-    if(thing) {
-      v.insert(v.begin() + location,thing);
+  /** insert @param thing at 0-based @param location if it is not null.
+   * @returns thing */
+  T *insert(T *thing,int location) {
+    if(thing){
+      v.insert(v.begin()+location,thing);
     }
     return thing;
   }
@@ -54,30 +59,30 @@ public:
   }
 
   /** @return @param n th item of the chain.*/
-  T *nth(int n){
+ T *nth(int n) const{
     if(n<0 ||n>=int(v.size())) {
       return nullptr;
     }
     return v[n];
   }
 
-  /** @return @param n th item of the chain.*/
-  const T *nth(int n) const {
-    if(n<0 ||n>=int(v.size())) {
-      return nullptr;
-    }
-    return v[n];
-  }
+//  /** @return @param n th item of the chain.*/
+//  const T *nth(int n) const {
+//    if(n<0 ||n>=int(v.size())){
+//      return nullptr;
+//    }
+//    return v[n];
+//  }
 
   /** @return @param n th item of the chain.*/
-  T *operator [](int n){
+  T *operator [](int n) const{
     return nth(n);
   }
 
-  /** @return @param n th item of the chain.*/
-  const T *operator [](int n) const {
-    return nth(n);
-  }
+//  /** @return @param n th item of the chain.*/
+//  const T *operator [](int n) const {
+//    return nth(n);
+//  }
 
   /** @returns number of items in this chain. using type int rather than size_t to allow for -1 as a signalling value in other functions.*/
   int quantity() const {
@@ -85,40 +90,40 @@ public:
   }
 
   /** @returns last item in chain,  nullptr if chain is empty. */
-  T* last(){
-    if(int qty = quantity()) {//if non-zero
-      return v[qty - 1];
+  T* last()const{
+    if(int qty=quantity()){//if non-zero
+      return v[qty-1];
     } else {
       return nullptr;
     }
   }
 
-  /** @returns last item in chain,  nullptr if chain is empty. */
-  const T* last() const {
-    if(int qty = quantity()) {//if non-zero
-      return v[qty - 1];
-    } else {
-      return nullptr;
-    }
-  }
+//  /** @returns last item in chain,  nullptr if chain is empty. */
+//  const T* last()const {
+//    if(int qty=quantity()){//if non-zero
+//      return v[qty-1];
+//    } else {
+//      return nullptr;
+//    }
+//  }
 
   /** @returns first item in chain,  nullptr if chain is empty. */
-  T* first(){
-    if(quantity()) {//if non-zero
+  T* first()const{
+    if(quantity()){//if non-zero
       return v[0];
     } else {
       return nullptr;
     }
   }
 
-  /** @returns first item in chain,  nullptr if chain is empty. */
-  const T* first() const {
-    if(quantity()) {//if non-zero
-      return v[0];
-    } else {
-      return nullptr;
-    }
-  }
+//  /** @returns first item in chain,  nullptr if chain is empty. */
+//  const T* first()const {
+//    if(quantity()){//if non-zero
+//      return v[0];
+//    } else {
+//      return nullptr;
+//    }
+//  }
 
   /** presizes chain for faster insertions via adding nullptr entries. This violates some of the expectations of other member functions */
   void allocate(int howmany){
@@ -192,10 +197,11 @@ public:
 }; // class Chain
 
 #include "sequence.h"
-/**
- *  a cheap-enough to copy java-like iteration aid for vectors of pointers, such as Chain<> is.
- */
-template<typename T> class ChainScanner : public ::Sequence<T> {
+/** a cheap-enough to copy java-like iteration aid for vectors of pointers, such as Chain<> is.
+ * This works better than std::vector::iterator as it properly deals with items being removed during iteration.
+ *
+*/
+template <typename T> class ChainScanner:public ::Sequence<T> {
   Chain<T> &list;
   int steps;///for ordinal
 public:
@@ -203,7 +209,7 @@ public:
   ChainScanner(Chain<T> &list) : list(list),steps(0){
   }
 
-  bool hasNext(){ //const here causes a problem, class was proclaimed abstract because Sequence<t> didn't offer a const hasNext().
+  bool hasNext()const{
     return steps<list.quantity();
   }
 
@@ -221,8 +227,8 @@ public:
   }
 
   /** move pointer back. If value is bad then pointer goes to 0!*/
-  void rewind(unsigned int backup = 0 - 1){//default arg '0-1' is a cheap way of saying 'max unsigned int' that works for all sizes of int.
-    if(backup <= steps) {
+  void rewind(unsigned int backup=~0){//default arg '~0' is a cheap way of saying 'max unsigned int' that works for all sizes of int.
+    if(backup <= unsigned(steps)) {
       steps -= backup;
     } else {
       steps = 0;
@@ -249,23 +255,26 @@ public:
 
 }; // class ChainScanner
 
-template< typename T > class ConstChainScanner : public ::Sequence< const T > {
-  const Chain<T> &list;
+/** scan a const chain, one that doesn't tolerate adds or removes */
+template< typename T > class ConstChainScanner : public ::Sequence<T> {
+  const Chain <T> &list;
   int steps;///for ordinal
 public:
 
-  ConstChainScanner(const Chain<T> &list) : list(list),steps(0){
+  ConstChainScanner(const Chain<T> &list):
+    list(list),
+    steps(0){
   }
 
-  bool hasNext(){
+  bool hasNext()const{
     return steps<list.quantity();
   }
 
-  const T &next(void){
+  T &next(void) {
     return *list[steps++];
   }
 
-  const T &current(void){
+  T &current(void)const{
     return *list[steps];
   }
 
@@ -274,7 +283,7 @@ public:
     return steps;
   }
 
-  void rewind(unsigned int backup = 0 - 1){
+  void rewind(unsigned backup=~0){
     if(backup <= steps) {
       steps -= backup;
     } else {

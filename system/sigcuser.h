@@ -2,7 +2,7 @@
 #define SIGCUSER_H
 
 #include <sigc++/sigc++.h>
-#include "eztypes.h" //for deleteonreturn
+#include "cheaptricks.h" //for deleteonreturn
 
 //sigc trackable should be inherited from virtually in so many cases that we always shall
 #define SIGCTRACKABLE virtual public sigc::trackable
@@ -36,12 +36,14 @@ template<typename T> bool always(bool b,T /*ignored*/){
   return b;
 }
 
+#if NO_VARIADIC_TEMPLATES
 /** an adaptor to add a fixed return value to a slot that didn't have one.*/
 template<typename T> T callAndReturn(SimpleSlot &voidly,T fixedReturn){
   voidly();
   return fixedReturn;
 }
 
+/** @returns a slot that when invoked returns @param fixedReturn*/
 template<typename T> sigc::slot<T> addReturn(SimpleSlot &voidly,T fixedReturn){
   return sigc::bind(&callAndReturn<T>,voidly,fixedReturn);//#do NOT use ref here, let original slot evaporate.
 }
@@ -55,6 +57,32 @@ template<typename T,typename A> T call1AndReturn(sigc::slot<void,A> &voidly,T fi
 template<typename T,typename A> sigc::slot<T,A> addReturn1(sigc::slot<void,A> &voidly,T fixedReturn){
   return sigc::bind(&call1AndReturn<T,A>,voidly,fixedReturn);//#do NOT use ref here, let original slot evaporate.
 }
+
+/** creates a slot that when executed/invoked removes that slot from any signal.*/
+//class RunOnceSlot : SIGCTRACKABLE {
+//  SimpleSlot action;
+//  /** construction of a useful one requires a little post construction work, so use @see makeInstance */
+//  RunOnceSlot(SimpleSlot action);
+//  void run();
+//public:
+//  /** make a new self deleting slot runner.  */
+//  static SimpleSlot makeInstance(SimpleSlot action);
+//};
+
+#else // if NO_VARIADIC_TEMPLATES
+//now that we have variadic templates tamed:
+/** an adaptor to add a fixed return value to a slot that didn't have one.*/
+template<typename T,typename ... Args> T call1AndReturn(sigc::slot<void,Args ...> &voidly,T fixedReturn){
+  voidly();
+  return fixedReturn;
+}
+
+template<typename T,typename ... Args> sigc::slot<T,Args ...> addReturn(sigc::slot<void,Args ...> &voidly,T fixedReturn){
+  return sigc::bind(&call1AndReturn<T,Args ...>,voidly,fixedReturn);//#do NOT use ref here, let original slot evaporate.
+}
+
+#endif // if NO_VARIADIC_TEMPLATES
+
 
 /** adaptor to call a function and assign it to a stored native-like target */
 template<typename T> void assignTo(T &target,sigc::slot<T> getter){
@@ -70,36 +98,29 @@ BooleanSlot assigner(bool &target);
 /** for use bound into a slot, when invoked it calls the action if the @param source returns the @param edge */
 void onEdge(sigc::slot<bool> source,bool edge,SimpleSlot action);
 
-/** creates a slot that when executed/invoked removes that slot from any signal.*/
-class RunOnceSlot : SIGCTRACKABLE {
-  SimpleSlot continuation;
-  RunOnceSlot(SimpleSlot continuation);
-  void run();
-public:
-  /** make a new self deleting slot runner */
-  static SimpleSlot getInstance(sigc::slot< void > continuation);
-};
-
-template< typename T_arg1 > class RunOnceSlot1 : SIGCTRACKABLE {
-  typedef sigc::slot< void, T_arg1 > Slot;
-  Slot slot;
-  RunOnceSlot1(Slot slot) :
-    slot(slot){
+/** a slot that runs once, via deleting itself when run.
+ * It is inadvisable to keep a reference to one of these, expected use to use @see makeInstance in the argumentlist of a signal.connect() call.
+ */
+template< typename ... Args> class RunOnceSlot : SIGCTRACKABLE {
+  typedef sigc::slot< void, Args ... > Action;
+  Action action;
+  RunOnceSlot(Action slot) :
+    action(slot){
   }
 
-  void run(T_arg1 arg1){
-    DeleteOnReturn< RunOnceSlot1< T_arg1 >> dor(this);
-    slot(arg1);
+  void run(Args ... args){
+    DeleteOnReturn< RunOnceSlot> dor(this);
+    action(args ...);
   }
 
 public:
   /** make a new self deleting slot runner */
-  static Slot getInstance(Slot slot){
-    RunOnceSlot1 &dou(*new RunOnceSlot1(slot));
-    return mem_fun(dou, &RunOnceSlot1::run);
+  static Action makeInstance(Action slot){
+    RunOnceSlot *dou(new RunOnceSlot(slot));
+    return sigc::mem_fun(dou, &RunOnceSlot::run);
   }
 
-}; // class RunOnceSlot1
+}; // class RunOnceSlot
 
 
 /** usage: Finally d(slot);
@@ -122,10 +143,11 @@ public:
   operator bool();
 };
 
-void doSoon(SimpleSlot slot,int howSoon = 0,int howurgently = 1);
-/** @return a slot that when invoked will schedule execution of the @param given slot.
- *  deleting objects referenced by the toDefer slot should be interesting ;) */
-SimpleSlot eventually(SimpleSlot toDefer);
+//these required Glib stuff --
+//void doSoon(SimpleSlot slot,int howSoon = 0,int howurgently = 1);
+///** @return a slot that when invoked will schedule execution of the @param given slot.
+// *  deleting objects referenced by the toDefer slot should be interesting ;) */
+//SimpleSlot eventually(SimpleSlot toDefer);
 
 /** a signal accumulator that invokes all slots, anding the result */
 struct AndAll {

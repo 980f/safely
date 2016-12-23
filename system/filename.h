@@ -1,14 +1,13 @@
-//(C) 2011 Applied Rigaku Technologies. Proprietary and Confidential.
+
 #ifndef FILENAME_H
 #define FILENAME_H
 
-#include <ustring.h>
+#include <segmentedname.h>
 
-/**
- * somewhere else, typically where the main() resides, you must declare the absolute root:
- * const char *FileName::root = "/nexqc/";
+/** if you want a project root, I suggest running the application in a chroot.
+ *
  */
-class FileName : public Ustring {
+class FileName : public SegmentedName {
 public:
   static const Ustring root;
 public:

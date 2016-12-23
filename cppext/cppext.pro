@@ -1,19 +1,7 @@
 # // *INDENT-OFF* protects against pretty printers
-#-------------------------------------------------
-#
-# Project created by QtCreator 2016-12-14T15:17:49
-#
-#-------------------------------------------------
+#magic for making a static lib
 
-QT -= core gui
-
-TEMPLATE = lib
-CONFIG += c++11
-CONFIG += staticlib
-CONFIG -= app_bundle
-CONFIG -= qt
-
-#//TARGET = ../libcppext.a
+include ("../staticlib.pro")
 
 #permalloc needs a define: this is only non-zero in microcontrollers (heapless systems)
 DEFINES += PermAllocPool=0
@@ -26,7 +14,7 @@ SOURCES += argset.cpp \
     centeredslice.cpp \
     charformatter.cpp \
     charscanner.cpp \
-    cheapTricks.cpp \
+    cheaptricks.cpp \
     core-atomic.cpp \
     crc16m.cpp \
     cycler.cpp \
@@ -56,8 +44,10 @@ SOURCES += argset.cpp \
     utf8.cpp \
     textkey.cpp \
     polyfilter.cpp \
-    zstring.cpp \
-    hassettings.cpp
+    hassettings.cpp \
+    pathname.cpp \
+    bitwise.cpp \
+    cstr.cpp
 
 HEADERS += safely.h \
     argset.h \
@@ -68,7 +58,7 @@ HEADERS += safely.h \
     changemonitored.h \
     charformatter.h \
     charscanner.h \
-    cheapTricks.h \
+    cheaptricks.h \
     circularbuffer.h \
     circularindexer.h \
     core-atomic.h \
@@ -113,4 +103,9 @@ HEADERS += safely.h \
     textkey.h \
     polyfilter.h \
     zstring.h \
-    hassettings.h
+    hassettings.h \
+    pathname.h \
+    bitwise.h \
+    segmentedname.h \
+    cstr.h \
+    testcppextbuild.h
