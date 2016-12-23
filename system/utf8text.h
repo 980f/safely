@@ -5,8 +5,7 @@
 
 
 /** encode and decode \u and c-escapes, using Text class*/
-class Utf8Text
-{
+class Utf8Text {
 public:
   Utf8Text();
   /** number of bytes for \u and \xx and \tn encoding the given utf8 string. */

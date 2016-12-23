@@ -18,12 +18,12 @@ struct NumberFormat {
   /** if true always show sign,  */
   bool showsign;
   /** how many values it is to be applied to before being forgotten. 0 is forever, ~0 is nearly forever */
-  unsigned usages=0;//default unlimited
+  unsigned usages = 0;//default unlimited
 
   NumberFormat();
 
   /** worst case required*/
-  unsigned needs()const;
+  unsigned needs() const;
   /** set to standard values */
   void clear();
 
@@ -40,7 +40,7 @@ struct NumberFormatter {
 
   NumberFormatter(int precision, TextKey postfix = "");
 
-  unsigned needs()const;
+  unsigned needs() const;
 
   /** @returns a locally created buffer that holds the image of @param value.
    * @param addone if true adds one to use value of precision without altering the field */
@@ -50,6 +50,7 @@ struct NumberFormatter {
   Text operator ()(double value,bool addone = false) const {
     return format(value,addone);
   }
+
 };
 
 

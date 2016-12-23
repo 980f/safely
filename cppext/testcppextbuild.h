@@ -2,8 +2,7 @@
 #define TESTCPPEXTBUILD_H
 
 
-class TestCppExtBuild
-{
+class TestCppExtBuild {
 public:
   TestCppExtBuild();
 };

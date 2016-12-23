@@ -15,17 +15,17 @@ public:
 
 public: //stats
   /**number of values */
-  unsigned totalNodes=0;
+  unsigned totalNodes = 0;
 
   /**number of terminal values */
-  unsigned totalScalar=0;
+  unsigned totalScalar = 0;
 
   /** greatest depth of nesting */
-  unsigned maxDepth=0;
+  unsigned maxDepth = 0;
 
   /** number of unmatched braces at end of parsing */
-  unsigned nested=0;
+  unsigned nested = 0;
 
-};
+}; // class JSONparser
 
 #endif // STOREJSON_H

@@ -137,7 +137,8 @@ public:
   /** sets a labeling for a numeric value. NB: the pointer is cached in this class, the item better not be deletable! */
   void setEnumerizer(const Enumerated *enumerated);
   const Enumerated *getEnumerizer() const;
-  /** @returns whether the text value was converted to a number. @param ifPure is whether to restrict the conversion to strings that are just a number, or whether trailing text is to be ignored. */
+  /** @returns whether the text value was converted to a number. @param ifPure is whether to restrict the conversion to strings that are just a number, or whether
+   * trailing text is to be ignored. */
   bool convertToNumber(bool ifPure);
 /** convert an Unknown to either Numerical or Text depending upon purity, for other types @returns false */
   bool resolve(bool recursively);
@@ -183,7 +184,7 @@ private: //@deprecated, need use case
   void clone(const Storable &other);
 public:
   /** like an operator =
- rhs is not const due to image() mutating the text when not Textual */
+   *  rhs is not const due to image() mutating the text when not Textual */
   void assignFrom(Storable &other);
   /** set the value of a numerical node */
   double setValue(double value, Quality quality = Edited);
@@ -244,7 +245,7 @@ public:
   }
 
   /** @returns null pointer if no child by given name exists, else pointer to the child*/
-  Storable *existingChild(TextKey  childName);
+  Storable *existingChild(TextKey childName);
   /** @see existingChild() non const version */
   const Storable *existingChild(TextKey childName) const;
 
@@ -252,8 +253,8 @@ public:
    * To walk the list:
    * for(Storable *nemo=node.findNameless();nemo;nemo=node.findNameless(nemo.ownIndex())) dosomething(nemo); //nemo will not be null
    * @deprecated untested
-*/
-  Storable *findNameless(int lastFound=~0);
+   */
+  Storable *findNameless(int lastFound = ~0);
 
   /** if @param autocreate is true then call child() on each piece of the @param path, else call existingChild() until either a
    * member is missing or the child is found.
@@ -290,7 +291,7 @@ public:
   bool removeChild(Cstr name);
 
   /** remove all children */
-  void filicide(bool notify=false);
+  void filicide(bool notify = false);
   /** packs child values into the given @param args, if purify is true then argset entries in excess of the number of this node's
    * children are zeroed, else they are left unmodified  */
   void getArgs(ArgSet &args, bool purify = false);
@@ -320,7 +321,7 @@ class Stored : SIGCTRACKABLE {
 protected:
   /** used to per-class disable notification causing onParse' to be called before all children exist.
    * Only a few situations have needed to do this.
-*/
+   */
   bool duringConstruction;
   // you must add the following lines to your constructor, can't be a base class function as the virtual table isn't operational
   // yet:
@@ -347,7 +348,7 @@ public:
   /** pointer to text value's first char, dangerous! here for some GUI access. */
   TextKey rawText() const;
   /** @param generation 0 is self, same as plain index()
- @returns ordinal within parent wad of this item. Useful for parallel array stuff */
+   *  @returns ordinal within parent wad of this item. Useful for parallel array stuff */
   int parentIndex(int generation = 1) const;
   /** @returns ordinal of the wrapped node.  */
   int index() const;
@@ -366,7 +367,8 @@ public:
   bool notRefreshed() const;
 //end refresh logic.
 
-  /** @returns *copy* of underlying node's name. Since the node name is const as of late 2016 this will stay the name, but manipulating it will not alter the node's name. */
+  /** @returns *copy* of underlying node's name. Since the node name is const as of late 2016 this will stay the name, but manipulating it will not alter the node's
+   * name. */
   NodeName getName() const;
 
 //ArgSet stuff is interface to our hardware device protocol
@@ -397,8 +399,9 @@ public:
 
   /** @returns nominally constant text image.
    * IN a prior implementation this was a connection to an editable item, we now force old-timey seperate read and write.
-   * I.E. you cannot alter the content without using setImage() and triggering watchers. When this returned a reference to an intelligent string class the change detect was potentially bypassed.
-*/
+   * I.E. you cannot alter the content without using setImage() and triggering watchers. When this returned a reference to an intelligent string class the change detect
+   *was potentially bypassed.
+   */
   Cstr image() const {
     return node.image();
   }
@@ -417,9 +420,9 @@ public:
 
 /** the ConnectChid macro is the main usablity feature of this class ensemble.
  * In any derived class of Stored one must have a constructor that takes a Storable.
-if you label that argument 'node' then for each Stored-derived member of your Stored-derived class that constructor must have an explicit construction item
- (since in turn those need a Storable param) and the ConnectChild macro will find a node named the same as the variable within the enclosing class's node and
-use that to init it. using variable arguments for additional construction arguments which are usually default values. */
+ *  if you label that argument 'node' then for each Stored-derived member of your Stored-derived class that constructor must have an explicit construction item
+ *  (since in turn those need a Storable param) and the ConnectChild macro will find a node named the same as the variable within the enclosing class's node and
+ *  use that to init it. using variable arguments for additional construction arguments which are usually default values. */
 #define ConnectChild(varname, ...) varname(node.child( # varname ), ## __VA_ARGS__)
 #define ConnectSibling(varname, ...) varname(node.parent->child( # varname ), ## __VA_ARGS__)
 

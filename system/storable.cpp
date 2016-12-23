@@ -152,7 +152,7 @@ bool Storable::resolve(bool recursively){
       return true;
     }
   }
-  if(recursively && is(Wad)){
+  if(recursively && is(Wad)) {
     ForKidsConstly(list){
       list.next().resolve(true);
     }
@@ -257,22 +257,23 @@ int Storable::listModified(sigc::slot<void, Ustring> textViewer) const {
     }
     return 0;
   } // switch
-}
-#endif
+} // Storable::listModified
+
+#endif // if StorableDebugStringy
 
 
 #include "pathparser.h"
 Text Storable::fullName() const {
   //non-recursive,
   SegmentedName collector(false);
-  const Storable *scan=this;
+  const Storable *scan = this;
 
-  do{
+  do {
     collector.prefix(scan->name);
-  } while((scan=scan->parent));
+  } while((scan = scan->parent));
 
   return PathParser::pack(collector,slasher);
-}
+} // Storable::fullName
 
 connection Storable::addChangeWatcher(const SimpleSlot&watcher, bool kickme) const {
   if(kickme) {
@@ -391,11 +392,11 @@ void Storable::setImage(const TextKey &value, Quality quality){
   setImageFrom(value, quality);
 }
 
-Cstr Storable::image(void)  {
+Cstr Storable::image(void){
   switch(type) {
   case Uncertain:
     resolve(false);
-    //JOIN
+  //JOIN
   case Textual:
     return text;
 
@@ -404,11 +405,11 @@ Cstr Storable::image(void)  {
       return enumerated->token(number);//don't update text, this is much more efficient since enumerated is effectively static.
     } else {
       //set the internal image without triggering change detect
-      text=PathParser::makeNumber(number);
+      text = PathParser::makeNumber(number);
       return text;
     }
   case Wad:
-    text=PathParser::makeNumber(numChildren());
+    text = PathParser::makeNumber(numChildren());
     return text;
 
   default:
@@ -442,7 +443,7 @@ Storable *Storable::existingChild(TextKey childName){
       return &one;
     }
   }
-  return 0;
+  return nullptr;
 }
 
 const Storable *Storable::existingChild(TextKey childName) const {
@@ -458,11 +459,11 @@ const Storable *Storable::existingChild(TextKey childName) const {
   }
   //never got here! never asked for trivial name!
   return nullptr;//can't find a nameless child. Need special functions for that which include a search start index.
-}
+} // Storable::existingChild
 
 Storable *Storable::findNameless(int lastFound){
-  while(lastFound++<wad.quantity()){
-    if(wad[lastFound]->name.empty()){
+  while(lastFound++<wad.quantity()) {
+    if(wad[lastFound]->name.empty()) {
       return wad[lastFound];//and user can use the index thereof to pass back to this for the next one.
     }
   }
@@ -478,17 +479,17 @@ Storable *Storable::findChild(TextKey path, bool autocreate){
   Storable *searcher = this;
   //ignoring rootedness, theoretically could find a parent from here and get to a sibling, not a particulary good idea.
 
-  while(progeny.hasNext()){
-    Storable * found=searcher->findChild(progeny.next());
-    if(found){
-      searcher=found;
+  while(progeny.hasNext()) {
+    Storable * found = searcher->findChild(progeny.next());
+    if(found) {
+      searcher = found;
       continue;
     } else {
       if(autocreate) {
         progeny.rewind(1);
         //build children
-        while(progeny.hasNext()){
-          searcher=&(searcher->addChild(progeny.next()));
+        while(progeny.hasNext()) {
+          searcher = &(searcher->addChild(progeny.next()));
         }
         return searcher;//could break, but nice to have a seperate exit for this case.
       } else {
@@ -515,7 +516,7 @@ Storable&Storable::operator ()(TextKey name){
 
 Storable&Storable::operator [](int ordinal){
   if(!has(ordinal)) {
-    wtf("nonexisting child of %s referenced by ordinal %d (out of %d).",bugName , ordinal, numChildren());
+    wtf("nonexisting child of %s referenced by ordinal %d (out of %d).",bugName, ordinal, numChildren());
     dumpStack("nth child doesn't exist");
     addChild(""); //better than an NPE so deep in the hierarchy that we don't know where it comes from.
     return *wad.last();
@@ -596,14 +597,14 @@ bool Storable::removeChild(Storable&node){
 }
 
 bool Storable::removeChild(Cstr name){
-  Storable *moriturus=existingChild(name);
+  Storable *moriturus = existingChild(name);
   return moriturus && remove(moriturus->index);
 }
 
 void Storable::filicide(bool notify){
   also(numChildren() != 0); //mark for those who poll changes...
   wad.clear(); //remove WITHOUT notification, we only call filicide when we are cloning
-  if(notify){
+  if(notify) {
     watchers.send();
   }
 }

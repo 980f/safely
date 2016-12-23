@@ -4,7 +4,7 @@
 /** interfaces like java iterators
  *
  * a predecessor implementation didn't have as many 'const's as they got in the way of some anticipatory caching. Such extensions will now have to do their anticipating
- *conditionally in the next() method, or any other method that affects the 'hasNext' concept.
+ * conditionally in the next() method, or any other method that affects the 'hasNext' concept.
  */
 template<typename Content> class Sequence {
 public:

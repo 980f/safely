@@ -10,7 +10,6 @@
 #define JOIN  [[clang::fallthrough]];
 
 
-
 /// maximum number of values that 'Settings' protocol can handle.
 #define MAXARGS 15
 #define ArgsPerMessage 15

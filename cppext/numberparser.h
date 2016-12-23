@@ -22,36 +22,37 @@ public:
   bool negativeExponent;
   u64 exponent; //this large just so that we can easily share a function
   void reset(void);
-  double packed()const;
+  double packed() const;
   /** @returns whether number could be an integer */
-  bool seemsInteger()const;
+  bool seemsInteger() const;
   /** saturated signed version of number predecimal */
-  s64 asInteger()const;
+  s64 asInteger() const;
   NumberParserState(){
     reset();
   }
+
   static bool startsNumber(char c);
-};
+}; // class NumberParserState
 
-struct NumberParser:public NumberParserState {
-  static int parseUnsigned(u64&n, PeekableSequence <char >&p);
-  void parseFraction(PeekableSequence <char >&p);
-  bool parseNumber(LatentSequence <char >&p);
+struct NumberParser : public NumberParserState {
+  static int parseUnsigned(u64&n, PeekableSequence<char >&p);
+  void parseFraction(PeekableSequence<char >&p);
+  bool parseNumber(LatentSequence<char >&p);
   /** parseNumber followed by packing it into a double, on error get NaN*/
-  double getValue(LatentSequence <char >&p);
+  double getValue(LatentSequence<char >&p);
 };
 
-class PushedNumberParser:public NumberParserState {
+class PushedNumberParser : public NumberParserState {
   /** value of NPS::double cached when next() returned true */
   double lastParsed;
-  int processed ;
+  int processed;
   /** whitespace ignored */
-  int skipped ;
-  char ch ; //init for debug
+  int skipped;
+  char ch;  //init for debug
   /** prepare for new number*/
   void reset();
   /** @returns whether the pushed char terminated number input. */
   bool next(char u);
-};
+}; // class PushedNumberParser
 
 #endif // NUMBERPARSER_H
