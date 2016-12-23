@@ -76,7 +76,7 @@ public:   //made public for sibling access, could hide it with some explicit sib
   /** used primarily for debugging, don't have to unwind stack to discover source of a wtf herein. */
   Storable *parent;
   /** whether items must be transfered to/from storage in the order they are in the wad. '{' vs '{' in json files.
- presently this has not been relied upon as we don't use a hashmap for a wad.*/
+   *  presently this has not been relied upon as we don't use a hashmap for a wad.*/
   bool strictlyOrdered;
 protected:
   /** whether wad is dynamically reorganized to allow for binary search for a child.

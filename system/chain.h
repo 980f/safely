@@ -4,9 +4,9 @@
 #include <vector>
 
 /**
-Safe(r) and convenient wrapper around a vector of pointers.
-It is very suited for container managed persistence, i.e. all objects of a class are tracked herein and removal from here results in deletion of object.
-*/
+ *  Safe(r) and convenient wrapper around a vector of pointers.
+ *  It is very suited for container managed persistence, i.e. all objects of a class are tracked herein and removal from here results in deletion of object.
+ */
 template< typename T > class Chain {
 
 protected:
@@ -15,32 +15,32 @@ protected:
   /** filters attempted appends, ill use can still put nulls into the chain.*/
   std::vector<T*> v;
 public:
-  Chain(bool isOwner=true):isOwner(isOwner), v(0) {
+  Chain(bool isOwner = true) : isOwner(isOwner), v(0){
     //#nada
   }
 
   /** add @param thing to the end of this chain if it is not null. @return thing.
-  Factories for type T call this integral with calling new T(...) */
-  T *append(T *thing) {
-    if(thing){//should never get nulls here, but if so don't add them to list.(helps with debug)
+   *  Factories for type T call this integral with calling new T(...) */
+  T *append(T *thing){
+    if(thing) {//should never get nulls here, but if so don't add them to list.(helps with debug)
       v.push_back(thing);
     }
     return thing;
   }
 
   /** insert @param thing at 0-based @param location if it is not null. @return thing */
-  T *insert(T *thing,int location) {
-    if(thing){
-      v.insert(v.begin()+location,thing);
+  T *insert(T *thing,int location){
+    if(thing) {
+      v.insert(v.begin() + location,thing);
     }
     return thing;
   }
 
   /** @returns index of @param thing, doing an exact object compare, -1 if not contained */
   int indexOf(const T *thing) const {
-    if(thing){
-      for(int i=v.size();i-->0;){
-        if(v[i] == thing){
+    if(thing) {
+      for(int i = v.size(); i-->0; ) {
+        if(v[i] == thing) {
           return i;
         }
       }
@@ -54,8 +54,8 @@ public:
   }
 
   /** @return @param n th item of the chain.*/
-  T *nth(int n) {
-    if(n<0 ||n>=int(v.size())){
+  T *nth(int n){
+    if(n<0 ||n>=int(v.size())) {
       return nullptr;
     }
     return v[n];
@@ -63,14 +63,14 @@ public:
 
   /** @return @param n th item of the chain.*/
   const T *nth(int n) const {
-    if(n<0 ||n>=int(v.size())){
+    if(n<0 ||n>=int(v.size())) {
       return nullptr;
     }
     return v[n];
   }
 
   /** @return @param n th item of the chain.*/
-  T *operator [](int n) {
+  T *operator [](int n){
     return nth(n);
   }
 
@@ -86,17 +86,17 @@ public:
 
   /** @returns last item in chain,  nullptr if chain is empty. */
   T* last(){
-    if(int qty=quantity()){//if non-zero
-      return v[qty-1];
+    if(int qty = quantity()) {//if non-zero
+      return v[qty - 1];
     } else {
       return nullptr;
     }
   }
 
   /** @returns last item in chain,  nullptr if chain is empty. */
-  const T* last()const {
-    if(int qty=quantity()){//if non-zero
-      return v[qty-1];
+  const T* last() const {
+    if(int qty = quantity()) {//if non-zero
+      return v[qty - 1];
     } else {
       return nullptr;
     }
@@ -104,7 +104,7 @@ public:
 
   /** @returns first item in chain,  nullptr if chain is empty. */
   T* first(){
-    if(quantity()){//if non-zero
+    if(quantity()) {//if non-zero
       return v[0];
     } else {
       return nullptr;
@@ -112,8 +112,8 @@ public:
   }
 
   /** @returns first item in chain,  nullptr if chain is empty. */
-  const T* first()const {
-    if(quantity()){//if non-zero
+  const T* first() const {
+    if(quantity()) {//if non-zero
       return v[0];
     } else {
       return nullptr;
@@ -122,7 +122,7 @@ public:
 
   /** presizes chain for faster insertions via adding nullptr entries. This violates some of the expectations of other member functions */
   void allocate(int howmany){
-    if(howmany>quantity()){
+    if(howmany>quantity()) {
       v.resize(howmany,0);//adds null entries, generally not a desirable thing.
     }
   }
@@ -133,51 +133,51 @@ public:
   }
 
   /** removes @param n th item, 0 removes first in chain. @returns whether something was actually removed */
-  bool removeNth(int n) {
-    if(!has(n)){
+  bool removeNth(int n){
+    if(!has(n)) {
       return false;
     }
-    if(isOwner){
+    if(isOwner) {
       delete v[n];
     }
-    v.erase(v.begin()+n);
+    v.erase(v.begin() + n);
     return true;
   }
 
   /** removes item @param thing if present. @returns whether something was actually removed*/
-  bool remove(T *thing) {
-      return removeNth(indexOf(thing));
+  bool remove(T *thing){
+    return removeNth(indexOf(thing));
   }
 
   /** move item at @param from location to @param to location, shifting the items inbetween.
    * @returns whether the operation was performed, which only happens if both indexes are in the chain.
-   *This is faster than remove/insert and more importantly does not delete the item as remove does.
-@deprecated needs test! had bug so must not have been compiled, ever? */
+   * This is faster than remove/insert and more importantly does not delete the item as remove does.
+   *  @deprecated needs test! had bug so must not have been compiled, ever? */
   bool relocate(int from, int to){
-    if(has(from)&&has(to)){
-      int dir=to-from;//positive if moving towards end
-      if(dir==0){
-              return false;
-            }
-      T* thing=v[from];
+    if(has(from)&&has(to)) {
+      int dir = to - from;//positive if moving towards end
+      if(dir==0) {
+        return false;
+      }
+      T* thing = v[from];
       T** p = v.data();//C++11 addition. If fails compilation then will have to do a loop with iterators
       //#not inlining the below (via dir=bas(dir) until after we have proven test coverage.
-      if(dir<0){//moving down
-        memmove(p+to,p+to+sizeof(T*),-dir*sizeof(T*));
-      }  else {//moving on up
-        memmove(p+to,p+to-sizeof(T*),dir*sizeof(T*));
+      if(dir<0) {//moving down
+        memmove(p + to,p + to + sizeof(T*),-dir * sizeof(T*));
+      } else { //moving on up
+        memmove(p + to,p + to - sizeof(T*),dir * sizeof(T*));
       }
-      v[to]=thing;
+      v[to] = thing;
       return true;
     } else {
       return false;
     }
-  }
+  } // relocate
 
   /** removes all items. */
-  void clear() {
-    if(isOwner){
-      for(int i=v.size();i-->0;){
+  void clear(){
+    if(isOwner) {
+      for(int i = v.size(); i-->0; ) {
         delete v[i];
       }
     }
@@ -185,21 +185,22 @@ public:
   }
 
   /** destruction removes all items */
-  ~Chain() {
+  ~Chain(){
     clear();
   }
-};
+
+}; // class Chain
 
 #include "sequence.h"
 /**
-a cheap-enough to copy java-like iteration aid for vectors of pointers, such as Chain<> is.
-*/
-template <typename T> class ChainScanner:public ::Sequence<T> {
+ *  a cheap-enough to copy java-like iteration aid for vectors of pointers, such as Chain<> is.
+ */
+template<typename T> class ChainScanner : public ::Sequence<T> {
   Chain<T> &list;
   int steps;///for ordinal
 public:
 
-  ChainScanner(Chain<T> &list):list(list),steps(0){
+  ChainScanner(Chain<T> &list) : list(list),steps(0){
   }
 
   bool hasNext(){ //const here causes a problem, class was proclaimed abstract because Sequence<t> didn't offer a const hasNext().
@@ -210,7 +211,7 @@ public:
     return *list[steps++];
   }
 
-  T &current(void)const{
+  T &current(void) const {
     return *list[steps];
   }
 
@@ -220,7 +221,7 @@ public:
   }
 
   /** move pointer back. If value is bad then pointer goes to 0!*/
-  void rewind(unsigned int backup=0-1){//default arg '0-1' is a cheap way of saying 'max unsigned int' that works for all sizes of int.
+  void rewind(unsigned int backup = 0 - 1){//default arg '0-1' is a cheap way of saying 'max unsigned int' that works for all sizes of int.
     if(backup <= steps) {
       steps -= backup;
     } else {
@@ -230,30 +231,30 @@ public:
 
   /** removes  the item that the last call to next() gave you, adjusting iteration for its absence */
   void removeLastNext(){//remove steps-1
-    if(steps>0){//must have nexted at least once else segv
+    if(steps>0) {//must have nexted at least once else segv
       list.removeNth(--steps);//decrement so we don't skip the one moving into the spot erased (versus just -1).
     }
   }
 
   /** removes @param which nth item, adjusting as needed the iteration for its absence */
   void remove(int which){
-    if(which<0){
+    if(which<0) {
       return;
     }
-    if(which<steps){//if removing history
+    if(which<steps) {//if removing history
       --steps;//decrement so we don't skip the one moving into the spot erased.
     }
     list.remove(which);
   }
 
-};
+}; // class ChainScanner
 
 template< typename T > class ConstChainScanner : public ::Sequence< const T > {
-  const Chain <T> &list;
+  const Chain<T> &list;
   int steps;///for ordinal
 public:
 
-  ConstChainScanner(const Chain<T> &list):list(list),steps(0){
+  ConstChainScanner(const Chain<T> &list) : list(list),steps(0){
   }
 
   bool hasNext(){
@@ -273,7 +274,7 @@ public:
     return steps;
   }
 
-  void rewind(unsigned int backup=0-1){
+  void rewind(unsigned int backup = 0 - 1){
     if(backup <= steps) {
       steps -= backup;
     } else {
@@ -281,22 +282,22 @@ public:
     }
   }
 
-};
+}; // class ConstChainScanner
 
 /** iterate from end to start */
-template <typename T> class ChainReversed:public ::Sequence<T> {
-  Chain <T> &list;
+template<typename T> class ChainReversed : public ::Sequence<T> {
+  Chain<T> &list;
   unsigned steps;///for ordinal
 public:
   void rewind(){
-    steps=list.quantity();
+    steps = list.quantity();
   }
 
-  ChainReversed( Chain<T> &list):list(list){
+  ChainReversed( Chain<T> &list) : list(list){
     rewind();
   }
 
-  bool hasNext()const{
+  bool hasNext() const {
     return steps>0;
   }
 
@@ -305,27 +306,26 @@ public:
   }
 
   /** will throw if you haven't called hasNext at least once before calling this*/
-  T &current(void)const{
+  T &current(void) const {
     return *(list[ordinal()]);
   }
 
   /** @returns the integer index of the item that next() will give you, -1 if nothing left */
   int ordinal() const {
-    return steps-1;
+    return steps - 1;
   }
 
   void remove(int which){
-    if(which<0){//coded this way for debug, want to trap removing things that don't exist.
+    if(which<0) {//coded this way for debug, want to trap removing things that don't exist.
       return;
     }
     list.remove(which);
   }
-
 
   /** removes  the item that the last call to next() gave you, adjusting iteration for its absence */
   void removeLastNext(){//which is typically the same as current.
     remove(steps);
   }
 
-};
+}; // class ChainReversed
 #endif // CHAIN_H

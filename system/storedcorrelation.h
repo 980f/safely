@@ -6,11 +6,11 @@
 #include "linearfit.h"
 
 /** Storage wrapped simple statistic */
-class StoredStatistic: public Stored {
+class StoredStatistic : public Stored {
   RealStatistic &wrapped;
   StoredReal sum;
   StoredReal sumSquares;
-  StoredInt count;  
+  StoredInt count;
 public:
   StoredStatistic(Storable &node,RealStatistic &wrapped);
   void onPrint();
@@ -18,7 +18,7 @@ public:
 
 
 /** Storage wrapped linear correlator */
-class StoredCorrelation:public LinearFit, public Stored {
+class StoredCorrelation : public LinearFit, public Stored {
   StoredStatistic xx;
   StoredStatistic yy;
   StoredReal sumCross;
@@ -26,8 +26,8 @@ class StoredCorrelation:public LinearFit, public Stored {
 public:
   StoredCorrelation(Storable &node);
   void onPrint();
-  sigc::connection whenUpdated(SimpleSlot slott,bool kickme=false);
+  sigc::connection whenUpdated(SimpleSlot slott,bool kickme = false);
   void updateComplete();
-};
+}; // class StoredCorrelation
 
 #endif // STOREDCORRELATION_H

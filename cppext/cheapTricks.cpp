@@ -16,7 +16,7 @@ bool isPresent(const char *flags, char flag){
 } /* isPresent */
 
 bool changed(double&target, double newvalue,int bits){
-  if(!nearly(target,newvalue,bits)){
+  if(!nearly(target,newvalue,bits)) {
     target = newvalue;
     return true;
   } else {
@@ -24,6 +24,6 @@ bool changed(double&target, double newvalue,int bits){
   }
 }
 
-AutoFlag::AutoFlag(bool &toBeCleared):ClearOnExit<bool>(toBeCleared,true){
+AutoFlag::AutoFlag(bool &toBeCleared) : ClearOnExit<bool>(toBeCleared,true){
   //#nada
 }

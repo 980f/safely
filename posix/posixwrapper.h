@@ -2,9 +2,9 @@
 #define POSIXWRAPPER_H
 
 /**
-  * handy things for wrapping a POSIX C API with a C++ class,
-  * especially fine grained printf based logging.
-  */
+ * handy things for wrapping a POSIX C API with a C++ class,
+ * especially fine grained printf based logging.
+ */
 
 class PosixWrapper {
 protected:
@@ -20,6 +20,6 @@ public:
   PosixWrapper();
   /** printf like logging, with all the faults therein.*/
   void logmsg(const char *fmt, ...);
-};
+}; // class PosixWrapper
 
 #endif // POSIXWRAPPER_H

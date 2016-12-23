@@ -23,10 +23,10 @@ bool PosixWrapper::failure(bool passthrough){
   return passthrough;
 }
 
-
 bool PosixWrapper::failed(int zeroorminus1){
-  if(zeroorminus1 == -1){
-    if(changed(errornumber ,errno)){//only log message if different than previous, prevents spam at the loss of occasional meaningful duplicates. If you think you might duplicae an error then clear errornumber before a call.
+  if(zeroorminus1 == -1) {
+    if(changed(errornumber,errno)) {//only log message if different than previous, prevents spam at the loss of occasional meaningful duplicates. If you think you might
+                                    // duplicae an error then clear errornumber before a call.
       syslog(debug, "Failed: %m");
     }
     return true;
@@ -34,6 +34,6 @@ bool PosixWrapper::failed(int zeroorminus1){
     errornumber = 0;
     return false;
   }
-}
+} // PosixWrapper::failed
 
 //end of file

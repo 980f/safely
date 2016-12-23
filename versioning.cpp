@@ -1,4 +1,3 @@
-
 #include "versioning.h"
 
 double svn(){
@@ -6,4 +5,3 @@ double svn(){
     #include "svnrevision.txt"
   ;
 }
-
