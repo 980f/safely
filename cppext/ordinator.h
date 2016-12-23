@@ -3,7 +3,7 @@
 
 /** utility class for generator a sequence of integers up to a limit.
  * This is built for the needs of the Indexer<> class, which explains the comments and some curious design choices.
-*/
+ */
 class Ordinator {
 protected:
   //could use size_t's, but that would be painful and we won't ever get close to 2**32 with this codebase.
@@ -11,9 +11,9 @@ protected:
   unsigned length;
 public:
   /** create a range of sorts */
-  Ordinator(unsigned length, int pointer = 0 ):pointer(pointer),length(length){
-    if(static_cast<unsigned>(pointer)>length){//bad value: will normalize to 'consumed'. The cast to unsigned makes negative numbers HUGE.
-      this->pointer=length;
+  Ordinator(unsigned length, int pointer = 0 ) : pointer(pointer),length(length){
+    if(static_cast<unsigned>(pointer)>length) {//bad value: will normalize to 'consumed'. The cast to unsigned makes negative numbers HUGE.
+      this->pointer = length;
     }
   }
 
@@ -21,13 +21,13 @@ public:
    * if @param clip<0 then the 'used' subset, shortened by the ~clip value (~0 gets all, ~1 loses the most recent one)
    * if @param clip==0 then the subset is 'all' of the original, original pointer is ignored.
    * if @param clip<0 then the 'unused' subset, skipping clip -1 items (presuming caller moves pointer to the coordinate place)
-*/
-  Ordinator(const Ordinator &other,int clip=0):pointer(0),length(other.length){
-      if(clip<0) {//section past, usually 0..pointer-1,
-        length= other.pointer - ~clip;
-      }
-      if(clip>0){//end section pointer .. length -1,
-      length=other.freespace() + ~clip;
+   */
+  Ordinator(const Ordinator &other,int clip = 0) : pointer(0),length(other.length){
+    if(clip<0) {  //section past, usually 0..pointer-1,
+      length = other.pointer - ~clip;
+    }
+    if(clip>0) { //end section pointer .. length -1,
+      length = other.freespace() + ~clip;
     }
     //else constructor init list has taken care of it.
   }
@@ -43,7 +43,7 @@ public:
   }
 
   /** @returns whether pointer is not past the last */
-  bool hasNext(void)const {
+  bool hasNext(void) const {
     return length > 0 && pointer < length;
   }
 
@@ -68,18 +68,19 @@ public:
   }
 
   /**AFTER a next this is the index of what that next() returned.*/
-  int present(void )const {
-    return pointer-1;
+  int present(void ) const {
+    return pointer - 1;
   }
 
   void rewind(void){
     pointer = 0;
   }
+
   /**
-    * subtract @param backup from pointer, stopping at 0 if excessive.
-    * @see rewind(void) for complete rewind rather than using a hopefully big enough value.
-    * @return this
-    */
+   * subtract @param backup from pointer, stopping at 0 if excessive.
+   * @see rewind(void) for complete rewind rather than using a hopefully big enough value.
+   * @return this
+   */
   void rewind(unsigned int backup){
     if(backup <= pointer) {
       pointer -= backup;
@@ -101,8 +102,8 @@ public:
   }
 
   /** remove at most the given number of items preceding next.
-    *  first use is processing escaped chars in a string in buffer.h, probably not much use elsewhere.
-    */
+   *  first use is processing escaped chars in a string in buffer.h, probably not much use elsewhere.
+   */
   void remove(unsigned int amount){
     if(amount > pointer) {
       amount = pointer;
@@ -113,7 +114,7 @@ public:
 
   /** if other isn't at its start then we get the part past, else we get a copy */
   void grab(const Ordinator &other){
-    if(other.pointer>0){//want front end.
+    if(other.pointer>0) {//want front end.
       length = other.pointer;
       pointer = 0;
     } else { //was already rewound and truncated
@@ -121,6 +122,7 @@ public:
       pointer = other.pointer;
     }
   }
-};
+
+}; // class Ordinator
 
 #endif // ORDINATOR_H

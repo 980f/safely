@@ -8,12 +8,12 @@ bool isDigit(char c){
 
 const u64 DecimalCutoff = 922337203685477580LL; //trunc(2^63)/10, courtesy of python.
 
-double NumberParserState::packed()const{
-  if(isNan){
+double NumberParserState::packed() const {
+  if(isNan) {
     return Nan;
   }
-  if(isInf){
-    return negative?-Infinity: Infinity;
+  if(isInf) {
+    return negative ? -Infinity : Infinity;
   }
   int exp = exponent;
   if(negativeExponent) {
@@ -32,16 +32,15 @@ double NumberParserState::packed()const{
   }
   number *= ::pow10(exp);//and apply user provide power
   return negative ? -number : number;
-}
-
+} // NumberParserState::packed
 
 bool NumberParserState::startsNumber(char c){
   return isDigit(c) || c == '-' || c == '.'; //'.' tolerates lack of a leading zero
 }
 
 void NumberParserState::reset(void){
-  isNan=false;
-  isInf=false;
+  isNan = false;
+  isInf = false;
   negative = false;
   predecimal = 0;
   pow10 = 0;
@@ -50,9 +49,9 @@ void NumberParserState::reset(void){
   hasEterm = false;
   exponent = 0;
   negativeExponent = false;
-}
+} // NumberParserState::reset
 
-double NumberParser::getValue(LatentSequence <char>&p){
+double NumberParser::getValue(LatentSequence<char>&p){
   if(parseNumber(p)) {
     return packed();
   } else {
@@ -60,7 +59,7 @@ double NumberParser::getValue(LatentSequence <char>&p){
   }
 } /* getValue */
 
-int NumberParser::parseUnsigned(u64&n, PeekableSequence <char>&p){
+int NumberParser::parseUnsigned(u64&n, PeekableSequence<char>&p){
   int processed = 0;
   int skipped = 0;
   u64 acc = 0; //need to accept 53 bits worth for mantissa of double.
@@ -89,11 +88,11 @@ int NumberParser::parseUnsigned(u64&n, PeekableSequence <char>&p){
   }
 } /* parseUnsigned */
 
-void NumberParser::parseFraction(PeekableSequence <char>&p){
+void NumberParser::parseFraction(PeekableSequence<char>&p){
   u64 acc = 0; //need to accept 53 bits worth for mantissa of double.
   u8 ch = 0; //init for debug
-  div10=0;
-  while(p.hasNext()){
+  div10 = 0;
+  while(p.hasNext()) {
     ch = p.peek();
     if(isDigit(ch)) {
       p.skip(1);
@@ -108,11 +107,11 @@ void NumberParser::parseFraction(PeekableSequence <char>&p){
       break;
     }
   }
-  postdecimal=acc;
+  postdecimal = acc;
   //  return div10; //signal
-}
+} // NumberParser::parseFraction
 
-bool NumberParser::parseNumber(LatentSequence <char>&p){
+bool NumberParser::parseNumber(LatentSequence<char>&p){
   reset();
   u8 ch = 0;
   while(p.hasNext()) { //accept leading whitespace
@@ -125,7 +124,7 @@ bool NumberParser::parseNumber(LatentSequence <char>&p){
     negative = true;
     if(!p.hasNext()) {
       return false; //true results in a value of zero... negative sign by itself is not a number
-    }    
+    }
   } else if(ch == '+') { //optional '+' sign
     if(!p.hasNext()) {
       return false; //true results in a value of zero... positive sign by itself is not a number
@@ -139,20 +138,21 @@ bool NumberParser::parseNumber(LatentSequence <char>&p){
   pow10 = parseUnsigned(predecimal, p);
   if(pow10 >= 0) { //negative is signal, no number found.
     //still have to parse for E expression if string is 0Exx
-    if(p.hasNext()){
+    if(p.hasNext()) {
       ch = p.peek();
       if(ch == '.') {
         p.skip(1);
         parseFraction(p);
       }
-      if(p.hasNext()){
+      if(p.hasNext()) {
         ch = p.peek();
         //space before the E is not tolerated,
         if(ch == 'E' || ch == 'e') { //maydo: also tolerate a 'D'
           hasEterm = true;
           p.skip(1);
-          if(p.hasNext())
+          if(p.hasNext()) {
             ch = p.peek(); //char after the E
+          }
           switch(int(ch)) {
           case '-':
             negativeExponent = true;

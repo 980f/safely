@@ -80,10 +80,10 @@ public:
 
 to stream a Unichar:
 
-  int followers=numFollowers(unichar);
-out<<firstByte(unichar,followers);
-while(followers-->0){
-  out<<nextByte(unichar,followers);
+int followers = numFollowers(unichar);
+out << firstByte(unichar,followers);
+while(followers-->0) {
+  out << nextByte(unichar,followers);
 }
 
 #endif

@@ -6,9 +6,9 @@ typedef const char* TextKey;
 
 /** add 1 to reserve space for null terminator
  * this is a marker for '1+' or '+1'
-*/
+ */
 inline unsigned Zguard(unsigned allocation){
-  return 1+allocation;
+  return 1 + allocation;
 }
 
 //////////// inline stringy stuff /////////////
@@ -38,6 +38,6 @@ bool same(TextKey a,TextKey b);
 
 /** wraps strtod() to regularize use of its 2nd parameter.
  * @param impure if not null gets set to whether the numerical part of the string was followed by more text.*/
-double toDouble(TextKey rawText, bool* impure=nullptr);
+double toDouble(TextKey rawText, bool* impure = nullptr);
 
 #endif // TEXTKEY_H

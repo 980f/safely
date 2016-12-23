@@ -29,30 +29,30 @@ unsigned UTF8::numFollowers() const {
 } // UTF8::numFollowers
 
 unsigned UTF8::numFollowers(u32 unichar){
-  if(unichar < (1U<<7)) {
+  if(unichar < (1U << 7)) {
     return 0;
   }
-  if(unichar<(1U<<(6+5))){
+  if(unichar<(1U << (6 + 5))) {
     return 1;
   }
-  if(unichar<(1U<<(6+6+4))){
+  if(unichar<(1U << (6 + 6 + 4))) {
     return 2;
   }
-  if(unichar<(1U<<(6+6+6+3))){
+  if(unichar<(1U << (6 + 6 + 6 + 3))) {
     return 3;
   }
-  if(unichar<(1U<<(6+6+6+6+2))){
+  if(unichar<(1U << (6 + 6 + 6 + 6 + 2))) {
     return 4;
   }
-  if(unichar<(1U<<(6+6+6+6+6+1))){
+  if(unichar<(1U << (6 + 6 + 6 + 6 + 6 + 1))) {
     return 5;
   }
   //it appears unicode is likely to stop at 2G characters
   return 0;//not yet implementing invalid extensions.
-}
+} // UTF8::numFollowers
 
 u8 UTF8::firstByte(u32 unichar, unsigned followers){
-  if(followers){
+  if(followers) {
     u8 prefix(0xFC);
     prefix <<= (5 - followers);//1->C0, 2->E0 3->F0 4->F8
     unichar >>= (6 * followers);
@@ -66,7 +66,7 @@ u8 UTF8::nextByte(u32 unichar, unsigned followers){
   unsigned shift = 6 * followers;
   unichar >>= shift;
   unichar &= fieldMask(6);
-  unichar |= (1<<7);
+  unichar |= (1 << 7);
   return static_cast<u8>(unichar);//# truncate to 8 bits.
 }
 

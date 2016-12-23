@@ -66,7 +66,6 @@ public:
     return *this;
   }
 
-
   /** make a useless one */
   Indexer(void) : Ordinator(0),
     buffer(0){
@@ -78,7 +77,6 @@ public:
   Indexer(Content *wrapped, unsigned sizeofBuffer) : Ordinator(sizeofBuffer / sizeof(Content), 0), buffer(wrapped){
     //#nada
   }
-
 
   /* if @param clip is negative then the new indexer covers just the data before the old one's pointer minus the ~clip value:
    * e.g a clip of ~0 gets everything beneath the pointer, ~1 ends the new Indexer one shy of the oldone's pointer
@@ -115,7 +113,6 @@ public:
     length = other.freespace();
   }
 
-
   /** reduce length to be that used and reset pointer.
    * useful for converting from a write buffer to a read buffer, but note that the original buffer size is lost.*/
   void freeze(){
@@ -132,8 +129,6 @@ public:
     }
     return sub;
   }
-
-
 
   /** actually put 0's into the buffer starting at @param ender */
   void truncate(unsigned ender){
@@ -187,7 +182,7 @@ public:
   }
 
   //publish parts of ordinator:
-  bool hasNext(void)const {
+  bool hasNext(void) const {
     return Ordinator::hasNext();
   }
 
@@ -224,16 +219,16 @@ public:
   }
 
   /** @return current object ('s reference), rigged for sensible behavior when buffer is used circularly*/
-  Content &peek(void)const{
+  Content &peek(void) const {
     return buffer[pointer < length ? pointer : 0];
   }
 
   /**@return reference to item most likely delivered by last call to next()*/
-  Content &previous(void)const{
+  Content &previous(void) const {
     return buffer[pointer >= length ? length - 1 : (pointer ? pointer - 1 : 0)];
   }
 
-  operator Content()const{
+  operator Content() const {
     return previous();
   }
 

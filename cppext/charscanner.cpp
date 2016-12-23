@@ -117,8 +117,7 @@ CharScanner::CharScanner(char  *content, unsigned size ) : Indexer<char >(conten
   //#nada
 }
 
-CharScanner::~CharScanner()
-{
+CharScanner::~CharScanner(){
 
 }
 
@@ -128,13 +127,12 @@ CharScanner::CharScanner(const CharScanner&other, int clip ) : Indexer<char >(ot
 
 /** grabs used part */
 CharScanner::CharScanner(const ByteScanner&other, int clip) : //
-  Indexer<char >(reinterpret_cast<char *>(other.internalBuffer()),clip? other.used() : other.allocated()){
+  Indexer<char >(reinterpret_cast<char *>(other.internalBuffer()),clip ? other.used() : other.allocated()){
   //#nada
   pointer = 0;
 }
 
-CharScanner::CharScanner(const CharScanner &other):CharScanner(other,0)
-{
+CharScanner::CharScanner(const CharScanner &other) : CharScanner(other,0){
 
 }
 

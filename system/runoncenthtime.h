@@ -33,9 +33,10 @@ public:
 
 
 /** counts signal emissions and every 'nth' one invokes the given action.
-@deprecated As far as I can tell this implementation leaks memory. Will have to dig deep into sigc::signal destructor to see if there is a handle therein to make things like this possible.
-The runOnce variations on this theme delete themselves after running, which may also leak if the slot they were given doesn't delete objects when it is deleted.
-*/
+ *  @deprecated As far as I can tell this implementation leaks memory. Will have to dig deep into sigc::signal destructor to see if there is a handle therein to make
+ * things like this possible.
+ *  The runOnce variations on this theme delete themselves after running, which may also leak if the slot they were given doesn't delete objects when it is deleted.
+ */
 template<typename ... Args> class RunEvery : SIGCTRACKABLE {
   typedef sigc::slot< void, Args ... > Action;
   Action action;

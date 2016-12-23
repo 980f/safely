@@ -29,7 +29,7 @@ public:
 
   /** @returns pointer member, allowing you to bypass the checks of this class.
    * Name is from/for replacing glib::ustring and std::string */
-  TextKey c_str()const;
+  TextKey c_str() const;
 
   /** @returns whether content is non-existent or trivial */
   bool empty() const;

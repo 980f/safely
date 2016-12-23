@@ -15,19 +15,19 @@ class Pathname : public CharFormatter {
   const char seperator;
 
 public:
-  Pathname(Indexer<char> &other,char slasher='/');
+  Pathname(Indexer<char> &other,char slasher = '/');
   virtual ~Pathname();
 
   /** reset to be just the seperator*/
   Pathname &root();
 
-    /** removes the last path element, similar to the dirname unix command */
+  /** removes the last path element, similar to the dirname unix command */
   Pathname &parent(void);
 
   /** @returns this. Adds another path element preceding it with seperator if needed*/
   Pathname &addChild(const TextKey &s, bool escapeit = false);
 
-    /** make sure string ends with given token*/
+  /** make sure string ends with given token*/
   Pathname &assure(char token);
 //  /** add a dot if one isn't present then add given text.*/
 //  Pathname &ext(const Ustring &s,bool escapeit = false);
@@ -37,6 +37,6 @@ public:
 
 
   //void addNode(Cstr node);
-};
+}; // class Pathname
 
 #endif // PATHNAME_H
