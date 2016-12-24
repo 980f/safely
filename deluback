@@ -1,0 +1,2 @@
+## delete uncrustify backups.
+find . -name \*unc-backup\* -delete
