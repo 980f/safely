@@ -317,7 +317,7 @@ void Storable::clone(const Storable&other){ //todo:2 try to not trigger false ch
   } /* switch */
 } // clone
 
-void Storable::assignFrom( Storable&other){
+void Storable::assignFrom(Storable&other){
   if(&other == nullptr) {
     return;                     //breakpoint, probably a pathological case.
   }
@@ -658,6 +658,15 @@ sigc::connection Stored::onAnyChange(SimpleSlot slotty, bool kickme){
 
 void Stored::markTrivial(){
   node.isVolatile = true;
+}
+
+void Stored::legacy(TextKey oldname, TextKey newname, bool purgeOld){//purgeOld default is historical
+  if(Storable * legacy = node.existingChild(oldname)) {
+    node.child(newname).assignFrom(*legacy);
+    if(purgeOld) {
+      node.remove(legacy->index);
+    }
+  }
 }
 
 /** parent (0) is self, return own index ,if a member of a StoredGroup then this is index within group

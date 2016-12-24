@@ -407,14 +407,17 @@ public:
   }
 
   /** for case of renamed child: upgrade this storage.
-   * todo: make a weaker form which doesn't need a template arg by copying value members of oldnode according to typeinfo of new
+   * @deprecated use non template form so that string values can also be 'legacy'
    * node.*/
-  template<typename Scalar> void legacy(const char *oldname, const char *newname){
+  template<typename Scalar> void legacy(TextKey oldname, TextKey newname){
     if(Storable * legacy = node.existingChild(oldname)) {
       node.child(newname).setNumber(legacy->getNumber<Scalar>());
       node.remove(legacy->index);
     }
   }
+
+  /** handle rename of a member of a Stored-dreivative. Does NOT deal with moving something up or down a level, but you can copy that logic manually */
+  void legacy(TextKey oldname, TextKey newname, bool purgeOld = true);
 
 }; // class Stored
 

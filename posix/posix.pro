@@ -1,19 +1,16 @@
-## // *INDENT-OFF* in case we hit the file with uncrustify
+# // *INDENT-OFF*  in case we run uncrustify on this flie
 
-TEMPLATE = lib
-CONFIG += staticlib
-CONFIG -= app_bundle
-CONFIG -= qt
-CONFIG += c++11
+#magic for making a static lib
+include ("../staticlib.pro")
+#our sibling with heapless code
+include("../cppext/lib.pro")
 
-INCLUDEPATH += .. ../cppext
-LIBS += -L.. -lcppext
+INCLUDEPATH += ..
 
 SOURCES += \
     fdset.cpp \
     fildes.cpp \
-    posixwrapper.cpp \
-    vargs.cpp
+    posixwrapper.cpp
 
 HEADERS += \
     fdset.h \
