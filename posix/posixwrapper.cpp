@@ -2,8 +2,8 @@
 #include "cheapTricks.h"
 #include <errno.h>
 #include <syslog.h>
-//#include <stdarg.h>
-#include "vargs.h"
+#include <stdarg.h>
+
 
 PosixWrapper::PosixWrapper(){
   errornumber = 0;
@@ -11,8 +11,10 @@ PosixWrapper::PosixWrapper(){
 }
 
 void PosixWrapper::logmsg(const char *fmt, ...){
-  PFlist args(fmt);
+  va_list args;
+  va_start(args, fmt);
   vsyslog(debug, fmt, args);
+  va_end(args);
 }
 
 bool PosixWrapper::failure(bool passthrough){
