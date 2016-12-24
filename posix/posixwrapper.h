@@ -2,10 +2,8 @@
 #define POSIXWRAPPER_H
 
 /**
- * handy things for wrapping a POSIX C API with a C++ class,
- * especially fine grained printf based logging.
+ * handy things for wrapping a POSIX C API with a C++ class, if only for errno management.
  */
-
 class PosixWrapper {
 protected:
   bool failure(bool passthrough = false); //#legacy default arg
@@ -13,8 +11,8 @@ protected:
   bool failed(int zeroorminus1);
 public:
   /** ERRNO for last operation done using the extend object */
-  int errornumber;  //attempt at thread-safe errno tracking.
-  /** //logging noisiness for the (extended) object */
+  int errornumber;
+  /** logging noisiness for the (extended) object */
   int debug;
 public:
   PosixWrapper();

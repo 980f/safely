@@ -1,17 +1,17 @@
 #ifndef FILDES_H
 #define FILDES_H
 
-#include "buffer.h"
+//#include "buffer.h"
 #include "charscanner.h"
 #include "posixwrapper.h"
 #include "fdset.h"
-#include "stdio.h" //for getting fp from fd ...
-//todo: hide BADFD better.
-#define BADFD -1
+//#include "stdio.h" //for getting fp from fd ...
 
 /** wrapper around file descriptors,especially noteworthy is that it closes the file on destruction, so best use is to create and use locally.*/
 class Fildes : public PosixWrapper {
 public:
+  //make a true variable for something that is usuall #defined.
+static const int BADFD= -1;
   //retain for post-mortem debug.
   int lastRead;
   int lastWrote;
@@ -24,8 +24,9 @@ public:
   /** since we close on going out of scope if you share an fd you must take care to use pointer or reference*/
   ~Fildes();
   bool open(const char *devname, int O_stuff); //open a named file
+  /** takes ownership of an FD, if @param urit is true ("You are it")*/
   bool preopened(int fd,bool urit=true);
-  /**set/clear a fcntl accessible flag, @returns success of operation */
+  /** set/clear a fcntl accessible flag, @returns success of operation */
   bool setSingleFlag(int bitfield, bool one) const;
   int close(void);
   /**make this transparently usable as an fd number*/
