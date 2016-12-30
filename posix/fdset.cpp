@@ -1,6 +1,7 @@
 #include "fdset.h"
 
 #include "cheapTricks.h"
+#include "minimath.h"
 
 FDset::FDset(){
   maxfd = 0;
@@ -86,6 +87,12 @@ bool SelectorSet::isWritable(int fd) const {
 
 bool SelectorSet::isTroubled(int fd) const {
   return FD_ISSET(fd, &troublers);
+}
+
+void SelectorSet::setTimeout(double seconds){
+frex
+  timeout.tv_usec = 0;
+  timeout.tv_sec = time_t(seconds);
 }
 
 //end of file.
