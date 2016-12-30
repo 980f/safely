@@ -33,6 +33,8 @@ public:
   bool isReadable(int fd) const;
   bool isWritable(int fd) const;
   bool isTroubled(int fd) const;
+  /** set timeout in <b>seconds</b>, not ms. */
+  void setTimeout(double seconds);
 };
 
 #endif // FDSET_H
