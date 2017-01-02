@@ -316,3 +316,15 @@ int splitter(double &d){
 }
 
 } //end extern C for potentially assembly coded routines.
+
+
+///** version of @see splitter that allows for long or long-long etc integer types.
+
+template <typename Integrish> Integrish intbin(double &d){
+  double eye;
+  d=modf(d,&eye);
+  return Integrish(eye);
+}
+
+template <> int intbin<int>(double &d);
+template <> long intbin<long>(double &d);

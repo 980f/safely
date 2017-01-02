@@ -28,7 +28,8 @@ public:
   void kill();
   /** @returns a slot that when invoked invokes calls send()*/
   SimpleSlot propagator();
-  /** creating object freezes triggering the signal, deleting object liberates the signal.
+
+  /** creating a Freezer object freezes triggering the signal, deleting object liberates the signal.
    * this guarantees ungate() gets called for each gate() called by this entity.
    * usage: GatedSignal::Freezer uselessname(someGatedSignal); instead of calling someGatedSignal::gate() and hopefully remembering to call its ungate() later. */
   class Freezer {

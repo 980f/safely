@@ -18,7 +18,7 @@ Text PathParser::pack(const SegmentedName &pieces, char seperator){
     packer.next() = seperator;
     packer.printString(feeder.next());
   }
-  return Text(path);
+  return Text(path);//when you destroy the Text the data malloc'd above is freed
 } // PathParser::pack
 
 bool PathParser::parseInto(SegmentedName &pieces, Text &packed, char seperator){
