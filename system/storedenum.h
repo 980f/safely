@@ -1,7 +1,7 @@
 #ifndef STOREDENUM_H
 #define STOREDENUM_H
 
-#include "storable.h"
+#include "stored.h"
 class StoredEnum : public Stored {
 public:
   StoredEnum(Storable &node, const Enumerated &enumerated, int def);

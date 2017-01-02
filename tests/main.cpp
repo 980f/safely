@@ -8,6 +8,7 @@
 
 SafeStr<14> fortnight;
 
+//simply compiling the following is a demanding thing:
 Indexer<SafeStr<10>> pressure;
 
 #include "watchable.h"
@@ -34,12 +35,13 @@ void testdemonic(){
   //run once on second change
   demonic.onAnyChange(RunOnceNthTime<int>::makeInstance(&justOnceLater,2));
 
-
   demonic = 0;//should be no change
+  //should print justOnce: 17
   demonic = 17;//should print 17
   demonic = 0;//should print 0
+  //should print justOnceLater:0
   demonic = 22;//should print 0
-
+  //nothing else should print.
 } // testdemonic
 
 #include "cheaptricks.h"

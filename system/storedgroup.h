@@ -1,7 +1,7 @@
 #ifndef STOREDGROUP_H
 #define STOREDGROUP_H
 
-#include "storable.h"
+#include "stored.h"
 #include "chain.h"
 
 ////////////////////////////////

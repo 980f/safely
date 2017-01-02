@@ -7,7 +7,7 @@
  */
 
 //#define JOIN
-#define JOIN  [[clang::fallthrough]];
+#define JOIN  [[clang::fallthrough]]
 
 
 /// maximum number of values that 'Settings' protocol can handle.

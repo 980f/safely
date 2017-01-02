@@ -6,6 +6,7 @@
 #include "numberformatter.h"
 
 #include "utf8.h" //isdigit
+
 /** class for formatting values into a Text object. this replaces most of glib::ustring's extensions to std::string */
 class TextFormatter : public Text {
   NumberFormat nf;
