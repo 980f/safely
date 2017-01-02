@@ -1,7 +1,7 @@
 #ifndef STOREDNUMERIC_H
 #define STOREDNUMERIC_H
 
-#include "storable.h"
+#include "stored.h"
 #include "sigcuser.h"
 //////////////////////////////
 template< typename Numeric > class StoredNumeric: public Stored {

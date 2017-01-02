@@ -1,7 +1,7 @@
 #ifndef STOREDSETTABLE_H
 #define STOREDSETTABLE_H
 
-#include "storable.h"
+#include "stored.h"
 #include "settable.h"
 #include "hassettings.h"
 

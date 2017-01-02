@@ -1,7 +1,7 @@
 #ifndef STOREDLABEL_H
 #define STOREDLABEL_H
 
-#include "storable.h"
+#include "stored.h"
 
 class StoredLabel : public Stored {
 public:
