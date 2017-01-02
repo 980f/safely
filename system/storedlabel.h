@@ -3,15 +3,18 @@
 
 #include "stored.h"
 
+/** a Stored piece of text.
+*/
 class StoredLabel : public Stored {
 public:
   StoredLabel(Storable &node, const TextValue  &fallback = TextValue());
   void setDefault(const TextValue  &deftext);
   /**pointer to storage, not safe to use to manipulate it,*/
   TextKey c_str() const;
-  /** your own self-deleting copy of the storage */
+  /** your own self-deleting copy of the storage.
+   * IE manipuating this does not affect the stored value.  */
   TextValue toString() const;
-  /** synatctic sugar for toString() */
+  /** syntactic sugar for toString() */
   operator TextValue() const {
     return toString();
   }

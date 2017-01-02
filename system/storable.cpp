@@ -188,8 +188,8 @@ bool Storable::isModified() const {
         return true;
       }
     }
-  JOIN case Numerical:
-  //#join
+  JOIN;
+  case Numerical:
   case Textual:
     return ChangeMonitored::isModified();
   } // switch
@@ -218,7 +218,7 @@ bool Storable::wasModified(){
   }
 //  break;
   case Numerical:
-  //#join
+  //JOIN;
   case Textual:
     return thiswas;
   } // switch
