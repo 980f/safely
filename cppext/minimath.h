@@ -144,6 +144,9 @@ template <typename floating> bool nearly(floating value, floating other, int bit
 extern const u32 Decimal1[];
 int ilog10(u32 value);
 
+extern const u64 Decimal2[];
+int ilog10(u64 value);
+
 /** filtering in case we choose to optimize this */
 double pow10(int exponent);
 

@@ -3,13 +3,14 @@
 
 #include "eztypes.h"
 
-//#include "buffer.h" //the data type for our parser.
-
-/** number parser (think atoi/atod/atol) that works on safe arrays (this library's bounds checked storage access) */
+/** number parser (think atoi/atod/atol) receiver style */
 class NumberParserPieces {
+protected:
+  static const unsigned base=10;//someday make this dynamic.
 public:
   bool isNan;
   bool isInf;
+  bool isZero;
   bool negative;
   /** whether mantissa had a decimal point*/
   bool hadRadixPoint;
@@ -37,6 +38,8 @@ public:
     reset();
   }
 
+  bool seemsOk() const;
+
   /** @returns whether the given character is allowed at the start of a number (excludes 0, we don't do 'C' binary formats here */
   static bool startsNumber(char c);
 }; // class NumberParserState
@@ -44,21 +47,39 @@ public:
 
 /** a parser that is fed characters sequentially */
 class PushedNumberParser : public NumberParserPieces {
+  enum Phase {
+    Start, BeforeDecimal, AfterDecimal, AfterExponent, Done, Failed
+  };
+  Phase phase;
+public:
+  /** char counter, handy for caller to note where parsing stopped, ordinal of char which terminated it. */
+  unsigned processed=0;
   /** value of NPS::double cached when next() returned true */
   double lastParsed;
-  unsigned processed=0;
-  /** whitespace ignored */
-  unsigned skipped=0;
-  /** last char fed to next, retained for debug, otherwise would be a local of next() */
-  char ch=0;
+
 public:
   /** prepare for new number*/
   void reset();
-  /** @returns whether the pushed char terminated number input. */
+
+  /** @returns whether more chars are possbile (not terminated) */
   bool next(char u);
+
+  /** @returns net power of 10, including pre-normalized mantissa */
+  int ilog10()const;
+
   PushedNumberParser(){
     reset();
   }
+
+  /** computes value from pieces*/
+  double value();
+
+private:
+  /** @returns whether accum had room without overflow/wrapping */
+  bool applydigit(u64 &accum, char ch);
+  static bool isExponentMarker(char ch);
+  bool fail();
+
 }; // class PushedNumberParser
 
 

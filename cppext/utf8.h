@@ -11,7 +11,10 @@ typedef u32 Unichar;
 #include "cheaptricks.h" //isPresent
 #include "ctype.h"
 
-/** represents one byte of a UTF8 multibyte character, not to be confused with a Unicode character which is a 32 bit entity*/
+/** represents one byte of a UTF8 multibyte character, not to be confused with a Unicode character which is a 32 bit entity
+ * in addition to utf8 info this wraps ctype functions making them members of a char.
+
+*/
 class UTF8 {
 public:
   char raw;
@@ -24,12 +27,19 @@ public:
     return *this;
   }
 
-  bool operator ==(int ch) const {
+  /** compare byte.
+   * @returns whether this is the same value as @param ch. */
+  bool is(int ch) const {
     return raw == char(ch);
   }
 
-  bool operator ==(UTF8 other) const {
-    return raw == other.raw;
+  /** @returns @see is() */
+  bool operator ==(int ch) const {
+    return is(ch);
+  }
+
+  bool is(UTF8 other) const {
+    return is(other.raw);
   }
 
 //  operator int(void){  //so that we can switch(utf8) and also use traditional C string functionality.
@@ -48,12 +58,19 @@ public:
 //    return raw != 0;
 //  }
 
-  /** is allowed in numeric constant or enum name */
+  /** @returns whether this is allowed in numeric constant or enum name */
   bool numAlpha() const;
 
-  bool isWhite() const {
-    return isPresent(" \t\r\n", raw);
-  }
+  /** @returns whether this is first char of an identifier, per JSON and C++ rules. This is pretty much anything that isn't a number, punctuation or a control char */
+  bool startsName() const;
+
+  /** @returns whether this is first char of an number image, per JSON and C++ rules */
+  bool startsNumber() const;
+
+  /** @returns whether this is considered whitespace */
+  bool isWhite() const;
+
+  bool in(const char *tokens) const;
 
   /** if you skip a byte then numFollowers will be illegal*/
   bool isMultibyte() const {
@@ -63,7 +80,7 @@ public:
   /** only valid if first char of a UTF8 sequence */
   unsigned numFollowers(void) const;
 
-  /** @returns number of 10xxxxxx bytes needed for given @param unichar unicode char*/
+  /** @returns number of 10xxxxxx bytes needed for given @param unichar unicode char.*/
   static unsigned numFollowers(u32 unichar);
 
   /** @returns 1st byte of sequence given @param followers value returned from @see numFollowers(u32)*/
@@ -71,8 +88,6 @@ public:
 
   /** @returns intermediate or final byte, @param followers is 0 for the final one */
   static u8 nextByte(u32 unichar,unsigned followers);
-
-  bool in(const char *tokens) const;
 
 }; // class UTF8
 

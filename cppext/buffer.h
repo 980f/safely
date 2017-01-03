@@ -130,6 +130,25 @@ public:
     return sub;
   }
 
+  /** move start of buffer to be @param howmany past present start.
+   * does sensible things if you trim past the current pointer, wipes the whole thing is you trim all of it.
+   */
+  void trimLeading(unsigned howmany){
+    if(howmany<pointer){//normal case
+      buffer+=howmany;//move start
+      pointer-=howmany;
+      length-=howmany;
+    } else if(howmany<length){
+      buffer+=howmany;//move start
+      pointer=0;//make it valid
+      length-=howmany;
+    } else {//kill the whole thing
+      buffer=nullptr;
+      pointer=0;
+      length=0;
+    }
+  }
+
   /** actually put 0's into the buffer starting at @param ender */
   void truncate(unsigned ender){
     while(ender < pointer) {
