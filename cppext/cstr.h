@@ -73,9 +73,18 @@ public:
   /** forget the target */
   virtual void clear();
 
-  /** marker for tedious syntax const_cast<char *>()*/
+  /** marker for tedious syntax const_cast<char *>()
+   * this should only be used when passing the pointer to old stdlib functions, and only when you have verified the string is null terminated.
+*/
   inline static char *violate(TextKey violatus){
     return const_cast<char *>(violatus);
+  }
+
+  /** marker for tedious syntax const_cast<char *>()
+   * this should only be used when passing the pointer to old stdlib functions, and only when you have verified the string is null terminated.
+*/
+  inline char *violated(){
+    return const_cast<char *>(ptr);
   }
 
 }; // class Cstr

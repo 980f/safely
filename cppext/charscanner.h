@@ -12,6 +12,8 @@ struct CharScanner : public Indexer<char> {
 public:
   static CharScanner Null;
   CharScanner(void);
+  /** risks calling strlen on content. Caller must ensure @param content is a null terminated string. */
+  static CharScanner infer(TextKey content);
   CharScanner(char  * content, unsigned size);
   virtual ~CharScanner();
   /** explicit copy constructor helps compiler out, better than defaulting portion to 0*/
@@ -46,17 +48,7 @@ public:
   bool isBlank();
 
   /** @return a null terminated subset of this, modifying this to omit the returned part and the separator */
-  CharScanner split(char separator){
-    CharScanner lookahead(&peek(), freespace()); //remainder of 'this'.
-    while(lookahead.hasNext()) {
-      if(lookahead.next() == separator) {
-        lookahead.previous() = 0;//drop separator leading part.
-        break;
-      }
-    }
-    skip(lookahead.used()); //adjust this to point past separator
-    return CharScanner(lookahead);//return trailing piece
-  } // split
+  CharScanner split(char separator); // split
 
 };
 

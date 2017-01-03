@@ -173,11 +173,11 @@ bool Storable::is(Storable::Quality q) const {
 }
 
 bool Storable::isModified() const {
-  if(isVolatile) {
+  if(isVolatile) {//because we use this primarily to determine if the container needs to be saved, we leave out nodes that don't get saved.
     return false;
   }
   switch(type) {
-  default:
+  case Uncertain:
   case NotKnown:
     return false;
 
@@ -188,8 +188,7 @@ bool Storable::isModified() const {
         return true;
       }
     }
-  JOIN;
-  case Numerical:
+  JOIN case Numerical:
   case Textual:
     return ChangeMonitored::isModified();
   } // switch
@@ -202,7 +201,6 @@ bool Storable::wasModified(){
     return false;
   }
   switch(type) {
-  default:
   case Uncertain:
   case NotKnown:
     return false;
@@ -212,6 +210,7 @@ bool Storable::wasModified(){
     ForKids(list){
       if(list.next().wasModified()) {
         ++changes;
+        //#don't exit early, we want to run wasModified() on all entities to clear their dirty bits.
       }
     }
     return changes > 0 || thiswas;
@@ -264,14 +263,14 @@ int Storable::listModified(sigc::slot<void, Ustring> textViewer) const {
 #include "pathparser.h"
 Text Storable::fullName() const {
   //non-recursive,
-  SegmentedName collector(false);
+  SegmentedName pathname(false);
   const Storable *scan = this;
 
   do {
-    collector.prefix(scan->name);
+    pathname.prefix(scan->name);
   } while((scan = scan->parent));
 
-  return PathParser::pack(collector,slasher);
+  return PathParser::pack(pathname,slasher);
 } // Storable::fullName
 
 connection Storable::addChangeWatcher(const SimpleSlot&watcher, bool kickme) const {
@@ -395,8 +394,7 @@ Cstr Storable::image(void){
   switch(type) {
   case Uncertain:
     resolve(false);
-  //JOIN
-  case Textual:
+  JOIN case Textual:
     return text;
 
   case Numerical:
@@ -411,7 +409,7 @@ Cstr Storable::image(void){
     text = PathParser::makeNumber(numChildren());
     return text;
 
-  default:
+  case NotKnown:
     return "(unknown)";
   } // switch
 } // image

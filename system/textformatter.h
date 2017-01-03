@@ -7,33 +7,80 @@
 
 #include "utf8.h" //isdigit
 
-/** class for formatting values into a Text object. this replaces most of glib::ustring's extensions to std::string */
+
+/** class for formatting values into a Text object. this replaces most of glib::ustring's extensions to std::string
+ * compared to other string class implemenations this takes pain to realloc only when absolutely necessary. It does not do fancy memory management,
+ * the fanciest thing it does is predict what a bunch of concatenation will require before attempting that concatenation, allocating just what is needed.
+
+*/
 class TextFormatter : public Text {
-  NumberFormat nf;
+  /** wraps format string, gets rewound a lot */
+  CharScanner format;
+  /** wraps Text for assembling string */
   CharFormatter body;
+  /** stateful number formatting, an inline NF item applies to all higher indexed values */
+  NumberFormat nf;
+  /** whether we are computing size of final string or assembling it */
+  bool sizing=true;
   /** tag of next argument to format+insert */
   int which = ~0;//weird value for debug, should always be written to before use by proper code.
-  /** caller must compute largest possible expansion of args + format string then create this then call formatters*/
-  TextFormatter(int presize);
-
   /** when we have no space the print is a dry run that computes instead of formats */
   int sizer = 0;
+
+  struct Piece {
+    // how many times reference in the string, usually 0 or 1
+    unsigned refcount;
+    // how many bytes it needed.
+    unsigned length;
+  };
+
+//todo: count and malloc  Piece *lengthCache=nullptr;
+  Piece lengthCache[10];//so long as we only can handle single digit place indicators we can do a fixed allocation here.
+
+  struct Insertion {
+    int which;
+    //offset from start of final string where the insertion goes.
+    int position;
+  };
+  //we allocate this by summing the refcounts of the lengthCache items.
+  Insertion *inserts=nullptr;
+
+  /** caller must compute largest possible expansion of args + format string then create this then call formatters*/
+  TextFormatter(TextKey mf);
+private:
+  TextFormatter();
 public:
   ~TextFormatter();
 private:
   void substitute(TextKey stringy){
-    if(this->length()>0) {
-      body.remove(2);
-    } else {
+    CharScanner risky=CharScanner::infer(Cstr::violate(stringy));
+    risky.dump();
+    if(sizing) {
       sizer -= 2; //remove tag
-      sizer += Cstr(stringy).length();
+      sizer += risky.allocated()-1;
+    } else {
+//      body.remove(2);
+      //todo: insert string without changing body allocation.
     }
-//todo: insert string without changing body allocation.
   }
 
   //** compiler might have figured this out, but it is nice to able to breakpoint on this until we have proven the class */
   void substitute(Cstr stringy){
-    substitute(stringy.c_str());
+    substitute(CharFormatter::infer(stringy.violated()));
+  }
+
+  /** the primary substituter, all others defer to this */
+  void substitute(CharFormatter buf){
+    if(sizing){
+      sizer-=2;
+      sizer+=buf.used();
+    } else {
+      //shove data up
+      //point to '$'
+      body.rewind(2);
+      //overlay
+      body.appendUsed(buf);
+    }
   }
 
   void substitute(double value){
@@ -43,7 +90,7 @@ private:
       workspace.printChar('?');//replaces '%'
       workspace.printDigit(which);
     }
-    substitute(workspace.internalBuffer());
+    substitute(workspace.used());
   }
 
   /** templated printf:
@@ -59,7 +106,7 @@ private:
     }
   }
 
-//argument spec inline
+//if it is a number format then record it and apply to following items, no substition takes place..
   template<typename ... Args> void compose_item( NumberFormat &item, const Args& ... args){
     nf = item;
     next(args ...);
@@ -82,7 +129,7 @@ private:
   } // compose_item
 
 public:
-  TextFormatter();
+
   /** @returns maximum number of chars it will take to show the given number */
   static unsigned estimateNumber(double value);
   /** @returns maximum number of chars it will take to show the given unicode char (given 1st byte of utf8) */
@@ -94,7 +141,7 @@ public:
 public:
   /** @returns composition of arguments using NumberFormatter rules */
   template<typename ... Args> static Text compose(TextKey format, const Args ... args){
-    TextFormatter dryrun(0); //a zero size formatter computes required length via a dry run at formatting
+    TextFormatter worker(format,0); //a zero size formatter computes required length via a dry run at formatting
     dryrun.compose(format,args ...);
 
     TextFormatter builder(Zguard(dryrun.sizer));
