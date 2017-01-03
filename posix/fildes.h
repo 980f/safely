@@ -1,21 +1,21 @@
 #ifndef FILDES_H
 #define FILDES_H
 
-//#include "buffer.h"
-#include "charscanner.h"
-#include "posixwrapper.h"
-#include "fdset.h"
-//#include "stdio.h" //for getting fp from fd ...
+#include "charscanner.h"   //safe buffer
+#include "posixwrapper.h"  //manage errno
+//#include "fdset.h"
 
-/** wrapper around file descriptors,especially noteworthy is that it closes the file on destruction, so best use is to create and use locally.*/
+
+/** wrapper around file descriptors, especially noteworthy is that it closes the file on destruction, so best use is to create and use locally.*/
 class Fildes : public PosixWrapper {
 public:
   //make a true variable for something that is usuall #defined.
-static const int BADFD= -1;
+  static const int BADFD= -1;
   //retain for post-mortem debug.
   int lastRead;
   int lastWrote;
 protected:
+/** whether this object opened the fd it wraps. That is the normal case but if you want to do multiple operations and retain error info on each step then you might use multiple Fildes objects around teh same fd. */
   bool amOwner;
   int fd;
   bool assignFd(int anFD);
@@ -42,8 +42,9 @@ public:
     return fd != BADFD;
   }
 
-  /** get alternative view of the file*/
-  FILE * getfp(const char *fargs=0);
+  /** get alternative view of the file.
+@returns a FILE pointer for the same file */
+  FILE * getfp(const char *fargs=nullptr);
 
   /** read from used bytes of buffer */
   int read(ByteScanner&p);

@@ -246,6 +246,8 @@ extern "C" { //assembly coded in cortexm3.s, usually due to outrageously bad com
   float shiftScale(float eff, int pow2);
 
   double flog(u32 number);
+  /** @return the natural logarithm of the ratio of @param over over @param under.
+   * This is computable as the difference of their logs, but we wrap that here so that some fancy fidding can reduce the number of logarithms executed.  */
   double logRatio(u32 over, u32 under);
 
   u16 uround(float scaled);
@@ -273,4 +275,6 @@ extern "C" { //assembly coded in cortexm3.s, usually due to outrageously bad com
 
 } //end extern C for assembly coded routines.
 
+
+template <typename Integrish> Integrish intbin(double &d);
 #endif /* ifndef minimath_h */

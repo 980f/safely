@@ -278,3 +278,8 @@ bool CharFormatter::removeTerminator(){
   }
   return false;
 }
+
+CharFormatter CharFormatter::infer(char *content)
+{
+
+}

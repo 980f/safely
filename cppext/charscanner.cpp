@@ -113,6 +113,12 @@ CharScanner::CharScanner(void) : Indexer<char >(){
   //#nada
 }
 
+CharScanner CharScanner::infer(TextKey content)
+{
+  Cstr wrap(content);
+  return CharScanner(wrap,wrap.length());
+}
+
 CharScanner::CharScanner(char  *content, unsigned size ) : Indexer<char >(content, size){
   //#nada
 }
@@ -219,6 +225,7 @@ void CharScanner::trimNulls(void){
 }
 
 #include "cheaptricks.h"
+#include "cstr.h"
 bool CharScanner::isBlank(){
   if(length==0) {
     return true;

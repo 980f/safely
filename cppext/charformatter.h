@@ -10,6 +10,8 @@ class CharFormatter : public CharScanner {
 public:
   /** unsafe version, uses strlen */
   CharFormatter(char * content);
+  /** risks calling strlen on content. Caller must ensure @param content is a null terminated string. */
+  static CharFormatter infer(char *content);
   /** @parm size as given must be the size allocated with @param content */
   CharFormatter(char * content, unsigned size);
   /** construct around buffer associated with @param other, shares the buffer!*/

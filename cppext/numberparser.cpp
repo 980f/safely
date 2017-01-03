@@ -1,6 +1,7 @@
 #include "numberparser.h"
 
-//#include "ctype.h"
+#include "minimath.h"
+#include "cheaptricks.h"
 
 bool isDigit(char c){
   return c>='0'&&c<='9';
@@ -8,18 +9,19 @@ bool isDigit(char c){
 
 const u64 DecimalCutoff = 922337203685477580LL; //trunc(2^63)/10, courtesy of python.
 
-double NumberParserState::packed() const {
+double NumberParserPieces::packed() const {
   if(isNan) {
     return Nan;
   }
   if(isInf) {
     return negative ? -Infinity : Infinity;
   }
-  int exp = exponent;
+  int exp = int(exponent);//safe truncation
   if(negativeExponent) {
     exp = -exp;
-  }
+  }  
   //exp is now the user given exponent
+
   double number = predecimal;
   if(pow10 > 0) { //then trailing digits of predecimal part were lopped off
     number *= ::pow10(pow10);
@@ -34,11 +36,11 @@ double NumberParserState::packed() const {
   return negative ? -number : number;
 } // NumberParserState::packed
 
-bool NumberParserState::startsNumber(char c){
+bool NumberParserPieces::startsNumber(char c){
   return isDigit(c) || c == '-' || c == '.'; //'.' tolerates lack of a leading zero
 }
 
-void NumberParserState::reset(void){
+void NumberParserPieces::reset(void){
   isNan = false;
   isInf = false;
   negative = false;
@@ -50,6 +52,40 @@ void NumberParserState::reset(void){
   exponent = 0;
   negativeExponent = false;
 } // NumberParserState::reset
+
+
+void PushedNumberParser::reset(){
+  NumberParserPieces::reset();
+  processed = 0;
+  skipped = 0;
+  ch = 0; //init for debug
+  phase=Start;
+}
+
+bool PushedNumberParser::next(char u){
+  ch=u;//record for post mortem debug
+  switch(phase){
+  case Start:
+    switch (ch) {
+    case '-':
+      break;
+    case '+':
+      break;
+    case '.'://tolerate leading point
+      break;
+    default:
+      if(isDigit(ch)){
+        //first digit of predecimal
+      } else if(isWhite(ch)){
+
+      }
+
+
+    }
+
+  }
+}
+
 
 double NumberParser::getValue(LatentSequence<char>&p){
   if(parseNumber(p)) {
@@ -179,10 +215,3 @@ bool NumberParser::parseNumber(LatentSequence<char>&p){
     return false;
   }
 } /* parseNumber */
-
-void PushedNumberParser::reset(){
-  NumberParserState::reset();
-  processed = 0;
-  skipped = 0;
-  ch = 0; //init for debug
-}

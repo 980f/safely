@@ -19,7 +19,7 @@ void PosixWrapper::logmsg(const char *fmt, ...){
 
 bool PosixWrapper::failure(bool passthrough){
   errornumber = errno;
-  if(errno != 0) {
+  if(errornumber != 0) {
     syslog(debug, "Failure: %m");
   }
   return passthrough;
