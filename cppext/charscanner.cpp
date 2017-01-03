@@ -1,4 +1,5 @@
 #include "charscanner.h"
+#include "cstr.h"
 
 //this one is sharable, with care! You should never be calling wrap or clone on a reference.
 CharScanner CharScanner::Null;
@@ -113,10 +114,9 @@ CharScanner::CharScanner(void) : Indexer<char >(){
   //#nada
 }
 
-CharScanner CharScanner::infer(TextKey content)
-{
+CharScanner CharScanner::infer(TextKey content){
   Cstr wrap(content);
-  return CharScanner(wrap,wrap.length());
+  return CharScanner(wrap.violated(),wrap.length());
 }
 
 CharScanner::CharScanner(char  *content, unsigned size ) : Indexer<char >(content, size){

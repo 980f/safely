@@ -3,10 +3,10 @@
 
 #include "textkey.h" //for its utility functions, could migrate those here
 
-
-/** yet another attempt at safe use of str library.
+/** yet another attempt at safe use of standard C lib str functions.
+ *
  * This class wraps a pointer and null checks all uses, vs letting str*() lib functions seg fault.
- * only str* function swhich do NOT alter the string should be wrapped here.
+ * only str* functions which do NOT alter the string should be wrapped here.
  */
 
 class Cstr {
@@ -75,15 +75,15 @@ public:
 
   /** marker for tedious syntax const_cast<char *>()
    * this should only be used when passing the pointer to old stdlib functions, and only when you have verified the string is null terminated.
-*/
-  inline static char *violate(TextKey violatus){
+   */
+  static char *violate(TextKey violatus){
     return const_cast<char *>(violatus);
   }
 
   /** marker for tedious syntax const_cast<char *>()
    * this should only be used when passing the pointer to old stdlib functions, and only when you have verified the string is null terminated.
-*/
-  inline char *violated(){
+   */
+  char *violated(){
     return const_cast<char *>(ptr);
   }
 

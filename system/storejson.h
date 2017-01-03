@@ -3,15 +3,22 @@
 
 #include "storable.h"
 #include "charscanner.h"
-/** parse relatively small blocks of json code. the caller will have to allocate */
-class JSONparser {
+
+/** parse relatively small blocks of json code.
+ * This class is a factory for Storable's.  */
+class StoredJSONparser {
   CharScanner token;//(buffer,length);
   CharScanner lookahead;//(buffer,length);
-  Storable &parent;
-  void parse( );
+  Storable *parent;
+
+  /** @returns new Storable, caller must add to wad  */
+  Storable *parseChild(Storable *parent);
 public:
   /** parse a block of text into a child of the given node. */
-  JSONparser(char *buffer, unsigned length,Storable &parent);
+  StoredJSONparser(const CharScanner &loaded,Storable *parent);
+
+  /** process the block */
+  bool parse( );
 
 public: //stats
   /**number of values */
@@ -26,6 +33,10 @@ public: //stats
   /** number of unmatched braces at end of parsing */
   unsigned nested = 0;
 
+private:
+  TextKey terminateField();
+  Storable *makeChild(Storable *parent);
+  Storable *makeNamelessChild(Storable *parent);
 }; // class JSONparser
 
 #endif // STOREJSON_H

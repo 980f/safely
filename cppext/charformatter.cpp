@@ -9,6 +9,29 @@
 #include "string.h"
 #include "numberparser.h"
 #include "safely.h" //ascii framing characters
+#include "cstr.h"
+
+struct NumberParser:public PushedNumberParser  {
+
+  /** @param buf points after last char, prev() is terminator */
+  bool parseNumber(CharFormatter &buf){
+    while(buf.hasNext() && next(buf.next())){
+      //#nada
+    }
+    return seemsOk();
+  }
+
+  double getValue(CharFormatter &buf, double backup=0.0){
+    if(parseNumber(buf)){
+      buf.unget();
+      return packed();
+    } else {
+      return backup;
+    }
+  }
+
+};
+
 
 CharFormatter::CharFormatter(char * content) : CharScanner(content, content ? strlen(content) : 0){
   //nada
@@ -50,7 +73,7 @@ s64 CharFormatter::parse64(s64 def){
 
   if(n.parseNumber(*this)) {
     if(n.hasEterm) {//trying to tolerate some values, may produce nonsense.
-      int logProduct = ilog10(n.predecimal) + n.exponent;
+      int logProduct = ilog10(n.predecimal)+n.pow10 + n.exponent;
       if(logProduct<=18) {
         n.predecimal = 0x7FFFFFFFFFFFFFFFLL;
       } else {
@@ -81,7 +104,7 @@ bool CharFormatter::printChar(char ch, unsigned howMany){
 }
 
 bool CharFormatter::printAtWidth(unsigned int value, unsigned width){
-  unsigned numDigits = value ? ilog10(value) + 1 : 1; //ilog10 doesn't work with zero
+  unsigned numDigits = value ? ilog10(value) + 1 : 1; //ilog10 gives -1 for zero, we lumpt that in with 1..9
   if(numDigits > width) {
     printChar('*', width);
     return false;
@@ -279,7 +302,7 @@ bool CharFormatter::removeTerminator(){
   return false;
 }
 
-CharFormatter CharFormatter::infer(char *content)
-{
-
+CharFormatter CharFormatter::infer(char *content){
+  Cstr wrap(content);
+  return CharFormatter(wrap.violated(),wrap.length());
 }

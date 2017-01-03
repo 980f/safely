@@ -3,11 +3,10 @@
 #include "minimath.h"
 #include "cheaptricks.h"
 
-bool isDigit(char c){
-  return c>='0'&&c<='9';
-}
+#include "ctype.h"
 
-const u64 DecimalCutoff = 922337203685477580LL; //trunc(2^63)/10, courtesy of python.
+/** maximum value that can be multiplied by 10 and not exceed 2^64: */
+const u64 DecimalCutoff = (1UL<<63)/5; //2^64 /10 == 2^63/5, needed to take care that the compiler didn't get a wrap.
 
 double NumberParserPieces::packed() const {
   if(isNan) {
@@ -34,10 +33,19 @@ double NumberParserPieces::packed() const {
   }
   number *= ::pow10(exp);//and apply user provide power
   return negative ? -number : number;
+}
+
+bool NumberParserPieces::seemsOk() const {
+  if (!isNan&&!isInf){
+    if(isZero || predecimal || postdecimal){//perfect zero or had some digits
+      return true;
+    }
+  }
+  return false;
 } // NumberParserState::packed
 
 bool NumberParserPieces::startsNumber(char c){
-  return isDigit(c) || c == '-' || c == '.'; //'.' tolerates lack of a leading zero
+  return isdigit(c) || c == '-' || c == '.'; //'.' tolerates lack of a leading zero
 }
 
 void NumberParserPieces::reset(void){
@@ -57,161 +65,154 @@ void NumberParserPieces::reset(void){
 void PushedNumberParser::reset(){
   NumberParserPieces::reset();
   processed = 0;
-  skipped = 0;
-  ch = 0; //init for debug
   phase=Start;
 }
 
-bool PushedNumberParser::next(char u){
-  ch=u;//record for post mortem debug
-  switch(phase){
-  case Start:
-    switch (ch) {
-    case '-':
-      break;
-    case '+':
-      break;
-    case '.'://tolerate leading point
-      break;
-    default:
-      if(isDigit(ch)){
-        //first digit of predecimal
-      } else if(isWhite(ch)){
-
-      }
-
-
-    }
-
+bool PushedNumberParser::applydigit(u64 &accum,char ch){
+  //todo: check for accumulator overflow. If so then we don't shift in digits, just inc pow10 as relevent.
+  if(accum > DecimalCutoff){
+    return false;
   }
+  unsigned digit=unsigned(ch-'0');
+  //todo: base 36 logic.
+  accum*=base;
+  accum+=digit;
+  return true;
+}
+
+bool PushedNumberParser::isExponentMarker(char ch){
+  return (ch|0x20)=='e';//fast tolower
+}
+
+bool PushedNumberParser::fail(){
+  if(changed(phase,Failed)){
+   //a place to breakpoint
+    return false;
+  }
+  return false;
 }
 
 
-double NumberParser::getValue(LatentSequence<char>&p){
-  if(parseNumber(p)) {
-    return packed();
-  } else {
-    return Nan;
-  }
-} /* getValue */
-
-int NumberParser::parseUnsigned(u64&n, PeekableSequence<char>&p){
-  int processed = 0;
-  int skipped = 0;
-  u64 acc = 0; //need to accept 53 bits worth for mantissa of double.
-  u8 ch = 0; //init for debug
-
-  while(p.hasNext()) {
-    ch = p.peek();
-    if(isDigit(ch)) { //todo:?M purge leading zeroes
-      p.skip(1);
-      ++processed;
-      if(acc > DecimalCutoff) {
-        ++skipped;
+bool PushedNumberParser::next(char u){
+  ++processed;//includes char that causes termination.
+  switch(phase){
+  default:
+    return fail();//if you push at me when I'm done I will bitch back at you.
+  case Start:
+    switch (u) {
+    case '-':
+      if(changed(negative,true)){//first negative ok
+        return true;
+      } else {//additional negative not cool
+        return fail();
+      }
+    case '+':
+      return true;
+    case '.'://tolerate leading point
+      phase=AfterDecimal;
+      return true;
+    case '0'://must exclude from 'isdigit'
+      isZero=true;
+      phase=BeforeDecimal;
+      return true;
+    default:
+      if(isdigit(u)){
+        //first digit of predecimal
+        phase=BeforeDecimal;
+        applydigit(predecimal,u);
+        return true;
+      } else if(isspace(u)){
+        return true;
       } else {
-        acc *= 10;
-        acc += ch - '0';
+        return fail();//if you push at me when I'm done I will bitch back at you.
       }
+    }
+//    break;
+  case BeforeDecimal: //only digits and decimal point
+    if(isdigit(u)){
+      if(isZero){//then started with a zero
+        //this is where we would detect a base xX
+        return fail();//no bases other than 10
+      }
+      if(applydigit(predecimal,u)){
+        //copacetic
+      } else {//count dropped digits
+        if(!pow10){
+          if(u>='5'){
+            ++predecimal;//round missing stuff
+          }
+        }
+        ++pow10; //if pow10 wraps we have a massively long string of digits.
+      }
+      return true;
+    } else if('.'==u){
+      if(isZero){//checking for debug
+        isZero=false;
+      }
+      hadRadixPoint=true;
+      phase=AfterDecimal;
+      return true;
+    } else if(isExponentMarker(u)){
+      if(isZero){ //0E not allowed
+        return fail();
+      }
+      phase=AfterExponent;
+      return true;
     } else {
-      break;
+      phase=Done;
+      return false;
     }
-  }
-  if(processed > 0) {
-    n = acc;
-    return skipped;
-  } else {
-    return -1; //signal
-  }
-} /* parseUnsigned */
 
-void NumberParser::parseFraction(PeekableSequence<char>&p){
-  u64 acc = 0; //need to accept 53 bits worth for mantissa of double.
-  u8 ch = 0; //init for debug
-  div10 = 0;
-  while(p.hasNext()) {
-    ch = p.peek();
-    if(isDigit(ch)) {
-      p.skip(1);
-      if(acc > DecimalCutoff) {
-        continue;//simply ignore excess precision.
-      } else { //leading zeroes come here, for a minor amount of wasted effort.
-        acc *= 10;
-        acc += ch - '0';
-        ++div10;
+  case AfterDecimal:
+    if(isdigit(u)){
+      if(pow10==0){//if we dropped digits then we ignore the AfterDecimal content
+        if (applydigit(postdecimal,u)){
+          ++div10;
+        }
       }
+      return true;
+    } else if(isExponentMarker(u)){
+      phase=AfterExponent;
+      return true;
     } else {
-      break;
+      phase=Done;
+      return false;
     }
-  }
-  postdecimal = acc;
-  //  return div10; //signal
-} // NumberParser::parseFraction
 
-bool NumberParser::parseNumber(LatentSequence<char>&p){
-  reset();
-  u8 ch = 0;
-  while(p.hasNext()) { //accept leading whitespace
-    ch = p.next();
-    if(ch != ' ') { //todo: used to tolerate tabs and newlines
-      break;
-    }
-  }
-  if(ch == '-') { //optional minus sign
-    negative = true;
-    if(!p.hasNext()) {
-      return false; //true results in a value of zero... negative sign by itself is not a number
-    }
-  } else if(ch == '+') { //optional '+' sign
-    if(!p.hasNext()) {
-      return false; //true results in a value of zero... positive sign by itself is not a number
-    }
-    //else just move along
-  } else if(isDigit(ch) || '.') { //don't tolerate an additional '-'
-    p.unget(); //put the digit back
-  } else {
-    return false; //not a decimal string
-  }
-  pow10 = parseUnsigned(predecimal, p);
-  if(pow10 >= 0) { //negative is signal, no number found.
-    //still have to parse for E expression if string is 0Exx
-    if(p.hasNext()) {
-      ch = p.peek();
-      if(ch == '.') {
-        p.skip(1);
-        parseFraction(p);
+  case AfterExponent: //meaning after the 'E'
+    if(isdigit(u)){
+      hasEterm=true;//not set until we have at least one digit
+      applydigit(exponent,u);
+      return true;
+    } else if('-'==(u)){
+      negativeExponent=true;
+      return true;
+    } else {
+      if(exponent){
+        phase=Done;
+        return false;
+      } else {
+        return fail();
       }
-      if(p.hasNext()) {
-        ch = p.peek();
-        //space before the E is not tolerated,
-        if(ch == 'E' || ch == 'e') { //maydo: also tolerate a 'D'
-          hasEterm = true;
-          p.skip(1);
-          if(p.hasNext()) {
-            ch = p.peek(); //char after the E
-          }
-          switch(int(ch)) {
-          case '-':
-            negativeExponent = true;
-            p.skip(1);
-            break;
-          case '+':
-            p.skip(1);
-            break;
-          }
-          //space after the E is not tolerated
-          int overflow = parseUnsigned(exponent, p);
-          if(overflow < 0) {
-            return false; //must have digits after E or E- or E+
-          }
-          if(overflow > 0) { //unbelievably large exponent
-            return false;
-          }
-        }//process E
-      }//check for an E
-    }//check for .99 or Exxx
-    return true;
-  } else {
-    //whitespace between sign and number is not tolerated
-    return false;
+    }
   }
-} /* parseNumber */
+}
+
+int PushedNumberParser::ilog10() const{
+  int totalPow10=::ilog10(predecimal);
+  totalPow10+=this->pow10;
+  if(hasEterm){
+    if(negativeExponent){
+      totalPow10-=exponent;
+    } else {
+      totalPow10+=exponent;
+    }
+  }
+  return totalPow10;
+}
+
+double PushedNumberParser::value(){
+  lastParsed=packed();
+  return lastParsed;
+}
+

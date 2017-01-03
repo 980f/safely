@@ -9,6 +9,14 @@ bool UTF8::numAlpha() const {
   return isalnum(raw) || isPresent("+-.", raw);
 }
 
+bool UTF8::startsName() const {
+  return isalpha(raw);
+}
+
+bool UTF8::isWhite() const {
+  return isspace(raw);
+}
+
 unsigned UTF8::numFollowers() const {
   if(u8(raw) < 0xC0) { //80..BF are illegal raw, we ignore that here, C0 and C1  are not specfied so lump them in as well
     return 0;   //7 bits    128

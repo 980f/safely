@@ -9,7 +9,7 @@
 
 
 /** class for formatting values into a Text object. this replaces most of glib::ustring's extensions to std::string
- * compared to other string class implemenations this takes pain to realloc only when absolutely necessary. It does not do fancy memory management,
+ * compared to other string class implemenations this takes pain to realloc only when absolutely necessary. It does not do fancy memory management liek copy-on-write,,
  * the fanciest thing it does is predict what a bunch of concatenation will require before attempting that concatenation, allocating just what is needed.
 
 */
@@ -45,7 +45,6 @@ class TextFormatter : public Text {
   //we allocate this by summing the refcounts of the lengthCache items.
   Insertion *inserts=nullptr;
 
-  /** caller must compute largest possible expansion of args + format string then create this then call formatters*/
   TextFormatter(TextKey mf);
 private:
   TextFormatter();
@@ -141,12 +140,12 @@ public:
 public:
   /** @returns composition of arguments using NumberFormatter rules */
   template<typename ... Args> static Text compose(TextKey format, const Args ... args){
-    TextFormatter worker(format,0); //a zero size formatter computes required length via a dry run at formatting
-    dryrun.compose(format,args ...);
-
-    TextFormatter builder(Zguard(dryrun.sizer));
-    builder.compose(format, args ...);
-    return builder;
+    TextFormatter worker(format); //a zero size formatter computes required length via a dry run at formatting
+    worker.sizing=true;
+    worker.compose(format,args ...);
+    worker.sizing=false;
+    worker.compose(format, args ...);
+    return Text(worker.body.internalBuffer());
   }
 
 }; // class TextFormatter

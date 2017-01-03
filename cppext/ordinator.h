@@ -10,8 +10,11 @@ protected:
   unsigned pointer;
   unsigned length;
 public:
+  /** AKA -1 depending upon how you look at it. We use ~0 as a marker that the -1 it hides is not a 'subtract 1' */
+  const unsigned BadLength=~0;
+
   /** create a range of sorts */
-  Ordinator(unsigned length, int pointer = 0 ) : pointer(pointer),length(length){
+  Ordinator(unsigned length, unsigned pointer = 0 ) : pointer(pointer),length(length){
     if(static_cast<unsigned>(pointer)>length) {//bad value: will normalize to 'consumed'. The cast to unsigned makes negative numbers HUGE.
       this->pointer = length;
     }
@@ -24,10 +27,10 @@ public:
    */
   Ordinator(const Ordinator &other,int clip = 0) : pointer(0),length(other.length){
     if(clip<0) {  //section past, usually 0..pointer-1,
-      length = other.pointer - ~clip;
+      length = other.pointer - (~clip);
     }
     if(clip>0) { //end section pointer .. length -1,
-      length = other.freespace() + ~clip;
+      length = other.freespace() + (~clip);
     }
     //else constructor init list has taken care of it.
   }
@@ -53,22 +56,24 @@ public:
   }
 
   /** available for write, or if just snapped available for parsing*/
-  int freespace(void) const {
+  unsigned freespace(void) const {
     return length - pointer;
   }
 
   /** available for block write*/
-  bool stillHas(int howmany) const {
+  bool stillHas(unsigned howmany) const {
     return freespace() >= howmany;
   }
 
   //NB: a cast to integer was annoying to derived types, from which this class is an extracted base.
-  int ordinal(void) const {
+  unsigned ordinal(void) const {
     return pointer;
   }
 
-  /**AFTER a next this is the index of what that next() returned.*/
-  int present(void ) const {
+  /**AFTER a next this is the index of what that next() returned.
+   * @returns ordinal of item that next() returned, ~0 if next() never called.
+*/
+  unsigned present(void ) const {
     return pointer - 1;
   }
 

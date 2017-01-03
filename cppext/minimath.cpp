@@ -69,6 +69,22 @@ int ilog10(u32 value){
   return -1;
 }
 
+const u64 Decimal2[] = {
+  10000000000UL, 100000000000UL, 1000000000000UL, 10000000000000UL, 100000000000000UL, 1000000000000000UL, 10000000000000000UL, 100000000000000000UL, 1000000000000000000UL, 10000000000000000000UL //added zeroes until compiler told me the number was too big
+};
+
+/** @returns the number of decimal digits needed to represent the given integer, -1 if the number is 0 */
+int ilog10(u64 value){
+  for(int log=countof(Decimal2);log-->0;){
+    if(Decimal2[log]<=value) {
+      return log+10;
+    }
+  }
+  return -1;
+}
+
+
+
 //uround and sround are coded to be like they will in optimized assembly
 u16 uround(float scaled){
   if(scaled < 0.5) { //fp compares are the same cost as integer.
