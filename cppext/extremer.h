@@ -5,61 +5,63 @@
  * data that is all present)
  *  //todo: encapsulate the members.
  *  //todo: move 'not found' values into constructor args
+ *
  */
 
-template<typename Scalar> class Extremer {
-public:
-/** whether we are seeking smallest else largest */
-  bool negatory;
-/** whether on new value equal to present extreme we prefer to mark the new value as the extremum */
-  bool preferLatter;
-/** whether any data has been inspected (else location is not valid) */
-  bool started;
-  //don't assign to these if you want this class's logic to prevail:
-  int location;
+/** negatory is whether we are seeking smallest else largest
+ * preferLatter is how to deal with ties between new value and reigning champion, whether to have the latest one take the crown.
+ */
+template<typename Scalar,bool negatory=false,bool preferLatter=false> class Extremer {
+public: //for convenience.
+/** whether any data has been inspected (else location and extremum are not valid)
+ * This is easier than trying to come up with a initial value of extremum.
+*/
+  bool started=false;
+public: //could make these read-only
+  int location=~0;//default for debug
+  /** */
   Scalar extremum;
-  //usually called from a specialization
-  Extremer(bool negatory = false,bool preferLatter = false) :
-    negatory(negatory),preferLatter(preferLatter),
-    started(false),location(-1){
-    extremum = 0;//extremum set just for debug
-  }
-
+public:
   /** @return whether the extremum or location was updated */
-  bool inspect(int loc,const Scalar&value ){
+  bool inspect(int loc,const Scalar&value){
     if(started) {
-      if(extremum==value) {
-        if(preferLatter ? loc<location : loc> location) {//then check index, same index is moot.
+      if(negatory){
+        if(extremum<value){
           return false;
         }
-      } else if(negatory ? extremum<value : extremum> value) {
-        return false;
+      } else {
+        if(extremum> value) {
+          return false;
+        }
       }
+
+      if(extremum==value) {
+        if(preferLatter) {
+          if(loc<location){
+            return false;
+          }
+        } else {
+          if(loc> location) {//then check index, same index is moot.
+            return false;
+          }
+        }
+      }
+    } else {
+      started = true;
+      extremum = value;
+      location = loc;
+      return true;
     }
-    started = true;
-    extremum = value;
-    location = loc;
-    return true;
   } // inspect
 
 }; // class Extremer
 
-class MaxDouble : public Extremer<double>{
-public:
-  MaxDouble(bool preferLatter = false) : Extremer<double>(false,preferLatter){
-//might do this for debug:    extremum=-Inf;
-  }
 
-};
-
-class MinDouble : public Extremer<double>{
-public:
-  MinDouble(bool preferLatter = false) : Extremer<double>(true,preferLatter){
-//might do this for debug:    extremum=-Inf;
-  }
-
-};
+//prebuild the common ones:
+class MaxDouble : public Extremer<double,false,false>{};
+class MinDouble : public Extremer<double,true,false>{};
 
 //add more wrapped specializations here.
+
 
 #endif // EXTREMER_H
