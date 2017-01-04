@@ -5,6 +5,8 @@
 
 #include "numberformatter.h"
 
+#include <halfopen.h>
+
 
 Text PathParser::pack(const SegmentedName &pieces, char seperator){
   unsigned bytesNeeded = Zguard(pieces.mallocLength(1));
@@ -21,23 +23,23 @@ Text PathParser::pack(const SegmentedName &pieces, char seperator){
   return Text(path);//when you destroy the Text the data malloc'd above is freed
 } // PathParser::pack
 
+
+
+
 bool PathParser::parseInto(SegmentedName &pieces, Text &packed, char seperator){
   CharScanner scan( Cstr::violate(packed.c_str()),packed.length());
-  bool rooted(false);
+  bool rooted(scan.peek()==seperator);
 
+  Span cutter(scan.ordinal(),BadIndex);
   while(scan.hasNext()) {
     if(scan.next()==seperator) {
-      scan.previous() = 0;//null terminator for Text constructor
+      cutter.highest=scan.ordinal();//halfopen interval is nice here.
       if(scan.ordinal()==1) {//1st char was an(other) seperator
-        if(pieces.quantity()==0) {
+        if(pieces.empty()) {
           rooted = true;
-        } else {          //todo: what do we do with empty path elements?
-          // merge multiple successive seperators into effectively just one.
-          scan.grab(scan);
-          continue;
         }
       }
-      pieces.append(new Text(scan.internalBuffer()));
+      pieces.suffix(*new Text(scan.internalBuffer()));
       scan.grab(scan);
     }
   }

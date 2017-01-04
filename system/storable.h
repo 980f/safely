@@ -249,12 +249,12 @@ public:
   /** @see existingChild() non const version */
   const Storable *existingChild(TextKey childName) const;
 
-  /** find nameless nodes, starting at &param lastFound. Pass ~0 for 'beginning`.
+  /** find nameless nodes, starting at &param lastFound. Pass BadIndex for 'beginning`.
    * To walk the list:
    * for(Storable *nemo=node.findNameless();nemo;nemo=node.findNameless(nemo.ownIndex())) dosomething(nemo); //nemo will not be null
    * @deprecated untested
    */
-  Storable *findNameless(int lastFound = ~0);
+  Storable *findNameless(unsigned lastFound = BadIndex);
 
   /** if @param autocreate is true then call child() on each piece of the @param path, else call existingChild() until either a
    * member is missing or the child is found.

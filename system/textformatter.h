@@ -23,9 +23,9 @@ class TextFormatter : public Text {
   /** whether we are computing size of final string or assembling it */
   bool sizing=true;
   /** tag of next argument to format+insert */
-  int which = ~0;//weird value for debug, should always be written to before use by proper code.
+  unsigned which = BadIndex;//weird value for debug, should always be written to before use by proper code.
   /** when we have no space the print is a dry run that computes instead of formats */
-  int sizer = 0;
+  unsigned sizer = 0;
 
   struct Piece {
     // how many times reference in the string, usually 0 or 1

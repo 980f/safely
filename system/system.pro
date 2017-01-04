@@ -37,7 +37,8 @@ SOURCES += \
     textformatter.cpp \
     sigcuser.cpp \
     runoncenthtime.cpp \
-    stored.cpp
+    stored.cpp \
+    filename.cpp
 
 HEADERS += \
     cachedindextostored.h \
@@ -79,5 +80,6 @@ HEADERS += \
     pathparser.h \
     textformatter.h \
     runoncenthtime.h \
-    stored.h
+    stored.h \
+    filename.h
 

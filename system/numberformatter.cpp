@@ -16,7 +16,7 @@ unsigned NumberFormat::needs() const {
 }
 
 void NumberFormat::clear(){
-  fieldWidth = ~0;
+  fieldWidth = BadLength;
   precision = 17; //ieee 64bit
 }
 

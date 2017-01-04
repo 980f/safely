@@ -458,7 +458,7 @@ const Storable *Storable::existingChild(TextKey childName) const {
   return nullptr;//can't find a nameless child. Need special functions for that which include a search start index.
 } // Storable::existingChild
 
-Storable *Storable::findNameless(int lastFound){
+Storable *Storable::findNameless(unsigned lastFound){
   while(lastFound++<wad.quantity()) {
     if(wad[lastFound]->name.empty()) {
       return wad[lastFound];//and user can use the index thereof to pass back to this for the next one.

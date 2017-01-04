@@ -35,7 +35,7 @@ public:
 public:
 
   /** deletes its copy of the content copied or recorded by the constructor */
-  ~Text();
+  virtual ~Text();
 
   /** useful for forcing a copy when constructing, the copy constructor is used for moving. */
   operator TextKey() const;
