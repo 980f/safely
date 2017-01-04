@@ -54,7 +54,7 @@ public: //could make these read-only
   Scalar extremum;
 public:
   /** @returns whether the extremum or location was updated */
-  bool inspect(const Scalar&value,int loc=0){
+  bool inspect(int loc,const Scalar&value){
     if(started) {
       if(negatory){
         if(extremum<value){
