@@ -1,6 +1,6 @@
 #include "fdset.h"
 
-#include "cheapTricks.h"
+#include "cheaptricks.h"
 #include "minimath.h"  //splitter
 
 FDset::FDset(){
@@ -92,7 +92,7 @@ bool SelectorSet::isTroubled(int fd) const {
 void SelectorSet::setTimeout(double seconds){
   int wholeSeconds=splitter(seconds);
   timeout.tv_sec = wholeSeconds;
-  timeout.tv_usec = int(1e6*seconds;  )
+  timeout.tv_usec = int(1e6*seconds);
 }
 
 //end of file.

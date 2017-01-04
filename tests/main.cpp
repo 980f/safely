@@ -72,17 +72,31 @@ public:
 
 #include "extremer.h"
 void extremely(){
-  Extremer<double> maxish;
-  Extremer<double> minish(true);
-//  auto testset=/*{1.0,4.2,3.7,8.9,-2.71828,9.5,3.4}*/;
+  MaxDouble maxish;
+  MinDouble minish;
+  Extremer<double,true,true> lastish;
+
   int which = 0;
-  for(auto x:{1.0,4.2,3.7,8.9,-2.71828,9.5,3.4}) {
+  for(auto x:{1.0,4.2,-2.71828,3.7,8.9,-2.71828,9.5,3.4}) {
     minish.inspect(which,x);
+    lastish.inspect(which,x);
     maxish.inspect(which++,x);
   }
   printf("\nMax %g at %u",maxish.extremum,maxish.location);
   printf("\nMin %g at %u",minish.extremum,minish.location);
+  printf("\nLastish %g at %u",lastish.extremum,lastish.location);
+
 } // extremely
+
+
+#include "storejson.h"
+#include "filer.h"
+
+const char*jsonfiles[]={"1.json","2.json"};
+void testJson(const char *fname){
+
+}
+
 
 int main(int argc, char *argv[]){
   while(argc-->0) {

@@ -10,12 +10,12 @@ bool isPresent(const char *flags, char flag);
  * Used as a base class, with argument a relatively persistant item to count the number of extant objects of that class.
  *  once upon a time there was a duplicate class CountedFlagger
  *
- *  This is all inlined because the compiler can optimize it to just the inc and dec code. Once LTO cna do that we can put the class out-of-line.
+ *  This is all inlined because the compiler can optimize it to just the inc and dec code. Once LTO can do that we can put the class out-of-line.
  */
 class CountedLock {
-  int &counter;
+  unsigned &counter;
 public:
-  CountedLock(int &counter) : counter(counter){
+  CountedLock(unsigned &counter) : counter(counter){
     ++counter;
   }
 
@@ -24,7 +24,7 @@ public:
   }
 
   /** can reference but not alter via this class.*/
-  operator int() const {
+  operator unsigned() const {
     return counter;
   }
 }; // class CountedLock
