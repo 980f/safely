@@ -90,9 +90,9 @@ public:
   OLM &locate(ID code);
   ~OLM();//uses permalloc
   /** report offset for given char*/
-  int lookup(ID ch,int nemo = ~0) const;
+  unsigned lookup(ID ch,unsigned nemo = ~0) const;
   /** @see lookup*/
-  int operator()(ID asciiId) const;
+  unsigned operator()(ID asciiId) const;
   /** char for nth param*/
   ID encode(unsigned index) const;
   /** char for nth param*/

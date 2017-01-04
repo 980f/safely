@@ -1,57 +1,82 @@
 #include "storejson.h"
-#include "utf8.h"
 #include "textpointer.h"
 
-//static
-//UTF8 skipwhite(CharScanner &scanner){
-//  while (scanner.hasNext()) {//space leading name or value
-//    UTF8 ch = scanner.next();
-//    if(!ch.isWhite()) {
-//      return ch;
-//    }
-//  }
-//  return 0;
-//}
-
-//JSONparser::JSONparser(char *buffer, unsigned length, Storable &parent) :
-//  token(buffer,length),
-//  lookahead(buffer,length),
-//  parent(parent){
-//  parse();
-//}
 
 bool StoredJSONparser::parse(){
-  parent=parseChild(nullptr);
-  return parent!=nullptr;
+  parseChild(nullptr);
+  return root!=nullptr;
 }
 
-//TextKey StoredJSONparser::terminateField(){
-//  TextKey token.
-//}
-
-
-Storable *StoredJSONparser::makeNamelessChild(Storable *parent){
-  if(parent){
-    return &parent->addChild("");
-  } else { //is root node
-    return new Storable("");
-  }
-}
-
-Storable *StoredJSONparser::makeChild(Storable *parent){
-  TextKey name=token.internalBuffer();
+Storable *StoredJSONparser::insertNewChild(Storable *parent,TextKey name){
+  ++totalNodes;
   if(parent){
     return &parent->addChild(name);
   } else { //is root node
-    return new Storable(name);
+    return root=new Storable(name);
   }
 }
 
+Storable *StoredJSONparser::makeNamelessChild(Storable *parent){
+  return insertNewChild(parent,"");
+}
 
-Storable *StoredJSONparser::parseChild(Storable *parent){
-  enum {Start, TextEnd, QuotedEnd, NumberEnd, SeekTerminator, Recover } seeking=Start;
+Storable *StoredJSONparser::makeChild(Storable *parent){
+  Text name(data.internalBuffer(),parser.name.begin,parser.name.end);
+  return insertNewChild(parent,name);
+}
+
+void StoredJSONparser::setValue(Storable &nova){
+  Text value(data.internalBuffer(),parser.value.begin,parser.value.end);
+  nova.setImage(value,Storable::Parsed);
+  nova.setType(Storable::Uncertain);//mark for deferred interpretation
+}
+
+bool StoredJSONparser::handleNameEnd(Storable *&nova, Storable *parent){
+  if(nova){ //failed!  name1: name2: xxxx
+    seeking=Recover; //try to resync somehow, like seek end of line
+    nova->setQuality(Storable::Quality::Empty);
+    return true;
+  } else { //have a name
+    nova = makeChild(parent);
+    return false;
+  }
+}
+
+bool StoredJSONparser::handleWadStart(Storable *&nova, Storable *parent){
+  if(nova){
+    //named wad
+  } else {
+    //nameless wad
+    nova=makeNamelessChild(parent);
+  }
+  while(parseChild(nova));
+  return false;
+}
+
+bool StoredJSONparser::handleValueEnd(Storable *&nova, Storable *parent, char termchar){
+  if(nova==nullptr){//if node doesn't exists
+    nova=makeNamelessChild(parent);
+  }
+
+  return termchar==',';
+}
+
+bool StoredJSONparser::onTerminator(char termchar,Storable *&nova,Storable *parent){
+  UTF8 ch(termchar);
+  if(ch.is(':')){ //end name
+    if(handleNameEnd(nova,parent)){
+      return true;//only get here on defect
+    }
+  } else if(ch.in("},")){
+    //nameless member of parent wad
+  }
+  return ch.is(',');
+}
+
+bool StoredJSONparser::parseChild(Storable *parent){
+  maxDepth.inspect(++nested);//heuristics
+
   Storable *nova=nullptr;
-  token=lookahead;//mark start
   //look for name
   while(lookahead.hasNext()){
     UTF8 ch=lookahead.next();
@@ -69,18 +94,7 @@ Storable *StoredJSONparser::parseChild(Storable *parent){
         token.trimLeading(lookahead.used()-1);
         seeking=NumberEnd;
       } else if(ch.is('{')){//begin wad value
-        if(nova){
-          //named wad
-        } else {
-          //nameless wad
-          nova=makeNamelessChild(parent);
-        }
-        while(Storable *child=parseChild(nova)){
-          if(lookahead.previous()=='}'){
-            break;
-          }
-        }
-        return nova;
+        return handleWadStart(nova,parent);
       }
       break;
     case QuotedEnd:
@@ -90,58 +104,54 @@ Storable *StoredJSONparser::parseChild(Storable *parent){
         seeking=SeekTerminator;
       }
       break;
-    case TextEnd:
-
-      if(!ch.isAlnum()){
+    case TextEnd:      
+      if(!ch.numAlpha()){
         lookahead.previous()=0;//null terminate the string
-        seeking=SeekTerminator;
+        if(ch.is(':')){ //end name
+          if(handleNameEnd(nova,parent)){
+            return nova;//on parsing failure give up here.
+          }
+        }
+        if(ch.isWhite()){
+          seeking=SeekTerminator;
+        } else {
+
+        }
       }
       break;
     case NumberEnd:
-      if(!ch.isNum()){
+      if(!ch.isInNumber()){
         lookahead.previous()=0;//null terminate the string
         seeking=SeekTerminator;
       }
     case SeekTerminator:
       if(ch.isWhite()){
         continue; // don't advance token pointer
-      } else if(ch.is(':')){ //end name
-        if(nova){
-          //failed!
-          seeking=Recover; //try to resync somehow, like seek end of line
-          nova->setQuality(Storable::Quality::Empty);
-          break;
-        } else { //have a name
-          nova=makeChild(parent);
+      }
+
+      if(ch.is(':')){ //end name
+        if(handleNameEnd(nova,parent)){
+          return true;//only get here on defect
         }
       } else if(ch.in("},")){
-        if(nova){//end named value
-
-        } else {//end nameless value
-
-        }
+        //nameless member of parent wad
       }
 
       break;
-    }
-    if(ch.startsName()){
-
+    case Recover:
+      if(ch.in("\n\r")){
+        //todo: null node with initial name
+        return false;
+      }
+      break;
     }
   }
-  //while lookahead is white keep looking
-  //if not white then
-  //capture it, and create node
-  //no name, must be an array node, create nameless one.
-
-  //look for value
-  //if wad then loop
   return nova;
 }
 
 StoredJSONparser::StoredJSONparser(const CharScanner &loaded, Storable *parent):
-  token(loaded,~0),
-  lookahead(loaded,~0),
-  parent(parent)
+  data(loaded,~0),
+  root(parent)
 {
   //just store info, don't parse until we are in a position to make Storables.
 }

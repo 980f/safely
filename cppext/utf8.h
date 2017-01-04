@@ -67,6 +67,9 @@ public:
   /** @returns whether this is first char of an number image, per JSON and C++ rules */
   bool startsNumber() const;
 
+  /** @returns whether this is non-initial char of a number. Doesn't retain state so defective numbers will still get a true here*/
+  bool isInNumber() const;
+
   /** @returns whether this is considered whitespace */
   bool isWhite() const;
 
