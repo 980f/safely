@@ -272,8 +272,8 @@ public:
   /** named version of operator [] const */
   const Storable &nth(int ordinal) const;
 private:
-  /** find the index of a child node. @returns -1 if not a wad or not found in the wad.*/
-  int indexOf(const Storable &node) const;
+  /** find the index of a child node. @returns BadIndex if not a wad or not found in the wad.*/
+  unsigned indexOf(const Storable &node) const;
 public:
   /** add a new empty node */
   Storable &addChild(TextKey childName);//removed default, nameless nodes are rare, make them stand out.

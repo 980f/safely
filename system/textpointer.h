@@ -2,6 +2,7 @@
 #define TEXTPOINTER_H
 
 #include "cstr.h"
+#include "halfopen.h" //Span
 
 /** adds strdup'ing to Cstr functionality, i.e. makes a copy on construction and assignement vs Cstr which just looks at someone else's allocated memory.
  *
@@ -29,8 +30,8 @@ public:
   /** take contents of @param other, hence other cannot be const as we null its pointer lest we get a double-free */
   Text(Text &other);
 
-  /** make a copy of non-null-terminated subset of some string */
-  Text(TextKey other,unsigned begin, unsigned end);
+  /** make a copy of non-null-terminated subset of some string. includes @param begin but not @param end */
+  Text(TextKey other,const Span &span);
 
 public:
 

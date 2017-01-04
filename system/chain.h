@@ -51,7 +51,7 @@ public:
   /** @returns index of @param thing, doing an exact object compare, -1 if not contained */
   unsigned indexOf(const T *thing) const {
     if(thing) {
-      for(int i = v.size(); i-->0; ) {
+      for(unsigned i = v.size(); i-->0; ) {
         if(v[i] == thing) {
           return i;
         }
@@ -66,15 +66,15 @@ public:
   }
 
   /** @return @param n th item of the chain.*/
-  T *nth(int n) const {
-    if(n<0 ||n>=int(v.size())) {
-      return nullptr;
+  T *nth(unsigned n) const {
+    if(n>=v.size()) {//#non-ternary for debug
+      return nullptr; //invalid access
     }
     return v[n];
   }
 
   /** @return @param n th item of the chain.*/
-  T *operator [](int n) const {
+  T *operator [](unsigned n) const {
     return nth(n);
   }
 
@@ -124,6 +124,16 @@ public:
     }
     v.erase(v.begin() + n);
     return true;
+  }
+
+  /** removes trailing entities until only @param mark remain. If mark is past end then nothing happens. */
+  void clipto(unsigned mark){
+    if(isOwner) {
+      for(unsigned which=quantity();which-->mark;){
+        delete v[which];
+      }
+    }
+    v.erase(v.begin()+mark,v.end() );
   }
 
   /** removes item @param thing if present. @returns whether something was actually removed*/

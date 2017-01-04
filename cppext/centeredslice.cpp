@@ -47,7 +47,7 @@ CenteredSlice CenteredSlice::subslice(int delta, int hwidth)const{
 }
 
 void CenteredSlice::constrainClip(int &clip)const {
-  if(clip==Ordinator::BadLength){//signal value
+  if(clip==BadLength){//signal value
     clip=hwidth;
   }
   if(clip>hwidth){//half-hearted attempt to stay inside bounds

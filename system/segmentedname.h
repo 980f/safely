@@ -6,13 +6,10 @@
 #include <chain.h>
 
 /** base pathname class, @see Pathname for something useful */
-class SegmentedName {
-public: //non-critical, can add setter and getter later if someone ever messes up.
-  /** whether the path is prefixed with the seperator char when merged */
-  const bool rooted;
-  Chain<Cstr> elements;
+class SegmentedName:public Chain<Cstr>  {
+
 public:
-  SegmentedName(bool rooted = true);
+  SegmentedName();
 
   bool empty() const;
   /** caller is responsible for not freeing stuff passed as TextKey until after this is deleted.
@@ -25,15 +22,19 @@ public:
   void prefix(const Cstr &parent);
   void suffix(const Cstr &child);
 
-  /** number of 'slashes' needed to assemble into a single string*/
-  unsigned numSeperators(bool includeRootedness=false) const;
   /** sum of lengths of elements, if @param raw just count as is, if not then compute \u escape expansions */
   unsigned contentLength(bool slashu = false,bool urlesc = false) const;
   /** total length. seperator length might be 2 if seperating with crlf's or a unicode or url percent sequence */
-  unsigned mallocLength(unsigned seperatorLength = 1) const;
+//  unsigned mallocLength(unsigned seperatorLength = 1) const;
 
   /** removes trivial path elements */
   void purify();
+
+  /** add to this one copies of all the entities of the other */
+  void copycat(const SegmentedName &other);
+
+  /** relocate to this one the entities of the other, the other is empty when done.*/
+  void transfer(SegmentedName &other);
 
   /** @returns an indexer, that can alter this */
   ChainScanner<Cstr> indexer();

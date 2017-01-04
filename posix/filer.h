@@ -33,10 +33,8 @@ public:
   static int makeUniqueName(const char *dirname);
 
   static bool exists(const char *pathname);
-  /** if @param ok is true then file @param pathname is deleted AND NB: the pathname is freed! */
-  static void killfileIfOK(bool ok,const char *pathname);
-  /** this rename works in background */
-  static void moveFile(const char *from,const char *to);
+//  /** this rename works in background */
+//  static void moveFile(const char *from,const char *to);
   /** this rename is blocking */
   static int mv(const char *src,const char *target);
 };

@@ -7,6 +7,8 @@
  *
  * This class wraps a pointer and null checks all uses, vs letting str*() lib functions seg fault.
  * only str* functions which do NOT alter the string should be wrapped here.
+ *
+ * While most of the functions are readily inlined we are putting them in a cpp file and will trust LTO (link time optimisation) to figure that out.
  */
 
 class Cstr {
@@ -35,8 +37,11 @@ public:
   bool empty() const;
 
   /** @returns length, 0 if ptr is null.
-   *  not using size_t due to textual analysis of frequency of casts. Using signed int as in enough places we use -1 as a signal to go find the length.*/
+   *  not using size_t due to textual analysis of frequency of casts.*/
   unsigned length() const;
+
+  /** @returns whether last character exists and is same as @param isit. an empty string will positively match char(0) */
+  bool endsWith(char isit) const;
 
   /** @returns whether @param other exactly matches this' content */
   bool is(TextKey other) const;

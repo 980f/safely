@@ -2,50 +2,58 @@
 #define FILENAME_H
 
 #include "segmentedname.h"
-#include "utf8.h"
+#include "pathparser.h"
 
-/** if you want a project root, I suggest running the application in a chroot.
+/** mates segmented name and pathparser to provide file naming utility
  *
+ * this approach maintains the path as an array of pieces, not assembled into a proper string until pack is called, which generates an independent chunk of text.
  */
 class FileName : public SegmentedName {
 public:
   FileName();
+  /** parses into first path element*/
   FileName(TextKey simple);
-  FileName(FileName &other);
+  /** parses, which copies */
+  FileName(const Text &simple);
+  /** copies elements */
+  FileName(const FileName &other);
 
-  /** removes the last path element, similar to the dirname unix command */
+  /** removes the last path element, similar to the dirname unix command
+   * @returns this as reference */
   FileName &dirname(void);
-  /** make sure string ends with given token*/
-  FileName &assure(char token);
-  /** misnamed, adds another path element preceding it with / if needed*/
+//  /** make sure string ends with given token. @returns this */
+//  FileName &assure(char token);
+  /** parses appending.
+ @returns this as reference */
   FileName &folder(const Text &s,bool escapeit = false);
-  /** add a dot if one isn't present then add given text.*/
+  /** modifies last path member, add a dot if one isn't present then add given text. creates one if empty
+ @returns this as reference */
   FileName &ext(const Text &s,bool escapeit = false);
-//  FileName&operator = (const FileName &other);
-/** reset to be just our globally enforced root directory*/
-  FileName &slash();
+/** reset to be just our globally enforced root directory.
+@returns this as reference */
+  FileName &erase();
 
 public:
-  Unichar lastChar() const;
+  bool lastChar(char isit) const;
+  Text pack(PathParser::Brackets bracket);
+  Text pack();
 }; // class FileName
 
 
 /** useful for managing a recursively named file set.*/
 class NameStacker {
   FileName &path;
-  FileName oldpath;
+  unsigned mark;
   bool escapeit; //for passing escaper option through NameStacker constructor
 public:
-  /** append something now, remove it when destructed. */
   NameStacker(FileName &path, bool escapeit = true);
   NameStacker(FileName &path, const Text &pushsome, bool escapeit = true);
-  /** append something now, remove it when destructed. */
-  NameStacker(NameStacker&path);
-  NameStacker(NameStacker&path, const Text &pushsome);
-  /** possibly ill-advised accessor*/
-  operator FileName &();
+//  NameStacker(NameStacker&path);
+//  NameStacker(NameStacker&path, const Text &pushsome);
   /** remove what was added by constructor */
   ~NameStacker();
+  /** access to embedded @see FileName::pack */
+  Text pack(const PathParser::Brackets &bracket);
 };
 
 #endif // FILENAME_H
