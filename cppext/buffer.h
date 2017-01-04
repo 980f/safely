@@ -72,9 +72,8 @@ public:
     //#nada
   }
 
-  /** */
-  //#below: truncating divide, omit attempt to have partial last element.  /*-1: key value for 'same as length'*/
-  Indexer(Content *wrapped, unsigned sizeofBuffer) : Ordinator(sizeofBuffer / sizeof(Content), 0), buffer(wrapped){
+  /** #below: truncating divide, omit attempt to have partial last element. */
+  Indexer(Content *wrapped, unsigned sizeofBuffer) : Ordinator(sizeofBuffer / sizeof(Content), 0U), buffer(wrapped){
     //#nada
   }
 

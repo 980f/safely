@@ -47,7 +47,8 @@ SOURCES += argset.cpp \
     hassettings.cpp \
     pathname.cpp \
     bitwise.cpp \
-    cstr.cpp
+    cstr.cpp \
+    pushedjsonparser.cpp
 
 HEADERS += safely.h \
     argset.h \
@@ -108,4 +109,5 @@ HEADERS += safely.h \
     bitwise.h \
     segmentedname.h \
     cstr.h \
-    testcppextbuild.h
+    testcppextbuild.h \
+    pushedjsonparser.h

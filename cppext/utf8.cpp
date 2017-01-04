@@ -1,9 +1,6 @@
 #include "utf8.h"
 #include "bitwise.h" //bitfields
 
-/** first byte tells you how many follow, number of leadings ones -2 (FE and FF are both 5)
- *  subsequent bytes start with 0b10xx xxxx 80..BF, which are not legal single byte chars.
- */
 
 bool UTF8::numAlpha() const {
   return isalnum(raw) || isPresent("+-.", raw);
@@ -13,10 +10,17 @@ bool UTF8::startsName() const {
   return isalpha(raw);
 }
 
+bool UTF8::isInNumber() const {
+  return isdigit(raw) || in("+-.Ee");
+}
+
 bool UTF8::isWhite() const {
   return isspace(raw);
 }
 
+/** first byte tells you how many follow, number of leadings ones -2 (FE and FF are both 5)
+ *  subsequent bytes start with 0b10xx xxxx 80..BF, which are not legal single byte chars.
+ */
 unsigned UTF8::numFollowers() const {
   if(u8(raw) < 0xC0) { //80..BF are illegal raw, we ignore that here, C0 and C1  are not specfied so lump them in as well
     return 0;   //7 bits    128
@@ -37,23 +41,14 @@ unsigned UTF8::numFollowers() const {
 } // UTF8::numFollowers
 
 unsigned UTF8::numFollowers(u32 unichar){
-  if(unichar < (1U << 7)) {
+  if(unichar < (1U << 7)) {//quick exit for ascii
     return 0;
   }
-  if(unichar<(1U << (6 + 5))) {
-    return 1;
-  }
-  if(unichar<(1U << (6 + 6 + 4))) {
-    return 2;
-  }
-  if(unichar<(1U << (6 + 6 + 6 + 3))) {
-    return 3;
-  }
-  if(unichar<(1U << (6 + 6 + 6 + 6 + 2))) {
-    return 4;
-  }
-  if(unichar<(1U << (6 + 6 + 6 + 6 + 6 + 1))) {
-    return 5;
+  for(int f=1;f<6;++f){
+    unsigned bits=(6*f) + (6-f);
+    if(unichar<(1U << bits)) {
+      return f;
+    }
   }
   //it appears unicode is likely to stop at 2G characters
   return 0;//not yet implementing invalid extensions.

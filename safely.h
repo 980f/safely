@@ -18,4 +18,8 @@
 #define FS  ','
 #define EOL 10
 
+/** AKA -1 depending upon how you look at it. We use ~0 as a marker that the -1 it hides is not a 'subtract 1' */
+const unsigned BadLength=~0U;
+
+
 #endif // SAFELY_H

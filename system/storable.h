@@ -116,7 +116,7 @@ private:
   Storable &precreate(TextKey name);
 public:
   /** this is *almost* const, need to work on clone() to make it so.*/
-  const Text name;
+  const TextValue name;
 private:
   void setName(TextKey name);
 public:

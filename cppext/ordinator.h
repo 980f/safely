@@ -1,6 +1,7 @@
 #ifndef ORDINATOR_H
 #define ORDINATOR_H
 
+#include "safely.h"
 /** utility class for generator a sequence of integers up to a limit.
  * This is built for the needs of the Indexer<> class, which explains the comments and some curious design choices.
  */
@@ -10,8 +11,6 @@ protected:
   unsigned pointer;
   unsigned length;
 public:
-  /** AKA -1 depending upon how you look at it. We use ~0 as a marker that the -1 it hides is not a 'subtract 1' */
-  const unsigned BadLength=~0;
 
   /** create a range of sorts */
   Ordinator(unsigned length, unsigned pointer = 0 ) : pointer(pointer),length(length){

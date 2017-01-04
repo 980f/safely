@@ -1,21 +1,21 @@
 #ifndef STOREJSON_H
 #define STOREJSON_H
 
+//for arguments:
 #include "storable.h"
 #include "charscanner.h"
 
+//for internals:
+#include "extremer.h"
+#include "utf8.h"
+
+#include "pushedjsonparser.h" //trying to implement with microcontroller parser
 /** parse relatively small blocks of json code.
  * This class is a factory for Storable's.  */
 class StoredJSONparser {
-  CharScanner token;//(buffer,length);
-  CharScanner lookahead;//(buffer,length);
-  Storable *parent;
-
-  /** @returns new Storable, caller must add to wad  */
-  Storable *parseChild(Storable *parent);
 public:
   /** parse a block of text into a child of the given node. */
-  StoredJSONparser(const CharScanner &loaded,Storable *parent);
+  StoredJSONparser(const CharScanner &loaded,Storable *root);
 
   /** process the block */
   bool parse( );
@@ -28,15 +28,29 @@ public: //stats
   unsigned totalScalar = 0;
 
   /** greatest depth of nesting */
-  unsigned maxDepth = 0;
+  SimpleExtremer<unsigned> maxDepth;
 
   /** number of unmatched braces at end of parsing */
   unsigned nested = 0;
 
-private:
-  TextKey terminateField();
+private: //to partition what would be an enormous switch with redundant cases we make a bunch of stateinfo members. if I could get the hang of functions defined within functions ....
+  CharScanner data;
+  Storable *root;
+  PushedJSON::Parser parser;
+
+  /** @returns whether there are more children */
+  bool parseChild(Storable *parent);
+
   Storable *makeChild(Storable *parent);
   Storable *makeNamelessChild(Storable *parent);
+  void setValue(Storable &nova);
+  /** handle finding the ':' that ends a name.
+   * @returns whether this was not a legal place for a name end */
+  bool handleNameEnd(Storable *&nova, Storable *parent);
+  bool handleWadStart(Storable *&nova, Storable *parent);
+  bool handleValueEnd(Storable *&nova, Storable *parent, char termchar);
+  Storable *insertNewChild(Storable *parent, TextKey name);
+  bool onTerminator(char termchar, Storable *&nova, Storable *parent);
 }; // class JSONparser
 
 #endif // STOREJSON_H

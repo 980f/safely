@@ -8,7 +8,7 @@ CharScanner CharScanner::Null;
 int ourStrncmp(const char *one, const char *two, unsigned length){
   for(unsigned i = 0; i<length; ++i) {
     if(one[i] == '\0' || two[i] == '\0') {
-      return ~0; //the function encountered a null and assumes it's a terminator.
+      return 0; //???? the function encountered a null and assumes it's a terminator.
     }
     if(one[i] > two[i]) {
       return 1;

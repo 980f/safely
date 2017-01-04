@@ -15,8 +15,21 @@ Text::Text(unsigned size) : Cstr( static_cast<TextKey>( calloc(Zguard(size),1)))
   //we have allocated a buffer and filled it with 0
 }
 
+/** this guy is criticial to this class being performant. If we flub it there will be scads of malloc's and free's. */
 Text::Text(Text &other) : Cstr(other){
-  other.clear();
+  other.clear();//take ownership, clearing the other one's pointer keeps it from freeing ours.
+}
+
+Text::Text(TextKey other, unsigned begin, unsigned end):Cstr(nullptr){
+  if(nonTrivial(other)&&(end>begin)&&end !=~0 && begin!=~0 ) {
+    unsigned length = end - begin;
+    char *ptr = reinterpret_cast<char *>(malloc(Zguard(length)));
+    if(ptr) {
+      ptr[length] = 0;//safety null
+      memcpy(ptr,&other[begin],length);
+      this->ptr=ptr;
+    }
+  }
 }
 
 Text::Text(const char *ptr,bool takeit) : Cstr( nonTrivial(ptr) ? (takeit ? ptr : strdup(ptr)) : nullptr){

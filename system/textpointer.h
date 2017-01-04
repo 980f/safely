@@ -29,6 +29,9 @@ public:
   /** take contents of @param other, hence other cannot be const as we null its pointer lest we get a double-free */
   Text(Text &other);
 
+  /** make a copy of non-null-terminated subset of some string */
+  Text(TextKey other,unsigned begin, unsigned end);
+
 public:
 
   /** deletes its copy of the content copied or recorded by the constructor */
