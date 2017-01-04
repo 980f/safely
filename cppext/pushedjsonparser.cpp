@@ -129,8 +129,8 @@ Action Parser::next(char pushed){
   auto action=lexer.next(pushed);
   switch (action) {
   case BeginToken: //record location, it is first char of something.
-    value.end=//for safety
-        value.begin=mark;
+    value.highest=//for safety
+        value.lowest=mark;
     return Continue;
   case Continue:   //continue scanning
     return Continue;
@@ -179,5 +179,5 @@ Parser::Parser()  {
 }
 
 void Parser::endToken(unsigned mark){
-  value.end=mark;
+  value.highest=mark;
 }

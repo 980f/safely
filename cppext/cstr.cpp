@@ -1,5 +1,5 @@
 #include "cstr.h"
-
+#include "safely.h"
 #include "string.h"
 
 Cstr::Cstr() : ptr(nullptr){
@@ -35,12 +35,16 @@ unsigned Cstr::length() const {
   return nonTrivial(ptr) ? static_cast<unsigned>(strlen(ptr)) : 0;
 }
 
+bool Cstr::endsWith(char isit) const {
+  return *this[length()-1]==isit;
+}
+
 bool Cstr::is(TextKey other) const {
   return same(this->ptr,other);
 }
 
 char Cstr::operator [](unsigned index){
-  return (nonTrivial(ptr)&&(isIndex(index))? ptr[index]:0;
+  return (nonTrivial(ptr)&&isValid(index)) ? ptr[index]:0;
 }
 
 /** attempt to match the reasoning of the @see same() function with respect to comparing null strings and empty strings */

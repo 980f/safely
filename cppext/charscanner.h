@@ -110,14 +110,7 @@ struct ByteLooker : public Indexer<const u8> {
   void grab(CharScanner&other){
     //#invalid cast:    grab(reinterpret_cast<ByteScanner>(other));
     buffer = reinterpret_cast<const u8*>(other.internalBuffer());
-    Ordinator::grab(other);/*
-                            *  if(other.ordinal()>0){//want front end.
-                            *  length = other.ordinal();
-                            *  pointer = 0;
-                            *  } else { //was already rewound and truncated
-                            *  length = other.length;
-                            *  pointer = other.ordinal();
-                            *  }*/
+    Ordinator::grab(other);
   }
 
 };

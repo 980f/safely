@@ -21,13 +21,13 @@ Text::Text(Text &other) : Cstr(other){
   other.clear();//take ownership, clearing the other one's pointer keeps it from freeing ours.
 }
 
-Text::Text(TextKey other, unsigned begin, unsigned end):Cstr(nullptr){
-  if(nonTrivial(other)&&(end>begin)&&isValid(end)&& isValid(begin)) {
-    unsigned length = end - begin;
+Text::Text(TextKey other, const Span &span):Cstr(nullptr){
+  if(nonTrivial(other)&&span.ordered()) {
+    unsigned length = span.span();
     char *ptr = reinterpret_cast<char *>(malloc(Zguard(length)));
     if(ptr) {
       ptr[length] = 0;//safety null
-      memcpy(ptr,&other[begin],length);
+      memcpy(ptr,&other[span.lowest],length);
       this->ptr=ptr;
     }
   }

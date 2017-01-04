@@ -268,12 +268,12 @@ OLM::~OLM(){
   StaticFree(&queue);
 }
 
-int OLM::lookup(char ch, int nemo) const {
+unsigned OLM::lookup(char ch, unsigned nemo) const {
   const char *p = strchr(unitMap, ch);
   return p ? p - unitMap : nemo;
 }
 
-int OLM::operator()(ID asciiId) const {
+unsigned OLM::operator()(ID asciiId) const {
   return lookup(asciiId);
 }
 

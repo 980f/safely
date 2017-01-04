@@ -177,10 +177,6 @@ bool Storable::isModified() const {
     return false;
   }
   switch(type) {
-  case Uncertain:
-  case NotKnown:
-    return false;
-
   case Wad:
     //investigate all children:
     ForKidsConstly(list){
@@ -188,10 +184,14 @@ bool Storable::isModified() const {
         return true;
       }
     }
-  JOIN case Numerical:
+//  JOIN
+  case Numerical:
   case Textual:
     return ChangeMonitored::isModified();
+  default:
+    return false;
   } // switch
+
 } // isModified
 
 bool Storable::wasModified(){
@@ -201,6 +201,7 @@ bool Storable::wasModified(){
     return false;
   }
   switch(type) {
+  default:
   case Uncertain:
   case NotKnown:
     return false;
@@ -215,7 +216,7 @@ bool Storable::wasModified(){
     }
     return changes > 0 || thiswas;
   }
-//  break;
+//  JOIN;
   case Numerical:
   //JOIN;
   case Textual:
@@ -263,14 +264,14 @@ int Storable::listModified(sigc::slot<void, Ustring> textViewer) const {
 #include "pathparser.h"
 Text Storable::fullName() const {
   //non-recursive,
-  SegmentedName pathname(false);
+  SegmentedName pathname;
   const Storable *scan = this;
 
   do {
     pathname.prefix(scan->name);
   } while((scan = scan->parent));
 
-  return PathParser::pack(pathname,slasher);
+  return PathParser::pack(pathname,slasher,false,true);
 } // Storable::fullName
 
 connection Storable::addChangeWatcher(const SimpleSlot&watcher, bool kickme) const {
@@ -392,21 +393,23 @@ void Storable::setImage(const TextKey &value, Quality quality){
 
 Cstr Storable::image(void){
   switch(type) {
+  default:
   case Uncertain:
     resolve(false);
-  JOIN case Textual:
+//  JOIN;
+  case Textual:
     return text;
 
   case Numerical:
     if(enumerated) {
-      return enumerated->token(number);//don't update text, this is much more efficient since enumerated is effectively static.
+      return enumerated->token(int(number));//don't update text, this is much more efficient since enumerated is effectively static.
     } else {
       //set the internal image without triggering change detect
-      text = PathParser::makeNumber(number);
+      text = NumberFormatter::makeNumber(number);
       return text;
     }
   case Wad:
-    text = PathParser::makeNumber(numChildren());
+    text = NumberFormatter::makeNumber(numChildren());
     return text;
 
   case NotKnown:
@@ -468,17 +471,32 @@ Storable *Storable::findNameless(unsigned lastFound){
 }
 
 Storable *Storable::findChild(TextKey path, bool autocreate){
-  SegmentedName genealogy(false);
+  SegmentedName genealogy;
   Text parsable(path);
-  PathParser::parseInto(genealogy,parsable,slasher);
+  auto bracket=PathParser::parseInto(genealogy,parsable,slasher);
+  if(bracket.before){
+    wtf("Storable path names do not (yet) support 'root' syntax: [%s]",path);
+  }
+  if(bracket.after) {
+    wtf("Storable findChild is ignoring trailing seperator: [%s]",path);
+  }
 
   auto progeny(genealogy.indexer());
   Storable *searcher = this;
-  //ignoring rootedness, theoretically could find a parent from here and get to a sibling, not a particulary good idea.
-
   while(progeny.hasNext()) {
-    Storable * found = searcher->findChild(progeny.next());
-    if(found) {
+    //maydo: if progeny.next is .. found=parent, continue loop
+    auto lname=progeny.next();
+    if(lname.cmp("..")==0){
+      if(Storable * found =searcher->parent) {
+        searcher = found;
+      } else {//we are at root of this tree.
+        //we can't autocreate a root, it would leak if we tried.
+        return nullptr;
+      }
+      continue;
+    }
+
+    if(Storable * found = searcher->findChild(lname)) {
       searcher = found;
       continue;
     } else {
@@ -498,10 +516,8 @@ Storable *Storable::findChild(TextKey path, bool autocreate){
 } // findChild
 
 /** creates node if not present.*/
-Storable&Storable::child(TextKey childName){
-  Storable *child = existingChild(childName);
-
-  if(child) {
+Storable&Storable::child(TextKey childName){  
+  if(Storable *child = existingChild(childName)) {
     return *child;
   }
   return addChild(childName);
@@ -528,7 +544,7 @@ const Storable&Storable::nth(int ordinal) const {
   return *wad[ordinal];
 }
 
-int Storable::indexOf(const Storable&node) const {
+unsigned Storable::indexOf(const Storable&node) const {
   return wad.indexOf(&node);
 }
 

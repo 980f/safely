@@ -1,16 +1,13 @@
 #include "filer.h"
+
 #include "sys/stat.h"
 #include "sys/types.h" //mkdir
-//#include "filename.h"
 #include "errno.h"
+#include <cstdlib>
 
 #include "logger.h"
-#include "string.h"
+#include "filename.h"
 
-//#include "shell.h"
-#include "safestr.h"
-
-#include "textkey.h"
 
 Filer::Filer(){
   buffer = 0;
@@ -29,15 +26,17 @@ bool Filer::mkDirDashP(const char *path, bool itsparent){
   if(dirpath.empty()) { //empty is not the same as '/', and even if it were we won't allow ourselves to create '/', ain't meaningful AFAIK
     return false;
   }
-  if(mkdir(dirpath.c_str(), 0777) == 0) {
+  PathParser::Brackets wrapwith(true,true);
+  Text normalized=dirpath.pack(wrapwith);
+  if(mkdir(normalized.c_str(), 0777) == 0) {
     return true;
   }
   if(errno == EEXIST) { //failed because directory already existed.
     return true; //wtf did posix make it an error to try to make a directory that already exists!?
   }
   if(errno == ENOENT) { //file doesn't exist
-    if(mkDirDashP(dirpath.c_str(), true)) {
-      int wtfn = mkdir(dirpath.c_str(), 0777); // //now that parent exists we try again
+    if(mkDirDashP(normalized.c_str(), true)) {
+      int wtfn = mkdir(normalized.c_str(), 0777); // //now that parent exists we try again
       return wtfn == 0;
     }
     return false;
@@ -100,25 +99,22 @@ bool Filer::readall(int maxalloc){
 } /* readall */
 
 bool Filer::cp(const char *src, const char *target, bool dashf, bool dashr){
-//  FileName from(src);
-//  FileName to(target);
+  FileName from(src);
+  FileName to(target);
 
+  SegmentedName command;
+  command.prefix("cp");
+  if(dashf && dashr) {
+    command.suffix("-rf");
+  } else if(dashf) {
+    command.suffix("-f");
+  } else if(dashr) {
+    command.suffix("-r");
+  }
+  command.suffix(from.pack());
+  command.suffix(to.pack());
 
-//  SafeStr<512> command;
-//  command.cat("cp ");
-//  if(dashf && dashr) {
-//    command.cat("-rf ");
-//  } else if(dashf) {
-//    command.cat("-f ");
-//  } else if(dashr) {
-//    command.cat("-r ");
-//  }
-//  command.cat(from.c_str());
-//  command.cat(" ");
-//  command.cat(to.c_str());
-//  int arf = system(command.asciiz());
-  int arf=false;
-  if(arf) {//todo:1 this 'if' statement seems to be inverted, went through false branch after a successful copy.
+  if(int arf = system(PathParser::pack(command,' '))) {//posixwrap
     arf = system("sync");
     return true;
   } else {
@@ -126,38 +122,23 @@ bool Filer::cp(const char *src, const char *target, bool dashf, bool dashr){
   }
 } // cp
 
+/** the implementation below strips leading and trailing slashes, we can't remove absolutely named files here. */
 int Filer::rm(const char *name, bool dashf, bool dashr){
   if(nonTrivial(name)) {
     FileName full(name);
     if(dashf || dashr) { //must use Shell
-#if UseShellClass
-      std::vector<std::string> argv;
-      argv.push_back("rm");
+      SegmentedName command;
+      command.suffix("rm");
       if(dashf) {
-        argv.push_back("-f");
+        command.suffix("-f");
       }
       if(dashr) {
-        argv.push_back("-r");
+        command.suffix("-r");
       }
-      argv.push_back("--");
-      argv.push_back(full.c_str());
-      return Shell::run(argv);
-
-#else // if UseShellClass
-      SafeStr<512> command;
-      command.cat("rm ");
-      if(dashf) {
-        command.cat(" -f ");
-      }
-      if(dashr) {
-        command.cat(" -r ");
-      }
-      command.cat(name);
-      return system(command.asciiz());
-
-#endif // if UseShellClass
+      command.transfer(full);
+      return system(PathParser::pack(command,' '));
     } else { //do it the simple way
-      return remove(full.c_str());
+      return remove(full.pack());//running it through FileName purifies the string by our rules, which might be nicer than the OS.
     }
   } else { //trivial name
     return 0; //success! we removed nothing!
@@ -165,12 +146,8 @@ int Filer::rm(const char *name, bool dashf, bool dashr){
 } // rm
 
 bool Filer::exists(const char *name){
-  if(!name || !*name) {
+  if(isTrivial(name)) {
     return false; //pathological
-  }
-  if(*name != '/') {
-    FileName full(name);
-    return exists(full.c_str());
   }
   struct stat st;
   if(0 == ::stat(name, &st)) {
@@ -179,37 +156,6 @@ bool Filer::exists(const char *name){
     return false;
   }
 } // exists
-
-void Filer::killfileIfOK(bool ok, const char *pathname){
-  if(ok) {
-    FileName filname(pathname);
-    Glib::RefPtr<Gio::File> moribund(Gio::File::create_for_path(filname));
-    moribund->remove();
-  }
-  delete[] pathname;
-}
-
-//#include "sigcuser.h"
-
-static void finishCopy(Glib::RefPtr<Gio::AsyncResult> &result, const sigc::slot<void, bool> whendone){
-  Glib::RefPtr<Gio::File> file(Glib::RefPtr<Gio::File>::cast_dynamic(result->get_source_object_base()));
-  bool success = false;
-
-  try {
-    success = file->copy_finish(result);
-  } catch(Glib::Error err) {
-    IgnoreGlib(err);
-  }
-  whendone(success);
-} // finishCopy
-
-void Filer::moveFile(const char *from, const char *to){
-  if(exists(from)) {
-    Glib::RefPtr<Gio::File> destination = Gio::File::create_for_path(to);
-    Glib::RefPtr<Gio::File> source = Gio::File::create_for_path(from);
-    source->copy_async(destination, sigc::bind(&finishCopy, sigc::bind(&killfileIfOK, strdup(from))), Gio::FILE_COPY_OVERWRITE);
-  }
-}
 
 int Filer::mv(const char *src, const char *target){
   return rename(src, target); //todo:1 capture errno etc stuff.

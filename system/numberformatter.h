@@ -51,6 +51,9 @@ struct NumberFormatter {
     return format(value,addone);
   }
 
+
+public: //some utilities
+  static Text makeNumber(double value);
 };
 
 

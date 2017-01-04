@@ -23,13 +23,13 @@ Storable *StoredJSONparser::makeNamelessChild(Storable *parent){
 }
 
 Storable *StoredJSONparser::makeChild(Storable *parent){
-  Text name(data.internalBuffer(),parser.name.lowest,parser.name.highest);
+  Text name(data.internalBuffer(),parser.name);
   parser.haveName = false;
   return insertNewChild(parent,name);
 }
 
 void StoredJSONparser::setValue(Storable &nova){
-  Text value(data.internalBuffer(),parser.value.lowest,parser.value.highest);
+  Text value(data.internalBuffer(),parser.value);
   nova.setImage(value,Storable::Parsed);
   nova.setType(Storable::Uncertain);//mark for deferred interpretation
 }
