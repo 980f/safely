@@ -1,14 +1,15 @@
+#include "safely.h"
 #include "roundrobiner.h"
 #include "cheaptricks.h"
 #include "minimath.h" //fill's clear's
 
 RoundRobiner::RoundRobiner(bool *Scoreboard, int quantity) : Scoreboard(Scoreboard), quantity(quantity){
   markAll(0);
-  last = ~0;
+  last = BadLength;
 }
 
 bool *RoundRobiner::deallocate(){
-  last = ~0;
+  last = BadLength;
   quantity = 0;
   return Scoreboard;
 }
@@ -20,7 +21,7 @@ int RoundRobiner::next(void){
       return last = n; //#assign and return
     }
   }
-  return last = ~0; //magic value for 'none'
+  return last = BadLength; //magic value for 'none'
 } /* next */
 
 bool &RoundRobiner::bit(int id) const {

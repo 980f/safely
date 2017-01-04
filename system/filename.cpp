@@ -1,34 +1,30 @@
-//(C) 2011 Applied Rigaku Technologies. Proprietary and Confidential.
-#include <glibmm/regex.h>
 #include "filename.h"
-//maydo: restore use of SafeStr to unhook this from Glib,
 //limits.h PATH_MAX+1 is the size of the safestr.
 
-using namespace Glib;
 
 /** no internal slashes, conver to %5F */
-ustring escape (const ustring &userinput){
-  int len = userinput.length();
+Text escape (const Text &userinput){
+  unsigned len = userinput.length();
   char workspace[len + 1];
   workspace[len] = 0;//before we forget.
-  for(int i = 0; i<len; ++i) {
-    workspace[i] = userinput.at(i);
+  for(unsigned i = 0; i<len; ++i) {
+    workspace[i] = userinput[i];
     if(workspace[i]=='/') {
       workspace[i] = '-';
     }
   }
-  return ustring(workspace);
+  return Text(workspace);
 } // escape
 
 FileName::FileName(){
   assign(root);
 }
 
-static bool isRooted(const ustring &simple){
+static bool isRooted(const Text &simple){
   return !simple.empty() && simple.at(0)=='/';
 }
 
-FileName::FileName(const ustring &simple){
+FileName::FileName(const Text  &simple){
   if(!isRooted(simple)) {
     assign(root);
   }
@@ -36,23 +32,23 @@ FileName::FileName(const ustring &simple){
 }
 
 FileName &FileName::dirname(void){
-  if(lastChar()==gunichar('/')) {
-    erase(length() - 1);
-  }
-  //it seems that rfinding the first '/' would work faster, in which case we just start the find one char earlier if the string ends in a slash.%%%5
-  assign(Regex::create("[^/]*$")->replace(*this, 0, "", static_cast< RegexMatchFlags >(0)));
+//  if(lastChar()==Unichar('/')) {
+//    erase(length() - 1);
+//  }
+//  //it seems that rfinding the first '/' would work faster, in which case we just start the find one char earlier if the string ends in a slash.%%%5
+//  assign(Regex::create("[^/]*$")->replace(*this, 0, "", static_cast< RegexMatchFlags >(0)));
   return *this;
 }
 
 /** make sure string ends with given token*/
 FileName &FileName::assure(char token){
-  if(lastChar() != gunichar(token)) {
-    append(&token, 1);
-  }
+//  if(lastChar() != gunichar(token)) {
+//    append(&token, 1);
+//  }
   return *this;
 }
 
-FileName &FileName::folder(const ustring &s,bool escapeit){
+FileName &FileName::folder(const Text  &s,bool escapeit){
   if(s.empty()) {
     return *this;
   }
@@ -67,27 +63,27 @@ FileName &FileName::folder(const ustring &s,bool escapeit){
   return *this;
 } // FileName::folder
 
-FileName &FileName::ext(const ustring &s,bool escapeit){
-  assure('.');
-  append(escapeit ? escape(s) : s);
+FileName &FileName::ext(const Text  &s,bool escapeit){
+//  assure('.');
+//  append(escapeit ? escape(s) : s);
   return *this;
 }
 
 FileName &FileName::slash(){
-  assign(root);
+//  assign(root);
   return *this;
 }
 
-ustring FileName::relative() const {
-  if(length() < root.length()) {
-    return "";
-  }
-  return substr(root.length());
-}
+//ustring FileName::relative() const {
+//  if(length() < root.length()) {
+//    return "";
+//  }
+//  return substr(root.length());
+//}
 
-gunichar FileName::lastChar() const {
-  return empty() ? 0 : at(length() - 1);
-}
+//Unichar FileName::lastChar() const {
+//  return empty() ? 0 : at(length() - 1);
+//}
 
 ////////////////
 
@@ -97,7 +93,7 @@ NameStacker::NameStacker(FileName &namer, bool escapeit) :
   escapeit(escapeit){
 }
 
-NameStacker::NameStacker(FileName &namer, const Glib::ustring &pushsome, bool escapeit) :
+NameStacker::NameStacker(FileName &namer, const Text &pushsome, bool escapeit) :
   path(namer),
   oldpath(namer),
   escapeit(escapeit){
@@ -110,7 +106,7 @@ NameStacker::NameStacker(NameStacker &path) :
   escapeit(path.escapeit){
 }
 
-NameStacker::NameStacker(NameStacker &path, const Glib::ustring &pushsome) :
+NameStacker::NameStacker(NameStacker &path, const Text &pushsome) :
   path(path.path),
   oldpath(path.path),
   escapeit(path.escapeit){

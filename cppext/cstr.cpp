@@ -31,12 +31,16 @@ bool Cstr::empty() const {
   return isTrivial(ptr);
 }
 
-int Cstr::length() const {
-  return nonTrivial(ptr) ? static_cast<int>(strlen(ptr)) : 0;
+unsigned Cstr::length() const {
+  return nonTrivial(ptr) ? static_cast<unsigned>(strlen(ptr)) : 0;
 }
 
 bool Cstr::is(TextKey other) const {
   return same(this->ptr,other);
+}
+
+char Cstr::operator [](unsigned index){
+  return (nonTrivial(ptr)&&(isIndex(index))? ptr[index]:0;
 }
 
 /** attempt to match the reasoning of the @see same() function with respect to comparing null strings and empty strings */

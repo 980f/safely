@@ -7,8 +7,8 @@
 
 class RoundRobiner {
   bool *Scoreboard;
-  int quantity;
-  int last;
+  unsigned quantity;
+  unsigned last;
 public:
   RoundRobiner(bool * Scoreboard, int quantity);
   /** one parent dynamically allocated the scoreboard. */

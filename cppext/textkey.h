@@ -11,6 +11,7 @@ inline unsigned Zguard(unsigned allocation){
   return 1 + allocation;
 }
 
+
 //////////// inline stringy stuff /////////////
 #define ERRLOC(moretext) __FILE__ "::" moretext
 

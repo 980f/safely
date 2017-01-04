@@ -5,6 +5,7 @@
  * See StoredJSONParser for a user.
  *
  */
+#include "halfopen.h"
 
 namespace PushedJSON {
 
@@ -60,10 +61,6 @@ public: // for error messages
 
 public://extended return value
   /** used to record extent of a parsed token */
-  struct Span {
-    unsigned begin;
-    unsigned end;
-  };
 
   Span name;
   Span value;

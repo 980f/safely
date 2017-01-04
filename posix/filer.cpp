@@ -1,7 +1,7 @@
 #include "filer.h"
 #include "sys/stat.h"
 #include "sys/types.h" //mkdir
-#include "filename.h"
+//#include "filename.h"
 #include "errno.h"
 
 #include "logger.h"
@@ -100,30 +100,30 @@ bool Filer::readall(int maxalloc){
 } /* readall */
 
 bool Filer::cp(const char *src, const char *target, bool dashf, bool dashr){
-  FileName from(src);
-  FileName to(target);
+//  FileName from(src);
+//  FileName to(target);
 
 
-  SafeStr<512> command;
-  command.cat("cp ");
-  if(dashf && dashr) {
-    command.cat("-rf ");
-  } else if(dashf) {
-    command.cat("-f ");
-  } else if(dashr) {
-    command.cat("-r ");
-  }
-  command.cat(from.c_str());
-  command.cat(" ");
-  command.cat(to.c_str());
-  int arf = system(command.asciiz());
+//  SafeStr<512> command;
+//  command.cat("cp ");
+//  if(dashf && dashr) {
+//    command.cat("-rf ");
+//  } else if(dashf) {
+//    command.cat("-f ");
+//  } else if(dashr) {
+//    command.cat("-r ");
+//  }
+//  command.cat(from.c_str());
+//  command.cat(" ");
+//  command.cat(to.c_str());
+//  int arf = system(command.asciiz());
+  int arf=false;
   if(arf) {//todo:1 this 'if' statement seems to be inverted, went through false branch after a successful copy.
     arf = system("sync");
     return true;
   } else {
     return false;
   }
-#endif // if UseShellClass
 } // cp
 
 int Filer::rm(const char *name, bool dashf, bool dashr){

@@ -1,3 +1,4 @@
+#include "safely.h"
 #include "textpointer.h"
 #include "string.h"  //strdup
 #include "stdlib.h"  //free
@@ -21,7 +22,7 @@ Text::Text(Text &other) : Cstr(other){
 }
 
 Text::Text(TextKey other, unsigned begin, unsigned end):Cstr(nullptr){
-  if(nonTrivial(other)&&(end>begin)&&end !=~0 && begin!=~0 ) {
+  if(nonTrivial(other)&&(end>begin)&&isValid(end)&& isValid(begin)) {
     unsigned length = end - begin;
     char *ptr = reinterpret_cast<char *>(malloc(Zguard(length)));
     if(ptr) {
