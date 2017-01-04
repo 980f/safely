@@ -28,6 +28,10 @@ Text PathParser::pack(const SegmentedName &pieces, char seperator, Brackets brac
   packer.printChar(0);//null terminate since we didn't pre-emptively calloc.
 
   return Text(path);//when you destroy the Text the data malloc'd above is freed
+}
+
+Text PathParser::pack(const SegmentedName &pieces, char seperator, bool after, bool before){
+  return pack(pieces,seperator,PathParser::Brackets(after,before));
 } // PathParser::pack
 
 

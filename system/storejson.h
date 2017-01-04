@@ -3,7 +3,7 @@
 
 //for arguments:
 #include "storable.h"
-#include "charscanner.h"
+#include "buffer.h"
 
 //for internals:
 #include "extremer.h"
@@ -15,10 +15,10 @@
 class StoredJSONparser {
 public:
   /** parse a block of text into a child of the given node. */
-  StoredJSONparser(const CharScanner &loaded,Storable *root);
+  StoredJSONparser(Indexer<const char> &loaded,Storable *root);
 
   /** process the block */
-  bool parse( );
+  bool parse(Storable *&root );
 
 public: //stats
   /**number of values */
@@ -34,7 +34,7 @@ public: //stats
   unsigned nested = 0;
 
 private: //to partition what would be an enormous switch with redundant cases we make a bunch of stateinfo members. if I could get the hang of functions defined within functions ....
-  CharScanner data;
+  Indexer<const char> data;
   Storable *root;
   PushedJSON::Parser parser;
 

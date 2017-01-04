@@ -142,19 +142,19 @@ Action Parser::next(char pushed){
     return BeginWad;
   case EndNameT:  //time to create named node
     endToken(mark);
-    JOIN
+//    JOIN
   case EndName:  //time to create named node
     name=value;
     haveName=true;
     return EndName;
   case EndItemT:  //comma between siblings
     endToken(mark);
-    JOIN
+//    JOIN
   case EndItem:  //comma between siblings
     return EndItem;
   case EndWadT:   //closing wad
     endToken(mark);
-    JOIN
+//    JOIN
   case EndWad:   //closing wad
     return EndWad;
   case Illegal:    //not a valid char given state, user must decide how to recover.

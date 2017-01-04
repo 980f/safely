@@ -320,6 +320,14 @@ public:
     }
   }
 
+  typedef void *(functoid)(Content &each);
+  void forEach(functoid eff){
+    Indexer<Content> list(*this);
+    while(list.hasNext()){
+      (*eff)(list.next());
+    }
+  }
+
 }; // class Indexer
 
 //the following probably doesn't work, or only works for simple types:
@@ -327,11 +335,5 @@ public:
 
 //raw (bytewise) access to object
 #define IndexBytesOf(indexer, thingy) Indexer<u8> indexer(reinterpret_cast<u8 *>(&thingy), sizeof(thingy))
-
-#define BytesOf(thingy) IndexBytesOf(, thingy)
-
-// iterate. todo: replace with C++11/14 stuff.
-#define ForIndexed(classname, indexer) for(Indexer<classname> list(indexer); list.hasNext(); )
-
 
 #endif // bufferH

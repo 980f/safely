@@ -1,6 +1,7 @@
 #include "utf8.h"
 #include "bitwise.h" //bitfields
 
+#include "ignoresignwarnings.h"
 
 bool UTF8::numAlpha() const {
   return isalnum(raw) || isPresent("+-.", raw);
@@ -25,6 +26,7 @@ unsigned UTF8::numFollowers() const {
   if(u8(raw) < 0xC0) { //80..BF are illegal raw, we ignore that here, C0 and C1  are not specfied so lump them in as well
     return 0;   //7 bits    128
   }
+  //unrolled loop:
   if(u8(raw) < 0xE0) {
     return 1;   //5 bits,  6 bits 2k
   }
@@ -38,7 +40,27 @@ unsigned UTF8::numFollowers() const {
     return 4;
   }
   return 5; //not yet used
-} // UTF8::numFollowers
+}
+
+void UTF8::firstBits(Unichar &uch) const {
+  if(u8(raw) < 0xC0) { //80..BF are illegal raw, we ignore that here, C0 and C1  are not specfied so lump them in as well
+    uch=0;   //illegal argument
+  } else {
+    unsigned nf=numFollowers();
+    //need to keep 6-nf bits
+    unsigned mask=fieldMask(6-nf);
+    uch=mask&u8(raw);
+  }
+}
+
+void UTF8::moreBits(Unichar &uch) const {
+  uch<<=6;
+  uch |= fieldMask(6)*u8(raw);
+}
+
+ void UTF8::pad(Unichar &uch, unsigned followers){
+   uch<<=(6*followers);
+ }
 
 unsigned UTF8::numFollowers(u32 unichar){
   if(unichar < (1U << 7)) {//quick exit for ascii

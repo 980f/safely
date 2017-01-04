@@ -4,8 +4,15 @@
 
 using namespace PushedJSON;
 
-bool StoredJSONparser::parse(){
+
+StoredJSONparser::StoredJSONparser(Indexer<const char> &loaded, Storable *root):data(loaded),root(root){
+  //#nada
+}
+
+
+bool StoredJSONparser::parse(Storable *&root){
   parseChild(nullptr);
+  root=this->root;
   return root!=nullptr;
 }
 
