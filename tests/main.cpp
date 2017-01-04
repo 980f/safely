@@ -16,15 +16,15 @@ Indexer<SafeStr<10>> pressure;
 static Watchable<int> demonic;
 
 void demonWatcher(int newvalue){
-  printf("\ndemonic: %d\n",newvalue);
+  printf("\ndemonic: %d",newvalue);
 }
 
 void justOnce(int newvalue){
-  printf("\njustOnce: %d\n",newvalue);
+  printf("\njustOnce: %d",newvalue);
 }
 
 void justOnceLater(int newvalue){
-  printf("\njustOnceLater: %d\n",newvalue);
+  printf("\njustOnceLater: %d",newvalue);
 }
 
 #include "runoncenthtime.h"
@@ -88,14 +88,6 @@ void extremely(){
 
 } // extremely
 
-
-#include "storejson.h"
-#include "filer.h"
-
-const char*jsonfiles[]={"1.json","2.json"};
-void testJson(const char *fname){
-
-}
 
 
 int main(int argc, char *argv[]){

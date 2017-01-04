@@ -4,27 +4,28 @@
 //todo: import from ezcpp repo
 
 //for non-bit addressable items:
-inline bool bit(int patter, unsigned int bitnumber){
+constexpr bool bit(int patter, unsigned int bitnumber){
   return (patter & (1 << bitnumber)) != 0;
 }
 
-inline unsigned int fieldMask(unsigned int width){
+constexpr unsigned int fieldMask(unsigned int width){
   return (1 << width) - 1;
+}
+
+constexpr unsigned int fieldMask(unsigned int offset,unsigned int width){
+  return fieldMask(width)<<offset;
+}
+
+constexpr unsigned int extractField(unsigned int source, unsigned int offset, unsigned int width){
+  return (source >> offset) & fieldMask(width);
 }
 
 /** use the following when offset or width are NOT constants, else you should be able to define bit fields in a struct and let the compiler to any inserting*/
 inline unsigned int insertField(unsigned int target, unsigned int source, unsigned int offset, unsigned int width){
-  unsigned int mask = fieldMask(width);
-
-  mask <<= offset;
+  unsigned int mask = fieldMask(width,offset);
   return (target & ~mask) | ((source << offset) & mask);
 }
 
-inline unsigned int extractField(unsigned int source, unsigned int offset, unsigned int width){
-  unsigned int mask = fieldMask(width);
-
-  return (source >> offset) & mask;
-}
 
 //////////// frequently used constructs ////////
 class Boolish {

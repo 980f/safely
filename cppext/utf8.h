@@ -83,6 +83,13 @@ public:
   /** only valid if first char of a UTF8 sequence */
   unsigned numFollowers(void) const;
 
+  /** bits extracted from this byte*/
+  void firstBits(Unichar &uch) const;
+  /** merges bits from tihs presumed to be continuation byte into @param uch */
+  void moreBits(Unichar &uch) const;
+  /** pretend remaining bytes were all zeroes */
+  static void pad(Unichar &uch, unsigned followers);
+
   /** @returns number of 10xxxxxx bytes needed for given @param unichar unicode char.*/
   static unsigned numFollowers(u32 unichar);
 

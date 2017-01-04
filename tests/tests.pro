@@ -17,4 +17,5 @@ include("../system/lib.pro")
 include("../cppext/lib.pro")
 
 
-SOURCES += main.cpp
+SOURCES += main.cpp \
+    jsontests.cpp
