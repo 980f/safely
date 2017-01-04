@@ -145,6 +145,7 @@ Action Parser::next(char pushed){
     JOIN
   case EndName:  //time to create named node
     name=value;
+    haveName=true;
     return EndName;
   case EndItemT:  //comma between siblings
     endToken(mark);

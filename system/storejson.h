@@ -44,13 +44,9 @@ private: //to partition what would be an enormous switch with redundant cases we
   Storable *makeChild(Storable *parent);
   Storable *makeNamelessChild(Storable *parent);
   void setValue(Storable &nova);
-  /** handle finding the ':' that ends a name.
-   * @returns whether this was not a legal place for a name end */
-  bool handleNameEnd(Storable *&nova, Storable *parent);
-  bool handleWadStart(Storable *&nova, Storable *parent);
-  bool handleValueEnd(Storable *&nova, Storable *parent, char termchar);
   Storable *insertNewChild(Storable *parent, TextKey name);
-  bool onTerminator(char termchar, Storable *&nova, Storable *parent);
+
+  Storable *assembleItem(Storable *parent);
 }; // class JSONparser
 
 #endif // STOREJSON_H

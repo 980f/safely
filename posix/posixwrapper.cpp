@@ -1,5 +1,5 @@
 #include "posixwrapper.h"
-#include "cheapTricks.h"
+#include "cheaptricks.h"
 #include <errno.h>
 #include <syslog.h>
 #include <stdarg.h>

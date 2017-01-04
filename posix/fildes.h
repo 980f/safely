@@ -3,8 +3,8 @@
 
 #include "charscanner.h"   //safe buffer
 #include "posixwrapper.h"  //manage errno
-//#include "fdset.h"
-
+#include "fdset.h"
+#include "stdio.h"  //FILE
 
 /** wrapper around file descriptors, especially noteworthy is that it closes the file on destruction, so best use is to create and use locally.*/
 class Fildes : public PosixWrapper {
