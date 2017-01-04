@@ -70,10 +70,18 @@ inline u32 rate(u32 num, u32 denom) {
   return (num + (denom / 2)) / denom;
 }
 
-//#rate() function takes unsigned which blows hard when have negative numbers
-inline int half(int sum) {
+inline unsigned half(unsigned sum) {
   return (sum + 1) / 2;
 }
+
+//#rate() function takes unsigned which blows hard when have negative numbers
+inline int half(int sum) {
+  if(sum<0){//truncate towards larger magnitude
+    return -half(-sum);//probably gratuitous but we also shouldn't be calling this with negatives so we can breakpoint here to detect that.
+  }
+  return (sum + 1) / 2;
+}
+
 
 /** quantity of bins needed to hold num items at denom items per bin*/
 inline u32 quanta(u32 num, u32 denom) {
