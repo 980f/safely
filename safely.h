@@ -34,4 +34,52 @@ inline bool isValid(unsigned index){
   return index!=BadIndex;
 }
 
+/** marker class for an integer used as an array index or related value. Leave all in header file as we need to strongly urge the compiler to inline all this code  */
+struct Index {
+  Index(unsigned raw):raw(raw){}
+
+  unsigned raw;
+
+  unsigned operator =(unsigned ord) noexcept {
+    return raw=ord;
+  }
+
+  operator unsigned () const noexcept {
+      return raw;
+  }
+
+  bool isValid() const noexcept {
+     return raw!=BadIndex;
+  }
+
+  void clear() noexcept {
+    raw=BadIndex;
+  }
+
+  /** @returns whether this is less than @param limit */
+  bool operator <( const Index &limit) const noexcept {
+    return raw<limit.raw;
+  }
+
+  /** @returns whether this contains @param other */
+  bool has(const Index &other) const noexcept {
+    return raw>other.raw;
+  }
+
+  /** maydo: convert negatives to canonical ~0*/
+  unsigned operator += (unsigned other) noexcept {
+    return raw+=other;
+  }
+  /** maydo: convert negatives to canonical ~0*/
+  unsigned operator ++ (int) noexcept {
+    return raw++;
+  }
+  /** maydo: convert negatives to canonical ~0*/
+  unsigned operator ++ () noexcept {
+    return ++raw;
+  }
+
+
+};
+
 #endif // SAFELY_H

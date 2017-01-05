@@ -41,7 +41,7 @@ public:
 
   /** insert @param thing at 0-based @param location if it is not null.
    * @returns thing */
-  T *insert(T *thing,int location){
+  T *insert(T *thing, unsigned location){
     if(thing) {
       v.insert(v.begin() + location,thing);
     }
@@ -124,6 +124,10 @@ public:
     }
     v.erase(v.begin() + n);
     return true;
+  }
+
+  bool removeLast(){
+    return removeNth(quantity()-1);
   }
 
   /** removes trailing entities until only @param mark remain. If mark is past end then nothing happens. */

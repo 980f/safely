@@ -35,8 +35,8 @@ public:
 
 };
 
-struct Span: public HalfOpen<unsigned> {
-  Span(unsigned low,unsigned high);
+struct Span: public HalfOpen<Index> {
+  Span(Index low,Index high);
   Span();
   virtual ~Span();
   bool ordered() const override;

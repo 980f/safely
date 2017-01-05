@@ -28,7 +28,7 @@ FileName::FileName(const Text  &simple):SegmentedName (){
 }
 
 FileName &FileName::dirname(void){
-  this->removeNth(this->quantity()-1);
+  removeLast();
   return *this;
 }
 
@@ -48,17 +48,29 @@ FileName &FileName::folder(const Text  &s){
 } // FileName::folder
 
 FileName &FileName::ext(const Text  &s){
-  unsigned length=Zguard(s.length()+1);
-  Text dotted(length);//+1 for dot.
-  CharFormatter catter(dotted.c_str(),length);
-  catter.printChar(',');
-  catter.cat(s.c_str());
-  if(empty()){
-
+  if(empty()){//becomes totality
+    unsigned length=Zguard(s.length()+1);
+    Text dotted(length);//+1 for dot.
+    CharFormatter catter(dotted.violated(),length);
+    catter.printChar(',');
+    catter.cat(s.c_str());
+    suffix(dotted);
+  } else {
+    auto fname=last();
+    unsigned length=Zguard(s.length()+1+fname->length());
+    Text dotted(length);//+1 for dot.
+    CharFormatter catter(dotted.violated(),length);
+    catter.printString(fname);
+    //todo: if fname ends in dot skip adding our own
+    if(fname->endsWith('.')){
+      //then keep it and don't add another, i.e. no double dots unless you manually feed them in.
+    } else {
+      catter.printChar(',');
+    }
+    catter.cat(s.c_str());
+    removeLast();
+    suffix(dotted);
   }
-  //Text amended()
-//  assure('.');
-//  append(escapeit ? escape(s) : s);
   return *this;
 }
 
