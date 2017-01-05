@@ -10,7 +10,7 @@
  */
 class FileName : public SegmentedName {
 public:
-  PathParser::Brackets bracket;
+  PathParser::Rules bracket;
   FileName();
   /** parses into first path element*/
   FileName(TextKey simple);

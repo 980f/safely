@@ -7,37 +7,36 @@
 
 using namespace PathParser;
 
-Text pack(const SegmentedName &pieces, char seperator, const Brackets &bracket){
+Text PathParser::pack(const SegmentedName &pieces, const Rules &rule){
   unsigned quantity=pieces.quantity();
   if(quantity==0){
     return Text();
   }
-  unsigned numSeperators=quantity-1+bracket.before+bracket.after;
+  unsigned numSeperators=quantity-1+rule.before+rule.after;
   unsigned bytesNeeded = Zguard(numSeperators+pieces.contentLength(false,false));
   char *path(static_cast<char *>( malloc(bytesNeeded)));//@DEL when returned Text object is deleted
   CharFormatter packer(path,bytesNeeded);
   auto feeder(pieces.indexer());
   while (feeder.hasNext()) {
-    if(packer.ordinal()>0 || bracket.before){//if not first or if put before first
-      packer.next() = seperator;
+    if(packer.ordinal()>0 || rule.before){//if not first or if put before first
+      packer.next() = rule.slash;
     }
     packer.printString(feeder.next());
   }
-  if(bracket.after && packer.used()>0) {//only append trailing slash if there is something ahead of it
-    packer.next() = seperator;
+  if(rule.after && packer.used()>0) {//only append trailing slash if there is something ahead of it
+    packer.next() = rule.slash;
   }
   packer.printChar(0);//null terminate since we didn't pre-emptively calloc.
 
   return Text(path);//when you destroy the Text the data malloc'd above is freed
 }
 
-//Text pack(const SegmentedName &pieces, char seperator, bool after, bool before){
-//  return pack(pieces,seperator,Brackets(after,before));
-//} // PathParser::pack
+//Text PathParser::pack(const SegmentedName &pieces, char seperator){
+//  return PathParser::pack(pieces,seperator,Rules());
+//}
 
-
-Brackets PathParser::parseInto(SegmentedName &pieces, const Text &packed, char seperator){
-  Brackets bracket;
+Rules PathParser::parseInto(SegmentedName &pieces, const Text &packed, char seperator){
+  Rules bracket(seperator,false,false);
   Indexer<const char> scan( packed.c_str(),packed.length());
 
   Span cutter;
@@ -73,10 +72,6 @@ Brackets PathParser::parseInto(SegmentedName &pieces, const Text &packed, char s
   return bracket;
 } // PathParser::parseInto
 
-Brackets::Brackets(bool after, bool before):after(after),before(before){
+Rules::Rules(char slash, bool after, bool before):slash(slash),after(after),before(before){
   //#nada
-}
-
-Text PathParser::pack(const SegmentedName &pieces, char seperator){
-  return PathParser::pack(pieces,seperator,Brackets());
 }

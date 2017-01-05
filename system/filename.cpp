@@ -37,7 +37,7 @@ FileName &FileName::folder(const Text  &s){
     return *this;
   }
   unsigned quant=this->quantity();//record before parsing
-  PathParser::Brackets subracket=PathParser::parseInto(*this,s,'/');
+  PathParser::Rules subracket=PathParser::parseInto(*this,s,'/');
   if(quant==0){
     bracket=subracket;
   } else {
@@ -60,7 +60,7 @@ FileName &FileName::ext(const Text  &s){
     unsigned length=Zguard(s.length()+1+fname->length());
     Text dotted(length);//+1 for dot.
     CharFormatter catter(dotted.violated(),length);
-    catter.printString(fname);
+    catter.printString(fname->c_str());
     //todo: if fname ends in dot skip adding our own
     if(fname->endsWith('.')){
       //then keep it and don't add another, i.e. no double dots unless you manually feed them in.
@@ -88,7 +88,7 @@ bool FileName::lastChar(char isit) const {
 }
 
 Text FileName::pack(){
-  return PathParser::pack(*this,'/', bracket);
+  return PathParser::pack(*this, bracket);
 }
 
 ////////////////
