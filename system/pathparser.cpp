@@ -5,8 +5,9 @@
 
 #include <halfopen.h>
 
+using namespace PathParser;
 
-Text PathParser::pack(const SegmentedName &pieces, char seperator, Brackets bracket){
+Text pack(const SegmentedName &pieces, char seperator, const Brackets &bracket){
   unsigned quantity=pieces.quantity();
   if(quantity==0){
     return Text();
@@ -30,13 +31,13 @@ Text PathParser::pack(const SegmentedName &pieces, char seperator, Brackets brac
   return Text(path);//when you destroy the Text the data malloc'd above is freed
 }
 
-Text PathParser::pack(const SegmentedName &pieces, char seperator, bool after, bool before){
-  return pack(pieces,seperator,PathParser::Brackets(after,before));
-} // PathParser::pack
+//Text pack(const SegmentedName &pieces, char seperator, bool after, bool before){
+//  return pack(pieces,seperator,Brackets(after,before));
+//} // PathParser::pack
 
 
-PathParser::Brackets PathParser::parseInto(SegmentedName &pieces, Text &packed, char seperator){
-  PathParser::Brackets bracket;
+Brackets PathParser::parseInto(SegmentedName &pieces, const Text &packed, char seperator){
+  Brackets bracket;
   Indexer<const char> scan( packed.c_str(),packed.length());
 
   Span cutter;
@@ -72,6 +73,6 @@ PathParser::Brackets PathParser::parseInto(SegmentedName &pieces, Text &packed, 
   return bracket;
 } // PathParser::parseInto
 
-PathParser::Brackets::Brackets(bool after, bool before):after(after),before(before){
+Brackets::Brackets(bool after, bool before):after(after),before(before){
   //#nada
 }

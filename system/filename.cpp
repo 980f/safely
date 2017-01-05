@@ -1,11 +1,10 @@
 #include "filename.h"
-//limits.h PATH_MAX+1 is the size of the safestr.
+#include "charformatter.h"
 
-
-/** no internal slashes, conver to %5F */
+/** no internal slashes, convert to dash */
 Text escape (const Text &userinput){
   unsigned len = userinput.length();
-  char workspace[len + 1];
+  char workspace[Zguard(len)];
   workspace[len] = 0;//before we forget.
   for(unsigned i = 0; i<len; ++i) {
     workspace[i] = userinput[i];
@@ -20,15 +19,12 @@ FileName::FileName(){
   //assign(root);
 }
 
-static bool isRooted(const Text &simple){
-  return false;// !simple.empty() && simple.at(0)=='/';
-}
+//static bool isRooted(const Text &simple){
+//  return false;// !simple.empty() && simple.at(0)=='/';
+//}
 
 FileName::FileName(const Text  &simple):SegmentedName (){
-//  if(!isRooted(simple)) {
-//    assign(root);
-//  }
-//  folder(simple);
+  folder(simple);
 }
 
 FileName &FileName::dirname(void){
@@ -36,15 +32,31 @@ FileName &FileName::dirname(void){
   return *this;
 }
 
-FileName &FileName::folder(const Text  &s,bool escapeit){
+FileName &FileName::folder(const Text  &s){
   if(s.empty()) {
     return *this;
   }
-
+  unsigned quant=this->quantity();//record before parsing
+  PathParser::Brackets subracket=PathParser::parseInto(*this,s,'/');
+  if(quant==0){
+    bracket=subracket;
+  } else {
+    //ignore there being a leading / in the added piece
+    bracket.after = subracket.after;
+  }
   return *this;
 } // FileName::folder
 
-FileName &FileName::ext(const Text  &s,bool escapeit){
+FileName &FileName::ext(const Text  &s){
+  unsigned length=Zguard(s.length()+1);
+  Text dotted(length);//+1 for dot.
+  CharFormatter catter(dotted.c_str(),length);
+  catter.printChar(',');
+  catter.cat(s.c_str());
+  if(empty()){
+
+  }
+  //Text amended()
 //  assure('.');
 //  append(escapeit ? escape(s) : s);
   return *this;
@@ -64,22 +76,20 @@ bool FileName::lastChar(char isit) const {
 }
 
 Text FileName::pack(){
-  return pack(PathParser::Brackets());
+  return PathParser::pack(*this,'/', bracket);
 }
 
 ////////////////
 
-NameStacker::NameStacker(FileName &namer, bool escapeit) :
+NameStacker::NameStacker(FileName &namer) :
   path(namer),
-  mark(namer.quantity()),
-  escapeit(escapeit){
+  mark(namer.quantity()){
 }
 
-NameStacker::NameStacker(FileName &namer, const Text &pushsome, bool escapeit) :
+NameStacker::NameStacker(FileName &namer, const Text &pushsome) :
   path(namer),
-  mark(namer.quantity()),
-  escapeit(escapeit){
-  path.folder(pushsome, escapeit);
+  mark(namer.quantity()){
+  path.folder(pushsome);
 }
 
 

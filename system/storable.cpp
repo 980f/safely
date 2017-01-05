@@ -271,7 +271,7 @@ Text Storable::fullName() const {
     pathname.prefix(scan->name);
   } while((scan = scan->parent));
 
-  return PathParser::pack(pathname,slasher,false,true);
+  return PathParser::pack(pathname,slasher,PathParser::Brackets(false,true));
 } // Storable::fullName
 
 connection Storable::addChangeWatcher(const SimpleSlot&watcher, bool kickme) const {
