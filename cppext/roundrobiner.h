@@ -10,17 +10,18 @@ class RoundRobiner {
   unsigned quantity;
   unsigned last;
 public:
-  RoundRobiner(bool * Scoreboard, int quantity);
+  RoundRobiner(bool * Scoreboard, unsigned quantity);
   /** one parent dynamically allocated the scoreboard. */
   bool *deallocate();
   /** for cached access to a postable bit, write a 1 to "post"*/
-  bool &bit(int id)const;
+  bool &bit(unsigned id)const;
+  static const unsigned ALL=~0U;
   /** set bit and @return whether was already posted */
-  bool post(int id);
+  bool post(unsigned id);
   /** @return index of next set bit, clear bit on return
     * usage: value=rr.next(); if(value>=0){ do something with value } else //there was nothing to do.
     */
-  int next(void);
+  unsigned next(void);
   //set all flags, point 'last' to make 0th item be 'next'
   void markAll(bool thesame=1);
 };
