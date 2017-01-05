@@ -8,7 +8,8 @@ using namespace PushedJSON;
 Action Lexer::next(char pushed){
   UTF8 ch(pushed);
 
-  if(utfFollowers--){//it is to be treated as a generic text char
+  if(utfFollowers){//it is to be treated as a generic text char
+    --utfFollowers;
     ch='k';
   } else if(ch.isMultibyte()){//first byte of a utf8 multibyte character
     utfFollowers=ch.numFollowers();
@@ -123,6 +124,8 @@ Action Parser::next(char pushed){
   if(pushed=='\n'){
     column=0;
     ++row;
+  } else {
+    ++column;
   }
   unsigned mark=location++;//increment before lest we forget given multiple returns.
 
