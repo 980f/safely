@@ -19,6 +19,7 @@ Filer::~Filer(){
 
 bool Filer::mkDirDashP(const char *path, bool itsparent){
   FileName dirpath(path);
+  dirpath.bracket.after=true;//build in trailing slash
 
   if(itsparent) {
     dirpath.dirname();
@@ -26,8 +27,7 @@ bool Filer::mkDirDashP(const char *path, bool itsparent){
   if(dirpath.empty()) { //empty is not the same as '/', and even if it were we won't allow ourselves to create '/', ain't meaningful AFAIK
     return false;
   }
-  PathParser::Brackets wrapwith(true,true);
-  Text normalized=dirpath.pack(wrapwith);
+  Text normalized=dirpath.pack();
   if(mkdir(normalized.c_str(), 0777) == 0) {
     return true;
   }

@@ -62,7 +62,7 @@ Brackets PathParser::parseInto(SegmentedName &pieces, const Text &packed, char s
     }
   }
   //the following is suspect
-  if(cutter.lowest<scan.ordinal()){
+  if(scan.contains(cutter.lowest)){
     cutter.highest=scan.ordinal();//halfopen interval is nice here.
     if(cutter.empty()){
       bracket.after=true;
@@ -75,4 +75,8 @@ Brackets PathParser::parseInto(SegmentedName &pieces, const Text &packed, char s
 
 Brackets::Brackets(bool after, bool before):after(after),before(before){
   //#nada
+}
+
+Text PathParser::pack(const SegmentedName &pieces, char seperator){
+  return PathParser::pack(pieces,seperator,Brackets());
 }

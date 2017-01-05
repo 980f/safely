@@ -261,18 +261,18 @@ public:
   virtual void remove(int which){
     if(has(which)) { //#while the pod and node can take care of bad indexes locally we don't want to do the notifies if the index is
                      // bad. And now preremoval depends on this check.
-      if(preremoval(operator [](which))) {
+      if(preremoval(operator [](which))) {//if not vetoed
         //We actually delete the objects before we signal removal so iterations show it already gone
         pod.removeNth(which); //deletes Stored entity
-        node.remove(which); //deletes underlying node
-        onremoval(which);
-        dependents(true, which);
+        node.remove(which); //deletes underlying node, which may have its own watchers
+        onremoval(which);   //high priority notifications
+        dependents(true, which);//lower priority notifications
       }
     }
   } // remove
 
   /** remove something from given place in list. This DELETES the item, beware of use-after-free.*/
-  void removeItem(Groupie &member){ //this method was CREATING a new node!
+  void removeItem(Groupie &member){
     remove(ordinalOf(&member));
   }
 
@@ -282,17 +282,17 @@ public:
   }
 
   /** remove any member for which the slot is true, @return quantity removed. This DELETES the item, beware of use-after-free.*/
-  int removeIf(const sigc::slot<bool, Groupie &> &killit){
+  unsigned removeIf(const sigc::slot<bool, Groupie &> &killit){
     int deaths = 0; //nice diagnostic versus a simple bool.
     Storable::Freezer autothaw(node, false); //since node watch doesn't know what is removed wait until possibly multiple removes
                                              // are done before triggering its watchers (important when some watchers are gui
                                              // redraws)
 
-    for(int which = quantity(); which-- > 0; ) { //#keep reverse iteration, can do remove's with it.
+    for(unsigned which = quantity(); which-- > 0; ) { //#keep reverse iteration, can do remove's with it.
       Groupie &victim(*pod[which]);
       if(killit( victim)) {
         ++deaths;
-        remove(which); //#works well because we reverse iterate. (see bug #369)
+        remove(which); //#works well because we reverse iterate.
       }
     }
     return deaths;
@@ -302,25 +302,26 @@ public:
     return true;
   }
 
+  /** @returns quantity removed */
   int removeAll(){ //#remove one at a time so that reorg demons run
     return removeIf(&anything);
   }
 
   /** @return ordinal of first entity meeting @param predicate, -1 for none.*/
-  int first(const sigc::slot<bool, const Groupie &> &predicate) const {
+  unsigned first(const sigc::slot<bool, const Groupie &> &predicate) const {
     ForValuesConstly(list){
       if(predicate(list.next())) {
         return list.ordinal() - 1; //#already bumped to next entry
       }
     }
-    return -1;
+    return BadIndex;
   }
 
   static bool byObject(const Groupie &child, const Groupie *unit){
     return &child == unit;
   }
 
-  int ordinalOf(const Groupie *unit) const {
+  unsigned ordinalOf(const Groupie *unit) const {
     return first(sigc::bind(&byObject, unit));
   }
 
@@ -328,7 +329,7 @@ public:
     return &child.node == &childnode;
   }
 
-  int ordinalOf(const Storable &childnode) const {
+  unsigned ordinalOf(const Storable &childnode) const {
     return first(sigc::bind(&byNode, sigc::ref(childnode)));
   }
 

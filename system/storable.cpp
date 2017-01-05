@@ -260,7 +260,6 @@ int Storable::listModified(sigc::slot<void, Ustring> textViewer) const {
 
 #endif // if StorableDebugStringy
 
-
 #include "pathparser.h"
 Text Storable::fullName() const {
   //non-recursive,
@@ -271,7 +270,7 @@ Text Storable::fullName() const {
     pathname.prefix(scan->name);
   } while((scan = scan->parent));
 
-  return PathParser::pack(pathname,slasher,PathParser::Brackets(false,true));
+  return PathParser::pack(pathname,slasher);
 } // Storable::fullName
 
 connection Storable::addChangeWatcher(const SimpleSlot&watcher, bool kickme) const {
@@ -591,8 +590,7 @@ void Storable::presize(int qty, Storable::Type type){
 }
 
 bool Storable::remove(int which){
-  if(has(which)) {
-    wad.removeNth(which);
+  if(wad.removeNth(which)) {//if something was actually removed
     //renumber children, must follow removal to make for-loop cute
     for(int ci = wad.quantity(); ci-- > which; ) { //from last downto item newly dropped into 'which' slot
       --(wad[ci]->index);

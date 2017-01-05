@@ -17,7 +17,7 @@ struct Brackets {
  * the lead and trailing seperators are only added when requested and when they would not result in a lonely slash
  * IE an empty pathname does NOT become '/'. That is an attempt to preclude 'rm -rf /' */
 Text pack(const SegmentedName &pieces, char seperator, const Brackets &bracket);
-
+Text pack(const SegmentedName &pieces, char seperator);
 ///** @param after is whether to add a trailing seperator, such as to indiciate 'directory' to some shell commands,
 // * @param before is whether to prefix path with seperator, such as for an absolute disk path. */
 //Text pack(const SegmentedName &pieces, char seperator, bool after = false, bool before = false);
