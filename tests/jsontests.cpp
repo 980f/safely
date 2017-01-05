@@ -31,7 +31,14 @@ void testJson(const char *block,unsigned size){
 }
 
 
-void testJ(int which){
-  Cstr test(jsontests[which]);
-  testJson(test.c_str(),test.length());
+void testJ(unsigned which){
+  if(Index(which).isValid()){
+    Cstr test(jsontests[which]);
+    testJson(test.c_str(),test.length());
+  } else {
+    for(int which=countof(jsontests);which-->0;){
+      Cstr test(jsontests[which]);
+      testJson(test.c_str(),test.length());
+    }
+  }
 }

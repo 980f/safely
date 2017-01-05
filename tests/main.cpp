@@ -88,12 +88,14 @@ void extremely(){
 
 } // extremely
 
-
+extern void testJ(unsigned which);
 
 int main(int argc, char *argv[]){
   while(argc-->0) {
     printf("\n%d: %s",argc,argv[argc]);
   }
+
+  testJ(~0);
 
   DeleteOnExitTestData::testme();
 
