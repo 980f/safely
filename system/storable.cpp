@@ -4,13 +4,14 @@
 
 #include "segmentedname.h" //for debug reports
 
+#include "pathparser.h"
+
+//not a class member so that we don't have to force pathparser on all users:
+static const PathParser::Rules slasher('/',false,true);// '.' gives java property naming, '/' would allow use of filename classes. '|' was DAB's choice for ART
 
 int Storable::instances(0);
 
-const char Storable::slasher('.');// '.' gives java property naming, '/' would allow use of filename classes.
-
-#define bugName "name goes here"
-//fullName().c_str()
+#define bugName fullName().c_str()
 
 using namespace sigc;
 //using namespace Storable;
@@ -260,7 +261,6 @@ int Storable::listModified(sigc::slot<void, Ustring> textViewer) const {
 
 #endif // if StorableDebugStringy
 
-#include "pathparser.h"
 Text Storable::fullName() const {
   //non-recursive,
   SegmentedName pathname;
@@ -472,7 +472,7 @@ Storable *Storable::findNameless(unsigned lastFound){
 Storable *Storable::findChild(TextKey path, bool autocreate){
   SegmentedName genealogy;
   Text parsable(path);
-  auto bracket=PathParser::parseInto(genealogy,parsable,slasher);
+  auto bracket=PathParser::parseInto(genealogy,parsable,slasher.slash);
   if(bracket.before){
     wtf("Storable path names do not (yet) support 'root' syntax: [%s]",path);
   }
