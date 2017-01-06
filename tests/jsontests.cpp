@@ -3,13 +3,10 @@
 #include "textpointer.h"
 
 static const char*jsontests[] = {
-  //c-escape in unquote string
-  //c-escape in solid string
-  //escape each syntax element
-  "braced1:\\{1\\}",
-
-  "na\\:me:coloned}",
-  "embedcomma:com\\,ma}",
+  "braced1:\"{1}\"",
+  "embedcomma:\"com,ma\"",
+  "embedcolonv:\"col:on\"",
+  "\"embed:colonn\":vacuum",
 
   "group:{f1:{s1:2},f2:vf2}",
 
@@ -45,7 +42,7 @@ void printNode(unsigned tab,Storable &node){
         putchar(',');
       } else {
         putchar('\n');
-        for(int tabs = tab - 1; tabs-->0; ) {
+        for(int tabs = tab; tabs-->0; ) {
           printf("  ");
         }
         putchar('}');

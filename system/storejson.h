@@ -38,15 +38,12 @@ private: //to partition what would be an enormous switch with redundant cases we
   Storable *root;
   PushedJSON::Parser parser;
 
-  /** @returns whether there are more children */
+  /** @returns whether there are more children, for recursively parsing wads. */
   bool parseChild(Storable *parent);
 
-  Storable *makeChild(Storable *parent);
-  Storable *makeNamelessChild(Storable *parent);
-  void setValue(Storable &nova);
   Storable *insertNewChild(Storable *parent, TextKey name);
-
-  Storable *assembleItem(Storable *parent);
+  /** @param evenIfempty might also be called isWad */
+  Storable *assembleItem(Storable *parent,bool evenIfEmpty=false);
 }; // class JSONparser
 
 
