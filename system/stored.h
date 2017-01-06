@@ -3,11 +3,10 @@
 
 #include "storable.h"
 
-
 /**
  * base class for interpreter of a storage node.
  * wrapper instead of extending Storable, to lighten each instance's memory footprint.
- * Only extend from this when program logic will alter values versus gui edit screens as the latter work directly on the nodes.*/
+ * note that gui edit screens work directly on the nodes, watch those on per instance bases if global constraints need to be applied.*/
 class Stored : SIGCTRACKABLE {
   Stored();//# we must attache to a storable, we exist to wrap access to one with type-safety.
   Stored(const Stored &cantbecopied);//can't copy a subset of a tree, not generically.
@@ -36,7 +35,7 @@ public:
   virtual void onParse(){
   }
 
-  /** this is needed to create slots in base class to call onParse due to it being a virtual function  */
+  /** this is needed to create slots in base class to call onParse due to onParse being a virtual function and the vtable not usable at the time that sigc needed it to be. IE virtual functions are not usable by sigc in the base class constructor of that class- you only get the base class version */
   void doParse();
   /** pointer to text value's first char, dangerous! here for some GUI access. */
   TextKey rawText() const;
