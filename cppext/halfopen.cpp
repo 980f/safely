@@ -18,3 +18,7 @@ void Span::leapfrog(unsigned skip){
   lowest=highest+skip;
   highest=BadIndex;
 }
+
+void Span::clear(){
+  highest=lowest=BadIndex;
+}

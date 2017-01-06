@@ -70,6 +70,8 @@ public://extended return value
    */
   Action next(char pushed);
 
+  /** called by entity that called next() after it has handled an item, to make sure we don't duplicate items if code is buggy. */
+  void itemCompleted();
   /** @param fully is whether to prepare for a new stream, versus just prepare for next item. */
   void reset(bool fully);
   Parser();

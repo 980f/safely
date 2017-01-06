@@ -42,6 +42,8 @@ struct Span: public HalfOpen<Index> {
   bool ordered() const override;
   /** move span to next possible one. default of 1 is for cutting out single character seperators */
   void leapfrog(unsigned skip=1);
+  /** set both ends to 'invalid'*/
+  void clear();
 };
 
 #endif // HALFOPEN_H

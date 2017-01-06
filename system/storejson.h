@@ -49,4 +49,5 @@ private: //to partition what would be an enormous switch with redundant cases we
   Storable *assembleItem(Storable *parent);
 }; // class JSONparser
 
+
 #endif // STOREJSON_H
