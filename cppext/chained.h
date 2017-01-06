@@ -69,7 +69,7 @@ public:
     cursor = obj;
   }
 
-  bool hasNext(){/*const*/
+  bool hasNext() const{
     return cursor!=0;
   }
 
