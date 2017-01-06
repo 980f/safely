@@ -23,7 +23,7 @@ public:
     full = false;
   }
 
-  bool hasNext(void) /*const*/ {
+  bool hasNext(void) const {
     return !empty;
   }
 

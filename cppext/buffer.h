@@ -106,15 +106,15 @@ public:
   }
 
   /** tail end of other, without 'removing' it from other. Very suitable for a lookahead parser */
-  void grab(const Indexer &other){
+  void grab(const Indexer<Content> &other){
     pointer = 0;
     buffer = &other.peek();
     length = other.freespace();
   }
 
   /** @returns an indexer that covers the freespace of this one. this one is not modified */
-  Indexer remainder() const {
-    Indexer rval;
+  Indexer<Content> remainder() const {
+    Indexer<Content> rval;
     rval.grab(*this);
     return rval;
   }
@@ -200,14 +200,14 @@ public:
     return ordinal();
   }
 
-//  //publish parts of ordinator:
-//  bool hasNext(void) const {
-//    return Ordinator::hasNext();
-//  }
+  //publish parts of ordinator, without these derived classes are deemed abstract.
+  bool hasNext(void) const {
+    return Ordinator::hasNext();
+  }
 
-//  bool hasPrevious(void) const {
-//    return Ordinator::hasPrevious();
-//  }
+  bool hasPrevious(void) const {
+    return Ordinator::hasPrevious();
+  }
 
   /** on overrun of buffer returns last valid entry*/
   Content &next(void){
@@ -216,11 +216,11 @@ public:
 
   /** on overrun of buffer returns @param onEmpty.
 NB this uses references in and out, you connot pass a const onEmpty */
-  Content &next(Content &onEmpty){
-    return pointer < length ? buffer[pointer++] : onEmpty;
-  }
+//  Content &next(Content &onEmpty){
+//    return pointer < length ? buffer[pointer++] : onEmpty;
+//  }
 
-  const Content &next(const Content &onEmpty){
+  Content next(Content onEmpty){
     return pointer < length ? buffer[pointer++] : onEmpty;
   }
 
