@@ -19,31 +19,37 @@ static const char*jsontests[] = {
   "n3:v3",
   "n2 : v2",
   " n1 : v1 ",
+  "emptyval:\"\"",
 };
 
 
 void printNode(unsigned tab,Storable &node){
-  putchar('\n');
-  for(int tabs = tab; tabs-->0; ) {
-    printf("  ");
+  bool pretty=Index(tab).isValid();
+  if(pretty){
+    putchar('\n');
+    for(unsigned tabs = tab; tabs-->0; ) {
+      printf("  ");
+    }
   }
   if(node.name.empty()) {
     //just print tabs
   } else {
-    printf("%s : ",node.name.c_str());
+    printf("\"%s\" : ",node.name.c_str());
   }
   switch (node.getType()) {
   case Storable::Wad:
     printf("{");
     for(auto list(node.kinder()); list.hasNext(); ) {
       Storable & it(list.next());
-      printNode(tab + 1,it);
+      printNode(pretty?tab + 1:BadIndex,it);
       if(list.hasNext()) {
         putchar(',');
       } else {
-        putchar('\n');
-        for(int tabs = tab; tabs-->0; ) {
-          printf("  ");
+        if(pretty){
+          putchar('\n');
+          for(int tabs = tab; tabs-->0; ) {
+            printf("  ");
+          }
         }
         putchar('}');
       }
@@ -54,8 +60,16 @@ void printNode(unsigned tab,Storable &node){
     break;
   case Storable::Uncertain:
   case Storable::NotKnown:
-  case Storable::Textual:
     printf("%s ",node.image().c_str());
+    break;
+  case Storable::Textual:
+    if(node.image().empty()){
+      putchar('"');
+      //else printf converts null ptr to (null)
+      putchar('"');
+    } else {
+      printf("\"%s\" ",node.image().c_str());
+    }
     break;
   } // switch
   fflush(stdout);
@@ -72,7 +86,7 @@ void testJson(const char *block,unsigned size){
   dbg("\n JsonParse: returned: %d  nodes:%u  scalars:%u depth:%u",retval,parser.totalNodes, parser.totalScalar, parser.maxDepth.extremum);
 
   if(root) {
-    printNode(0,*root);
+    printNode(~0,*root);
     fflush(stdout);  //to show up in debugger before app terminates.
   }
 }   // testJson

@@ -94,7 +94,7 @@ int main(int argc, char *argv[]){
   while(argc-->0) {
     printf("\n%d: %s",argc,argv[argc]);
   }
-
+  fflush(stdout);//without this flush the text above injected itself into testJ's output ...
   testJ(~0U);
 
   DeleteOnExitTestData::testme();
