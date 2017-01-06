@@ -13,3 +13,6 @@ INCLUDEPATH += ..
 #dump the libs above the lib dirs, for easy scripting
 DESTDIR = ..
 
+#libraries have unused functions:
+CCFLAG += -W-unused-function
+

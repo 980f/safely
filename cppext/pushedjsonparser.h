@@ -6,7 +6,7 @@
  *
  */
 #include "halfopen.h"
-
+#include "cheaptricks.h"
 namespace PushedJSON {
 
 enum Action {
@@ -26,7 +26,7 @@ enum Action {
 class Lexer {
   bool inQuote;
   /** used to skip over utf extended chars */
-  unsigned utfFollowers;
+  CountDown utfFollowers;
 
   enum Phase {
     Before, //nothing known, expect name or value

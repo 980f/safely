@@ -3,7 +3,7 @@
 
 #include "safely.h"
 #include "textpointer.h"
-
+#include "cheaptricks.h"
 /**
  * parameters for formatting a number.
  * It is an object so that we can pass it to a templated printf-like function as an argument that precedes the numbers it applies to.
@@ -18,7 +18,7 @@ struct NumberFormat {
   /** if true always show sign,  */
   bool showsign;
   /** how many values it is to be applied to before being forgotten. 0 is forever, ~0 is nearly forever */
-  unsigned usages = 0;//default unlimited
+  CountDown usages = 0;//default unlimited
 
   NumberFormat();
 
