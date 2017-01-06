@@ -55,12 +55,29 @@ public:
     }
   }
 
-  bool hasNext() const {
+  bool done() const noexcept{
+    return counter==0;
+  }
+
+  unsigned operator ++(){
+    return ++counter;
+  }
+
+  /** test, decrements if not already zero and @returns whether it just became zero */
+  bool last() noexcept {
+    if(counter){//test and decrement
+      return done();//just became zero
+    } else {
+      return false;
+    }
+  }
+
+  bool hasNext() const noexcept {
     return counter>0;
   }
 
   /** just how weird can c++ be? */
-  template <typename Many> Many& next(Many array[]){
+  template <typename Many> Many& next(Many array[]) const {
     return array[counter];
   }
 };

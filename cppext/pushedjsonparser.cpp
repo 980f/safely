@@ -32,7 +32,6 @@ Action Lexer::next(char pushed){
   }
 
   if(utfFollowers) {//it is to be treated as a generic text char
-    --utfFollowers;
     ch = 'k';
   } else if(ch.isMultibyte()) {//first byte of a utf8 multibyte character
     utfFollowers = ch.numFollowers();

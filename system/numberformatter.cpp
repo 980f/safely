@@ -21,7 +21,7 @@ void NumberFormat::clear(){
 }
 
 void NumberFormat::onUse(){
-  if(usages && !--usages) {
+  if(usages.last()) {
     clear();
   }
 }
