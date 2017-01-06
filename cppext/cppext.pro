@@ -3,6 +3,7 @@
 
 include ("../staticlib.pro")
 
+DESTDIR = ..
 #permalloc needs a define: this is only non-zero in microcontrollers (heapless systems)
 DEFINES += PermAllocPool=0
 
