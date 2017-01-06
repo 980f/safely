@@ -46,7 +46,8 @@ SOURCES += argset.cpp \
     bitwise.cpp \
     cstr.cpp \
     pushedjsonparser.cpp \
-    halfopen.cpp
+    halfopen.cpp \
+    char.cpp
 
 HEADERS += safely.h \
     argset.h \
@@ -109,4 +110,5 @@ HEADERS += safely.h \
     cstr.h \
     testcppextbuild.h \
     pushedjsonparser.h \
-    halfopen.h
+    halfopen.h \
+    char.h

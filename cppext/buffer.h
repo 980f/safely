@@ -201,7 +201,7 @@ public:
   }
 
   //publish parts of ordinator, without these derived classes are deemed abstract.
-  bool hasNext(void) const {
+  virtual bool hasNext(void) const {
     return Ordinator::hasNext();
   }
 
@@ -210,7 +210,7 @@ public:
   }
 
   /** on overrun of buffer returns last valid entry*/
-  Content &next(void){
+  virtual Content &next(void){
     return buffer[pointer < length ? pointer++ : length - 1];
   }
 
@@ -220,7 +220,7 @@ NB this uses references in and out, you connot pass a const onEmpty */
 //    return pointer < length ? buffer[pointer++] : onEmpty;
 //  }
 
-  Content next(Content onEmpty){
+  virtual Content next(Content onEmpty){
     return pointer < length ? buffer[pointer++] : onEmpty;
   }
 

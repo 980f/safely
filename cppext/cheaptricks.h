@@ -29,6 +29,41 @@ public:
   }
 }; // class CountedLock
 
+/** if non-zero then decrement else leave alone */
+class CountDown {
+  unsigned counter;
+public:
+  CountDown(unsigned count=0):counter(count){}
+
+  unsigned operator =(unsigned quantity){
+    return counter=quantity;
+  }
+
+  /** getter */
+  operator unsigned() const {
+    return counter;
+  }
+
+  /** test and decrement. the main reason this class exists is to ensure we get a decrement when we test.
+   * this marks something that should probably be atomic. */
+  operator bool (){
+    if(counter){
+      --counter;
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  bool hasNext() const {
+    return counter>0;
+  }
+
+  /** just how weird can c++ be? */
+  template <typename Many> Many& next(Many array[]){
+    return array[counter];
+  }
+};
 
 /** @returns whether assigning @param newvalue to @param target changes the latter. the compare is for nearly @param bits, not an exact number. If nearly the same then
  * the assignment does not occur.

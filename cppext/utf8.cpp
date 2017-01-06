@@ -3,26 +3,6 @@
 
 #include "ignoresignwarnings.h"
 
-bool UTF8::numAlpha() const noexcept {
-  return isalnum(raw) || isPresent("+-.", raw);
-}
-
-bool UTF8::startsName() const noexcept {
-  return isalpha(raw);
-}
-
-bool UTF8::isDigit() const noexcept{
-  return isdigit(raw);
-}
-
-bool UTF8::isInNumber() const noexcept {
-  return isdigit(raw) || in("+-.Ee");
-}
-
-bool UTF8::isWhite() const noexcept {
-  return isspace(raw);
-}
-
 /** first byte tells you how many follow, number of leadings ones -2 (FE and FF are both 5)
  *  subsequent bytes start with 0b10xx xxxx 80..BF, which are not legal single byte chars.
  */
@@ -99,11 +79,3 @@ u8 UTF8::nextByte(u32 unichar, unsigned followers) noexcept{
   return static_cast<u8>(unichar);//# truncate to 8 bits.
 }
 
-unsigned UTF8::hexDigit() const noexcept {
-  unsigned trusting=(raw &~0x20) - '0';//toUpper then subtract char for zero.
-  return (trusting>9)? trusting-7: trusting; //'A'-'0' = 17, want 10 for that
-}
-
-bool UTF8::in(const char *tokens) const noexcept {
-  return isPresent(tokens, raw);
-}

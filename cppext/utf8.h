@@ -9,21 +9,24 @@
 typedef u32 Unichar;
 
 #include "cheaptricks.h" //isPresent
-#include "ctype.h"
+
+#include "char.h" //makes a character like an object
 
 /** represents one byte of a UTF8 multibyte character, not to be confused with a Unicode character which is a 32 bit entity
  * in addition to utf8 info this wraps ctype functions making them members of a char.
 */
-class UTF8 {
+class UTF8: public Char {
 public:
-  char raw;
-  UTF8(char raw = 0){
-    this->raw = raw;
+  UTF8(char raw = 0):Char(raw){
   }
 
   UTF8&operator =(char raw){
     this->raw = raw;
     return *this;
+  }
+
+  bool is(UTF8 other) const  noexcept{
+    return is(other.raw);
   }
 
   /** compare byte.
@@ -32,38 +35,6 @@ public:
     return raw == char(ch);
   }
 
-  /** @returns @see is() */
-  bool operator ==(int ch) const noexcept {
-    return is(ch);
-  }
-
-  bool is(UTF8 other) const  noexcept{
-    return is(other.raw);
-  }
-
-  operator char(void) const  noexcept{ //cuts down on compiler complaints, except in switches.
-    return raw;
-  }
-
-  /** @returns whether this is allowed in numeric constant or enum name */
-  bool numAlpha() const noexcept;
-
-  /** @returns whether this is first char of an identifier, per JSON and C++ rules. This is pretty much anything that isn't a number, punctuation or a control char */
-  bool startsName() const noexcept;
-
-  /** @returns whether this is a decimal digit */
-  bool isDigit() const noexcept;
-
-  /** @returns whether this is first char of an number image, per JSON and C++ rules */
-  bool startsNumber() const noexcept;
-
-  /** @returns whether this is non-initial char of a number. Doesn't retain state so defective numbers will still get a true here*/
-  bool isInNumber() const noexcept;
-
-  /** @returns whether this is considered whitespace */
-  bool isWhite() const noexcept;
-
-  bool in(const char *tokens) const noexcept;
 
   /** if you skip a byte then numFollowers will be illegal*/
   bool isMultibyte() const noexcept {
@@ -89,12 +60,6 @@ public:
   /** @returns intermediate or final byte, @param followers is 0 for the final one */
   static u8 nextByte(u32 unichar,unsigned followers) noexcept;
 
-  /** @returns whether this is a legal hex digit per C's rules */
-  bool isHexDigit() const noexcept {
-    return isxdigit(raw);
-  }
-  /** @returns the math value of this which is presumed to be a hexdigit, wild (but repeatable) trash if not.*/
-  unsigned hexDigit() const noexcept;
 
 }; // class UTF8
 

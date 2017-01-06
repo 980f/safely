@@ -38,7 +38,8 @@ SOURCES += \
     sigcuser.cpp \
     runoncenthtime.cpp \
     stored.cpp \
-    filename.cpp
+    filename.cpp \
+    urltext.cpp
 
 HEADERS += \
     cachedindextostored.h \
@@ -81,5 +82,6 @@ HEADERS += \
     textformatter.h \
     runoncenthtime.h \
     stored.h \
-    filename.h
+    filename.h \
+    urltext.h
 
