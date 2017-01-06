@@ -32,7 +32,11 @@ void StoredJSONparser::setValue(Storable &nova){
   }
   Text value(data.internalBuffer(),parser.value);
   nova.setImage(value,Storable::Parsed);
-  nova.setType(Storable::Uncertain);//mark for deferred interpretation
+  if(parser.quoted){
+    parser.quoted=false;//keep the text type set by setImage.
+  } else {//mark for further inspection by datum user.
+    nova.setType(Storable::Uncertain);//mark for deferred interpretation
+  }
 }
 
 Storable *StoredJSONparser::assembleItem(Storable *parent){

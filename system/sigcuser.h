@@ -1,6 +1,9 @@
 #ifndef SIGCUSER_H
 #define SIGCUSER_H
 
+/** sigc is better than C++ functional as it has sigc::trackable and signals which manage using deletable items in slots
+*/
+
 #include <sigc++/sigc++.h>
 #include "cheaptricks.h" //for deleteonreturn
 

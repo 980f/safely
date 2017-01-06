@@ -4,6 +4,7 @@
 /** this class maintains parser state and renders an opinion on characters received.
  * See StoredJSONParser for a user.
  *
+ * It is very tolerant, especially of missing quotes around names and text values.
  */
 #include "halfopen.h"
 #include "cheaptricks.h"
@@ -14,6 +15,7 @@ enum Action {
   BeginToken, //record location, it is first char of something.
   Continue,   //continue scanning
   EndToken,  //just end the token
+  EndQuoted, //like end token, but of something that was quoted (relevant for null datum)
   BeginWad, //open brace encountered
   EndName,  //time to create named node
   EndNameT,  //time to create named node
@@ -53,15 +55,18 @@ public:
 /** tracks incoming byte sequence, records interesting points, reports interesting events */
 class Parser {
 public: // for error messages
-  bool haveName;
+
   unsigned location;//number of chars total
   unsigned row;//number of lines, for error messages
   unsigned column;//where in row
+
   Lexer lexer;
 
 public://extended return value
   /** used to record extent of a parsed token */
 
+  bool haveName;
+  bool quoted;
   Span name;
   Span value;
 

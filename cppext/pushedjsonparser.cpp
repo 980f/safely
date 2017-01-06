@@ -43,7 +43,10 @@ Action Lexer::next(char pushed){
     if(ch.is('"')) {//end quote
       inQuote = false;
       phase = After;
-      return EndToken;
+      return EndQuoted;
+    }
+    if(ch.is('\\')){
+      ++utfFollowers;//ignores all escapes, especially \"
     }
     //still inside quotes
     if(phase==Before) {//first char after quote is first care of token
@@ -74,9 +77,6 @@ Action Lexer::next(char pushed){
     case ',': //normal item seperator
       phase = Before;
       return EndItemT;
-    case '\\':
-      ++utfFollowers;//abuse this rather than having a dedicated backslash state.
-      return Continue;
     default:
       return Continue;
     } // switch
@@ -98,9 +98,6 @@ Action Lexer::next(char pushed){
       return EndWad;
     case ',': //normal item seperator
       return EndItem;
-    case '\\':
-//      ++utfFollowers;
-      return Illegal;
     default:
       return Illegal;
 //      phase = Inside;
@@ -124,10 +121,6 @@ Action Lexer::next(char pushed){
       return EndWad;
     case ',': //sometimes is an extraneous comma, we choose to ignore those.
       return EndItem;//permissive!
-    case '\\': //any escape sequence is just like plain text to us
-      ++utfFollowers;//abuse this rather than having a dedicated backslash state.
-      phase = Inside;
-      return BeginToken;
     default:
       phase = Inside;
       return BeginToken;
@@ -159,6 +152,9 @@ Action Parser::next(char pushed){
     return Continue;
   case Continue:   //continue scanning
     return Continue;
+  case EndQuoted:
+    quoted=true;
+    //JOIN
   case EndToken:  //just end the token
     endToken(mark);
     return Continue;
@@ -191,6 +187,7 @@ Action Parser::next(char pushed){
 
 void Parser::itemCompleted(){
   haveName = false;
+  quoted=false;
   name.clear();
   value.clear();
 } // Parser::next

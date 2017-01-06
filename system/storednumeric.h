@@ -52,10 +52,10 @@ public:
 
   /** copy value from node of exactly the same type */
   Numeric operator =(const StoredNumeric< Numeric > &other) {
-    return assign(other.node.Storable::getNumber< Numeric >());
+    return assign(other.node.Storable::getNumber/*< Numeric >*/());
   }
 
-  /** be no higher than argument */
+  /** be no higher than argument. is set to minimum of self and rhs */
   bool depress(Numeric rhs){
     Numeric temp=this->native();
     if(::depress(temp,rhs)){
@@ -66,7 +66,7 @@ public:
     }
   }
 
-  /** be no lower than argument */
+  /** be no lower than argument is set to maximum of self and rhs */
   bool elevate(Numeric rhs){
     Numeric temp=this->native();
     if(::elevate(temp,rhs)){
@@ -144,6 +144,7 @@ public:
 
 typedef StoredNumeric<double> StoredReal;
 typedef StoredNumeric<int> StoredInt;
+//todo: arrange to tolerate 'true' and 'false' text on underlying node. I think an enumerizer will do it.
 typedef StoredNumeric<bool> StoredBoolean;
 
 
