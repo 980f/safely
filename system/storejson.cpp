@@ -25,15 +25,6 @@ Storable *StoredJSONparser::insertNewChild(Storable *parent,TextKey name){
   }
 }
 
-Storable *StoredJSONparser::makeNamelessChild(Storable *parent){
-  return insertNewChild(parent,"");
-}
-
-Storable *StoredJSONparser::makeChild(Storable *parent){
-  Text name(data.internalBuffer(),parser.name);
-  parser.haveName = false;
-  return insertNewChild(parent,name);
-}
 
 void StoredJSONparser::setValue(Storable &nova){
   Text value(data.internalBuffer(),parser.value);
@@ -42,11 +33,18 @@ void StoredJSONparser::setValue(Storable &nova){
 }
 
 Storable *StoredJSONparser::assembleItem(Storable *parent){
-  if(parser.haveName) {
-    return makeChild(parent);
+  Storable *nova=nullptr;
+  if (parser.haveName){
+    Text name(data.internalBuffer(),parser.name);
+    nova= insertNewChild(parent,name);
   } else {
-    return makeNamelessChild(parent);
+    nova=insertNewChild(parent,"");
   }
+  if(nova){
+    setValue(*nova);
+  }
+  parser.itemCompleted();//ensure we don't reuse old data on next item.
+  return nova;
 }
 
 bool StoredJSONparser::parseChild(Storable *parent){
@@ -55,9 +53,7 @@ bool StoredJSONparser::parseChild(Storable *parent){
 
   //look for name
   while(data.hasNext()) {
-    Action action = parser.next(data.next());
-
-    switch (action) {
+    switch (parser.next(data.next())) {
     case BeginWad: //open brace encountered
       for(Storable *nova = assembleItem(parent); parseChild(nova); ) {
         //#recurse while there are more to be found
@@ -76,9 +72,10 @@ bool StoredJSONparser::parseChild(Storable *parent){
       break;
     } // switch
   }
+  auto finial=parser.next(0);
   //at end of file we might have one last item, especially if we only have one item
-  if(false){//todo: figure out how to detect well formed hanging fire.
+  if(finial==EndItem){
     assembleItem(parent);
   }
-  return false;
+  return false; //no more data so there are no more children,
 } // StoredJSONparser::parseChild

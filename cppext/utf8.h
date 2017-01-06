@@ -1,8 +1,8 @@
 #ifndef UTF8_H
 #define UTF8_H
 
-
 #include "eztypes.h"  //~stdint
+#include "ignoresignwarnings.h"  //much type mangling is done herein, so you don't have to in your code :)
 
 /** an int that can hold a UTF32 character
  * replace Glib gunichar usages */
@@ -13,7 +13,6 @@ typedef u32 Unichar;
 
 /** represents one byte of a UTF8 multibyte character, not to be confused with a Unicode character which is a 32 bit entity
  * in addition to utf8 info this wraps ctype functions making them members of a char.
-
 */
 class UTF8 {
 public:
@@ -42,21 +41,9 @@ public:
     return is(other.raw);
   }
 
-//  operator int(void){  //so that we can switch(utf8) and also use traditional C string functionality.
-//    return raw;
-//  }
-
-//  operator char(void){ //cuts down on compiler complaints, except in switches.
-//    return raw;
-//  }
-
   operator char(void) const { //cuts down on compiler complaints, except in switches.
     return raw;
   }
-
-//  operator bool(void){ //for while(*pointer) usage.
-//    return raw != 0;
-//  }
 
   /** @returns whether this is allowed in numeric constant or enum name */
   bool numAlpha() const;
@@ -98,6 +85,18 @@ public:
 
   /** @returns intermediate or final byte, @param followers is 0 for the final one */
   static u8 nextByte(u32 unichar,unsigned followers);
+
+  //// these aren't particularly utf8 related, but handy nonetheless
+  unsigned hexDigit() const {
+    unsigned trusting=raw-'0';
+    if(trusting>9){
+      trusting-=7; //'A'-'0' = 17, want 10 less than that
+    }
+    if(trusting>16){//must have been lower case letter
+      trusting -=32;//diff between lower and upper
+    }
+    return trusting;
+  }
 
 }; // class UTF8
 

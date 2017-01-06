@@ -77,7 +77,7 @@ public:
 #define SETGUARD(boolvarb) AutoFlag coe_ ## boolvarb(boolvarb)
 
 /** assign a value to variable on block exit, regardless of how the exit happens, including exceptions.
- * NB: records value to use at time of this object's creation */
+ * NB: it records the value to use at time of this object's creation */
 template<typename Scalar> class AssignOnExit {
   Scalar&zipperatus;
   Scalar onexit;
@@ -89,16 +89,47 @@ public:
     zipperatus = onexit;
   }
 
-  operator Scalar() const {
+  operator Scalar() const noexcept{
     return zipperatus;
   }
-  Scalar delta(void){
+
+  /** @returns the change that would occur if you exit now */
+  Scalar delta(void) const noexcept{
     return onexit - zipperatus;
   }
 
 }; // class AssignOnExit
 
-/** assign new value but return previous, kinda like value++ */
+/** assign a value to variable from another one on block exit, regardless of how the exit happens, including exceptions.
+ * NB: it records the value to use at time of this object's creation */
+template<typename Scalar> class CopyOnExit {
+  Scalar&zipperatus;
+  Scalar& onexit;
+public:
+  CopyOnExit(Scalar & toBeCleared, Scalar &onexit) : zipperatus(toBeCleared), onexit(onexit){
+    //both are references, you should not delete either of them until after the scope of this object is exited.
+  }
+
+  ~CopyOnExit(){
+    zipperatus = onexit;
+  }
+
+  operator Scalar() const noexcept{
+    return zipperatus;
+  }
+  /** @returns the change that would occur to the target should the exit occur now */
+  Scalar delta(void) const noexcept{
+    return onexit - zipperatus;
+  }
+
+}; // class AssignOnExit
+
+
+/** marker for potential atomic value shift
+ * assign new value but return previous, kinda like value++
+ * X previous= postAssign<x>(thingy, newvalue);
+ * previous is value of thingy before the assignment, thingy has newvalue.
+*/
 template<typename Scalar> Scalar postAssign(Scalar&varb, Scalar value){
   Scalar was = varb;
   varb = value;
@@ -106,7 +137,7 @@ template<typename Scalar> Scalar postAssign(Scalar&varb, Scalar value){
 }
 
 /** atomic test-and-clear */
-template<typename Scalar> Scalar flagged(Scalar&varb) ISRISH;
+template<typename Scalar> Scalar flagged(Scalar&varb) ISRISH; //mark as needing critical optimization
 
 template<typename Scalar> Scalar flagged(Scalar&varb){
 /** this implementation isn't actually atomic, we managed to single thread our whole codebase. */
@@ -114,16 +145,6 @@ template<typename Scalar> Scalar flagged(Scalar&varb){
   varb = 0;
   return was;
 }
-
-////custom instantiation for breakpointing on change.
-//inline bool flagged(bool &varb){
-//  if(varb){
-//    varb=0;
-//    return true;
-//  } else {
-//    return false;
-//  }
-//}
 
 /** if arg is false set it to true and return true else return false.
  *  wrapper for operation in case we have to make it truly atomic. */
@@ -139,18 +160,22 @@ inline bool notAlready(bool &varb){
 /** usage: DeleteOnReturn<typeofinstance>moriturus(&instance);
  *  for functions with multiple exits, or that might get hit with exceptions.
  *  NB: you must name an instance else it immediately deletes after construction.
+ *
+ * You can DeleteOnReturn <X> shortliveditem( new X()) and when that item goes out of scope it will be deleted.
+ * That is the same as X shortliveditem(), but allocates on the heap rather than the stack.
  */
 template<typename Deletable> class DeleteOnReturn {
   Deletable*something;
 public:
   DeleteOnReturn(Deletable*something) : something(something){
-
+    //we have recorded that which is to be deleted.
   }
 
   DeleteOnReturn(Deletable&something) : something(&something){
-
+//we have recorded that which is to be deleted.
   }
 
+  /** named version of cast to template type */
   Deletable &object(){
     return *something;
   }
@@ -159,17 +184,21 @@ public:
   operator Deletable &(){
     return object();
   }
+
   operator Deletable *(){
     return something;
   }
+
   operator const Deletable &() const {
     return *something;
   }
 
+  /** @returns whether ther is an object lurking insdie this*/
   operator bool() const {
     return something!=nullptr;
   }
 
+  /** this class exists to execute this method*/
   ~DeleteOnReturn(){
     delete something;
   }
