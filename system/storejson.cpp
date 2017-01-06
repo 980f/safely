@@ -25,30 +25,26 @@ Storable *StoredJSONparser::insertNewChild(Storable *parent,TextKey name){
   }
 }
 
-
-void StoredJSONparser::setValue(Storable &nova){
-  if(parser.value.empty()){
-    return;
-  }
-  Text value(data.internalBuffer(),parser.value);
-  nova.setImage(value,Storable::Parsed);
-  if(parser.quoted){
-    parser.quoted=false;//keep the text type set by setImage.
-  } else {//mark for further inspection by datum user.
-    nova.setType(Storable::Uncertain);//mark for deferred interpretation
-  }
-}
-
-Storable *StoredJSONparser::assembleItem(Storable *parent){
+Storable *StoredJSONparser::assembleItem(Storable *parent,bool evenIfEmpty){
   Storable *nova=nullptr;
-  if (parser.haveName){
-    Text name(data.internalBuffer(),parser.name);
-    nova= insertNewChild(parent,name);
-  } else {
-    nova=insertNewChild(parent,"");
-  }
-  if(nova){
-    setValue(*nova);
+  bool novalue=parser.value.empty();
+  if(evenIfEmpty || !novalue){
+    if (parser.haveName){
+      Text name(data.internalBuffer(),parser.name);
+      nova= insertNewChild(parent,name);
+    } else {
+      nova=insertNewChild(parent,"");
+    }
+    if(nova){
+      Text value(data.internalBuffer(),parser.value);
+      //maydo: here is where we would process text escapes, but I'd rather not include all possible escape processors in this module.
+      nova->setImage(value,Storable::Parsed);
+      if(parser.quoted){
+        parser.quoted=false;//keep the text type set by setImage.
+      } else {//mark for further inspection by datum user.
+        nova->setType(Storable::Uncertain);//mark for deferred interpretation
+      }
+    }
   }
   parser.itemCompleted();//ensure we don't reuse old data on next item.
   return nova;
@@ -62,7 +58,7 @@ bool StoredJSONparser::parseChild(Storable *parent){
   while(data.hasNext()) {
     switch (parser.next(data.next())) {
     case BeginWad: //open brace encountered
-      for(Storable *nova = assembleItem(parent); parseChild(nova); ) {
+      for(Storable *nova = assembleItem(parent,true); parseChild(nova); ) {
         //#recurse while there are more to be found
       }
       return true; //end of this wad isn't the same as end of possibly enclosing wad.
@@ -75,8 +71,11 @@ bool StoredJSONparser::parseChild(Storable *parent){
       assembleItem(parent);
       return false;
 
-    default:
+    case Illegal: //unexpected char
+      wtf("Bad char 0x%02X at row:%u, col:%u, offset:%u(?=%u)",data.previous(),parser.row,parser.column,parser.location,data.ordinal());
       break;
+    default:
+      break;//to stifle warnings
     } // switch
   }
   auto finial=parser.next(0);

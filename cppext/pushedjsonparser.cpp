@@ -25,7 +25,7 @@ Action Lexer::next(char pushed){
       case Inside:
         return EndItemT;
       case After:
-        return EndItem;
+        return EndItem; //eof push out any partial node
       }
     }
     return Illegal;//can't get here
@@ -71,9 +71,9 @@ Action Lexer::next(char pushed){
       return Illegal;
     case '{': //?missing colon
       return Illegal;
-    case '}':
+    case '}': //no whitespace end.
       phase = Before;
-      return EndItemT;
+      return EndWadT;
     case ',': //normal item seperator
       phase = Before;
       return EndItemT;
@@ -94,10 +94,10 @@ Action Lexer::next(char pushed){
       return Illegal; //maydo: act like missing coma
     case '{':
       return BeginWad;
-    case '}':
+    case '}'://after last value of a wad
       return EndWad;
     case ',': //normal item seperator
-      return EndItem;
+      return EndItem; //normal child endwith trailing whitespace
     default:
       return Illegal;
 //      phase = Inside;
@@ -120,7 +120,7 @@ Action Lexer::next(char pushed){
     case '}': //normal
       return EndWad;
     case ',': //sometimes is an extraneous comma, we choose to ignore those.
-      return EndItem;//permissive!
+      return EndItem;//missing value, possible missing whole child.
     default:
       phase = Inside;
       return BeginToken;
@@ -173,7 +173,7 @@ Action Parser::next(char pushed){
     endToken(mark);
 //    JOIN
   case EndItem:  //comma between siblings
-    return EndItem;
+    return EndItem;//normal end no whitespace after value
   case EndWadT:   //closing wad
     endToken(mark);
 //    JOIN
