@@ -3,12 +3,8 @@
 
 include ("../staticlib.pro")
 
-DESTDIR = ..
 #permalloc needs a define: this is only non-zero in microcontrollers (heapless systems)
 DEFINES += PermAllocPool=0
-
-#project settings include files are above the directories that share them, might be able to justify moving them into cppext since all other folders use stuff from there. also newly created files without a clear home go there.
-INCLUDEPATH += ..
 
 SOURCES += argset.cpp \
     bigendianer.cpp \
