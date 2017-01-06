@@ -3,8 +3,17 @@
 #include "textpointer.h"
 
 static const char*jsontests[] = {
+  //c-escape in unquote string
+  //c-escape in solid string
+  //escape each syntax element
+  "braced1:\\{1\\}",
 
-  "group:{first:lonely,}",
+  "na\\:me:coloned}",
+  "embedcomma:com\\,ma}",
+
+  "group:{f1:{s1:2},f2:vf2}",
+
+  "group:{first:lonely,}",                 //trailing comma in group
   "group:{first:lonely,second:twofer}",
   "group:{first:1}",
 

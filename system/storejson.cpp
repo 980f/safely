@@ -27,6 +27,9 @@ Storable *StoredJSONparser::insertNewChild(Storable *parent,TextKey name){
 
 
 void StoredJSONparser::setValue(Storable &nova){
+  if(parser.value.empty()){
+    return;
+  }
   Text value(data.internalBuffer(),parser.value);
   nova.setImage(value,Storable::Parsed);
   nova.setType(Storable::Uncertain);//mark for deferred interpretation
