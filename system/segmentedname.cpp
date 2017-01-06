@@ -1,6 +1,10 @@
 #include "segmentedname.h"
 #include "textpointer.h"
 
+#include "utf8text.h"
+#include "urltext.h"
+
+
 SegmentedName::SegmentedName() {
   //#nada
 }
@@ -13,7 +17,15 @@ unsigned SegmentedName::contentLength(bool slashu, bool urlesc) const {
   unsigned total=0;
 
   for(auto index(indexer());index.hasNext();){
-    total += index.next().length();
+    auto it(index.next());
+    unsigned length=it.length();
+    if(slashu){
+      length=Utf8Text::encodedLength(it);
+    }
+    if(urlesc){
+      length=UrlText::encodedLength(it);
+    }
+    total += length;
   }
   return total;
 }
