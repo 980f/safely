@@ -29,7 +29,9 @@ double toDouble(TextKey rawText, bool *impure){
     char *end(nullptr);  //setting value for debug purposes
     /*todo:1 set locale to one that doesn't have triplet separators */
     double d = strtod(rawText, &end);
-
+    if(rawText==end){
+      d=Nan;//getting stricter here
+    }
     if(impure) {
       *impure = nonTrivial(end);
     }

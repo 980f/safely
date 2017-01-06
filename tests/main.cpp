@@ -95,7 +95,7 @@ int main(int argc, char *argv[]){
     printf("\n%d: %s",argc,argv[argc]);
   }
 
-  testJ(~0U);
+  testJ(3);//~0U);
 
   DeleteOnExitTestData::testme();
 

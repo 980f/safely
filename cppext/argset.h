@@ -8,7 +8,7 @@
 class ArgSet : public Indexer<double> {
 public:
 /** wrap an existing array of doubles */
-  ArgSet(double *d, int sizeofd);
+  ArgSet(double *d, unsigned sizeofd);
 /** @return whether @param changed*/
   bool applyto(double&d);
 /** @return whether @param changed*/
@@ -20,6 +20,8 @@ public:
 /** @returns whether this and @param args are same size, and whether corresponding entries are nearly equal.
  *  @see nearly for @param bits value */
   bool equals(const ArgSet &args, int bits = 18) const;
+  //lint makes me do this:
+  virtual ~ArgSet();
 }; // class ArgSet
 
 #define makeArgs(qty) double argv[qty]; fillObject(argv, sizeof(argv), 0); ArgSet args(argv, sizeof(argv))

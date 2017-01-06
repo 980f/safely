@@ -77,16 +77,14 @@ public:
     //#nada
   }
 
-  /* if @param clip is negative then the new indexer covers just the data before the old one's pointer minus the ~clip value:
-   * e.g a clip of ~0 gets everything beneath the pointer, ~1 ends the new Indexer one shy of the oldone's pointer
-   * a clip of 0 gets you a new one that goes from [0..pointer)
-   * a clip of +1 gets you allocated-pointer-clip elements starting at pointer+clip-1
-   * some would call that a left subset of the used part.
-   * else if it covers the old one's allocated range truncated by the clip value (left subset of allocated)*/
-  Indexer(const Indexer &other, int clip = 0) :
-    Ordinator( other,clip),
+  /* if @param rewind is negative then the new indexer covers just the data before the old one's pointer minus the ~rewind value, i.e. data already visited excluding the most recent. NB that a clip of ~0 gets everything beneath the pointer, ~1 ends the new Indexer one shy of the oldone's pointer (such as removing a comma).
+   * a rewind of 0 gets you the equivalent of rewind(all) then clone() i.e. it ignores the other's pointer and gives you the contruction time view of the other.
+   * a rewind>0 gets you the unvisited part of the other, with the given number of already visited elements.
+   * e.g. a value of 1 after reading a comma will get you a buffer starting with that comma */
+  Indexer(const Indexer &other, int rewind = 0) : //default value is clone of created state of other.
+    Ordinator(other, rewind),
     // the -~ below allows +1 to stand for 'remove nothing' == 'starting after last next()'
-    buffer(clip<0 ? other.buffer : other.buffer + (other.pointer - ~clip)){
+    buffer(rewind<=0 ? other.buffer : other.buffer + (other.pointer - rewind)){
   }
 
   /** reworks this one to be used region of @param other.

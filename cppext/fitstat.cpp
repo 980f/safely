@@ -4,7 +4,7 @@ FitStat::FitStat(){
   init();
 }
 
-void FitStat::init(int df){
+void FitStat::init(unsigned df){
   num = 0;
   this->df = df;
   chiSquare = 0.0;

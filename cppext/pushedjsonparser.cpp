@@ -65,7 +65,6 @@ Action Lexer::next(char pushed){
       //we have ended a token and the name,
       phase = Before;
       return EndNameT;
-
     case '"': //not ours to reason why
       return Illegal;
     case '{': //?missing colon
@@ -90,6 +89,7 @@ Action Lexer::next(char pushed){
     }
     switch(ch) {
     case ':': //normal name value seperator
+      phase = Before;
       return EndName;
     case '"':
       return Illegal; //maydo: act like missing coma
@@ -103,8 +103,9 @@ Action Lexer::next(char pushed){
 //      ++utfFollowers;
       return Illegal;
     default:
-      phase = Inside;
-      return BeginToken;
+      return Illegal;
+//      phase = Inside;
+//      return BeginToken;
     } // switch
     break;
 
