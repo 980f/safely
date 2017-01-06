@@ -3,26 +3,30 @@
 
 #include "ignoresignwarnings.h"
 
-bool UTF8::numAlpha() const {
+bool UTF8::numAlpha() const noexcept {
   return isalnum(raw) || isPresent("+-.", raw);
 }
 
-bool UTF8::startsName() const {
+bool UTF8::startsName() const noexcept {
   return isalpha(raw);
 }
 
-bool UTF8::isInNumber() const {
+bool UTF8::isDigit() const noexcept{
+  return isdigit(raw);
+}
+
+bool UTF8::isInNumber() const noexcept {
   return isdigit(raw) || in("+-.Ee");
 }
 
-bool UTF8::isWhite() const {
+bool UTF8::isWhite() const noexcept {
   return isspace(raw);
 }
 
 /** first byte tells you how many follow, number of leadings ones -2 (FE and FF are both 5)
  *  subsequent bytes start with 0b10xx xxxx 80..BF, which are not legal single byte chars.
  */
-unsigned UTF8::numFollowers() const {
+unsigned UTF8::numFollowers() const noexcept {
   if(u8(raw) < 0xC0) { //80..BF are illegal raw, we ignore that here, C0 and C1  are not specfied so lump them in as well
     return 0;   //7 bits    128
   }
@@ -42,7 +46,7 @@ unsigned UTF8::numFollowers() const {
   return 5; //not yet used
 }
 
-void UTF8::firstBits(Unichar &uch) const {
+void UTF8::firstBits(Unichar &uch) const noexcept {
   if(u8(raw) < 0xC0) { //80..BF are illegal raw, we ignore that here, C0 and C1  are not specfied so lump them in as well
     uch=0;   //illegal argument
   } else {
@@ -53,16 +57,16 @@ void UTF8::firstBits(Unichar &uch) const {
   }
 }
 
-void UTF8::moreBits(Unichar &uch) const {
+void UTF8::moreBits(Unichar &uch) const noexcept {
   uch<<=6;
   uch |= fieldMask(6)*u8(raw);
 }
 
- void UTF8::pad(Unichar &uch, unsigned followers){
+ void UTF8::pad(Unichar &uch, unsigned followers) noexcept{
    uch<<=(6*followers);
  }
 
-unsigned UTF8::numFollowers(u32 unichar){
+unsigned UTF8::numFollowers(u32 unichar) noexcept{
   if(unichar < (1U << 7)) {//quick exit for ascii
     return 0;
   }
@@ -76,7 +80,7 @@ unsigned UTF8::numFollowers(u32 unichar){
   return 0;//not yet implementing invalid extensions.
 } // UTF8::numFollowers
 
-u8 UTF8::firstByte(u32 unichar, unsigned followers){
+u8 UTF8::firstByte(u32 unichar, unsigned followers) noexcept{
   if(followers) {
     u8 prefix(0xFC);
     prefix <<= (5 - followers);//1->C0, 2->E0 3->F0 4->F8
@@ -87,7 +91,7 @@ u8 UTF8::firstByte(u32 unichar, unsigned followers){
   }
 }
 
-u8 UTF8::nextByte(u32 unichar, unsigned followers){
+u8 UTF8::nextByte(u32 unichar, unsigned followers) noexcept{
   unsigned shift = 6 * followers;
   unichar >>= shift;
   unichar &= fieldMask(6);
@@ -95,6 +99,11 @@ u8 UTF8::nextByte(u32 unichar, unsigned followers){
   return static_cast<u8>(unichar);//# truncate to 8 bits.
 }
 
-bool UTF8::in(const char *tokens) const {
+unsigned UTF8::hexDigit() const noexcept {
+  unsigned trusting=(raw &~0x20) - '0';//toUpper then subtract char for zero.
+  return (trusting>9)? trusting-7: trusting; //'A'-'0' = 17, want 10 for that
+}
+
+bool UTF8::in(const char *tokens) const noexcept {
   return isPresent(tokens, raw);
 }

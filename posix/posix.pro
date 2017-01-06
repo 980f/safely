@@ -7,9 +7,6 @@ include("../cppext/lib.pro")
 #our sibling with heapless code
 include("../system/lib.pro")
 
-
-INCLUDEPATH += ..
-
 SOURCES += \
     fdset.cpp \
     fildes.cpp \

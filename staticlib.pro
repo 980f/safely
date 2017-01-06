@@ -8,5 +8,8 @@ CONFIG -= app_bundle
 CONFIG -= qt
 CONFIG += c++11
 
+#system options include files are above the lib dirs
 INCLUDEPATH += .. 
+#dump the libs above the lib dirs, for easy scripting
+DESTDIR = ..
 
