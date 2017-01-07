@@ -143,13 +143,12 @@ Index Utf8Text::encodedLength(Cstr utf8s){
 /** push parser to convert expanded codes back to utf8 */
 class Utf8Decoder {
 public:
-  bool slashing = false;
-  bool xing = false; //\x.....
+  Unichar uch = 0;
   CountDown  uchers = 0;
   CountDown octers = 0; //\nnn
-
-  Unichar uch = 0;
-  bool bigu;
+  bool slashing = false;
+  bool xing = false; //\x.....
+//  bool bigu = false;
 
   Event operator ()( UTF8 ch){
     if(ch.is(0)){//end of data
@@ -168,8 +167,7 @@ public:
     }
 
     if(uchers--) {
-      uch <<= 4;
-      uch |= ch.hexDigit();
+      ch.hexDigit(uch);
       if(uchers.done()) {
         return Done;
       }
@@ -187,8 +185,7 @@ public:
 
     if(xing) {
       if(ch.isHexDigit()) {
-        uch <<= 4;
-        uch |= ch.hexDigit();
+        ch.hexDigit(uch);
         return More;
       }
       if(ch.is('\\')) {

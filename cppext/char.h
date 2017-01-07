@@ -56,6 +56,12 @@ public:
   /** @returns the math value of this which is presumed to be a hexdigit, wild (but repeatable) trash if not.*/
   unsigned hexDigit() const noexcept;
 
+  /** append this as hex digit to @param uch unicode receiver. Presumes caller has already checked isHexDigit() */
+  template <typename Intish> void hexDigit(Intish &uch) const noexcept{
+    uch <<= 4;
+    uch |= hexDigit();
+  }
+
   char hexNibble(unsigned sb) const noexcept;
 };
 

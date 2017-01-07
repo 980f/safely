@@ -36,8 +36,11 @@ bool Char::isHexDigit() const noexcept {
 
 #include "ignoresignwarnings.h"
 unsigned Char::hexDigit() const noexcept {
-  unsigned trusting=(raw &~0x20) - '0';//toUpper then subtract char for zero.
-  return (trusting>9)? trusting-7: trusting; //'A'-'0' = 17, want 10 for that
+  unsigned trusting=(raw|0x20) - '0';//tolowerthen subtract char for zero.
+  if((trusting>9)){
+    trusting-=39;
+  }
+  return trusting; //'A'-'0' = 17, want 10 for that
 }
 
 char Char::hexNibble(unsigned sb) const noexcept {
