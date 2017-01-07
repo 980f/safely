@@ -28,20 +28,20 @@ unsigned UTF8::numFollowers() const noexcept {
 
 void UTF8::firstBits(Unichar &uch,unsigned nf) const noexcept {
   if(u8(raw) < 0xC0) { //80..BF are illegal raw, we ignore that here, C0 and C1  are not specfied so lump them in as well
+    //we can't trust numFollowers if this byte isn't multiByte
     uch=0;   //illegal argument
   } else {
-    if(nf==~0){
+    if(nf==~0){//unknown, so go compute
       nf=numFollowers();
     }
     //need to keep 6-nf bits
-    unsigned mask=fieldMask(6-nf);
-    uch=mask&u8(raw);
+    uch=fieldMask(6-nf)&u8(raw);
   }
 }
 
 void UTF8::moreBits(Unichar &uch) const noexcept {
   uch<<=6;
-  uch |= fieldMask(6)*u8(raw);
+  uch |= fieldMask(6)&u8(raw);
 }
 
  void UTF8::pad(Unichar &uch, unsigned followers) noexcept{

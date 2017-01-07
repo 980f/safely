@@ -12,17 +12,18 @@ void UnicodeTester::escape(const char *testdata)
   }
   dbg("\nEscape:<%s> ->",testdata);
   Text probate(Utf8Text::encode(wrapped));
-  dbg("returned: %p/%p",&probate,probate.c_str());
+//  dbg("returned: %p/%p",&probate,probate.c_str());
   dbg("<%s>",probate.c_str());
 
 }
 
 
 const char * unitests[]={
+  "nothing",
   "\x39OK\x20spaced",
   "\x39OK",
-  "\uABCD",
-  "nothing"
+  "\uC0B0",  //some han character, 3 sections
+  "\U0001f060",  //emoticon 6:5 domino
 };
 
 bool UnicodeTester::run(unsigned which){
