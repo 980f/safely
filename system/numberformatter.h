@@ -47,9 +47,7 @@ struct NumberFormatter {
   Text format(double value,bool addone = false) const;
 
   /** syntactic sugar for the only method call that is usually used dynamically */
-  Text operator ()(double value,bool addone = false) const {
-    return format(value,addone);
-  }
+  Text operator ()(double value,bool addone = false) const;
 
 
 public: //some utilities

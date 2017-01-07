@@ -19,6 +19,10 @@ Logger::Logger() : prefix(0){
   //ctor
 }
 
+Logger::Logger(const char *location):prefix(location){
+  //#nada
+}
+
 Logger::~Logger(){
   //dtor
 }

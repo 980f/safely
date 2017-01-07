@@ -46,6 +46,10 @@ Text NumberFormatter::format(double value,bool addone) const {
   return Text(workspace.internalBuffer());//the constructor invoked here copies the content.
 }
 
+Text NumberFormatter::operator ()(double value, bool addone) const {
+  return format(value,addone);
+}
+
 Text NumberFormatter::makeNumber(double value){
   NumberFormatter formatter(17);
   return formatter(value,false);

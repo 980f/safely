@@ -3,8 +3,7 @@
 
 #include "storedgroup.h"
 /** @deprecated  no longer built, keeping around for reference.
- *  this class was obsoleted by bringing back use of the Stored::parentIndex function. That in turn was done to simplify sorting of stored nodes for performance on
- * load.
+ *  this class was obsoleted by bringing back use of the Stored::parentIndex function. That in turn was done to simplify sorting of stored nodes for performance on load.
  *  Sorting would have required fancy manipulation in this class.
  */
 class CachedIndexToStored {

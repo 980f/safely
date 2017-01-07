@@ -41,7 +41,7 @@ struct Index {
   }
 
   /** @returns whether this is less than @param limit */
-  bool operator <( const Index &limit) const noexcept {
+  bool in( const Index &limit) const noexcept {
     return raw<limit.raw;
   }
 

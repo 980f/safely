@@ -10,6 +10,8 @@ public:
   /** must point to static text, is printed on the log before each message */
   const char *prefix;
 
+  Logger(const char *location);
+
   virtual ~Logger();
   /** makes usage look like a function */
   void operator() (const char *msg, ...);

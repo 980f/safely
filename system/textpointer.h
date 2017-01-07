@@ -30,6 +30,13 @@ public:
   /** take contents of @param other, hence other cannot be const as we null its pointer lest we get a double-free */
   Text(Text &other);
 
+  /** enforce that a const can't have its resource taken away from it. */
+  Text(const Text &other)=delete ;
+
+  /** enforce that a const can't have its resource taken away from it. */
+  Text(Text &&other);
+
+
   /** make a copy of non-null-terminated subset of some string. includes @param begin but not @param end */
   Text(TextKey other,const Span &span);
 
@@ -44,16 +51,27 @@ public:
   /** deletes present content (if any) and copies @param ptr content (if any).
    * @returns the @param pointer, not a pointer to self or the copy made.
    */
-  TextKey operator =(TextKey other) override;
+  TextKey operator =(const TextKey &other);
+
+  /** take ownership of a buffer, i.e. deleting this Text object will free @param other. Other will be a null poiner after this call, you should not reference it again. */
+  void take(TextKey &other);
 
   /** take ownership of a buffer, i.e. deleting this Text object will free @param other */
-  void take(TextKey other);
+  void take(const TextKey &other);
+
+  /** take ownership of a buffer, i.e. deleting this Text object will free @param other */
+  void take(Text& other);
 
   /** make a copy of @param other. If other points to the same memory as this ... we might screw up */
   void copy(TextKey other);
 
+  /** relinquish ownership */
+  void release(){
+    ptr=nullptr;
+  }
+
   /** discard==free internal content (if any) and null the internal pointer (to prevent use-after-free) */
-  void clear() override;
+  void clear()override;
 
 }; // class TextPointer
 

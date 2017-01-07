@@ -305,7 +305,7 @@ void Storable::clone(const Storable&other){ //todo:2 try to not trigger false ch
     break;
   case Uncertain:
   case Textual:
-    text = other.text;
+    text.copy(other.text);//want independent copy
     break;
   case Wad: //copy preserving order
     for(ConstChainScanner<Storable> list(other.wad); list.hasNext(); ) {
@@ -404,11 +404,11 @@ Cstr Storable::image(void){
       return enumerated->token(int(number));//don't update text, this is much more efficient since enumerated is effectively static.
     } else {
       //set the internal image without triggering change detect
-      text = NumberFormatter::makeNumber(number);
+      text.take(NumberFormatter::makeNumber(number));
       return text;
     }
   case Wad:
-    text = NumberFormatter::makeNumber(numChildren());
+    text.take(NumberFormatter::makeNumber(numChildren()));
     return text;
 
   case NotKnown:
