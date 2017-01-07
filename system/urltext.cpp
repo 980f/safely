@@ -64,8 +64,7 @@ bool Decoder::push(char incoming){
   Char ch(incoming);
   if(hidgetting){
     //todo: what if char is not a hex digit?
-    packer<<=4;
-    packer|=ch.hexDigit();
+    ch.hexDigit(packer);
     if(hidgetting.done()){
       next()=packer;
     }

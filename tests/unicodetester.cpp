@@ -4,17 +4,30 @@
 #include "stdio.h"
 #include "logger.h"
 
-void UnicodeTester::escape(const char *testdata)
+Text UnicodeTester::escape(const char *testdata)
 {
   Cstr wrapped(testdata);
   if(wrapped.empty()){
-    return;
+    return Text("empty intput");
   }
   dbg("\nEscape:<%s> ->",testdata);
   Text probate(Utf8Text::encode(wrapped));
 //  dbg("returned: %p/%p",&probate,probate.c_str());
   dbg("<%s>",probate.c_str());
+  return probate;
+}
 
+
+Text UnicodeTester::descape(const char *testdata){
+  Cstr wrapped(testdata);
+  if(wrapped.empty()){
+    return Text("empty intput");
+  }
+  dbg("\nrecode:<%s> ->",testdata);
+  Text probate(Utf8Text::decode(wrapped));
+//  dbg("returned: %p/%p",&probate,probate.c_str());
+  dbg("<%s>",probate.c_str());
+  return probate;
 }
 
 
@@ -28,10 +41,10 @@ const char * unitests[]={
 
 bool UnicodeTester::run(unsigned which){
   if(Index(which).in(countof(unitests))){
-    escape(unitests[which]);
+    descape(escape(unitests[which]));
   } else {
     for(which=countof(unitests);which-->0;){
-      escape(unitests[which]);
+      descape( escape(unitests[which]));
     }
   }
   return  true;
