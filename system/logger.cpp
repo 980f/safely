@@ -13,13 +13,13 @@
 //stderr or stdout.
 #define stout stderr
 
-Logger dbg;
+Logger dbg("",true);
 
 Logger::Logger() : prefix(0){
   //ctor
 }
 
-Logger::Logger(const char *location):prefix(location){
+Logger::Logger(const char *location,bool enabled):prefix(location),enabled(enabled){
   //#nada
 }
 
@@ -38,10 +38,12 @@ void show(FILE * stdf,const char *prefix,const char *msg,va_list &args){
 }
 
 void Logger::operator() (const char *msg, ...){
-  va_list args;
-  va_start(args, msg);
-  show(stout, prefix, msg, args);
-  va_end(args);
+  if(enabled){
+    va_list args;
+    va_start(args, msg);
+    show(stout, prefix, msg, args);
+    va_end(args);
+  }
 }
 
 /** a signal handler */

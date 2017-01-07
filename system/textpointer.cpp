@@ -5,7 +5,7 @@
 #include <utility>
 
 #include "logger.h"
-static Logger tbg("TextPointer");
+static Logger tbg("TextPointer",false);
 
 Text::Text() : Cstr(){
   //all is well
@@ -24,7 +24,7 @@ Text::Text(unsigned size) : Cstr( static_cast<TextKey>( calloc(Zguard(size),1)))
 
 /** this guy is criticial to this class being performant. If we flub it there will be scads of malloc's and free's. */
 Text::Text(Text &&other) : Cstr(other){
-  dbg("construct by && %p:%p",this,ptr);
+  tbg("construct by && %p:%p",this,ptr);
   other.release();//take ownership, clearing the other one's pointer keeps it from freeing ours.
 }
 
@@ -36,7 +36,7 @@ Text::Text(TextKey other, const Span &span):Cstr(nullptr){
       ptr[length] = 0;//safety null
       memcpy(ptr,&other[span.lowest],length);
       this->ptr=ptr;
-      dbg("construct by span %p:%p",this,ptr);
+      tbg("construct by span %p:%p",this,ptr);
     }
   }
 

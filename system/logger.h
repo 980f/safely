@@ -9,8 +9,8 @@ public:
   Logger();
   /** must point to static text, is printed on the log before each message */
   const char *prefix;
-
-  Logger(const char *location);
+  bool enabled;
+  Logger(const char *location,bool enabled=true);
 
   virtual ~Logger();
   /** makes usage look like a function */
