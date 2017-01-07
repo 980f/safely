@@ -7,11 +7,11 @@
 
 class TreeFile {
 public:
-  Ustring filename;
-  Storable &root;
+  FileName filename;
+  Storable *root;
   StoredReal svnnumber;
-  TreeFile(const Ustring &fname, Storable &root);
-  TreeFile(FileName &fname, Storable &root);
+  TreeFile(TextKey fname, Storable *root);
+  TreeFile(FileName &fname, Storable *root);
 
   bool parseTreeFile(void);
   bool printTree(bool blocking, bool debug = false);

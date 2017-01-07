@@ -1,9 +1,9 @@
 #ifndef MEASURE_H
 #define MEASURE_H
 
-#include "storable.h"
+#include "stored.h"
 #include "storednumeric.h"
-
+#include "storedlabel.h"
 ////////////////////////
 
 class Measure : public Stored {
@@ -18,9 +18,12 @@ public:
   StoredReal precision;
 
   Measure(Storable &node);
+#ifndef NO_GLIB
+
   Ustring format(double number, bool addone = false) const;
   /** @returns a slot for calling format() with just the number */
   Formatter formatter() const;
+#endif
 }; // class Measure
 
 class NamedMeasure : public Measure {

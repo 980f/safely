@@ -16,9 +16,11 @@ DelimitingOutputStream &StorageExporter::exportNode(Storable &node, bool header,
     dout(name, node.image());
   } else if(node.is(Storable::Wad)) {
     ForKinder( node){
-      Storable &kid(list.next());
+      Storable &it(list.next());
+#if USE_GLIB
       NodeName kidname(Ustring::format(name, ".", kid.name).c_str());
       exportNode(kid, header, kidname);
+#endif
     }
   }
   return dos;

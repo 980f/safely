@@ -42,7 +42,6 @@ SOURCES += \
     urltext.cpp
 
 HEADERS += \
-    cachedindextostored.h \
     chain.h \
     chainsorter.h \
     cpshelpers.h \
@@ -69,8 +68,6 @@ HEADERS += \
     storedsettable.h \
     textkey.h \
     textpointer.h \
-    tokenstream.h \
-    treefile.h \
     watchable.h \
     peakfindrecords.h \
     sigcuser.h \

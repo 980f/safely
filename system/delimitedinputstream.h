@@ -33,9 +33,10 @@ public:
   bool hasMoreFields();
   /** @returns whether not at end of file */
   bool hasMoreLines();
+#ifndef NO_GLIB
   /** parses optionally? quoted string */
   bool get(Ustring &text);
-
+#endif
   /** remove white space and parse content until white or separator encountered*/
   bool get(int &val);
   bool get(float &val);
