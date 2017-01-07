@@ -45,8 +45,8 @@ public:
 
     bigu=false;//only valid after Done until next push
     if(ch.isMultibyte()) {
-      ch.firstBits(uch);
-      followers = ch.numFollowers();
+      //we need nf, but so does firstBits (to save from having to call it twice).
+      ch.firstBits(uch,followers = ch.numFollowers());
       return First;
     }
     uch=ch;
