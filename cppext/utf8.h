@@ -44,8 +44,8 @@ public:
   /** only valid if first char of a UTF8 sequence */
   unsigned numFollowers(void) const noexcept;
 
-  /** bits extracted from this byte*/
-  void firstBits(Unichar &uch) const noexcept;
+  /** bits extracted from this byte, @param nf is value from numFollers, ~0 means call numFollowers else if already done pass tha back in.*/
+  void firstBits(Unichar &uch, unsigned nf=~0) const noexcept;
   /** merges bits from tihs presumed to be continuation byte into @param uch */
   void moreBits(Unichar &uch) const noexcept;
   /** pretend remaining bytes were all zeroes */
@@ -59,6 +59,8 @@ public:
 
   /** @returns intermediate or final byte, @param followers is 0 for the final one */
   static u8 nextByte(u32 unichar,unsigned followers) noexcept;
+
+  static char hexNibble(Unichar uch,unsigned sb) noexcept;
 
 
 }; // class UTF8

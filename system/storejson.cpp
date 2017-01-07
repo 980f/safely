@@ -1,3 +1,4 @@
+#include "safely.h"
 #include "storejson.h"
 #include "textpointer.h"
 #include "cheaptricks.h"

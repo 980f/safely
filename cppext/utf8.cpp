@@ -26,11 +26,13 @@ unsigned UTF8::numFollowers() const noexcept {
   return 5; //not yet used
 }
 
-void UTF8::firstBits(Unichar &uch) const noexcept {
+void UTF8::firstBits(Unichar &uch,unsigned nf) const noexcept {
   if(u8(raw) < 0xC0) { //80..BF are illegal raw, we ignore that here, C0 and C1  are not specfied so lump them in as well
     uch=0;   //illegal argument
   } else {
-    unsigned nf=numFollowers();
+    if(nf==~0){
+      nf=numFollowers();
+    }
     //need to keep 6-nf bits
     unsigned mask=fieldMask(6-nf);
     uch=mask&u8(raw);
@@ -77,5 +79,10 @@ u8 UTF8::nextByte(u32 unichar, unsigned followers) noexcept{
   unichar &= fieldMask(6);
   unichar |= (1 << 7);
   return static_cast<u8>(unichar);//# truncate to 8 bits.
+}
+
+char UTF8::hexNibble(Unichar uch, unsigned sb) noexcept {
+  u8 nib= 15&(uch>>(sb*4)); //push to low nib
+  return nib>9? 'A'+nib-10: '0'+nib;
 }
 
