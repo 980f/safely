@@ -111,4 +111,5 @@ HEADERS += safely.h \
     testcppextbuild.h \
     pushedjsonparser.h \
     halfopen.h \
-    char.h
+    char.h \
+    index.h

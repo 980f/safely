@@ -44,9 +44,8 @@ public:
     return counter;
   }
 
-  /** test and decrement. the main reason this class exists is to ensure we get a decrement when we test.
-   * this marks something that should probably be atomic. */
-  operator bool (){
+  /** same as operator bool, might remove that code and make people type the extra -- */
+  bool operator--(int) noexcept {
     if(counter){
       --counter;
       return true;
@@ -59,6 +58,7 @@ public:
     return counter==0;
   }
 
+/** sometimes you go back one */
   unsigned operator ++(){
     return ++counter;
   }
