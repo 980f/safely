@@ -83,10 +83,10 @@ void testJson(const char *block,unsigned size){
   StoredJSONparser parser(loaded,root);
   bool retval = parser.parse(root);
 
-  dbg("\n JsonParse: returned: %d  nodes:%u  scalars:%u depth:%u",retval,parser.totalNodes, parser.totalScalar, parser.maxDepth.extremum);
+  dbg("\n JsonParse: returned: %d  nodes:%u  scalars:%u depth:%u\n",retval,parser.totalNodes, parser.totalScalar, parser.maxDepth.extremum);
 
   if(root) {
-    printNode(~0,*root);
+    printNode(1,*root);
 //    fflush(stdout);  //to show up in debugger before app terminates.
   }
 }   // testJson
@@ -96,16 +96,15 @@ void testJson(const char *block,unsigned size){
 void testAbstractly(const char *block,unsigned size){
   dbg("\nJabstract: testing: %s",block);
   Indexer<const char> loaded(block,size);
-  Storable *root = nullptr;
 
   TAJParser parser(loaded);
-  dbg("\nJsonPreParse: nodes:%u  scalars:%u depth:%u",parser.stats.totalNodes, parser.stats.totalScalar, parser.stats.maxDepth.extremum);
+//  dbg("\nJsonPreParse: nodes:%u  scalars:%u depth:%u",parser.stats.totalNodes, parser.stats.totalScalar, parser.stats.maxDepth.extremum);
   parser.parse();
 
-  dbg("\nJsonParse:  nodes:%u  scalars:%u depth:%u",parser.stats.totalNodes, parser.stats.totalScalar, parser.stats.maxDepth.extremum);
+  dbg("\nJsonParse:  nodes:%u  scalars:%u depth:%u\n",parser.stats.totalNodes, parser.stats.totalScalar, parser.stats.maxDepth.extremum);
 
-  if(root) {
-    printNode(~0,*root);
+  if(parser.core.root) {
+    printNode(1,*parser.core.root);
 //    fflush(stdout);  //to show up in debugger before app terminates.
   }
 }   // testJson
