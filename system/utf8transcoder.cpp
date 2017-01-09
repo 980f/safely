@@ -97,6 +97,7 @@ Utf8Decoder::Event Utf8Decoder::operator ()(UTF8 ch){
       ch.hexDigit(uch);
       return More;
     }
+    xing=false;
     if(ch.is('\\')) {
       slashing = true;
       return Done;//take uch but don't resent the last char

@@ -33,8 +33,9 @@ Text UnicodeTester::descape(const char *testdata){
 
 const char * unitests[]={
   "nothing",
-  "\x39OK\x20spaced",
-  "\x39OK",
+  "\\x39OK\\x20spaced",
+  "\\x39OK\x20spaced",
+  "\\x39OK",
   "\uC0B0",  //some han character, 3 sections
   "\U0001f060",  //emoticon 6:5 domino
 };
