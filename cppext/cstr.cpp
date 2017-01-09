@@ -31,24 +31,24 @@ bool Cstr::empty() const {
   return isTrivial(ptr);
 }
 
-unsigned Cstr::length() const {
+unsigned Cstr::length() const noexcept {
   return nonTrivial(ptr) ? static_cast<unsigned>(strlen(ptr)) : 0;
 }
 
-bool Cstr::endsWith(char isit) const {
+bool Cstr::endsWith(char isit) const noexcept {
   return *this[length()-1]==isit;
 }
 
-bool Cstr::is(TextKey other) const {
+bool Cstr::is(TextKey other) const noexcept {
   return same(this->ptr,other);
 }
 
-char Cstr::operator [](unsigned index){
+char Cstr::operator [](const Index &index) const noexcept {
   return (nonTrivial(ptr)&&isValid(index)) ? ptr[index]:0;
 }
 
 /** attempt to match the reasoning of the @see same() function with respect to comparing null strings and empty strings */
-int Cstr::cmp(TextKey rhs) const {
+int Cstr::cmp(TextKey rhs) const noexcept {
   if(ptr) {
     if(rhs) {
       return strcmp(ptr,rhs);
@@ -60,7 +60,7 @@ int Cstr::cmp(TextKey rhs) const {
   }
 } // Zstring::cmp
 
-bool Cstr::startsWith(TextKey other) const {
+bool Cstr::startsWith(TextKey other) const noexcept {
   if(ptr == nullptr) {
     return isTrivial(other);
   }
@@ -84,23 +84,23 @@ bool Cstr::startsWith(TextKey other) const {
   return true;
 } // Cstr::startsWith
 
-int Cstr::index(char ch) const {
+Index Cstr::index(char ch) const noexcept {
   if(const char *candidate = chr(ch)) {
     return candidate - ptr;
   } else {
-    return -1;
+    return BadIndex;
   }
 }
 
-int Cstr::rindex(char ch) const {
+Index Cstr::rindex(char ch) const noexcept {
   if(const char *candidate = rchr(ch)) {
     return candidate - ptr;
   } else {
-    return -1;
+    return BadIndex;
   }
 }
 
-const char *Cstr::chr(int chr) const {
+const char *Cstr::chr(int chr) const noexcept {
   if(nonTrivial(ptr)) {
     return strchr(ptr,chr);
   } else {
@@ -108,7 +108,7 @@ const char *Cstr::chr(int chr) const {
   }
 }
 
-const char *Cstr::rchr(int chr) const {
+const char *Cstr::rchr(int chr) const noexcept {
   if(nonTrivial(ptr)) {
     return strrchr(ptr,chr);
   } else {
@@ -116,6 +116,6 @@ const char *Cstr::rchr(int chr) const {
   }
 } // TextPointer::startsWith
 
-void Cstr::clear(){
+void Cstr::clear() noexcept{
   ptr = nullptr;
 }

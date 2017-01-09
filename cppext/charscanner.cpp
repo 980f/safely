@@ -20,7 +20,7 @@ int ourStrncmp(const char *one, const char *two, unsigned length){
   return 0;
 } // ourStrncmp
 
-bool ByteScanner ::putBytes(unsigned value, int numBytes){
+bool ByteScanner ::putBytes(unsigned value, unsigned numBytes){
   if(stillHas(numBytes)) {
     const u8 *p = reinterpret_cast<const u8 *>(&value);
     while(numBytes-- > 0) {
@@ -71,6 +71,9 @@ ByteScanner::ByteScanner(const ByteScanner&other, int clip ) : Indexer<u8 >(othe
 ByteScanner::ByteScanner(const CharScanner&other ) : //choices herein are for first use which is in type casting a ready-to-send string.
   Indexer<u8 >( reinterpret_cast<u8*>(other.internalBuffer()), other.used()){
   //#nada
+}
+
+ByteScanner::~ByteScanner(){
 }
 
 u16 ByteScanner ::getU16(u16 def){
@@ -248,7 +251,7 @@ ByteLooker::ByteLooker(const u8  *content, unsigned size ) : Indexer<const u8 >(
   //#nada
 }
 
-u32 ByteLooker ::getU(int numBytes, u32 def){
+u32 ByteLooker ::getU(unsigned numBytes, u32 def){
   //using a pointer to a local precludes compiler optimizing for register use.
   if(stillHas(numBytes)) {
     u32 acc = 0;

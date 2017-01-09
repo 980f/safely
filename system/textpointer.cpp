@@ -98,7 +98,7 @@ void Text::take(TextKey &other){
   tbg("took cstr %p:%p  <-%p",this,ptr,other);
 }
 
-void Text::clear(){
+void Text::clear() noexcept {
   tbg("about to clear %p:%p",this,ptr);
   free(violate(ptr));
   release();

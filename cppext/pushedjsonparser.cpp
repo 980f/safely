@@ -203,6 +203,13 @@ void Parser::reset(bool fully){
   }
 }
 
+void Parser::shift(unsigned offset){
+  column=location-offset;//only correct for normal use cases
+  name.shift(offset);
+  value.shift(offset);
+  location-=offset;
+}
+
 Parser::Parser(){
   reset(true);
 }

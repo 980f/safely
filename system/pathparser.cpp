@@ -7,21 +7,26 @@
 
 using namespace PathParser;
 
-Text PathParser::pack(const SegmentedName &pieces, const Rules &rule){
+Text PathParser::pack(const SegmentedName &pieces, const Rules &rule, Converter &&converter){
   unsigned quantity=pieces.quantity();
   if(quantity==0){
     return Text();
   }
-  unsigned numSeperators=quantity-1+rule.before+rule.after;
-  unsigned bytesNeeded = Zguard(numSeperators+pieces.contentLength(false,false));
-  char *path(static_cast<char *>( malloc(bytesNeeded)));//@DEL when returned Text object is deleted
+
+  unsigned bytesNeeded =quantity-1+rule.before+rule.after;//number of seperators
+
+  for(auto index(pieces.indexer());index.hasNext();){
+    bytesNeeded += converter.length(index.next());
+  }
+
+  char *path(static_cast<char *>( malloc(Zguard(bytesNeeded))));//@DEL when returned Text object is deleted
   CharFormatter packer(path,bytesNeeded);
   auto feeder(pieces.indexer());
   while (feeder.hasNext()) {
     if(packer.ordinal()>0 || rule.before){//if not first or if put before first
       packer.next() = rule.slash;
     }
-    packer.printString(feeder.next());
+    converter(feeder.next(),packer);
   }
   if(rule.after && packer.used()>0) {//only append trailing slash if there is something ahead of it
     packer.next() = rule.slash;
@@ -55,7 +60,7 @@ Rules PathParser::parseInto(SegmentedName &pieces, const Text &packed, char sepe
         //adjacent seperators are as if they are one
         cutter.lowest+=1;
       } else {
-        pieces.suffix(*new Text(scan.internalBuffer(),cutter));
+        pieces.suffix(Text(scan.internalBuffer(),cutter));
         cutter.leapfrog(1);
       }
     }
@@ -66,7 +71,7 @@ Rules PathParser::parseInto(SegmentedName &pieces, const Text &packed, char sepe
     if(cutter.empty()){
       bracket.after=true;
     } else {
-      pieces.suffix(*new Text(scan.internalBuffer(),cutter));
+      pieces.suffix(Text(scan.internalBuffer(),cutter));
     }
   }
   return bracket;
@@ -75,3 +80,4 @@ Rules PathParser::parseInto(SegmentedName &pieces, const Text &packed, char sepe
 Rules::Rules(char slash, bool after, bool before):slash(slash),after(after),before(before){
   //#nada
 }
+

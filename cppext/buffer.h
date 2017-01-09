@@ -6,6 +6,7 @@
 #include "sequence.h"
 #include "ordinator.h"
 
+
 /**
  *  This class is used to prevent buffer overflows.
  *  Instances are passed a pointer to a buffer and its length and provide pointer-like syntax for modifying and accessing said
@@ -80,7 +81,7 @@ public:
 
   /* if @param rewind is negative then the new indexer covers just the data before the old one's pointer minus the ~rewind value, i.e. data already visited excluding
    * the most recent. NB that a clip of ~0 gets everything beneath the pointer, ~1 ends the new Indexer one shy of the oldone's pointer (such as removing a comma).
-   * a rewind of 0 gets you the equivalent of rewind(all) then clone() i.e. it ignores the other's pointer and gives you the contruction time view of the other.
+   * a rewind of 0 gets you the equivalent of rewind(all) then clone() i.e. it ignores the other's pointer and gives you the construction time view of the other.
    * a rewind>0 gets you the unvisited part of the other, with the given number of already visited elements.
    * e.g. a value of 1 after reading a comma will get you a buffer starting with that comma */
   Indexer(const Indexer &other, int rewind = 0) : //default value is clone of created state of other.

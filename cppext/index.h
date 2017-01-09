@@ -24,6 +24,10 @@ struct Index {
 
   unsigned raw;
 
+  bool isOdd() const noexcept {
+    return isValid()&& (raw&1);//lsb === is odd.
+  }
+
   unsigned operator =(unsigned ord) noexcept {
     return raw=ord;
   }
@@ -54,6 +58,16 @@ struct Index {
   unsigned operator += (unsigned other) noexcept {
     return raw+=other;
   }
+
+  /** decrement IF valid */
+  unsigned operator -= (unsigned other) noexcept {
+    if(isValid()){
+      return raw-=other;
+    } else {
+      return BadIndex;
+    }
+  }
+
   /** maydo: convert negatives to canonical ~0*/
   unsigned operator ++ (int) noexcept {
     return raw++;

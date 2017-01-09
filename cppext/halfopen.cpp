@@ -22,3 +22,9 @@ void Span::leapfrog(unsigned skip){
 void Span::clear(){
   highest=lowest=BadIndex;
 }
+
+void Span::shift(unsigned offset){
+  //NB: Index -= only modifies the Index if is is valid.
+  lowest-=offset;
+  highest-=offset;
+}

@@ -59,7 +59,7 @@ struct ByteScanner : public Indexer<u8> {
   ByteScanner(const ByteScanner &other, int clip = 0);
   //casting constructor, pointer to existing content like a snap().
   ByteScanner(const CharScanner &other);
-
+  ~ByteScanner();
   /**for embedded binary data */
   u16 getU16(u16 def = 0);
   u32 getU24(u32 def = 0);
@@ -71,7 +71,7 @@ struct ByteScanner : public Indexer<u8> {
   bool putU32(unsigned value);
 
   //used internally, but also useful externally
-  bool putBytes(unsigned value, int numBytes);
+  bool putBytes(unsigned value, unsigned numBytes);
   u32 getU(int numBytes, u32 def = 0);
 
   /**had to copy from the base class, couldn't figure out how to cast one template into another.*/
@@ -104,7 +104,7 @@ struct ByteLooker : public Indexer<const u8> {
   u32 getU24(u32 def = 0);
   u32 getU32(u32 def = 0);
 
-  u32 getU(int numBytes, u32 def = 0);
+  u32 getU(unsigned numBytes, u32 def = 0);
 
   /**had to copy from the base class, couldn't figure out how to cast one template into another.*/
   void grab(CharScanner&other){

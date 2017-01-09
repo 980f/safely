@@ -6,7 +6,8 @@
 #include "textkey.h"  //most path elements are fixed text
 //#include "eztypes.h"  //fixed elements of paths
 
-/** build a segment name in an overflow protected buffer, such as for a filename, but that will be an embellishment of this.
+/** @deprecated, see SegmentedName in 'system' lib
+ * build a segment name in an overflow protected buffer, such as for a filename, but that will be an embellishment of this.
  *  this class does not allocate data, you give it via pointer and allocation size.
  * Compared to its Glib partner this one does not implement a default 'root', run the app in chroot with externally set link to tmp
  */

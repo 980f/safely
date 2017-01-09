@@ -44,6 +44,8 @@ struct Span: public HalfOpen<Index> {
   void leapfrog(unsigned skip=1);
   /** set both ends to 'invalid'*/
   void clear();
+  /** subtract a number presumed to be less than the lowest from both that and the highest */
+  void shift(unsigned offset);
 };
 
 #endif // HALFOPEN_H
