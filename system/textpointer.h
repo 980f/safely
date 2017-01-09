@@ -71,7 +71,7 @@ public:
   }
 
   /** discard==free internal content (if any) and null the internal pointer (to prevent use-after-free) */
-  void clear()override;
+  void clear() noexcept override;
 
 }; // class TextPointer
 

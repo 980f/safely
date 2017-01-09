@@ -2,6 +2,7 @@
 #define CSTR_H
 
 #include "textkey.h" //for its utility functions, could migrate those here
+#include "index.h"  //for string search results
 
 /** yet another attempt at safe use of standard C lib str functions.
  *
@@ -38,52 +39,52 @@ public:
 
   /** @returns length, 0 if ptr is null.
    *  not using size_t due to textual analysis of frequency of casts.*/
-  unsigned length() const;
+  unsigned length() const noexcept;
 
   /** @returns whether last character exists and is same as @param isit. an empty string will positively match char(0) */
-  bool endsWith(char isit) const;
+  bool endsWith(char isit) const noexcept;
 
   /** @returns whether @param other exactly matches this' content */
-  bool is(TextKey other) const;
+  bool is(TextKey other) const  noexcept;
 
-  char operator [](unsigned index);
+  char operator [](const Index &index) const noexcept;
 
   /** needed by changed() template function */
-  bool operator !=(TextKey other) const {
+  bool operator !=(TextKey other) const  noexcept{
     return !is(other);
   }
 
   /** needed by changed() template function if we kill the != one*/
-  bool operator ==(TextKey other) const {
+  bool operator ==(TextKey other) const  noexcept{
     return is(other);
   }
 
   /** @returns strcmp treating nullptr's as same as "" */
-  int cmp(TextKey rhs) const;
+  int cmp(TextKey rhs) const noexcept;
 
   /** @returns whether this' content matches @param other for all of the chars of other */
-  bool startsWith(TextKey other) const;
+  bool startsWith(TextKey other) const noexcept;
 
   /** @returns position of first character in this string which matches ch. */
-  int index(char ch) const;
+  Index index(char ch) const noexcept;
 
   /** @returns position of last character in this string which matches ch. */
-  int rindex(char ch) const;
+  Index rindex(char ch) const noexcept;
 
   /** @returns pointer to first character in this string which matches ch.
    * If you know the origin of the string this is pointing to you can dare to const_cast<char *> the value here. */
-  const char *chr(int chr) const;
+  const char *chr(int chr) const noexcept;
 
   /** @returns pointer to first character in this string which matches ch. @see chr() */
-  const char *rchr(int chr) const;
+  const char *rchr(int chr) const noexcept;
 
   /** forget the target */
-  virtual void clear();
+  virtual void clear() noexcept;
 
   /** marker for tedious syntax const_cast<char *>()
    * this should only be used when passing the pointer to old stdlib functions, and only when you have verified the string is null terminated.
    */
-  static char *violate(TextKey violatus){
+  static char *violate(TextKey violatus) noexcept{
     return const_cast<char *>(violatus);
   }
 

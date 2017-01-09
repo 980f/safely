@@ -3,6 +3,7 @@
 
 #include "textpointer.h"
 #include "segmentedname.h"
+#include "converter.h"
 
 namespace PathParser {
 
@@ -19,10 +20,11 @@ struct Rules {
   Rules(char slash='/', bool after = false,bool before = false);
 };
 
+
 /** the pack() functions append the pieces together separated by seperator and conditionally wrapped with seperators.
  * the lead and trailing seperators are only added when requested and when they would not result in a lonely slash
  * IE an empty pathname does NOT become '/'. That is an attempt to preclude 'rm -rf /' */
-Text pack(const SegmentedName &pieces, const Rules &rule=Rules());
+Text pack(const SegmentedName &pieces, const Rules &rule=Rules(), Converter &&converter=Converter());
 ///** pack without leading or trailing slashes */
 //Text pack(const SegmentedName &pieces);
 

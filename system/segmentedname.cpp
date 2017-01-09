@@ -13,23 +13,6 @@ bool SegmentedName::empty() const {
   return quantity()==0;//naive implementation, doesn't deal with trivial entities.
 }
 
-unsigned SegmentedName::contentLength(bool slashu, bool urlesc) const {
-  unsigned total=0;
-
-  for(auto index(indexer());index.hasNext();){
-    auto it(index.next());
-    unsigned length=it.length();
-    if(slashu){
-      length=Utf8Text::encodedLength(it);
-    }
-    if(urlesc){
-      length=UrlText::encodedLength(it);
-    }
-    total += length;
-  }
-  return total;
-}
-
 void SegmentedName::purify(){
   for(auto index(indexer());index.hasNext();){
     if(index.next().empty()){

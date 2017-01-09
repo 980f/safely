@@ -7,8 +7,8 @@ GatedSignal::GatedSignal() :
   doEmit(false){
 }
 
-SimpleSignal::iterator GatedSignal::connect(const SimpleSlot &_slot){
-  return mySignal.connect(_slot);
+SimpleSignal::iterator GatedSignal::connect(const SimpleSlot &slot){
+  return mySignal.connect(slot);
 }
 
 void GatedSignal::send(){

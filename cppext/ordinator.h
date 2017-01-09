@@ -85,7 +85,7 @@ public:
    * @see rewind(void) for complete rewind rather than using a hopefully big enough value.
    * @return this
    */
-  void rewind(unsigned int backup){
+  void rewind(unsigned backup){
     if(backup <= pointer) {
       pointer -= backup;
     } else {
@@ -93,7 +93,7 @@ public:
     }
   }
 
-  void skip(unsigned int amount){
+  void skip(unsigned amount){
     pointer += amount;
     if(pointer > length) {
       pointer = length; //our normal one-past-end state, to make sure multiple skips don't wrap.
@@ -108,7 +108,7 @@ public:
   /** remove at most the given number of items preceding next.
    *  first use is processing escaped chars in a string in buffer.h, probably not much use elsewhere.
    */
-  void remove(unsigned int amount){
+  void remove(unsigned amount){
     if(amount > pointer) {
       amount = pointer;
     }

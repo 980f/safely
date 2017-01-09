@@ -1,19 +1,19 @@
 #include "filename.h"
 #include "charformatter.h"
 
-/** no internal slashes, convert to dash */
-Text escape (const Text &userinput){
-  unsigned len = userinput.length();
-  char workspace[Zguard(len)];
-  workspace[len] = 0;//before we forget.
-  for(unsigned i = 0; i<len; ++i) {
-    workspace[i] = userinput[i];
-    if(workspace[i]=='/') {
-      workspace[i] = '-';
-    }
-  }
-  return Text(workspace);
-} // escape
+///** no internal slashes, convert to dash */
+//Text escape (const Text &userinput){
+//  unsigned len = userinput.length();
+//  char workspace[Zguard(len)];
+//  workspace[len] = 0;//before we forget.
+//  for(unsigned i = 0; i<len; ++i) {
+//    workspace[i] = userinput[i];
+//    if(workspace[i]=='/') {
+//      workspace[i] = '-';
+//    }
+//  }
+//  return Text(workspace);
+//} // escape
 
 FileName::FileName(){
   //assign(root);

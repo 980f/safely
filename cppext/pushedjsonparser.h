@@ -57,17 +57,23 @@ class Parser {
 public: // for error messages
 
   unsigned location;//number of chars total
+  /** number of newelines that have been seen */
   unsigned row;//number of lines, for error messages
+  /** number of bytes inspected since last newline was seen */
   unsigned column;//where in row
 
+  /** parsing is split into token recognition here, and structure definition in the 'Parser' class. */
   Lexer lexer;
 
 public://extended return value
-  /** used to record extent of a parsed token */
 
+  /** whether a name was seen, bounds recorded in 'name'. */
   bool haveName;
+  /** whether the token in progress or previous one if outside a token had qoutes around it. The easiest time to sample it is on an End* event. */
   bool quoted;
+  /** 'location' recorded at start and end of name token */
   Span name;
+  /** 'location' recorded at start and end of value token. Note that a name is first seen as a value, when it is discoverd to be a name then it is copied into 'name' and is reset. */
   Span value;
 
   /**
@@ -79,6 +85,10 @@ public://extended return value
   void itemCompleted();
   /** @param fully is whether to prepare for a new stream, versus just prepare for next item. */
   void reset(bool fully);
+
+  /** subtract the @param offset from all values derived from location, including location.
+   * this is useful when a buffer is reused. */
+  void shift(unsigned offset);
   Parser();
 private:
   void endToken(unsigned mark);

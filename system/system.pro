@@ -39,7 +39,9 @@ SOURCES += \
     runoncenthtime.cpp \
     stored.cpp \
     filename.cpp \
-    urltext.cpp
+    urltext.cpp \
+    utf8transcoder.cpp \
+    utf8converter.cpp
 
 HEADERS += \
     chain.h \
@@ -80,5 +82,7 @@ HEADERS += \
     runoncenthtime.h \
     stored.h \
     filename.h \
-    urltext.h
+    urltext.h \
+    utf8transcoder.h \
+    utf8converter.h
 

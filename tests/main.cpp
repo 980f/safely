@@ -90,13 +90,19 @@ void extremely(){
 
 extern void testJ(unsigned which);
 #include "unicodetester.h"
+#include "numberformatter.h"
 int main(int argc, char *argv[]){
   while(argc-->0) {
     printf("\n%d: %s",argc,argv[argc]);
   }
   fflush(stdout);//without this flush the text above injected itself into testJ's output ...
- UnicodeTester::run();
-  exit(0);
+
+
+  Text puff=NumberFormatter::makeNumber(14.5);
+  printf("NumberFormatter: %s",puff.c_str());
+
+  UnicodeTester::run();
+//  exit(0);
 
   testJ(~0U);
 

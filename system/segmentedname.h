@@ -22,11 +22,6 @@ public:
   void prefix(const Cstr &parent);
   void suffix(const Cstr &child);
 
-  /** sum of lengths of elements, if @param raw just count as is, if not then compute \u escape expansions */
-  unsigned contentLength(bool slashu = false,bool urlesc = false) const;
-  /** total length. seperator length might be 2 if seperating with crlf's or a unicode or url percent sequence */
-//  unsigned mallocLength(unsigned seperatorLength = 1) const;
-
   /** removes trivial path elements */
   void purify();
 
