@@ -1,6 +1,7 @@
 #include "storejson.h"
 #include "filer.h"
 #include "textpointer.h"
+#include "stopwatch.h"
 
 static const char*jsontests[] = {
   "braced1:\"{1}\"",
@@ -81,9 +82,10 @@ void testJson(const char *block,unsigned size){
   Indexer<const char> loaded(block,size);
   Storable *root = nullptr;
   StoredJSONparser parser(loaded,root);
+  StopWatch perftimer;
   bool retval = parser.parse(root);
-
-  dbg("\n JsonParse: returned: %d  nodes:%u  scalars:%u depth:%u\n",retval,parser.totalNodes, parser.totalScalar, parser.maxDepth.extremum);
+  perftimer.stop();
+  dbg("\n JsonParse: after %d ms returned: %d  nodes:%u  scalars:%u depth:%u\n",perftimer.elapsed(), retval,parser.totalNodes, parser.totalScalar, parser.maxDepth.extremum);
 
   if(root) {
     printNode(1,*root);
@@ -99,9 +101,10 @@ void testAbstractly(const char *block,unsigned size){
 
   TAJParser parser(loaded);
 //  dbg("\nJsonPreParse: nodes:%u  scalars:%u depth:%u",parser.stats.totalNodes, parser.stats.totalScalar, parser.stats.maxDepth.extremum);
+  StopWatch perftimer;
   parser.parse();
 
-  dbg("\nJsonParse:  nodes:%u  scalars:%u depth:%u\n",parser.stats.totalNodes, parser.stats.totalScalar, parser.stats.maxDepth.extremum);
+  dbg("\nJsonParse: after %d ms nodes:%u  scalars:%u depth:%u\n",perftimer.elapsed(), parser.stats.totalNodes, parser.stats.totalScalar, parser.stats.maxDepth.extremum);
 
   if(parser.core.root) {
     printNode(1,*parser.core.root);
