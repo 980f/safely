@@ -105,6 +105,7 @@ int main(int argc, char *argv[]){
 //  exit(0);
 
   testJ(BadIndex,true);
+  testJ(BadIndex,false);
 
   DeleteOnExitTestData::testme();
 
