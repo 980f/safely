@@ -38,7 +38,7 @@ Text Utf8Text::decode(Cstr utf8s, Index presized){
     }
   }
   Text retval(Zguard(presized));
-  Utf8ConverterOut dx;
+  Utf8ConverterIn dx;
   Indexer<char>packer(retval.violated(),presized);
   dx(utf8s.c_str(),packer);
   return retval;

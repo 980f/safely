@@ -78,7 +78,7 @@ unsigned Utf8ConverterIn::length(const char *source) const {
       --source;
       //JOIN
     case Utf8Decoder::Done: //uch is utf8 char
-      totes += UTF8::numFollowers(dx.uch) + 1;
+      totes += UTF8::numFollowers(dx.fetch()) + 1;
       break;
     case Utf8Decoder::Plain:
       //todo: c-escapes here
@@ -86,7 +86,7 @@ unsigned Utf8ConverterIn::length(const char *source) const {
       break;
     case Utf8Decoder::End:
       if(dx.uch){//partial last char ...
-        totes += UTF8::numFollowers(dx.uch) + 1;
+        totes += UTF8::numFollowers(dx.fetch()) + 1;
       }
       return totes;
     }
