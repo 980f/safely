@@ -39,6 +39,7 @@ public:
 };
 
 class TAJParser: public AbstractJSONparser<Storable, Text> {
+public: //accessing root when done, should also set it for some usages.
   TestAbstractJsonConstructor core;
 public:
   TAJParser(Indexer<const char> &data);

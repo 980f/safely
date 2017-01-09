@@ -31,9 +31,10 @@ template <typename Storable, typename TextClass> class AbstractJSONparser;//forw
 template <typename Storable, typename TextClass>
 class JsonConstructor {
   friend class AbstractJSONparser<Storable, TextClass>;
-protected:
+public: //needs accessor
   /** parent of all that is parsed. It can be supplied or the insertNewChild must set it when given a null parent */
   Storable *root=nullptr;
+protected:
   /** must supply and track source data, and be able to recover it from values of ordinal */
   virtual bool hasNext(void) = 0;
   virtual char next(void) = 0;
@@ -73,6 +74,10 @@ protected:
       TextClass name(parser.haveName?data.extract(parser.name):"");
       TextClass value(data.extract(parser.value));
       nova=data.insertNewChild(parent,name,haveValue,value,parser.quoted);
+      ++stats.totalNodes;
+      if(haveValue){
+        ++stats.totalScalar;
+      }
     }
     parser.itemCompleted();//ensure we don't reuse old data on next item.
     return nova;
