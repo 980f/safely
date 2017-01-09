@@ -5,6 +5,7 @@
  * See StoredJSONParser for a user.
  *
  * It is very tolerant, especially of missing quotes around names and text values.
+ * It does not interpret data values, it leaves them as strings as it doesn't actually retain the string in any sense.
  */
 #include "halfopen.h"
 #include "cheaptricks.h"
@@ -56,11 +57,23 @@ public:
 class Parser {
 public: // for error messages
 
-  unsigned location;//number of chars total
+  struct Diag {
+    unsigned location=0;//number of chars total
   /** number of newelines that have been seen */
-  unsigned row;//number of lines, for error messages
+    unsigned row=0;//number of lines, for error messages
   /** number of bytes inspected since last newline was seen */
-  unsigned column;//where in row
+    unsigned column=0;//where in row
+  //last char examined, retained for error messages
+    char last=0;
+
+    void reset(){
+      location = 0;
+      row = 0;
+      column = 0;
+      last=0;
+    }
+
+  } d;
 
   /** parsing is split into token recognition here, and structure definition in the 'Parser' class. */
   Lexer lexer;
@@ -87,7 +100,7 @@ public://extended return value
   void reset(bool fully);
 
   /** subtract the @param offset from all values derived from location, including location.
-   * this is useful when a buffer is reused. */
+   * this is useful when a buffer is reused, such as in reading a file a line at a time. */
   void shift(unsigned offset);
   Parser();
 private:

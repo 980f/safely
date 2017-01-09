@@ -137,12 +137,13 @@ void Lexer::reset(){
 }
 
 Action Parser::next(char pushed){
-  unsigned mark = location++;//increment before we dig deep lest we forget given the multiple returns.
+  d.last=pushed;
+  unsigned mark = d.location++;//increment before we dig deep lest we forget given the multiple returns.
   if(pushed=='\n') {
-    column = 0;
-    ++row;
+    d.column = 0;
+    ++d.row;
   } else {
-    ++column;
+    ++d.column;
   }
 
   switch (lexer.next(pushed)) {
@@ -197,17 +198,18 @@ void Parser::reset(bool fully){
   itemCompleted();
 
   if(fully) {
-    location = 0;
-    row = 0;
-    column = 0;
+    d.location = 0;
+    d.row = 0;
+    d.column = 0;
+    d.last=0;
   }
 }
 
 void Parser::shift(unsigned offset){
-  column=location-offset;//only correct for normal use cases
+  d.column=d.location-offset;//only correct for normal use cases
   name.shift(offset);
   value.shift(offset);
-  location-=offset;
+  d.location-=offset;
 }
 
 Parser::Parser(){

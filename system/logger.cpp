@@ -9,6 +9,7 @@
 #include <execinfo.h>
 #include <iostream>
 #include <math.h>
+#include "textkey.h"
 
 //stderr or stdout.
 #define stout stderr
@@ -28,7 +29,7 @@ Logger::~Logger(){
 }
 
 void show(FILE * stdf,const char *prefix,const char *msg,va_list &args){
-  if(prefix) {
+  if(nonTrivial(prefix)) {
     fputs(prefix,stdf);
     fputs("::",stdf);
   }

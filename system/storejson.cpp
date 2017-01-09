@@ -82,7 +82,7 @@ bool StoredJSONparser::parseChild(Storable *parent){
       return false;
 
     case Illegal: //unexpected char
-      wtf("Bad char 0x%02X at row:%u, col:%u, offset:%u(?=%u)",data.previous(),parser.row,parser.column,parser.location,data.ordinal());
+      wtf("Bad char 0x%02X at row:%u, col:%u, offset:%u",parser.d.last,parser.d.row,parser.d.column,parser.d.location);
       break;
     default:
       break;//to stifle warnings
