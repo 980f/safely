@@ -88,7 +88,7 @@ void extremely(){
 
 } // extremely
 
-extern void testJ(unsigned which);
+extern void testJ(unsigned which,bool newer);
 #include "unicodetester.h"
 #include "numberformatter.h"
 int main(int argc, char *argv[]){
@@ -96,15 +96,15 @@ int main(int argc, char *argv[]){
     printf("\n%d: %s",argc,argv[argc]);
   }
   fflush(stdout);//without this flush the text above injected itself into testJ's output ...
-
+  extremely();
 
   Text puff=NumberFormatter::makeNumber(14.5);
-  printf("NumberFormatter: %s",puff.c_str());
+  printf("\nNumberFormatter: %s",puff.c_str());
 
   UnicodeTester::run();
 //  exit(0);
 
-  testJ(~0U);
+  testJ(BadIndex,true);
 
   DeleteOnExitTestData::testme();
 
@@ -114,7 +114,6 @@ int main(int argc, char *argv[]){
   coe(coedata);
   printf("\ncoe: %d should be 0",coedata);
 
-  extremely();
   printf("\ntests completed \n");
   return 0;
 } // main

@@ -87,18 +87,41 @@ void testJson(const char *block,unsigned size){
 
   if(root) {
     printNode(~0,*root);
-    fflush(stdout);  //to show up in debugger before app terminates.
+//    fflush(stdout);  //to show up in debugger before app terminates.
   }
 }   // testJson
 
-void testJ(unsigned which){
+#include "testabstractjsonparser.h"
+
+void testAbstractly(const char *block,unsigned size){
+  dbg("\nJabstract: testing: %s",block);
+  Indexer<const char> loaded(block,size);
+  Storable *root = nullptr;
+
+  TAJParser parser(loaded);
+  dbg("\nJsonPreParse: nodes:%u  scalars:%u depth:%u",parser.stats.totalNodes, parser.stats.totalScalar, parser.stats.maxDepth.extremum);
+  parser.parse();
+
+  dbg("\nJsonParse:  nodes:%u  scalars:%u depth:%u",parser.stats.totalNodes, parser.stats.totalScalar, parser.stats.maxDepth.extremum);
+
+  if(root) {
+    printNode(~0,*root);
+//    fflush(stdout);  //to show up in debugger before app terminates.
+  }
+}   // testJson
+
+
+void testJ(unsigned which,bool newer){
   if(Index(which).isValid()) {
     Cstr test(jsontests[which]);
-    testJson(test.c_str(),test.length());
-  } else {
-    for(int which = countof(jsontests); which-->0; ) {
-      Cstr test(jsontests[which]);
+    if(newer){
+      testAbstractly(test.c_str(),test.length());
+    } else {
       testJson(test.c_str(),test.length());
+    }
+  } else {
+    for(int which = countof(jsontests); which-->0; ) {      
+      testJ(which,newer);
     }
   }
 }   // testJ

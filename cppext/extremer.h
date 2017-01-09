@@ -10,7 +10,7 @@
 
 /** negatory is whether we are seeking smallest else largest
  */
-template<typename Scalar,bool negatory=false> class SimpleExtremer {
+template<typename Scalar,bool negatory=false,bool preferLatter=false> class SimpleExtremer {
 public: //for convenience.
 /** whether any data has been inspected (else location and extremum are not valid)
  * This is easier than trying to come up with a type independent initial value of extremum.
@@ -19,16 +19,30 @@ public: //for convenience.
 public: //could make this read-only
   Scalar extremum;
 public:
+
   /** @returns whether the extremum was updated */
   bool inspect(const Scalar&value){
     if(started) {
+//if preferLatter we want '=' to fall through and return true, not return false
       if(negatory){
-        if(extremum<value){
-          return false;
+        if (preferLatter){
+          if(extremum<value){
+            return false;
+          }
+        } else {
+          if(extremum<=value){
+            return  false;
+          }
         }
       } else {
-        if(extremum> value) {
-          return false;
+        if (preferLatter){
+          if(value<extremum){
+            return false;
+          }
+        } else {
+          if(value<=extremum){
+            return  false;
+          }
         }
       }
     } else {
@@ -38,53 +52,36 @@ public:
     return true;
   } // inspect
 
+  /** to reuse */
+  void reset(){
+    started=false;
+    extremum=0;//for debug
+  }
 }; // class Extremer
 
 /** negatory is whether we are seeking smallest else largest
  * preferLatter is how to deal with ties between new value and reigning champion, whether to have the latest one take the crown.
  */
-template<typename Scalar,bool negatory=false,bool preferLatter=false> class Extremer {
-public: //for convenience.
-/** whether any data has been inspected (else location and extremum are not valid)
- * This is easier than trying to come up with a initial value of extremum.
-*/
-  bool started=false;
+template<typename Scalar,bool negatory=false,bool preferLatter=false> class Extremer: public SimpleExtremer<Scalar,negatory,preferLatter> {
+  typedef SimpleExtremer<Scalar,negatory,preferLatter> Simple;//compiler would NOT recognize the base class references without this aid.
 public: //could make these read-only
   int location=~0;//default for debug
-  Scalar extremum;
+
 public:
   /** @returns whether the extremum or location was updated */
   bool inspect(int loc,const Scalar&value){
-    if(started) {
-      if(negatory){
-        if(extremum<value){
-          return false;
-        }
-      } else {
-        if(extremum> value) {
-          return false;
-        }
-      }
-
-      if(extremum==value) {
-        if(preferLatter) {
-          if(loc<location){
-            return false;
-          }
-        } else {
-          if(loc> location) {//then check index, same index is moot.
-            return false;
-          }
-        }
-      }
+    if(Simple::inspect(value)){
+      location = loc;
+      return true;
     } else {
-      started = true;
+      return false;
     }
-    extremum = value;
-    location = loc;
-    return true;
   } // inspect
 
+  void reset(){
+    location=~0;
+    Simple::reset();
+  }
 }; // class Extremer
 
 //prebuild the common ones:

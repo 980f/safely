@@ -49,7 +49,8 @@ SOURCES += argset.cpp \
     halfopen.cpp \
     char.cpp \
     block.cpp \
-    converter.cpp
+    converter.cpp \
+    abstractjsonparser.cpp
 
 HEADERS += safely.h \
     argset.h \
@@ -116,4 +117,5 @@ HEADERS += safely.h \
     char.h \
     index.h \
     block.h \
-    converter.h
+    converter.h \
+    abstractjsonparser.h
