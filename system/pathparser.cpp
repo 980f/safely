@@ -23,7 +23,7 @@ Text PathParser::pack(const SegmentedName &pieces, const Rules &rule, Converter 
   CharFormatter packer(path,bytesNeeded);
   auto feeder(pieces.indexer());
   while (feeder.hasNext()) {
-    if(packer.ordinal()>0 || rule.before){//if not first or if put before first
+    if(feeder.ordinal()>0 || rule.before){//if not first or if put before first
       packer.next() = rule.slash;
     }
     converter(feeder.next(),packer);
@@ -44,24 +44,22 @@ Rules PathParser::parseInto(SegmentedName &pieces, const Text &packed, char sepe
   Rules bracket(seperator,false,false);
   Indexer<const char> scan( packed.c_str(),packed.length());
 
-  Span cutter;
+  Text::Chunker cutter(packed);
   if(scan.hasNext()&&scan.peek()==seperator){//if begins with seperator
     bracket.before=true;
     scan.next();
-    cutter.lowest=scan.ordinal();//
-  } else {
-    cutter.lowest=0;
-  }//cutter.highest is still invalid
+  }
+  cutter.lowest=scan.ordinal();//
+  //cutter.highest is still invalid
 
   while(scan.hasNext()) {
     if(scan.next()==seperator) {
       cutter.highest=scan.ordinal();//halfopen interval is nice here.
       if(cutter.empty()){
         //adjacent seperators are as if they are one
-        cutter.lowest+=1;
+        cutter.lowest+=1;//which has a side effect of making it invalid, which is good
       } else {
-        pieces.suffix(Text(scan.internalBuffer(),cutter));
-        cutter.leapfrog(1);
+        pieces.suffix(cutter(1/*next chunk starts past the seperator*/));
       }
     }
   }
@@ -71,7 +69,7 @@ Rules PathParser::parseInto(SegmentedName &pieces, const Text &packed, char sepe
     if(cutter.empty()){
       bracket.after=true;
     } else {
-      pieces.suffix(Text(scan.internalBuffer(),cutter));
+      pieces.suffix(cutter(0));
     }
   }
   return bracket;
