@@ -73,6 +73,16 @@ public:
   /** discard==free internal content (if any) and null the internal pointer (to prevent use-after-free) */
   void clear() noexcept override;
 
+
+  class Chunker:public Span {
+    Cstr base;
+  public:
+    Chunker (const char*start);
+    /** pass back a copy of the substring defined by the cutter, and move the cutter @param leap past that */
+    Text operator() (unsigned leap);
+  };
+
+
 }; // class TextPointer
 
 #endif // TEXTPOINTER_H
