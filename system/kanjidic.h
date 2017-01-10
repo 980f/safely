@@ -6,7 +6,7 @@
  *  Depending upon speed we will cache that map in a file.
  */
 
-#include "ustring.h"  //unicode string used by our text editor
+#include "textpointer.h"  //unicode string used by our text editor
 
 /** which  Kanji subset to scan for possible */
 enum CJK {
@@ -25,12 +25,12 @@ public:
   /** @deprecated, most frequent cases have multiple candidates
    * @return single result for hiragana string, sets length to how much of the trailing part of @param hiraganaFragment was actually
    * part of the name (may drop this if we choose a strict lookup)*/
-  static Unichar charFor(const Ustring &hiraganaFragment, int &);
+  static Unichar charFor(const Text &hiraganaFragment, int &);
 
   /** @returns fresh listing of kanji whose @param reading is @param name.
    * Someday might chose to do 'startsWith'
-   * could dangerously pass back a reference to a shared string, but would have to touch Storable class to do so. */
-  static Ustring candidates(const Ustring &name,CJK nameset);
+   * */
+  static Text candidates(const Text &name,CJK nameset);
 
   /** factory access to guts of kanji tables*/
   static Storable &debugNode();
