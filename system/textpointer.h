@@ -27,8 +27,8 @@ public:
   /** calloc's a block of data. */
   Text(unsigned size);
 
-  /** take contents of @param other, hence other cannot be const as we null its pointer lest we get a double-free */
-  Text(Text &other);
+//  /** take contents of @param other, hence other cannot be const as we null its pointer lest we get a double-free */
+//  Text(Text &other);
 
   /** enforce that a const can't have its resource taken away from it. */
   Text(const Text &other)=delete ;
