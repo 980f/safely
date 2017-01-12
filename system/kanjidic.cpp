@@ -4,33 +4,23 @@
 #include "storednumeric.h"
 
 #include "safely.h"
-#include "l10n.h" //for options that must persist when this guy's artfile is lost.
+//#include "l10n.h" //for options that must persist when this guy's artfile is lost.
 #include "range.h"
 
 #include "chainsorter.h"    //for unihan filtering
-#include "ctype.h"
+#include "char.h"
 /**
  *  lookup list of kanji unicodes given hiragana or pinyin string.
  *  the kanji's are not unique, nor are the text keys.
  */
 
-//simpleminded ascii to hex digit
-static int hexValue(char hexchar){
-  if(hexchar>='a') {
-    return hexchar - 'a' + 10;
-  }
-  if(hexchar>='A') {
-    return hexchar - 'A' + 10;
-  }
-  return hexchar - '0';
-}
 
 /** parse 4 hex digits as unsigned integer, moving @param mark textpointer past last hex digit*/
 static Unichar parse4hex(const char *&mark){
   Unichar kanjiuni(0);
-  while(*mark&&!isspace(*mark)) {
+  while(Char ch=*mark++ &&!ch.isWhite()) {
     kanjiuni *= 16;
-    kanjiuni += hexValue(*mark++);
+    kanjiuni += ch.hexDigit();
   }
   return kanjiuni;
 }
@@ -85,8 +75,8 @@ struct KanjiLookup : public ArtFile {
     Storable &index(set.child(textkey));
     index.setType(Storable::Textual);//todo:1 add to storable a setting for 'type for new children'
     //# Storable does not offer a reference into its image as it is designed to notify on changes. A reference access to its values would break that contract.
-    Glib::ustring readings(index.image());
-    if(readings.find(kanjicode)==Glib::ustring::npos) {
+    Text readings=index.image();
+    if(readings.find(kanjicode)==BadIndex) {
       readings.append(1,kanjicode);
       index.setImage(readings);
     } else {
@@ -147,7 +137,7 @@ struct KanjiLookup : public ArtFile {
 
   /** @returns a utf8 string for a set of euc-jp characters (jis-208) stopping at either end-of-string OR a period.
    *@deprecated limited for use in this module, see single char translators for details.*/
-  static Glib::ustring euc2unis(const char* eucp,int length){
+  static Text euc2unis(const char* eucp,int length){
     Glib::ustring utf8;
     utf8.reserve(length / 2);//length is odd only when some non-jis 208 punctuation is present, in which case we stop early
     while(*eucp && length-->0) {//length is guard against failure to null terminate string

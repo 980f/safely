@@ -103,3 +103,14 @@ void Text::clear() noexcept {
   free(violate(ptr));
   release();
 }
+/////////////////
+
+Text::Chunker::Chunker(const char *start):base(start){
+  //#nada
+}
+
+Text Text::Chunker::operator()(unsigned leap){
+  Text piece (base,*this);
+  leapfrog(leap);
+  return piece;
+}
