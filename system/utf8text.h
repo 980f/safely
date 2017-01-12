@@ -2,7 +2,7 @@
 #define UTF8TEXT_H
 
 #include "textpointer.h"
-
+#include "index.h"
 
 /** encode and decode \\u and c-escapes, using Text class*/
 namespace Utf8Text {
@@ -13,6 +13,6 @@ namespace Utf8Text {
   Index encodedLength(Cstr utf8s);
   /** @returns the number of bytes needed for the string if \uxxxx etc are converted to utf8 */
   Index decodedLength(Cstr utf8s);
-};
+}
 
 #endif // UTF8TEXT_H

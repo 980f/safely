@@ -27,8 +27,8 @@ public:
   /** calloc's a block of data. */
   Text(unsigned size);
 
-  /** take contents of @param other, hence other cannot be const as we null its pointer lest we get a double-free */
-  Text(Text &other);
+//  /** take contents of @param other, hence other cannot be const as we null its pointer lest we get a double-free */
+//  Text(Text &other);
 
   /** enforce that a const can't have its resource taken away from it. */
   Text(const Text &other)=delete ;
@@ -72,6 +72,16 @@ public:
 
   /** discard==free internal content (if any) and null the internal pointer (to prevent use-after-free) */
   void clear() noexcept override;
+
+
+  class Chunker:public Span {
+    Cstr base;
+  public:
+    Chunker (const char*start);
+    /** pass back a copy of the substring defined by the cutter, and move the cutter @param leap past that */
+    Text operator() (unsigned leap);
+  };
+
 
 }; // class TextPointer
 

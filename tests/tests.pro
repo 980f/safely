@@ -13,8 +13,10 @@ include("../posix/lib.pro")
 SOURCES += main.cpp \
     jsontests.cpp \
     unicodetester.cpp \
-    testabstractjsonparser.cpp
+    testabstractjsonparser.cpp \
+    testpathparser.cpp
 
 HEADERS += \
     unicodetester.h \
-    testabstractjsonparser.h
+    testabstractjsonparser.h \
+    testpathparser.h
