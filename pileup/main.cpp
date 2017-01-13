@@ -4,27 +4,31 @@
 
 class CounterIsr {
 public:
-  double quantum;//1 osc MHz
+  double quantum;//processor clock rate,  1 / Hz
   /** time from event to isr acknowledges it*/
   unsigned latency;
 /** time from event to can interrupt again */
   unsigned cycle;
 
+  /** stats on events converted and lost */
   unsigned events=0;
   unsigned rejected=0;
   unsigned detected=0;
 
+  /** whether a count will generate an interrupt soon*/
   unsigned deferred=0;
 
+  /** time left in period between last event and isr acknowldege, computed from latency */
   double vectoring=0;
+
+  /** time left in period between last event and isr return/can interrupt again, computed from cycle */
   double storing=0;
-  double restarting=0;
 
   CounterIsr(unsigned latency=32, unsigned cycle=70,double MHz=96.0):
     quantum(1e-6/MHz),
     latency(latency),
     cycle(cycle){
-
+    //#nada
   }
 
   /** event is latched in irq stuff, but not evaluted yet */
@@ -37,25 +41,26 @@ public:
     }
   }
 
+  /** event lost */
   void lost(){
     ++events;
     ++rejected;
   }
 
-  void detect(bool clean){
+  void detect(){
     ++events;
-    if(clean){
-      ++detected;
-    }
-    detected+=deferred;
+    ++detected; //one for the event that triggered the isr
+    detected+=deferred; //and a retriggered one
     deferred=0;
   }
 
+  /** compute timers */
   void trigger(){
     vectoring=quantum*latency;
     storing=quantum*cycle;
   }
 
+  /** feed this the time since previous event */
   void next(double event){
     if(vectoring>0){
       if(event<vectoring){//occured before ack of previous
@@ -83,7 +88,7 @@ public:
       storing=0;
     }
 
-    detect(true);
+    detect();
     trigger();
   }
 
@@ -92,24 +97,42 @@ public:
   }
 
   double liveness()const{
-    return rate(detected,events);
+    return ratio(100.0f*detected,events);
   }
 
+  /** should be zero if code is correct */
   int sanitycheck()const{
     return rejected+detected-events;
   }
 };
 
+class PoissonFeeder {
+  //random number generation sogn and dance:
+  std::random_device randomSource;
+  std::mt19937 uniform;
+  std::exponential_distribution<double> generator;
 
-using namespace std;
+public:
+  PoissonFeeder(double cps):
+    uniform (randomSource()),
+    generator(cps){
+    //#nada
+  }
 
-int main(int argc, char *argv[])
-{
+  double operator()(){
+    return generator(uniform);
+  }
+
+};
+
+//using namespace std;
+
+int main(int argc, char *argv[]){
   double cps=10000;
   unsigned latency=32;
   unsigned cycle=70;
   double MHz=96.0;
-  cout << "\nEstimate Isr pileup" << endl;
+  printf("\nEstimate Isr pileup");
   while(argc-->0){
     double arg=atof(argv[argc]);
     switch (argc) {
@@ -127,18 +150,16 @@ int main(int argc, char *argv[])
       break;
     }
   }
+
+
   CounterIsr sim(latency,cycle,MHz);
-
-  std::random_device rd;
-  std::mt19937 rnd_gen (rd ());
-
-//  uniform_real_distribution<double> uniform(0.0,1.0);
-  exponential_distribution<double> generator(cps);//ratio(1.0,cps));
+  PoissonFeeder pfeeder(cps);
 
   printf("\nArguments: cps:%g latency:%u  cycle:%u osc:%g ",cps,latency,cycle,MHz);
 
+  /** run simulation */
   for(int trials=10000; trials-->0;){
-    double randy=generator(rnd_gen);
+    double randy=pfeeder();
     sim.next(randy);
   }
 
