@@ -106,26 +106,7 @@ public:
   }
 };
 
-class PoissonFeeder {
-  //random number generation sogn and dance:
-  std::random_device randomSource;
-  std::mt19937 uniform;
-  std::exponential_distribution<double> generator;
-
-public:
-  PoissonFeeder(double cps):
-    uniform (randomSource()),
-    generator(cps){
-    //#nada
-  }
-
-  double operator()(){
-    return generator(uniform);
-  }
-
-};
-
-//using namespace std;
+#include "poissonfeeder.h"
 
 int main(int argc, char *argv[]){
   double cps=10000;
