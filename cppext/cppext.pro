@@ -50,7 +50,9 @@ SOURCES += argset.cpp \
     char.cpp \
     block.cpp \
     converter.cpp \
-    abstractjsonparser.cpp
+    abstractjsonparser.cpp \
+    poissonfeeder.cpp
+
 
 HEADERS += safely.h \
     argset.h \
@@ -118,4 +120,5 @@ HEADERS += safely.h \
     index.h \
     block.h \
     converter.h \
-    abstractjsonparser.h
+    abstractjsonparser.h \
+    poissonfeeder.h
