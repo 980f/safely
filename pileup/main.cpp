@@ -73,11 +73,14 @@ public:
         defer();
         return;
       }
-      //at event-storing we started vectoring again
-      event-=storing;
-      trigger();
-      next(event);//recurse at most once or twice
-      return;
+      if(event<storing+quantum*cycle){//still interacting with previous cycle
+        //at event-storing we started vectoring again
+        event-=storing;
+        trigger();
+        next(event);//recurse at most once or twice
+        return;
+      }
+      storing=0;
     }
 
     detect(true);
@@ -85,7 +88,7 @@ public:
   }
 
   double deadness()const{
-    return rate(rejected,events);
+    return ratio(100.0f*rejected,events);
   }
 
   double liveness()const{
@@ -130,14 +133,16 @@ int main(int argc, char *argv[])
   std::mt19937 rnd_gen (rd ());
 
 //  uniform_real_distribution<double> uniform(0.0,1.0);
-  exponential_distribution<double> generator(ratio(1.0,cps));
+  exponential_distribution<double> generator(cps);//ratio(1.0,cps));
 
   printf("\nArguments: cps:%g latency:%u  cycle:%u osc:%g ",cps,latency,cycle,MHz);
-  for(int trials=100; trials-->0;){
+
+  for(int trials=10000; trials-->0;){
     double randy=generator(rnd_gen);
     sim.next(randy);
   }
 
   printf("\nAfter %u trials dead time was %g%% ",sim.events,sim.deadness());
+  printf("\nRaw counts: %u %u %u \n",sim.events,sim.detected,sim.rejected);
   return 0;
 }
