@@ -1,6 +1,6 @@
 #include "settable.h"
 
-bool Settable::blockCheck(Settable &desired){
+bool Settable::blockCheck(Settable &desired) const{
   return differs(desired);
 }
 
@@ -23,7 +23,11 @@ void Settable::copy(const Settable &other){
   this->setParams(args);
 }
 
-bool Settable::differed(const Settable &other){
+bool Settable::changed(const Settable &other){
   copy(other);
   return wasModified();
+}
+
+Settable::~Settable(){
+  //#nada
 }
