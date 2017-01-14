@@ -1,6 +1,5 @@
 #ifndef CHAINED_H
 #define CHAINED_H
-//this class is not useful, it needs removes, and options to delete the removed items.
 
 /** usage:
  *  this is only appropriate if the semantics of the class are such that
@@ -11,10 +10,11 @@
  *  }
  *
  */
-template<typename T> class Chainer;
+
+//template<typename T> class Chainer;
 template<typename T> class Chained {
-  friend class Chainer<T>;
-protected:
+//  friend class Chainer<T>;
+//protected:
 public://for SettingsGrouper::init
   T* peer;
 protected:
@@ -22,47 +22,74 @@ protected:
     peer = 0;
   }
 
-public: //because it is also popular to contain a list as well as to be one.
-  /** @return @param newbie after appending it to chain.*/
+public:
+  /** @returns @param newbie after appending it to chain.*/
   T* append(T* newbie){
-    if(peer==0) {//often is the first as pairs as the  most common list
-      return peer = newbie;//it is a violation of contract for newbie's peer to not be null.
-    }
-    T* scan = peer;
-    while(scan!=newbie && scan->peer!=0) {//1st clause handles a user bug.
+    Chained<T>* scan = this;
+    while(scan!=newbie && scan->peer!=0) {
       scan = scan->peer;
     }
-    return scan->peer = newbie;
+    if(scan!=newbie){
+      scan->peer = newbie;
+    }
+    return newbie;
   }
 
   /** nth peer, 0th is peer of @this. @return null is there aren't n links in this Chained */
   T* nth(int which) const {
 #if 0    //tail recursive version:
-    if(which-->0) {
-      return peer.nth(which);
-    }
-    return peer;
+    return (which-->0)?peer.nth(which):peer;
 #else
-    T* scan = peer; //0th element
+    Chained<T>* scan = peer; //0th element
     while(which-->0 && scan) {
-      scan = scan.peer;
+      scan = scan->peer;
     }
     return scan;
 #endif
   } // nth
 
-  T* remove(T* moriturus){
-    return nullptr;
+  /** @returns @param moriturus after removing it from this list (if present).
+   * Returning moriturus (latin for 'about to die') allows the decision as to whether to delete the item to be made by someone else.
+ */
+  virtual Chained<T>* remove(Chained<T>* moriturus){
+    if(moriturus==nullptr || moriturus==this){
+      return nullptr;//can't remove ourself
+    }
+    for(Chained<T>* scan = this; scan->peer ; scan=scan->peer){
+      if(moriturus==scan->peer){
+        scan->peer=moriturus->peer;
+        moriturus->peer=nullptr;
+        break;
+      }
+    }
+    return moriturus;
   }
 
 }; // class Chained
 
+template<typename T> class ChainedAnchor:public Chained<T> {
+  const bool isOwner;
+public:
+
+  ChainedAnchor(T *root, bool isOwner=true):isOwner(isOwner){
+    Chained<T>::peer=root;
+  }
+
+  T* remove(T* moriturus)override{
+    if( Chained<T>::remove(moriturus)){
+      if(isOwner){
+        delete moriturus;
+      }
+    }
+  }
+
+};
 
 #include "sequence.h"
 /**
  *  only T:Chained<T> will work here.
  */
-template<typename T> class Chainer : public Sequence<T> {
+template<typename T> class Chainer : public Sequence<Chained<T>> {
   Chained<T>* cursor;
 public:
   Chainer(Chained<T> *obj){
@@ -73,8 +100,8 @@ public:
     return cursor!=0;
   }
 
-  T& next(){
-    T* current = static_cast<T*>(cursor);
+  Chained<T>& next(){
+    Chained<T>* current = cursor;
     cursor = cursor->peer;
     return *current;
   }

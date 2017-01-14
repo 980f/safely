@@ -93,7 +93,7 @@ bool HasSettings::parseArgstring(ArgSet &args, CharFormatter &p){
     } else {
       return false; //stop parse on invalid input
     }
-    u8 ascii = p.next(0);
+    char ascii = p.next(0);
     switch(ascii) {
     case ',':
       continue;
