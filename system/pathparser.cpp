@@ -46,6 +46,9 @@ Rules PathParser::parseInto(SegmentedName &pieces, const Text &packed, char sepe
   if(scan.hasNext()&&scan.peek()==seperator){//if begins with seperator
     bracket.before=true;
     scan.next();
+    if(!scan.hasNext()){//solitary slash was reporting both before and after slashing
+      return bracket;//exiting early here gives us pre, not post, no pieces.
+    }
   }
   cutter.lowest=scan.ordinal();//
   //cutter.highest is still invalid
@@ -70,8 +73,8 @@ Rules PathParser::parseInto(SegmentedName &pieces, const Text &packed, char sepe
       pieces.suffix(cutter(0));
     }
   } else {
-    //if (cutter.lowest==span.length), which it always did so we quit testing.
-    bracket.after=true;
+    //if (cutter.lowest==span.length), but not if empty string
+    bracket.after=scan.ordinal()>0;
   }
   return bracket;
 } // PathParser::parseInto
