@@ -9,7 +9,13 @@ void TestPathParser::parse(const char *rawpath,char sep){
   rules=PathParser::parseInto(path,rawpath,sep);
 }
 
+Text TestPathParser::pack(){
+  return PathParser::pack(path,rules);
+}
+
 const char *testdata[]={
+  "/",
+  "",
   "/this/is/a//stupider/path/",
   "/this/is/a/path",
   "/rootdir/",
@@ -27,6 +33,10 @@ void TestPathParser::run(unsigned which){
     for(auto list(ppt.path.indexer());list.hasNext();){
       dbg("\t%s",list.next().c_str());
     }
+
+    Text canonical(ppt.pack());
+    dbg("\tCanonical:%s",canonical.c_str());
+
   } else {
     for(which=countof(testdata);which-->0;){
       run(which);
