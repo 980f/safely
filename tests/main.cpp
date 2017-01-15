@@ -5,6 +5,7 @@
 #include <initializer_list>  //for inline test data sets
 
 #include "safestr.h"
+#include "logger.h"
 
 SafeStr<14> fortnight;
 
@@ -95,11 +96,11 @@ extern void testJ(unsigned which,bool newer);
 
 int main(int argc, char *argv[]){
   while(argc-->0) {
-    printf("\n%d: %s",argc,argv[argc]);
+    dbg("%d: %s",argc,argv[argc]);
   }
   fflush(stdout);//without this flush the text above injected itself into testJ's output ...
 
-  TestPathParser::run();
+  TestPathParser::run(0);
   exit(0);
 
   extremely();

@@ -54,7 +54,7 @@ Rules PathParser::parseInto(SegmentedName &pieces, const Text &packed, char sepe
 
   while(scan.hasNext()) {
     if(scan.next()==seperator) {
-      cutter.highest=scan.ordinal();//halfopen interval is nice here.
+      cutter.highest=scan.ordinal()-1;
       if(cutter.empty()){
         //adjacent seperators are as if they are one
         cutter.lowest+=1;//which has a side effect of making it invalid, which is good
@@ -65,12 +65,15 @@ Rules PathParser::parseInto(SegmentedName &pieces, const Text &packed, char sepe
   }
   //the following is suspect
   if(scan.contains(cutter.lowest)){
-    cutter.highest=scan.ordinal();//halfopen interval is nice here.
+    cutter.highest=scan.ordinal();
     if(cutter.empty()){
       bracket.after=true;
     } else {
       pieces.suffix(cutter(0));
     }
+  } else {
+    //if (cutter.lowest==span.length), which it always did so we quit testing.
+    bracket.after=true;
   }
   return bracket;
 } // PathParser::parseInto
