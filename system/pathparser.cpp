@@ -20,9 +20,9 @@ Text PathParser::pack(const SegmentedName &pieces, const Rules &rule, Converter 
   }
 
   char *path(static_cast<char *>( malloc(Zguard(bytesNeeded))));//@DEL when returned Text object is deleted
+  path[bytesNeeded]=0;//null terminate since we didn't pre-emptively calloc.
   CharFormatter packer(path,bytesNeeded);
-  auto feeder(pieces.indexer());
-  while (feeder.hasNext()) {
+  for(auto feeder(pieces.indexer());feeder.hasNext();) {
     if(feeder.ordinal()>0 || rule.before){//if not first or if put before first
       packer.next() = rule.slash;
     }
@@ -31,14 +31,12 @@ Text PathParser::pack(const SegmentedName &pieces, const Rules &rule, Converter 
   if(rule.after && packer.used()>0) {//only append trailing slash if there is something ahead of it
     packer.next() = rule.slash;
   }
+  //and in case we overestimated the length needed:
   packer.printChar(0);//null terminate since we didn't pre-emptively calloc.
 
   return Text(path);//when you destroy the Text the data malloc'd above is freed
 }
 
-//Text PathParser::pack(const SegmentedName &pieces, char seperator){
-//  return PathParser::pack(pieces,seperator,Rules());
-//}
 
 Rules PathParser::parseInto(SegmentedName &pieces, const Text &packed, char seperator){
   Rules bracket(seperator,false,false);

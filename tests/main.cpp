@@ -100,7 +100,7 @@ int main(int argc, char *argv[]){
   }
   fflush(stdout);//without this flush the text above injected itself into testJ's output ...
 
-  TestPathParser::run(0);
+  TestPathParser::run(~0);
   exit(0);
 
   extremely();
