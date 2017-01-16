@@ -9,6 +9,7 @@
 #include "filename.h"
 
 
+
 Filer::Filer(){
   buffer = 0;
 }
@@ -27,7 +28,7 @@ bool Filer::mkDirDashP(const char *path, bool itsparent){
   if(dirpath.empty()) { //empty is not the same as '/', and even if it were we won't allow ourselves to create '/', ain't meaningful AFAIK
     return false;
   }
-  Text normalized=dirpath.pack();
+  Text normalized=dirpath.pack(FileNameConverter());
   if(mkdir(normalized.c_str(), 0777) == 0) {
     return true;
   }
@@ -111,7 +112,7 @@ bool Filer::cp(const char *src, const char *target, bool dashf, bool dashr){
   } else if(dashr) {
     command.suffix("-r");
   }
-  command.suffix(from.pack());
+  command.suffix(from.pack(FileNameConverter()));
   command.suffix(to.pack());
 
   if(int arf = system(PathParser::pack(command,' '))) {//posixwrap
@@ -135,7 +136,7 @@ int Filer::rm(const char *name, bool dashf, bool dashr){
       if(dashr) {
         command.suffix("-r");
       }
-      command.transfer(full);
+      command.suffix(full.pack().c_str());
       return system(PathParser::pack(command,' '));
     } else { //do it the simple way
       return remove(full.pack());//running it through FileName purifies the string by our rules, which might be nicer than the OS.

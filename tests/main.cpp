@@ -17,15 +17,15 @@ Indexer<SafeStr<10>> pressure;
 static Watchable<int> demonic;
 
 void demonWatcher(int newvalue){
-  printf("\ndemonic: %d",newvalue);
+  dbg("\ndemonic: %d",newvalue);
 }
 
 void justOnce(int newvalue){
-  printf("\njustOnce: %d",newvalue);
+  dbg("\njustOnce: %d",newvalue);
 }
 
 void justOnceLater(int newvalue){
-  printf("\njustOnceLater: %d",newvalue);
+  dbg("\njustOnceLater: %d",newvalue);
 }
 
 #include "runoncenthtime.h"
@@ -59,13 +59,13 @@ public:
   }
 
   ~DeleteOnExitTestData(){
-    printf("\nDeleteOnExitTestData.%s",TextKey(message));
+    dbg("\nDeleteOnExitTestData.%s",TextKey(message));
   }
 
   static void testme(){
     DeleteOnExitTestData &doe(*new DeleteOnExitTestData("I'm dying here!"));
-    DeleteOnReturn<DeleteOnExitTestData> dor(doe);
-    printf("\nthis should be followed with another printout");
+    DeleteOnExit<DeleteOnExitTestData> dor(doe);
+    dbg("this should be followed with another printout");
   }
 
 }; // class DeleteOnExitTestData
@@ -83,9 +83,9 @@ void extremely(){
     lastish.inspect(which,x);
     maxish.inspect(which++,x);
   }
-  printf("\nMax %g at %u",maxish.extremum,maxish.location);
-  printf("\nMin %g at %u",minish.extremum,minish.location);
-  printf("\nLastish %g at %u",lastish.extremum,lastish.location);
+  dbg("\nMax %g at %u",maxish.extremum,maxish.location);
+  dbg("\nMin %g at %u",minish.extremum,minish.location);
+  dbg("\nLastish %g at %u",lastish.extremum,lastish.location);
 
 } // extremely
 
@@ -96,32 +96,38 @@ extern void testJ(unsigned which,bool newer);
 
 int main(int argc, char *argv[]){
   while(argc-->0) {
-    dbg("%d: %s",argc,argv[argc]);
+    const char*tes=argv[argc];
+    dbg("\n%d: %s",argc,tes);
+    char group=(*tes++);
+    unsigned which=atoi(tes);
+    switch(group){
+    case 'j': //json tests
+//      testJ(which,true);
+      testJ(which,false);
+      break;
+    case 'p'://pathparser tests
+      TestPathParser::run(which);
+      break;
+    case 'u':
+      UnicodeTester::run();
+      break;
+    case 'e':
+      extremely();
+      break;
+    case 'n':
+      printf("\nNumberFormatter: %s",NumberFormatter::makeNumber(14.5).c_str());
+      break;
+    case 'x':
+      DeleteOnExitTestData::testme();
+      testdemonic();
+    {
+      int coedata(42);
+      coe(coedata);
+      printf("\ncoe: %d should be 0",coedata);
+    }
+      break;
+    }
   }
-  fflush(stdout);//without this flush the text above injected itself into testJ's output ...
-
-  TestPathParser::run(~0);
-  exit(0);
-
-  extremely();
-
-  Text puff=NumberFormatter::makeNumber(14.5);
-  printf("\nNumberFormatter: %s",puff.c_str());
-
-  UnicodeTester::run();
-//  exit(0);
-
-  testJ(BadIndex,true);
-  testJ(BadIndex,false);
-
-  DeleteOnExitTestData::testme();
-
-  testdemonic();
-
-  int coedata(42);
-  coe(coedata);
-  printf("\ncoe: %d should be 0",coedata);
-
-  printf("\ntests completed \n");
+  dbg("\ntests completed \n");
   return 0;
 } // main

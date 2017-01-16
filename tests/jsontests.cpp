@@ -9,7 +9,7 @@ static const char*jsontests[] = {
   "embedcolonv:\"col:on\"",
   "\"embed:colonn\":vacuum",
 
-  "group:{f1:{s1:2},f2:vf2}",
+  "group:{f1:{s1:1,s2:2},f2:vf2}",
 
   "group:{first:lonely,}",                 //trailing comma in group
   "group:{first:lonely,second:twofer}",
@@ -85,7 +85,7 @@ void testJson(const char *block,unsigned size){
   StopWatch perftimer;
   bool retval = parser.parse(root);
   perftimer.stop();
-  dbg("\n JsonParse: after %d ms returned: %d  nodes:%u  scalars:%u depth:%u\n",perftimer.elapsed(), retval,parser.totalNodes, parser.totalScalar, parser.maxDepth.extremum);
+  dbg("\n JsonParse: after %g ms returned: %d  nodes:%u  scalars:%u depth:%u\n",perftimer.elapsed()*1000.0, retval,parser.totalNodes, parser.totalScalar, parser.maxDepth.extremum);
 
   if(root) {
     printNode(1,*root);
@@ -108,7 +108,7 @@ void testAbstractly(const char *block,unsigned size){
 
   if(parser.core.root) {
     printNode(1,*parser.core.root);
-//    fflush(stdout);  //to show up in debugger before app terminates.
+    fflush(stdout);  //to show up in debugger ASAP.
   }
 }   // testJson
 

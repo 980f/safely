@@ -1,6 +1,22 @@
 #include "char.h"
 #include "ctype.h"
-#include "cheaptricks.h"
+//#include "cheaptricks.h"
+
+bool isPresent(const char *flags, char flag){
+  int badStringLimiter = 26; //in case string pointer is garbage we don't want to read all of ram
+
+  if(flags) {
+    char probe;
+    while((probe = *flags++) && badStringLimiter-- > 0) {
+      if(flag == probe) {
+        return true;
+      }
+    }
+  }
+  return false;
+} /* isPresent */
+
+////////////////////////////////////
 
 bool Char::numAlpha() const noexcept {
   return isalnum(raw) || isPresent("+-.", raw);
@@ -44,6 +60,6 @@ unsigned Char::hexDigit() const noexcept {
 }
 
 char Char::hexNibble(unsigned sb) const noexcept {
-  u8 nib= 15&(raw>>(sb*4)); //push to low nib
+  unsigned char nib= 15&(raw>>(sb*4)); //push to low nib
   return nib>9? 'A'+nib-10: '0'+nib;
 }

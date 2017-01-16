@@ -5,9 +5,10 @@
 #include "index.h"  //for string search results
 
 /** yet another attempt at safe use of standard C lib str functions.
+ * Assiduous use will it hard for you to make use-after-free bugs.
  *
  * This class wraps a pointer and null checks all uses, vs letting str*() lib functions seg fault.
- * only str* functions which do NOT alter the string should be wrapped here.
+ * only str* functions which do NOT alter the string should be wrapped here. When data is free'd the pointer is nulled so instead of use-fater-free you get a trivial string.
  *
  * While most of the functions are readily inlined we are putting them in a cpp file and will trust LTO (link time optimisation) to figure that out.
  */

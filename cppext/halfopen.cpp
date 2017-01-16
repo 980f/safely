@@ -28,3 +28,8 @@ void Span::shift(unsigned offset){
   lowest-=offset;
   highest-=offset;
 }
+
+void Span::take(Span &other){
+  *this=other;
+  other.clear();
+}

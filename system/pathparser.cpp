@@ -1,28 +1,26 @@
 #include "pathparser.h"
-#include "malloc.h"
-
-#include "charformatter.h"
 
 #include <halfopen.h>
 
 using namespace PathParser;
 
-Text PathParser::pack(const SegmentedName &pieces, const Rules &rule, Converter &&converter){
-  unsigned quantity=pieces.quantity();
-  if(quantity==0){
-    return Text();
+unsigned PathParser::length(ConstChainScanner<Cstr> indexer, const Rules &rule, Converter &&converter){
+  if(!indexer.hasNext()){
+    return 0;//don't inspect rules, i.e. rule.before only matters if we have something before
   }
+  unsigned quantity=rule.after;//number of seperators
 
-  unsigned bytesNeeded =quantity-1+rule.before+rule.after;//number of seperators
-
-  for(auto index(pieces.indexer());index.hasNext();){
-    bytesNeeded += converter.length(index.next());
+  while(indexer.hasNext()){
+    quantity+= 1+converter.length(indexer.next());
   }
+  if(!rule.before){
+    --quantity;
+  }
+  return quantity;
+}
 
-  char *path(static_cast<char *>( malloc(Zguard(bytesNeeded))));//@DEL when returned Text object is deleted
-  path[bytesNeeded]=0;//null terminate since we didn't pre-emptively calloc.
-  CharFormatter packer(path,bytesNeeded);
-  for(auto feeder(pieces.indexer());feeder.hasNext();) {
+void PathParser::packInto(Indexer<char> &packer,ConstChainScanner<Cstr>feeder,const Rules &rule, Converter &&converter){
+  while(feeder.hasNext()) {
     if(feeder.ordinal()>0 || rule.before){//if not first or if put before first
       packer.next() = rule.slash;
     }
@@ -32,17 +30,21 @@ Text PathParser::pack(const SegmentedName &pieces, const Rules &rule, Converter 
     packer.next() = rule.slash;
   }
   //and in case we overestimated the length needed:
-  packer.printChar(0);//null terminate since we didn't pre-emptively calloc.
-
-  return Text(path);//when you destroy the Text the data malloc'd above is freed
+  packer.next()=0;//null terminate since we didn't pre-emptively calloc.
 }
 
+Text PathParser::pack(const SegmentedName &pieces, const Rules &rule, Converter &&converter){
+  unsigned bytesNeeded=length(pieces.indexer(),rule,converter.forward());
+  Indexer<char> packer=Indexer<char>::make(bytesNeeded,true);
+  packInto(packer,pieces.indexer(),rule,converter.forward());
+  return Text(packer.internalBuffer());//when you destroy the Text the data malloc'd above is freed
+}
 
 Rules PathParser::parseInto(SegmentedName &pieces, const Text &packed, char seperator){
   Rules bracket(seperator,false,false);
   Indexer<const char> scan( packed.c_str(),packed.length());
 
-  Text::Chunker cutter(packed);
+  Text::Chunker cutter(scan.internalBuffer());
   if(scan.hasNext()&&scan.peek()==seperator){//if begins with seperator
     bracket.before=true;
     scan.next();
@@ -82,4 +84,5 @@ Rules PathParser::parseInto(SegmentedName &pieces, const Text &packed, char sepe
 Rules::Rules(char slash, bool after, bool before):slash(slash),after(after),before(before){
   //#nada
 }
+
 

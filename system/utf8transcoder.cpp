@@ -1,9 +1,9 @@
 #include "utf8transcoder.h"
+#include "localonexit.h"
 
-
-/** n the string below there are pairs of (escape code: escaped char) e.g. n\n
+/** In the string below there are pairs of (escape code: escaped char) e.g. n\n
  * it looks confusing as some of the chars being escaped are unchanged by the process.
- * when removing a slash you seach for the char and pass back the odd member of the pair
+ * when removing a slash you search for the char and pass back the odd member of the pair
  * when adding slashes you find the char and emit a slash and the even member of the pair
 */
 static const char *SeaScapes="a\a" "b\b" "f\f" "n\n" "r\r" "t\t" "v\v" "\\\\" "//" "''" "??" "\"\"";
@@ -13,22 +13,28 @@ bool needsSlash(char raw){
   return Index(Cstr(SeaScapes).index(raw)).isOdd();//isOdd includes checking for valid.
 }
 
+/** while named for one usage this works symmetrically */
 char slashee(char afterslash){
   Index present= Cstr(SeaScapes).index(afterslash);
   if(present.isValid()){
-    return SeaScapes[1^present];
+    return SeaScapes[1^present];//xor with 1 swaps even and odd.
   } else {
     return afterslash;
   }
 }
 
 
+Unichar Unicoder::fetch(){
+  ClearOnExit<Unichar> coe(uch);
+  cleanup();
+  return uch;
+}
+
+
 Utf8Escaper::Event Utf8Escaper::operator ()(UTF8 ch){
   if(ch.is(0)){
-    if(followers){//was in middle of sequence
-      UTF8::pad(uch, followers);//same plane, better than total garbage
-    } else {
-      uch=0;//safety
+    if(cleanup()){//was not in middle of sequence
+      uch=0;//safety, probably already 0
     }
     return End;
   }
@@ -54,23 +60,40 @@ Utf8Escaper::Event Utf8Escaper::operator ()(UTF8 ch){
   return Plain;
 }
 
-Unichar Utf8Escaper::fetch(){
-  ClearOnExit<Unichar> coe(uch);
-  return uch;
+bool Utf8Escaper::cleanup(){
+  if(followers){//was in middle of sequence
+    UTF8::pad(uch, followers);//same plane, better than total garbage
+    followers=0;
+    return false;
+  }
+  return true;
+}
+
+bool Utf8Decoder::cleanup(){
+  if(uchers){//partial \u series
+    uch<<=(4*uchers);
+    uchers=0;
+    return false;
+  } else if(octers){//partial \octal
+    uch<<=(3*octers);
+    octers=0;
+    return false;
+  } else if(xing){//\x at end of string, perfectly legal and somewhat common \x00
+    //uch copacetic
+    xing=0;
+    return false;
+  } else if(slashing){
+    uch='\\';  //trailing slash is a slash
+    slashing=0;
+    return false;
+  }
+  return true;
 }
 
 Utf8Decoder::Event Utf8Decoder::operator ()(UTF8 ch){
   if(ch.is(0)){//end of data
-    if(uchers){//partial \u series
-      uch<<=(4*uchers);
-    } else if(octers){//partial \octal
-      uch<<=(3*octers);
-    } else if(xing){//\x at end of string, perfectly legal and somewhat common \x00
-      //uch copacetic
-    } else if(slashing){
-      uch='\\';  //trailing slash is a slash
-    } else {
-      uch=0;
+    if(cleanup()){
+      uch=0;//probably already was, just protecting against ill advised future changes to the code.
     }
     return End;
   }
@@ -140,10 +163,5 @@ Utf8Decoder::Event Utf8Decoder::operator ()(UTF8 ch){
   }
   uch=ch;
   return Plain;
-}
-
-Unichar Utf8Decoder::fetch(){
-  ClearOnExit<Unichar> coe(uch);
-  return uch;
 }
 

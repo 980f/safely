@@ -5,7 +5,7 @@
 */
 
 #include <sigc++/sigc++.h>
-#include "cheaptricks.h" //for deleteonreturn
+#include "localonexit.h" //for deleteonreturn
 
 //sigc trackable should be inherited from virtually in so many cases that we always shall
 #define SIGCTRACKABLE virtual public sigc::trackable
@@ -112,7 +112,7 @@ template< typename ... Args> class RunOnceSlot : SIGCTRACKABLE {
   }
 
   void run(Args ... args){
-    DeleteOnReturn< RunOnceSlot> dor(this);
+    DeleteOnExit< RunOnceSlot> dor(this);
     action(args ...);
   }
 

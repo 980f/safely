@@ -332,25 +332,51 @@ NB this uses references in and out, you connot pass a const onEmpty */
 
   typedef void *(functoid)(Content &each);
   /** apply @param eff function to all members of this buffer, ignoring pointer */
-  void forEach(functoid eff){
+  void forEach(functoid eff) const {
     Indexer<Content> list(*this,0);
     while(list.hasNext()) {
       (*eff)(list.next());
     }
   }
 
-  void forUsed(functoid eff){
+  void forUsed(functoid eff) const{
     Indexer<Content> list(*this,~0);
     while(list.hasNext()) {
       (*eff)(list.next());
     }
   }
 
-  void forRemaining(functoid eff){
+  void forRemaining(functoid eff) const {
     Indexer<Content> list;
     list.grab(*this);
     while(list.hasNext()) {
       (*eff)(list.next());
+    }
+  }
+
+  //free contents and forget them. Only safe todo if you know this buffer is created from a malloc.
+  void destroy(){
+    if(length){//# testing for debug, delete[] can handle a zero.
+      delete []buffer;
+    }
+    //and now forget we ever saw those
+    length=0;
+    pointer=0;
+    buffer=nullptr;
+  }
+
+  /** YOU must arrange to delete the contents of what this function returns. The @see destroy() method is handy for that.
+   * this method was originally created for text strings, got tired of repeating the 'make one and ensure null' paragraph
+*/
+  static Indexer<Content> make(unsigned quantity, bool zterm=false){
+    if(Index(quantity).isValid()){
+      Content *path=new Content[zterm?1+quantity:quantity];
+      if(zterm){
+        path[quantity]=0;//null terminate since we didn't pre-emptively calloc.
+      }
+      return Indexer<char> (path,quantity);
+    } else {
+      return Indexer();
     }
   }
 

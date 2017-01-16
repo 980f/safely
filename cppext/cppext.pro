@@ -52,7 +52,9 @@ SOURCES += argset.cpp \
     converter.cpp \
     abstractjsonparser.cpp \
     poissonfeeder.cpp \
-    settablegroup.cpp
+    settablegroup.cpp \
+    pushedparser.cpp \
+    localonexit.cpp
 
 
 HEADERS += safely.h \
@@ -123,4 +125,6 @@ HEADERS += safely.h \
     converter.h \
     abstractjsonparser.h \
     poissonfeeder.h \
-    settablegroup.h
+    settablegroup.h \
+    pushedparser.h \
+    localonexit.h

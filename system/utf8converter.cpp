@@ -30,7 +30,7 @@ unsigned Utf8ConverterOut::length(const char *source) const{
       return totes;
     }
   }
-  return BadIndex;//bug
+  return BadIndex;//#bug if you get here
 }
 
 
@@ -74,8 +74,8 @@ unsigned Utf8ConverterIn::length(const char *source) const {
     switch(dx(*source++)){
     case Utf8Decoder::More://accumulating more info
       break;
-    case Utf8Decoder::Xand://need to resent last char
-      --source;
+    case Utf8Decoder::Xand://need to resend last char
+      --source;//resends
       //JOIN
     case Utf8Decoder::Done: //uch is utf8 char
       totes += UTF8::numFollowers(dx.fetch()) + 1;
@@ -101,8 +101,8 @@ void Utf8ConverterIn::operator()(const char *peeker, Indexer<char> &packer){
     switch(dx(*peeker++)){
     case Utf8Decoder::More://accumulating more info
       break;
-    case Utf8Decoder::Xand://need to resent last char
-      --peeker;
+    case Utf8Decoder::Xand://need to resend last char
+      --peeker;//resends last
       //JOIN
     case Utf8Decoder::Done:{ //uch is utf8 char
       unsigned nf=UTF8::numFollowers(dx.uch);
@@ -132,7 +132,7 @@ void Utf8ConverterIn::operator()(const char *peeker, Indexer<char> &packer){
 }
 
 //todo: force 'remaining' constructor
-UnicharScanner::UnicharScanner(const Indexer<char> &utf8, int rewind):utf8(utf8,rewind){
+UnicharScanner::UnicharScanner(const Indexer<const char> &utf8, int rewind):utf8(utf8,rewind){
   //#nada
 }
 
@@ -141,21 +141,24 @@ bool UnicharScanner::hasNext() const {
 }
 
 Unichar UnicharScanner::next(){
-  if(!utf8.hasNext()){
-    return 0;
-  }
   while(utf8.hasNext()){
-    switch (ex(utf8.next())) {
-    case Utf8Escaper::More:
-      break;
-    case Utf8Escaper::Done:
-      return ex.fetch();
-    case Utf8Escaper::Plain:
-      return ex.fetch();
-    case Utf8Escaper::End:
+    if ((ex(utf8.next())!=Utf8Escaper::More)){
       return ex.fetch();
     }
   }
   return 0;
 }
 
+
+bool UnicharReader::hasNext() const {
+  return utf8.hasNext();
+}
+
+Unichar UnicharReader::next(){
+  while(utf8.hasNext()){
+    if ((ex(utf8.next())!=Utf8Escaper::More)){
+      return ex.fetch();
+    }
+  }
+  return 0;
+}

@@ -1,9 +1,12 @@
 #ifndef ABSTRACTJSONPARSER_H
 #define ABSTRACTJSONPARSER_H
 
+/** an abstract json parser.
+ * One migh use this as a base class, although that might be more complex then copy-pasting from a concrete instance such as @see StoredJSONparser */
+
 #include "pushedjsonparser.h"
 #include "sequence.h"
-/** an abstract json parser. One migth use this as a base class, although that might be more complex then copy-pasting from a concrete instance such as @see StoredJSONparser */
+#include "localonexit.h"
 
 
 #include "extremer.h"
@@ -69,11 +72,12 @@ protected:
 
   Storable *assembleItem(Storable *parent,bool evenIfEmpty=false){
     Storable *nova=nullptr;
-    bool haveValue= parser.quoted || !parser.value.empty();
+    //we have a value if it was empty quotes or nonTrivial content. JSON null is an anonymous value at this layer of the parser.
+    bool haveValue= parser.wasQuoted || !parser.value.empty();
     if(evenIfEmpty || haveValue){ //checking haveValue here ignores extraneous ',' in the source
       TextClass name(parser.haveName?data.extract(parser.name):"");
       TextClass value(data.extract(parser.value));
-      nova=data.insertNewChild(parent,name,haveValue,value,parser.quoted);
+      nova=data.insertNewChild(parent,name,haveValue,value,parser.wasQuoted);
       ++stats.totalNodes;
       if(haveValue){
         ++stats.totalScalar;

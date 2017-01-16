@@ -1,19 +1,6 @@
 #include "cheaptricks.h"
 #include "minimath.h"
 
-bool isPresent(const char *flags, char flag){
-  int badStringLimiter = 26; //in case string pointer is garbage we don't want to read all of ram
-
-  if(flags) {
-    char probe;
-    while((probe = *flags++) && badStringLimiter-- > 0) {
-      if(flag == probe) {
-        return true;
-      }
-    }
-  }
-  return false;
-} /* isPresent */
 
 bool changed(double&target, double newvalue,int bits){
   if(!nearly(target,newvalue,bits)) {
@@ -24,6 +11,19 @@ bool changed(double&target, double newvalue,int bits){
   }
 }
 
-AutoFlag::AutoFlag(bool &toBeCleared) : ClearOnExit<bool>(toBeCleared,true){
-  //#nada
+bool CountDown::operator--(int) noexcept {
+  if(counter){
+    --counter;
+    return true;
+  } else {
+    return false;
+  }
+}
+
+bool CountDown::last() noexcept {
+  if(counter){//test and decrement
+    return done();//just became zero
+  } else {
+    return false;
+  }
 }
