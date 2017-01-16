@@ -1,7 +1,45 @@
 #include "matrixinverter.h"
 #include "minimath.h"
 #include <cmath>
+
+#include "ignoresignwarnings.h"
+//@deprecated: use modern for loop constructs
+#define forSize(si) for(int si=size;si-->0;)
+
+#ifdef MATRIX_INIVERT_NO_LOGGING
+#define mdbg(...)
+void MatrixInverter::dump(bool please) {
+  if(showDump&&please) {
+    ;//a place to breakpoint.
+  }
+}
+
+#else
+static bool showDump=false;
 #include "logger.h"
+static Logger mdbg("MatrixInverter");
+
+#include "stdio.h"
+void MatrixInverter::dump(bool please) {
+  if(showDump&&please) {
+    printf("\nMatrix Inverse:");
+    forSize(rw) {
+      printf("\n%d", rw);
+      forSize(cl) {
+        printf(",%g", xs[rw][cl]);
+      }
+      printf("\t\t");
+      forSize(cl) {
+        printf(",%g", inv[rw][cl]);
+      }
+    }
+    printf("\n");
+    fflush(stdout);
+  }
+}
+
+#endif
+
 
 MatrixInverter::MatrixInverter(int size):
   size(size),
@@ -14,7 +52,8 @@ MatrixInverter::MatrixInverter(int size):
 MatrixInverter::Matrix::Matrix(int size):
   std::vector< Column >(size) {
   forSize(i) {
-    operator [](i).resize(size);
+    (*this)[i].resize(size);
+
   }
 }
 
@@ -27,7 +66,7 @@ void MatrixInverter::clear() {
 }
 
 double MatrixInverter::compute() {
-  dbg("Inverting matrix");
+  mdbg("Inverting matrix");
   if(size == 1) { //special case to expedite debug of non-special cases
     double norm = xs[0][0];
     inv[0][0] = ratio(1.0, norm);
@@ -48,7 +87,7 @@ double MatrixInverter::compute() {
     if(isNormal(norm)){
       forSize(rw) {
         forSize(cl) {
-          dbg("In matrix inversion loop (quadratic efficiency)");
+          mdbg("In matrix inversion loop (quadratic efficiency)");
           inv[rw][cl] =  polarity(rw==cl) * ratio(xs[rw][cl],norm);
         }
       }
@@ -59,7 +98,7 @@ double MatrixInverter::compute() {
   forSize(rw) {
     forSize(cl) {
       inv[rw][cl] = xs[rw][cl]; //using separate before and after matrices for debuggability
-      dbg("In second matrix inversion loop (quadratic efficiency)");
+      mdbg("In second matrix inversion loop (quadratic efficiency)");
     }
   }
   double norm = 1.0;
@@ -70,25 +109,22 @@ double MatrixInverter::compute() {
     }
 
     double absmax = inv[focus][focus];
-    if(absmax != 0) {
+    if(isNormal(absmax)) {
       norm *= absmax;
       double invmax = -1 / absmax;
-
-#define inPlay(rw) !ignore[rw]&& rw!=focus
-
       forSize(rw) { //scale column by biggest entry
-        if(inPlay(rw)) {
+        if(inPlay(rw,focus)) {
           inv[rw][focus] *= invmax; //row is multiplied by -1/diagonal element
         }
       }
       forSize(rw) {
-        if(inPlay(rw)) {
+        if(inPlay(rw,focus)) {
           double d = inv[rw][focus];
           if(isNormal(d)) { //skip iteration if going to be adding multiple of 0. isnormal handles the -0.0's we seem to get.
             forSize(cl) {
-              if(inPlay(cl)) {
+              if(inPlay(cl,focus)) {
                 inv[rw][cl] += inv[focus][cl] * d; //subtract scaled row from other rows
-                dbg("In third matrix inversion loop (quadratic efficiency)");
+                mdbg("In third matrix inversion loop (quadratic efficiency)");
               }
             }
           }
@@ -96,7 +132,7 @@ double MatrixInverter::compute() {
       }
       invmax = -invmax;
       forSize(cl) {
-        if(inPlay(cl)) {
+        if(inPlay(cl,focus)) {
           inv[focus][cl] *= invmax; //row is scaled by 1/diagonal element
         }
       }
@@ -127,25 +163,4 @@ bool MatrixInverter::test() {
     }
   }
   return true;//could do some sort of check for identity.
-}
-
-#include "logger.h"
-#include "stdio.h"
-static bool showDump=false;
-void MatrixInverter::dump(bool please) {
-  if(showDump&&please) {
-    dbg("Matrix Inverse");
-    forSize(rw) {
-      printf("\n%d", rw);
-      forSize(cl) {
-        printf(",%g", xs[rw][cl]);
-      }
-      printf("\t\t");
-      forSize(cl) {
-        printf(",%g", inv[rw][cl]);
-      }
-    }
-    printf("\n");
-    fflush(stdout);
-  }
 }

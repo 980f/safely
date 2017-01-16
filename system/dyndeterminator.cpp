@@ -5,9 +5,14 @@
 #include "logger.h"
 #include "minimath.h"
 
-#define forP(si) for(int si=p.size;si-->0;)
-#define forTriangle(cl) for(int cl=rw+1;cl-->0;)
-#define withOutDiagonal(cl) for(int cl=rw;cl-->0;)
+#include "ignoresignwarnings.h"
+
+#define forP(si) for(unsigned si=p.size;si-->0;)
+#define forTriangle(cl) for(unsigned cl=rw+1;cl-->0;)
+#define withOutDiagonal(cl) for(unsigned cl=rw;cl-->0;)
+
+//@deprecated: use modern for loop constructs
+#define forSize(si) for(unsigned si=size;si-->0;)
 
 LLSQcomputer::LLSQcomputer(int numCoeff):
   MatrixInverter(numCoeff),
