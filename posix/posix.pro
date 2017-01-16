@@ -13,7 +13,8 @@ SOURCES += \
     posixwrapper.cpp \
     perftimer.cpp \
     stopwatch.cpp \
-    filer.cpp
+    filer.cpp \
+    perftimer.cpp
 
 HEADERS += \
     fdset.h \
@@ -22,4 +23,5 @@ HEADERS += \
     posixwrapper.h \
     perftimer.h \
     stopwatch.h \
-    vargs.h
+    vargs.h \
+    perftimer.h
