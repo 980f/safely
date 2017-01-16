@@ -9,24 +9,6 @@
 #include "localonexit.h"
 
 
-#include "extremer.h"
-struct JsonStats {
-  /**number of values */
-  unsigned totalNodes = 0;
-  /**number of terminal values */
-  unsigned totalScalar = 0;
-  /** greatest depth of nesting */
-  SimpleExtremer<unsigned> maxDepth;
-  /** number of unmatched braces at end of parsing */
-  unsigned nested = 0;
-
-  void reset(){
-    totalNodes = 0;
-    totalScalar = 0;
-    maxDepth.reset();
-    nested = 0;
-  }
-};
 
 
 template <typename Storable, typename TextClass> class AbstractJSONparser;//forward ref for friendliness
@@ -78,10 +60,7 @@ protected:
       TextClass name(parser.haveName?data.extract(parser.name):"");
       TextClass value(data.extract(parser.value));
       nova=data.insertNewChild(parent,name,haveValue,value,parser.wasQuoted);
-      ++stats.totalNodes;
-      if(haveValue){
-        ++stats.totalScalar;
-      }
+      stats.onNode(haveValue);
     }
     parser.itemCompleted();//ensure we don't reuse old data on next item.
     return nova;
@@ -89,9 +68,7 @@ protected:
 
   /** @returns whether there are more children, for recursively parsing wads. */
   bool parseChild(Storable *parent){
-    CountedLock doe(stats.nested);//inc on create, dec on exit
-    stats.maxDepth.inspect(stats.nested);//heuristics
-
+    JsonStats::DepthTracker doe(stats);
     //look for name
     while(data.hasNext()) {
       switch (parser.next(data.next())) {

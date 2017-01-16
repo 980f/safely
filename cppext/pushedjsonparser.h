@@ -10,6 +10,29 @@
 #include "halfopen.h"
 #include "cheaptricks.h" //CountDown
 #include "pushedparser.h"
+#include "localonexit.h"
+
+#include "extremer.h"
+struct JsonStats {
+  /**number of values */
+  unsigned totalNodes = 0;
+  /**number of terminal values */
+  unsigned totalScalar = 0;
+  /** greatest depth of nesting */
+  SimpleExtremer<unsigned> maxDepth;
+  /** number of unmatched braces at end of parsing */
+  unsigned nested = 0;
+
+  void reset();
+
+  void onNode(bool scalar);
+
+  class DepthTracker:public CountedLock {
+  public:
+    DepthTracker(JsonStats &s);
+  };
+
+};
 
 namespace PushedJSON {
 
