@@ -2,35 +2,46 @@
 #define TWIDDLER_H
 #include "eztypes.h"
 /** software PWM
-  * implements as a ratio of two integers without using division except during initialization.
+  * implements as a ratio of two integers without using division except during some of the optional setup functions.
   */
 
-class Twiddler {
+class IntegerTwiddler {
+protected:
   int above;
   int below;
   int twiddle;
 public:
-  Twiddler();
+  IntegerTwiddler();
   /** @see setRatio */
-  Twiddler(u32 numer, u32 denom, bool center = true);
+  IntegerTwiddler(u32 numer, u32 denom, bool center = true);
+
   /** numer out of (numer+denom) calls (in a row) to pwm() will return true. @param center true initializes the cycling to halfway through the longer part of the cycle.*/
   void setRatio(u32 numer, u32 denom, bool center = true);
-  void setRatio(double ratio);
-  /**@return amount of time that twiddler is 'true' */
-  double getRatio(void);
-  /** @return 1/getRatio()*/
-  double getDivider(void)const;
 
   /** set ratio such that pwm is true once per @param rate calls
     * NB: rate of 0 makes pwm 'always true'*/
   void setDivider(int rate);
   /** rig for pwm() to always return @param on*/
   void freeze(bool on = false);
+
+  /** @returns a bit the average of which is the ratio of the above and below members */
   bool pwm(void);
+
   operator bool (void){
     return pwm();
   }
-  //unsigned fractionOf(unsigned channel) ~ channel * (twiddle/(above+below))
+};
+
+/** add some convenient rate setting/getting functions, factored out of prior implementation to ge ta no-floating point base class */
+class Twiddler:public IntegerTwiddler {
+public:
+  using IntegerTwiddler::IntegerTwiddler;
+  void setRatio(double ratio);
+  /**@return amount of time that twiddler is 'true' */
+  double getRatio(void);
+  /** @return 1/getRatio()*/
+  double getDivider(void)const;
+
 };
 
 /** pulse width modulator modulator (not redundant!)
