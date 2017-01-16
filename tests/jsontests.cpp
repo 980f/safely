@@ -85,7 +85,7 @@ void testJson(const char *block,unsigned size){
   StopWatch perftimer;
   bool retval = parser.parse(root);
   perftimer.stop();
-  dbg("JsonParse: after %g ms returned: %d  nodes:%u  scalars:%u depth:%u",perftimer.elapsed()*1000.0, retval,parser.totalNodes, parser.totalScalar, parser.maxDepth.extremum);
+  dbg("JsonParse: after %g ms returned: %d  nodes:%u  scalars:%u depth:%u",perftimer.elapsed()*1000.0, retval,parser.s.totalNodes, parser.s.totalScalar, parser.s.maxDepth.extremum);
 
   if(root) {
     printNode(1,*root);

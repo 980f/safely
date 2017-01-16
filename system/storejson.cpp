@@ -18,7 +18,6 @@ bool StoredJSONparser::parse(Storable *&root){
 }
 
 Storable *StoredJSONparser::insertNewChild(Storable *parent,TextKey name){
-  ++totalNodes;
   if(parent) {
     return &parent->addChild(name);
   } else { //is root node
@@ -39,11 +38,14 @@ Storable *StoredJSONparser::assembleItem(Storable *parent,bool evenIfEmpty){
     if(nova){//pathological to not have one
       if(novalue){
         if(flagged(parser.wasQuoted)){
+          s.onNode(true);
           nova->setType(Storable::Textual);//mark for deferred interpretation
         } else {      //inferring wad node
+          s.onNode(false);
           nova->setType(Storable::Wad);//
         }
       } else {
+        s.onNode(true);//even null nodes are deemed scalar.
         Text value(data.internalBuffer(),parser.value);
         //maydo: here is where we would process text escapes, but I'd rather not include all possible escape processors in this module.
         nova->setImage(value,Storable::Parsed);
@@ -60,9 +62,7 @@ Storable *StoredJSONparser::assembleItem(Storable *parent,bool evenIfEmpty){
 }
 
 bool StoredJSONparser::parseChild(Storable *parent){
-  CountedLock doe(nested);//inc on create, dec on exit
-  maxDepth.inspect(nested);//heuristics
-
+  JsonStats::DepthTracker doe(s);
   //look for name
   while(data.hasNext()) {
     switch (parser.next(data.next())) {

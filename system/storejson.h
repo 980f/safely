@@ -26,19 +26,9 @@ public:
   bool parse(Storable *&root );
 
 public: //stats
-  /**number of values */
-  unsigned totalNodes = 0;
+  JsonStats s;
 
-  /**number of terminal values */
-  unsigned totalScalar = 0;
-
-  /** greatest depth of nesting */
-  SimpleExtremer<unsigned> maxDepth;
-
-  /** number of unmatched braces at end of parsing */
-  unsigned nested = 0;
-
-private: //to partition what would be an enormous switch with redundant cases we make a bunch of stateinfo members. if I could get the hang of functions defined within functions ....
+private:
   Indexer<const char> data;
   Storable *root;
   PushedJSON::Parser parser;

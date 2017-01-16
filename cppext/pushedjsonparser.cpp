@@ -180,3 +180,21 @@ Parser::Parser(){
 }
 
 
+
+JsonStats::DepthTracker::DepthTracker(JsonStats &s):CountedLock(s.nested){
+  s.maxDepth.inspect(s.nested);//heuristics
+}
+
+void JsonStats::reset(){
+  totalNodes = 0;
+  totalScalar = 0;
+  maxDepth.reset();
+  nested = 0;
+}
+
+void JsonStats::onNode(bool scalar){
+  ++totalNodes;
+  if(scalar){
+    ++totalScalar;
+  }
+}
