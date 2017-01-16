@@ -529,7 +529,7 @@ Storable&Storable::operator ()(TextKey name){
 Storable&Storable::operator [](int ordinal){
   if(!has(ordinal)) {
     wtf("nonexisting child of %s referenced by ordinal %d (out of %d).",bugName, ordinal, numChildren());
-    dumpStack("nth child doesn't exist");
+    dbg.dumpStack("nth child doesn't exist");
     addChild(""); //better than an NPE so deep in the hierarchy that we don't know where it comes from.
     return *wad.last();
   }

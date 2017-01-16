@@ -161,7 +161,7 @@ public:
       return last();
     } else {
       wtf("asked for non-existent member: %d out of %d of set", ordinal, quantity());
-      dumpStack("StoredGroup::nth");
+      wtf.dumpStack("StoredGroup::nth");
       if(!has(0)) {
         create("autocreated"); //better than a random crash.
       }
@@ -174,7 +174,7 @@ public:
       return *pod[ordinal];
     }
     wtf("asked for non-existent member: %d out of %d of set", ordinal, quantity());
-    dumpStack("StoredGroup::nth");
+    wtf.dumpStack("StoredGroup::nth");
     return *pod[0]; //which will still blow if there are no entities at all.
   }
 
