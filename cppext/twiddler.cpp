@@ -1,15 +1,15 @@
 #include "twiddler.h"
 #include "minimath.h"
 
-Twiddler::Twiddler(){
+IntegerTwiddler::IntegerTwiddler(){
   freeze();
 }
 
-Twiddler::Twiddler(u32 numer, u32 denom, bool center){
+IntegerTwiddler::IntegerTwiddler(u32 numer, u32 denom, bool center){
   setRatio(numer,denom,center);
 }
 
-void Twiddler::setRatio(u32 numer, u32 denom, bool center){
+void IntegerTwiddler::setRatio(u32 numer, u32 denom, bool center){
   above = numer;
   below = denom;
   if(center) {
@@ -24,16 +24,16 @@ void Twiddler::setRatio(u32 numer, u32 denom, bool center){
 } /* setRatio */
 
 //a value used to get the maximum precision/resolution available due to the data type of twiddle
-#define MaxRes 0x7FFFFFFF
+const unsigned MaxRes = 0x7FFFFFFF;
 //todo:3 above is max pos int, find standard symbol for it.
 
 void Twiddler::setRatio(double ratio){
-  if(ratio<=0){ //this code was common in most usages so I added it here.
+  if(ratio<=0){
     freeze(false);
   } else if(ratio >= 1.0) {
-    setRatio(MaxRes * ratio, MaxRes);
+    IntegerTwiddler::setRatio(MaxRes * ratio, MaxRes);
   } else {
-    setRatio(MaxRes, MaxRes * ratio);
+    IntegerTwiddler::setRatio(MaxRes, MaxRes * ratio);
   }
 }
 
@@ -48,7 +48,7 @@ double Twiddler::getDivider()const{
   return ratio(double(below), double(above));
 }
 
-void Twiddler::setDivider(int rate){
+void IntegerTwiddler::setDivider(int rate){
   if(rate<=0){
     freeze(false);
   } else {
@@ -58,13 +58,13 @@ void Twiddler::setDivider(int rate){
   }
 }
 
-void Twiddler::freeze(bool on){
+void IntegerTwiddler::freeze(bool on){
   above = 0;
   below = 0;
   twiddle = on - 1; //#hack
 }
 
-bool Twiddler::pwm(void){
+bool IntegerTwiddler::pwm(void){
   if(twiddle >= 0) {
     twiddle -= below;
     return true;
