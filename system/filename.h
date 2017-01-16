@@ -7,8 +7,18 @@
 /** mates segmented name and pathparser to provide file naming utility
  *
  * this approach maintains the path as an array of pieces, not assembled into a proper string until pack is called, which generates an independent chunk of text.
+ * this has an advantage that intentional path separators aren't url encoded, only ones embedded in data appended to the path.
  */
-class FileName : public SegmentedName {
+
+#include "dottedname.h"
+
+class FileNameConverter:public Converter {
+  //for now do nothing, need to get a compile.
+  //later on convert filesystem chars into %xx escapes.
+};
+
+
+class FileName : public Chain<DottedName> {
 public:
   PathParser::Rules bracket;
   FileName();
@@ -19,6 +29,10 @@ public:
   /** copies elements */
   FileName(const FileName &other);
 
+  /** @returns whether filename is trivial. Note: "/" is trivial, we make it hard to pass 'whole filesystem' to anything */
+  bool empty() const{
+    return quantity()==0;
+  }
   /** removes the last path element, similar to the dirname unix command
    * @returns this as reference */
   FileName &dirname(void);
@@ -33,8 +47,10 @@ public:
   FileName &erase();
 
 public:
-  bool lastChar(char isit) const;
-  Text pack();
+
+  unsigned length(Converter &&cvt=FileNameConverter())const;
+  /** assemble string to pass to normal code. @param cvt is for escaping special charaacters */
+  Text pack(Converter &&cvt=FileNameConverter(), unsigned bytesNeeded=BadIndex);
 }; // class FileName
 
 

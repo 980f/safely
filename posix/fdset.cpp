@@ -1,6 +1,6 @@
 #include "fdset.h"
 
-#include "cheaptricks.h"
+#include "char.h"
 #include "minimath.h"  //splitter
 
 FDset::FDset(){

@@ -46,6 +46,8 @@ struct Span: public HalfOpen<Index> {
   void clear();
   /** subtract a number presumed to be less than the lowest from both that and the highest */
   void shift(unsigned offset);
+  /** take values from other, clear() other */
+  void take(Span &other);
 };
 
 #endif // HALFOPEN_H

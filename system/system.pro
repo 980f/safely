@@ -41,7 +41,8 @@ SOURCES += \
     filename.cpp \
     urltext.cpp \
     utf8transcoder.cpp \
-    utf8converter.cpp
+    utf8converter.cpp \
+    dottedname.cpp
 
 HEADERS += \
     chain.h \
@@ -84,5 +85,6 @@ HEADERS += \
     filename.h \
     urltext.h \
     utf8transcoder.h \
-    utf8converter.h
+    utf8converter.h \
+    dottedname.h
 

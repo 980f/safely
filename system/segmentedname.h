@@ -7,10 +7,13 @@
 
 /** base pathname class, @see Pathname for something useful */
 class SegmentedName:public Chain<Cstr>  {
+  /** there are two reasonable approaches to assignment so we force you to use a named function */
+  SegmentedName(const SegmentedName &)=delete;
+  void operator =(const SegmentedName &)=delete;
 
-public:
+public://this is a utility class, adding better named functions to its base.
   SegmentedName();
-
+  /** @returns whether there are any path pieces to this name */
   bool empty() const;
   /** caller is responsible for not freeing stuff passed as TextKey until after this is deleted.
    *  This class will create Cstr's to hold on to addresses.
@@ -22,18 +25,22 @@ public:
   void prefix(const Cstr &parent);
   void suffix(const Cstr &child);
 
-  /** removes trivial path elements */
+  /** @deprecated untested
+   * removes trivial path elements */
   void purify();
 
-  /** add to this one copies of all the entities of the other */
+  /** @deprecated untested
+   * add to this one copies of all the entities of the other */
   void copycat(const SegmentedName &other);
 
-  /** relocate to this one the entities of the other, the other is empty when done.*/
+  /** @deprecated untested
+   * relocate to this one the entities of the other, the other is empty when done.*/
   void transfer(SegmentedName &other);
 
   /** @returns an indexer, that can alter this */
   ChainScanner<Cstr> indexer();
 
+  /** @returns an indexer, that can only view this, note that the individual pieces are still mutaable. */
   ConstChainScanner<Cstr> indexer() const;
 }; // class SegmentedName
 

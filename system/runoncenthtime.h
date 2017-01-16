@@ -17,7 +17,7 @@ public: //while the main purpose is a slot that eventually fires and dies this c
 
   void run(Args ... args){
     if(--count <= 0) {
-      DeleteOnReturn<RunOnceNthTime> dou(this);//NEW@ makeInstance()
+      DeleteOnExit<RunOnceNthTime> dou(this);//NEW@ makeInstance()
       action(args ...);
     }
   }

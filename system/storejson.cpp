@@ -28,7 +28,7 @@ Storable *StoredJSONparser::insertNewChild(Storable *parent,TextKey name){
 
 Storable *StoredJSONparser::assembleItem(Storable *parent,bool evenIfEmpty){
   Storable *nova=nullptr;
-  bool novalue=parser.value.empty()&&!parser.quoted;//empty string
+  bool novalue=parser.value.empty()&&!parser.wasQuoted;//empty string
   if(evenIfEmpty || !novalue){ //checking novalue here gets rids of extraneous ',' in the source
     if (parser.haveName){
       Text name(data.internalBuffer(),parser.name);
@@ -38,8 +38,7 @@ Storable *StoredJSONparser::assembleItem(Storable *parent,bool evenIfEmpty){
     }
     if(nova){//pathological to not have one
       if(novalue){
-        if(parser.quoted){
-          parser.quoted=false;
+        if(flagged(parser.wasQuoted)){
           nova->setType(Storable::Textual);//mark for deferred interpretation
         } else {      //inferring wad node
           nova->setType(Storable::Wad);//
@@ -48,8 +47,8 @@ Storable *StoredJSONparser::assembleItem(Storable *parent,bool evenIfEmpty){
         Text value(data.internalBuffer(),parser.value);
         //maydo: here is where we would process text escapes, but I'd rather not include all possible escape processors in this module.
         nova->setImage(value,Storable::Parsed);
-        if(parser.quoted){
-          parser.quoted=false;//keep the text type set by setImage.
+        if(flagged(parser.wasQuoted)){
+          //keep the text type set by setImage.
         } else {//mark for further inspection by datum user.
           nova->setType(Storable::Uncertain);//mark for deferred interpretation
         }
@@ -67,6 +66,11 @@ bool StoredJSONparser::parseChild(Storable *parent){
   //look for name
   while(data.hasNext()) {
     switch (parser.next(data.next())) {
+    case Done://won't happen due to data.hasNext();
+//    default:
+      break;
+    case Continue:
+      break;
     case BeginWad: //open brace encountered
       for(Storable *nova = assembleItem(parent,true); parseChild(nova); ) {
         //#recurse while there are more to be found
@@ -84,8 +88,7 @@ bool StoredJSONparser::parseChild(Storable *parent){
     case Illegal: //unexpected char
       wtf("Bad char 0x%02X at row:%u, col:%u, offset:%u",parser.d.last,parser.d.row,parser.d.column,parser.d.location);
       break;
-    default:
-      break;//to stifle warnings
+
     } // switch
   }
   auto finial=parser.next(0);

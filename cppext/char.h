@@ -2,6 +2,9 @@
 #define CHAR_H
 
 
+/** like strchr but with idiot checks on the parameters */
+bool isPresent(const char *flags, char flag);
+
 class Char {
 public:
   char raw;

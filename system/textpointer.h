@@ -4,7 +4,10 @@
 #include "cstr.h"
 #include "halfopen.h" //Span
 
-/** adds strdup'ing to Cstr functionality, i.e. makes a copy on construction and assignement vs Cstr which just looks at someone else's allocated memory.
+/** This class is a minimal String class, it prevents memory leaks and trivial NPE's but does provide any manipulation facilities.
+ * Most especially it does not rellocate/resize its contents. It uses malloc and free rather than new and delete so that it might yield a smaller binary on microcontroller systems.
+ *
+ * adds strdup'ing to @see Cstr functionality, i.e. makes a copy on construction and assignement vs Cstr which just looks at someone else's allocated memory.
  *
  *  This class unconditionally frees the data it points at when destroyed. IE it always owns what it points at.
  */
@@ -17,7 +20,6 @@ public:
   /** makes a copy of the @param given content if @param takeit is false, else presumes the caller is happy with this maintaining the lifetime.
    * IE: if takeit is true then this class just records the pointer, if false it makes a copy of the data and forgets the given pinter.
    * This class *always* frees the data it points at.
-
  */
   Text(TextKey ptr,bool takeit);
 
@@ -26,9 +28,6 @@ public:
 
   /** calloc's a block of data. */
   Text(unsigned size);
-
-//  /** take contents of @param other, hence other cannot be const as we null its pointer lest we get a double-free */
-//  Text(Text &other);
 
   /** enforce that a const can't have its resource taken away from it. */
   Text(const Text &other)=delete ;
@@ -74,6 +73,7 @@ public:
   void clear() noexcept override;
 
 
+  /** a core part of a parser is to take substrings, this does just that part of parsing */
   class Chunker:public Span {
     Cstr base;
   public:

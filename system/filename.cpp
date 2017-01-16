@@ -1,29 +1,13 @@
 #include "filename.h"
 #include "charformatter.h"
 
-///** no internal slashes, convert to dash */
-//Text escape (const Text &userinput){
-//  unsigned len = userinput.length();
-//  char workspace[Zguard(len)];
-//  workspace[len] = 0;//before we forget.
-//  for(unsigned i = 0; i<len; ++i) {
-//    workspace[i] = userinput[i];
-//    if(workspace[i]=='/') {
-//      workspace[i] = '-';
-//    }
-//  }
-//  return Text(workspace);
-//} // escape
+#include <malloc.h>
 
 FileName::FileName(){
   //assign(root);
 }
 
-//static bool isRooted(const Text &simple){
-//  return false;// !simple.empty() && simple.at(0)=='/';
-//}
-
-FileName::FileName(const Text  &simple):SegmentedName (){
+FileName::FileName(const Text  &simple){
   folder(simple);
 }
 
@@ -37,39 +21,28 @@ FileName &FileName::folder(const Text  &s){
     return *this;
   }
   unsigned quant=this->quantity();//record before parsing
-  PathParser::Rules subracket=PathParser::parseInto(*this,s,'/');
-  if(quant==0){
-    bracket=subracket;
-  } else {
-    //ignore there being a leading / in the added piece
-    bracket.after = subracket.after;
-  }
+
+
+
+//  PathParser::Rules subracket=PathParser::parseInto(*this,s,'/');
+//  if(quant==0){
+//    bracket=subracket;
+//  } else {
+//    //ignore there being a leading / in the added piece
+//    bracket.after = subracket.after;
+//  }
+
   return *this;
 } // FileName::folder
 
 FileName &FileName::ext(const Text  &s){
   if(empty()){//becomes totality
-    unsigned length=Zguard(s.length()+1);
-    Text dotted(length);//+1 for dot.
-    CharFormatter catter(dotted.violated(),length);
-    catter.printChar(',');
-    catter.cat(s.c_str());
-    suffix(dotted);
+    auto fname=new DottedName('.',s);
+    fname->bracket.before=true;
+    append(fname);
   } else {
     auto fname=last();
-    unsigned length=Zguard(s.length()+1+fname->length());
-    Text dotted(length);//+1 for dot.
-    CharFormatter catter(dotted.violated(),length);
-    catter.printString(fname->c_str());
-    //todo: if fname ends in dot skip adding our own
-    if(fname->endsWith('.')){
-      //then keep it and don't add another, i.e. no double dots unless you manually feed them in.
-    } else {
-      catter.printChar(',');
-    }
-    catter.cat(s.c_str());
-    removeLast();
-    suffix(dotted);
+    fname->suffix(s.c_str());
   }
   return *this;
 }
@@ -79,16 +52,40 @@ FileName &FileName::erase(){
   return *this;
 }
 
-bool FileName::lastChar(char isit) const {
-  if(auto final=last()){
-    return final->endsWith(isit);
-  } else {
-    return false;
+unsigned FileName::length(Converter &&cvt) const {
+  unsigned pieces=quantity();
+  if(pieces==0){
+    return 0;
   }
+
+  unsigned bytesNeeded =pieces-1+bracket.before+bracket.after;//number of seperators
+
+  for(ConstChainScanner<DottedName> index(*this);index.hasNext();){
+    bytesNeeded += index.next().length(cvt.forward());
+  }
+  return bytesNeeded;
 }
 
-Text FileName::pack(){
-  return PathParser::pack(*this, bracket);
+
+Text FileName::pack(Converter &&cvt,unsigned bytesNeeded){
+  if(!Index(bytesNeeded).isValid()){
+    bytesNeeded=length(cvt.forward());
+  }
+  Indexer<char> packer=Indexer<char>::make(bytesNeeded,true);
+
+  for(ChainScanner<DottedName> feeder(*this);feeder.hasNext();) {
+    if(feeder.ordinal()>0 || bracket.before){//if not first or if put before first
+      packer.next() = bracket.slash;
+    }
+
+  }
+  if(bracket.after && packer.used()>0) {//only append trailing slash if there is something ahead of it
+    packer.next() = bracket.slash;
+  }
+  //and in case we overestimated the length needed:
+  packer.next()=0;//null terminate since we didn't pre-emptively calloc.
+
+  return Text(packer.internalBuffer());//when you destroy the Text the data malloc'd above is freed
 }
 
 ////////////////
