@@ -11,6 +11,8 @@ SOURCES += \
     fdset.cpp \
     fildes.cpp \
     posixwrapper.cpp \
+    perftimer.cpp \
+    stopwatch.cpp \
     filer.cpp
 
 HEADERS += \
@@ -18,4 +20,6 @@ HEADERS += \
     fildes.h \
     filer.h \
     posixwrapper.h \
+    perftimer.h \
+    stopwatch.h \
     vargs.h

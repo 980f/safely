@@ -15,8 +15,6 @@ SOURCES += \
     logger.cpp \
     matrixinverter.cpp \
     numberformatter.cpp \
-    perftimer.cpp \
-    stopwatch.cpp \
     storable.cpp \
     storageexporter.cpp \
     storedcorrelation.cpp \
@@ -56,10 +54,7 @@ HEADERS += \
     mapiterator.h \
     matrixinverter.h \
     measure.h \
-    networkscanner.h \
     numberformatter.h \
-    perftimer.h \
-    stopwatch.h \
     storable.h \
     storageexporter.h \
     storedcorrelation.h \
