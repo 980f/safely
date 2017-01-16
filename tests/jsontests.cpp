@@ -72,12 +72,12 @@ void printNode(unsigned tab,Storable &node){
       printf("\"%s\" ",node.image().c_str());
     }
     break;
-  } // switch
+  } // switch  
   fflush(stdout);
 } // switch
 
 void testJson(const char *block,unsigned size){
-  dbg("\ntestJson: testing: %s",block);
+  dbg("testJson: testing: %s",block);
 
   Indexer<const char> loaded(block,size);
   Storable *root = nullptr;
@@ -85,18 +85,19 @@ void testJson(const char *block,unsigned size){
   StopWatch perftimer;
   bool retval = parser.parse(root);
   perftimer.stop();
-  dbg("\n JsonParse: after %g ms returned: %d  nodes:%u  scalars:%u depth:%u\n",perftimer.elapsed()*1000.0, retval,parser.totalNodes, parser.totalScalar, parser.maxDepth.extremum);
+  dbg("JsonParse: after %g ms returned: %d  nodes:%u  scalars:%u depth:%u",perftimer.elapsed()*1000.0, retval,parser.totalNodes, parser.totalScalar, parser.maxDepth.extremum);
 
   if(root) {
     printNode(1,*root);
-//    fflush(stdout);  //to show up in debugger before app terminates.
+    putchar('\n');
+      fflush(stdout);
   }
 }   // testJson
 
 #include "testabstractjsonparser.h"
 
 void testAbstractly(const char *block,unsigned size){
-  dbg("\nJabstract: testing: %s",block);
+  dbg("Jabstract: testing: %s",block);
   Indexer<const char> loaded(block,size);
 
   TAJParser parser(loaded);
@@ -104,10 +105,11 @@ void testAbstractly(const char *block,unsigned size){
   StopWatch perftimer;
   parser.parse();
 
-  dbg("\nJsonParse: after %d ms nodes:%u  scalars:%u depth:%u\n",perftimer.elapsed(), parser.stats.totalNodes, parser.stats.totalScalar, parser.stats.maxDepth.extremum);
+  dbg("JsonParse: after %g ms nodes:%u  scalars:%u depth:%u",perftimer.elapsed()*1000, parser.stats.totalNodes, parser.stats.totalScalar, parser.stats.maxDepth.extremum);
 
   if(parser.core.root) {
     printNode(1,*parser.core.root);
+    putchar('\n');
     fflush(stdout);  //to show up in debugger ASAP.
   }
 }   // testJson

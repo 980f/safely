@@ -97,13 +97,15 @@ extern void testJ(unsigned which,bool newer);
 int main(int argc, char *argv[]){
   while(argc-->0) {
     const char*tes=argv[argc];
-    dbg("\n%d: %s",argc,tes);
+    dbg("%d: %s",argc,tes);
     char group=(*tes++);
     unsigned which=atoi(tes);
     switch(group){
     case 'j': //json tests
-//      testJ(which,true);
-      testJ(which,false);
+      testJ(which,true);//newer implementation
+      break;
+    case 'J':
+      testJ(which,false);//older impl.
       break;
     case 'p'://pathparser tests
       TestPathParser::run(which);
@@ -115,7 +117,7 @@ int main(int argc, char *argv[]){
       extremely();
       break;
     case 'n':
-      printf("\nNumberFormatter: %s",NumberFormatter::makeNumber(14.5).c_str());
+      dbg("NumberFormatter: %s",NumberFormatter::makeNumber(14.5).c_str());
       break;
     case 'x':
       DeleteOnExitTestData::testme();
@@ -123,11 +125,11 @@ int main(int argc, char *argv[]){
     {
       int coedata(42);
       coe(coedata);
-      printf("\ncoe: %d should be 0",coedata);
+      dbg("coe: %d should be 0",coedata);
     }
       break;
     }
   }
-  dbg("\ntests completed \n");
+  dbg("tests completed \n");
   return 0;
 } // main
