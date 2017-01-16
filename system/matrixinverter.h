@@ -3,7 +3,7 @@
 
 
 #include <vector>
-/** dynamic sized multiregression. See determinator for simple fixed size problems */
+/** dynamic sized multiregression. See class determinator for simple fixed size problems. */
 class MatrixInverter {
 public:
   typedef std::vector<bool> Gater;
@@ -15,11 +15,10 @@ public:
 public:
   const int size; //num X's == num Coeffs.
 public:
-  /** the presence of the bogus Cxy term precludes doing various elements in parallel via a matrix of Y's, also we exclude different samples per element meaning we'd need to reload the matrix anyway.*/
   Matrix xs; //sum xXx
-  Matrix inv; //decon coeffs.
+  Matrix inv; //
   /** for fit variants manipulate the ignores*/
-  Gater ignore; //unused column&row, decons unfortunately has to always process all of them due to this being applied symmetrically.
+  Gater ignore; //unused column&row, you can build the xXx matrix once and then iterate through different model options through modifying just these.
   MatrixInverter(int size);
 public:
   static inline double diag(int cl,int rw){
@@ -31,8 +30,8 @@ public:
   /** @ param please  is an additional gating of the spew, see a static bool within the module for the other one.*/
   void dump(bool please);
   bool test();
+private:
+  inline bool inPlay(int rw,int focus) { return rw!=focus && !ignore[rw];}
 };
-#define forSize(si) for(int si=size;si-->0;)
-
 
 #endif // MATRIXINVERTER_H
