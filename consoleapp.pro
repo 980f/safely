@@ -1,9 +1,6 @@
-
+## qtcreator pro file fragment for making a non-QT console app
+QT       -= core gui
 TEMPLATE = app
-CONFIG -= app_bundle
-CONFIG -= qt
 CONFIG += console
-CONFIG +=  c++11
 
-#safely projects put their project specific includes above the application src path.
-INCLUDEPATH += ..
+include("safely.pro")
