@@ -34,4 +34,32 @@ public:
   virtual ~Settable();
 };
 
+
+/** Wrap any scalar type with settability. You gain the equivalent of Watched as a side effect. */
+template <typename Scalar> class Setting: public Settable {
+public:
+  Scalar value;
+  operator Scalar(){
+    return value;
+  }
+
+  Scalar operator =(Scalar other){
+    return value=other;
+  }
+
+  int numParams()const {
+    return 1;
+  }
+
+  bool setParams(ArgSet&args){
+    value=args.next(0);
+  }
+
+  void getParams(ArgSet&args)const {
+    args.next()=value;
+  }
+
+};
+
+
 #endif // SETTABLE_H

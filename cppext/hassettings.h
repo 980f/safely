@@ -4,7 +4,8 @@
 #include "buffer.h"
 #include "chained.h" //can't use the better chain as we don't have a heap.
 #include "charformatter.h"
-
+//we will now coerce each field to be Settable:
+#include "settable.h"
 
 // message#extraneous data seperator
 #define OOBmarker '#'
@@ -78,13 +79,13 @@ private:
   }
 
 public: //for use on GroupMapper by Settings grouper init //todo:3 friend?
-  MnemonicSet unitMap;
+  const MnemonicSet unitMap;
 public: //for constructing reports 1:1 with queue entries on self as hasSettings
   unsigned quantity;//strlen unitMap
 public:
   RoundRobiner queue;//these were 1:1 and so ... made it a member.
 public: //todo:2 make read-only
-  ID prefix;
+  const ID prefix;
 public:
   OLM(MnemonicSet unitMap);
   OLM &locate(ID code);
@@ -134,6 +135,7 @@ public:
    * @return true if fieldID is known and there was room for the args.
    */
   virtual bool getParam(ID fieldID, ArgSet&args) const = 0;
+  virtual Settable *field(ID fieldID);
   virtual void oobData(ID fieldId,CharFormatter &p);
   /** called by printReport when getParam returns false.
    * todo:M rework to call customReport which default:s to call getParam().
@@ -222,7 +224,7 @@ public:
   bool postKey(const ParamKey &parm);
 
   /** next queued item's code.*/
-  ParamKey nextReport();
+  virtual ParamKey nextReport();
   /** @return null on success, else error message*/
   const char * stuff(const ParamKey &param, CharFormatter p);
   const char * stuff(const ParamKey &param, ArgSet &args);
@@ -232,6 +234,8 @@ public:
   bool printParam(CharFormatter&response, const ParamKey &Id,bool master); //exporting reporting from command responder to allow for deferred reports
   /** by default returns a pointer to a shared buffer, don't call printReport until the previous usage has been finished*/
   bool printReport(CharFormatter&response, const ParamKey &nexrep);
+  /** get values for a named thing. @returns whether @param key was valid. This will not include any OutOfBand data. */
+  bool getParam(const ParamKey &key,ArgSet &args);
 
 }; // class SettingsGrouper
 
