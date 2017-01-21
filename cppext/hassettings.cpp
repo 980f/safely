@@ -198,6 +198,14 @@ bool SettingsGrouper::printReport(CharFormatter &response, const ParamKey &key){
   return printParam(response, key, imLinkMaster);
 }
 
+bool SettingsGrouper::getParam(const ParamKey &key,ArgSet &args) {
+  if(HasSettings *unit = unit4(key.unit, true)) {
+    return unit->getParam(key.field, args);
+  } else {
+    return false;
+  }
+}
+
 bool SettingsGrouper::postKey(const ParamKey &parm){
   HasSettings *unit = unit4(parm.unit);
   if(unit) {

@@ -14,9 +14,17 @@ SOURCES += main.cpp \
     jsontests.cpp \
     unicodetester.cpp \
     testabstractjsonparser.cpp \
-    testpathparser.cpp
+    testpathparser.cpp \
+    positionersettings.cpp \
+    markreport.cpp \
+    steppercontrol.cpp \
+    pcucontrol.cpp
 
 HEADERS += \
     unicodetester.h \
     testabstractjsonparser.h \
-    testpathparser.h
+    testpathparser.h \
+    positionersettings.h \
+    markreport.h \
+    steppercontrol.h \
+    pcucontrol.h
