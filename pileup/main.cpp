@@ -110,8 +110,8 @@ public:
 
 int main(int argc, char *argv[]){
   double cps=10000;
-  unsigned latency=32;
-  unsigned cycle=70;
+  unsigned latency=18;
+  unsigned cycle=36;
   double MHz=96.0;
   printf("\nEstimate Isr pileup");
   while(argc-->0){
