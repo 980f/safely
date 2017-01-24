@@ -3,6 +3,13 @@
 #include "string.h" //strlen  strchr
 #include "permalloc.h"
 
+//legacy:
+//oldway needs to compile:
+unsigned numIDS (MnemonicSet set){
+  return  strlen(set);
+}
+
+
 HasSettings::HasSettings(const char *plist) ://
   pMap(plist){
 }
@@ -19,6 +26,10 @@ void HasSettings::suppressField(ID fieldID){
   }
   bool &bit = reportFor(fieldID);
   bit = 0;
+}
+
+Settable *HasSettings::field(ID fieldID){
+  return nullptr;//we'll find out why this has gone missing
 }
 
 void HasSettings::oobData(ID /*fieldId*/, CharFormatter & /*p*/){
@@ -109,34 +120,34 @@ bool HasSettings::parseArgstring(ArgSet &args, CharFormatter &p){
 
 ////////////
 
-GroupMapper::GroupMapper(const char *unitMap) :
-  units(unitMap){
-  lastReporter = 0; //units exists, but peer is null at this time.
-}
+//GroupMapper::GroupMapper(const char *unitMap) :
+//  units(unitMap){
+//  lastReporter = 0; //units exists, but peer is null at this time.
+//}
 
 ParamKey GroupMapper::nextReport(){
-  OLM *scanner = lastReporter;
+//  OLM *scanner = lastReporter;
   ParamKey nexrep;//note: debugger display the address of this variable instead of its value.
-  while(!(nexrep = scanner->nextReport())) {
-    scanner = scanner->peer;
-    if(!scanner) { //maydo: make a circle when we init
-      scanner = units.peer;
-    }
-    if(scanner == lastReporter) {
-      break;
-    }
-  }
-  if(nexrep) {
-    lastReporter = scanner;
-  }
+//  while(!(nexrep = scanner->nextReport())) {
+//    scanner = scanner->peer;
+//    if(!scanner) { //maydo: make a circle when we init
+//      scanner = units.peer;
+//    }
+//    if(scanner == lastReporter) {
+//      break;
+//    }
+//  }
+//  if(nexrep) {
+//    lastReporter = scanner;
+//  }
   return nexrep;
 } // GroupMapper::nextReport
 
 void GroupMapper::markAll(bool send){
-  for(OLM *scanner = units.peer; scanner; scanner = scanner->peer) {
-    scanner->queue.markAll(send);
-  }
-  //removed to see if fixes 'screaming writes' //todo:1 research whether we should revert this: lastReporter = units.peer; //for predictable sequence
+//  for(OLM *scanner = units.peer; scanner; scanner = scanner->peer) {
+//    scanner->queue.markAll(send);
+//  }
+//  //removed to see if fixes 'screaming writes' //todo:1 research whether we should revert this: lastReporter = units.peer; //for predictable sequence
 }
 
 ////////////
@@ -148,25 +159,26 @@ bool Poster::postMessage(const char *twochar){
 
 ///////////////
 
-SettingsGrouper::SettingsGrouper(const char *unitList) :
-  grouper(unitList){
+SettingsGrouper::SettingsGrouper(const char *unitList)
+//  :grouper(unitList)
+{
   //#subordinate units may not yet be constructed so this is too soon to init the lookup mechanism.
   imLinkMaster = false;
 }
 
 void SettingsGrouper::init(){
-  for(const char *scanner = grouper.units.unitMap; *scanner; ++scanner) {
-    HasSettings *unit = unit4(ID(*scanner));
-    if(!unit) {
-      continue;//a command group is not yet implemented
-    }
-    grouper.link((unit->pMap.locate(*scanner)));
-  }
-  grouper.lastReporter = grouper.units.peer;
-  if(peer) {
-    peer->init();
-    grouper.link(*(peer->grouper.units.peer));//1st child of next group
-  }
+//  for(const char *scanner = grouper.units.unitMap; *scanner; ++scanner) {
+//    HasSettings *unit = unit4(ID(*scanner));
+//    if(!unit) {
+//      continue;//a command group is not yet implemented
+//    }
+//    grouper.link((unit->pMap.locate(*scanner)));
+//  }
+//  grouper.lastReporter = grouper.units.peer;
+//  if(peer) {
+//    peer->init();
+//    grouper.link(*(peer->grouper.units.peer));//1st child of next group
+//  }
 } // SettingsGrouper::init
 
 bool &SettingsGrouper::reportFor(const ParamKey &ID){

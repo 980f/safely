@@ -34,17 +34,18 @@ public:
   virtual ~Settable();
 };
 
-
+#include "cheaptricks.h" //changed<>()
 /** Wrap any scalar type with settability. You gain the equivalent of Watched as a side effect. */
 template <typename Scalar> class Setting: public Settable {
 public:
   Scalar value;
-  operator Scalar(){
+  operator Scalar() const{
     return value;
   }
 
   Scalar operator =(Scalar other){
-    return value=other;
+    also( ::changed<Scalar,Scalar>(value,other));
+    return other;
   }
 
   int numParams()const {
@@ -52,7 +53,7 @@ public:
   }
 
   bool setParams(ArgSet&args){
-    value=args.next(0);
+    return also(::changed(value,args.next(0)));
   }
 
   void getParams(ArgSet&args)const {

@@ -65,7 +65,7 @@ public:
   } /* push */
 
   /** pushes @param pushee into buffer, first removing 'next' one if already full. @returns this*/
-  CircularBuffer<Content> roll(const Content&pushee){
+  CircularBuffer<Content> &roll(const Content&pushee){
     if(full){
       next();
     }
@@ -77,13 +77,13 @@ public:
     return false; //todo:2 try to implement this
   }
 
-  Content&peek(void){ //QT+mingw had no problem with a ';' here, gcc arm however wouldn't create the function.
-    return CircularIndexer <Content>::peek();
-  }
+//  Content&peek(void){ //QT+mingw had no problem with a ';' here, gcc arm however wouldn't create the function.
+//    return CircularIndexer <Content>::peek();
+//  }
 
-  Content&previous(void){
-    return CircularIndexer <Content>::previous();
-  }
+//  Content&previous(void){
+//    return CircularIndexer <Content>::previous();
+//  }
 };
 
 #endif // CIRCULARBUFFER_H

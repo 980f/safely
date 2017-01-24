@@ -57,7 +57,7 @@ bool changed(double&target, double newvalue,int bits = 32);
 
 /** atomisable compare and assign
  * @returns whether assigning @param newvalue to @param target changes the latter */
-template<typename Scalar1, typename Scalar2> bool changed(Scalar1 &target, const Scalar2 &newvalue){
+template<typename Scalar1, typename Scalar2=Scalar1> bool changed(Scalar1 &target, const Scalar2 &newvalue){
   if(target != newvalue) {
     target = newvalue;
     return true;
