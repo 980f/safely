@@ -45,6 +45,7 @@ public:
     return buffer[pointer < length ? pointer : 0];
   }
 
+
   /**@return reference to item most likely delivered by last call to next()*/
   Content&previous(void){
     return buffer[(pointer == 0 ? length : pointer) - 1];

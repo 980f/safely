@@ -69,10 +69,13 @@ bool operator>(const ParamKey& lhs, const ParamKey& rhs){
 /** because bare const char *'s are deprecated for code review reasons, we typedef each class of use thereof:*/
 typedef const ID * MnemonicSet;
 
+//oldway needs to compile:
+unsigned numIDS(MnemonicSet set);
+unsigned ordinalOfID(MnemonicSet set);
 
 #include "roundrobiner.h"
 /** One Letter Mnemonic */
-class OLM : public Chained<OLM>{
+class OLM {
 private:
   void operator =(int){
     //not sensible, these are used as dispatch table indices.
@@ -85,7 +88,7 @@ public: //for constructing reports 1:1 with queue entries on self as hasSettings
 public:
   RoundRobiner queue;//these were 1:1 and so ... made it a member.
 public: //todo:2 make read-only
-  const ID prefix;
+  ID prefix;
 public:
   OLM(MnemonicSet unitMap);
   OLM &locate(ID code);
@@ -186,13 +189,13 @@ struct CustomFormatter {
 
 class GroupMapper {
 public:
-  OLM units;
-  GroupMapper(const char *unitMap);
-  OLM *lastReporter;
+//  OLM units;
+//  GroupMapper(const char *unitMap);
+//  OLM *lastReporter;
   ParamKey nextReport();
-  void link(OLM &pList){
-    units.append(&pList);
-  }
+//  void link(OLM &pList){
+//    units.append(&pList);
+//  }
 
   void markAll(bool send = true);
 }; // class GroupMapper

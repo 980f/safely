@@ -83,12 +83,6 @@ private:
 }; // class PushedNumberParser
 
 
-//struct NumberParser : public NumberParserState {
-//  static int parseUnsigned(u64&n, PeekableSequence<char >&p);
-//  void parseFraction(PeekableSequence<char >&p);
-//  bool parseNumber(LatentSequence<char >&p);
-//  /** parseNumber followed by packing it into a double, on error get NaN*/
-//  double getValue(LatentSequence<char >&p);
-//};
+
 
 #endif // NUMBERPARSER_H

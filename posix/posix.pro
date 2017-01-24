@@ -23,5 +23,4 @@ HEADERS += \
     posixwrapper.h \
     perftimer.h \
     stopwatch.h \
-    vargs.h \
     posixlogger.h

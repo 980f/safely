@@ -3,7 +3,7 @@
 CONFIG -= app_bundle
 CONFIG -= qt
 #we want the same language in use everywhere:
-CONFIG += c++14
+CONFIG += c++11
 
 #safely projects put their application specific includes above the application src path.
 INCLUDEPATH += .. 

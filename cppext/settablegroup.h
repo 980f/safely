@@ -11,7 +11,7 @@ template <class SG1> struct SettingTag {
   /** item which reads and writes ArgSets */
   Settable SG1::*settable;
   /** another ArgSet reader and writer, which gets the tail end of any argset that the primary has had its way with */
-  Settable SG1::*sibling=0;
+  Settable SG1::*sibling;
 };
 
 /** for what was once HasSettings we make a table */

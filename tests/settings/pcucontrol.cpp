@@ -26,18 +26,18 @@ PcuControl::PcuControl():
 }
 
 HasSettings *PcuControl::unit4(ID asciiId,bool /*ignored*/){
-  switch(grouper.units(asciiId)) {
-  default: return 0;
-  case O: return &poller;
-  case M: return r; //possibly null
-  case F: return &wheel.c;
-  case W: return &wheel;
-  case T: return &stray.c;
-  case R: return &stray;
-  case D: return &door;
-  case L: return &lamp;
-  case P: return &purge;
-  case S: return &beSpinning;
+  switch(asciiId) {
+  default: return nullptr;
+  case 'O': return &poller;
+  case 'M': return r; //possibly null
+  case 'F': return &wheel.c;
+  case 'W': return &wheel;
+  case 'T': return &stray.c;
+  case 'R': return &stray;
+  case 'D': return &door;
+  case 'L': return &lamp;
+  case 'P': return &purge;
+  case 'S': return &beSpinning;
   } /* switch */
 } /* unit4 */
 

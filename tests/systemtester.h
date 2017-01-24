@@ -2,6 +2,7 @@
 #define SYSTEMTESTER_H
 
 #include "storable.h"
+#include "stdio.h"
 
 class SystemTester {
 
@@ -16,9 +17,9 @@ public:
 }; // class SystemTester
 
 
-int main(int argc,char *argv[]){
-  SystemTester tester;
+//int main(int argc,char *argv[]){
+//  SystemTester tester;
 
-}
+//}
 
 #endif // SYSTEMTESTER_H

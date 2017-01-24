@@ -12,6 +12,7 @@ public:
   int numParams()const{ return 1;}
   bool setParams(ArgSet&args){
     one=args.next();
+    return isModified();
   }
   void getParams(ArgSet&args)const{
     args.next()=one;
@@ -28,6 +29,7 @@ public:
   bool setParams(ArgSet&args){
     two=args.next();
     one=args.next();
+    return isModified();
   }
   void getParams(ArgSet&args)const{
     args.next()=two;
@@ -38,14 +40,15 @@ public:
 
 
 class SettingsTestData {
+public:
   STDOne roger;
   STDTwo wilco;
 };
 
 
 SettingTag<SettingsTestData> myMapper []={
-  {'R',SettingsTestData::roger},
-  {'W',SettingsTestData::wilco},
+  {'R', reinterpret_cast<Settable SettingsTestData::*>( &SettingsTestData::roger),nullptr},
+  {'W', reinterpret_cast<Settable SettingsTestData::*>( &SettingsTestData::wilco),nullptr},
 };
 
 #endif // SETTINGSTESTDATUM_H
