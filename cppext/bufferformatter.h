@@ -1,66 +1,33 @@
-#ifndef TEXTFORMATTER_H
-#define TEXTFORMATTER_H
+#ifndef BUFFERFORMATTER_H
+#define BUFFERFORMATTER_H
 
-#include "textpointer.h"
 #include "charformatter.h"
 #include "numberformatter.h"
 
 #include "utf8.h" //isdigit
 
 
-/** class for formatting values into a Text object. this replaces most of glib::ustring's extensions to std::string
- * compared to other string class implemenations this takes pain to realloc only when absolutely necessary. It does not do fancy memory management like copy-on-write,,
- * the fanciest thing it does is predict what a bunch of concatenation will require before attempting that concatenation, allocating just what is needed.
-
+/** for args safe pritning into a buffer.
+ * This differs from TextFormatter class which will resize the buffer, this will just clip.
 */
-class TextFormatter : public Text {
+class BufferFormatter {
   /** wraps format string, gets rewound a lot */
   CharScanner format;
   /** wraps Text for assembling string */
   CharFormatter body;
   /** stateful number formatting, an inline NF item applies to all higher indexed values */
   NumberFormat nf;
-  /** whether we are computing size of final string or assembling it */
-  bool sizing=true;
   /** tag of next argument to format+insert */
   unsigned which = BadIndex;//weird value for debug, should always be written to before use by proper code.
-  /** when we have no space the print is a dry run that computes instead of formats */
-  unsigned sizer = 0;
 
-  struct Piece {
-    // how many times reference in the string, usually 0 or 1
-    unsigned refcount;
-    // how many bytes it needed.
-    unsigned length;
-  };
-
-//todo: count and malloc  Piece *lengthCache=nullptr;
-  Piece lengthCache[10];//so long as we only can handle single digit place indicators we can do a fixed allocation here.
-
-  struct Insertion {
-    int which;
-    //offset from start of final string where the insertion goes.
-    int position;
-  };
-  //we allocate this by summing the refcounts of the lengthCache items.
-  Insertion *inserts=nullptr;
-
-  TextFormatter(TextKey mf);
-private:
-  TextFormatter();
 public:
-  ~TextFormatter();
+  BufferFormatter();
+  ~BufferFormatter();
 private:
   void substitute(TextKey stringy){
     CharScanner risky=CharScanner::infer(Cstr::violate(stringy));
     risky.dump();
-    if(sizing) {
-      sizer -= 2; //remove tag
-      sizer += risky.allocated()-1;
-    } else {
-//      body.remove(2);
-      //todo: insert string without changing body allocation.
-    }
+
   }
 
   //** compiler might have figured this out, but it is nice to able to breakpoint on this until we have proven the class */
@@ -83,7 +50,8 @@ private:
   }
 
   void substitute(double value){
-    char widest[Zguard(nf.needs())];
+    int space=nf.needs();
+
     CharFormatter workspace(widest,sizeof(widest));
     if( !workspace.printNumber(value,nf.precision)) {//if failed to insert anything
       workspace.printChar('?');//replaces '%'
@@ -116,7 +84,7 @@ private:
     while(body.hasNext()) {
       char c = body.next();
       if(c == '%'&&body.hasNext()) {
-        //todo: parseInt so that we canhave more than 10 args
+        //todo: parseInt so that we can have more than 10 args
         char d = body.next();
         if(d - '0' == which) { //splice in ref
           substitute(item);
@@ -151,3 +119,6 @@ public:
 }; // class TextFormatter
 
 #endif // TEXTFORMATTER_H
+
+
+#endif // BUFFERFORMATTER_H
