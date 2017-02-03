@@ -89,6 +89,18 @@ void extremely(){
 
 } // extremely
 
+
+#include "bufferformatter.h"
+
+void testBufferFormatter(){
+  char bigenough[200];
+
+  CharFormatter buffer(bigenough);
+  BufferFormatter::composeInto(buffer,"One $1",1984);
+  dbg("\nShould be <One 1984>:<%s>",bigenough);
+}
+
+
 extern void testJ(unsigned which,bool newer);
 #include "unicodetester.h"
 #include "numberformatter.h"
@@ -101,6 +113,9 @@ int main(int argc, char *argv[]){
     char group=(*tes++);
     unsigned which=atoi(tes);
     switch(group){
+    case 'b'://buffer formatting
+      testBufferFormatter();
+      break;
     case 'j': //json tests
       testJ(which,true);//newer implementation
       break;

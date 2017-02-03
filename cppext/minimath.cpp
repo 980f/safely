@@ -80,7 +80,7 @@ int ilog10(u64 value){
       return log+10;
     }
   }
-  return -1;
+  return ilog10(u32(value));
 }
 
 
@@ -287,39 +287,51 @@ double logRatio(u32 over, u32 under){
 }
 #endif /* if logoptimized */
 
-/** n!/r! = n*(n-1)..*(n-r+1) */
-u32 Pnr(unsigned n, unsigned  r){
+/** n!/r!(n-r)! = n*(n-1)..*(n-r+1)/r*(r-1)..
+This is done in a complicated fashion to increase the range over what could be done if the factorials were computed then divided.
+*/
+u32 Cnr(unsigned n, unsigned  r){
   if(r<=0){//frequent case and avert naive divide by zero
     return 1;
   }
   if(r==1){//fairly frequent case
     return n;
   }
-  u32 num=n;
-  while(r-->0){
-    num*=--n;
+  if(r==2){
+    //divide the even number by 2, via shift.
+    if(n&1){
+      return n*((n-1)>>1);
+    } else {
+      return (n>>1)*(n-1);
+    }
   }
-  return num;
-}
 
-///** n!/r!(n-r)! = n*(n-1)..*(n-r+1) / r! */
-//u32 Cnr(unsigned n, unsigned  r){
-//  if(r<=0){//frequent case and avert naive divide by zero
-//    return 1;
-//  }
-//  if(r==1){//fairly frequent case
-//    return n;
-//  }
-//  u32 num=n;
-//  while(n-->r){//n!/(n-r)!
-//    num*=n;
-//  }
-//  u32 den=r;
-//  while(r-->1){
-//    den*=r;
-//  }
-//  return num/den;//#zero is checked
-//}
+  u32 num=n;
+  u32 denom=r;
+  //optimize range by removing power of 2 from factorials while computing them
+  int twos=0;
+  while(r-->0){
+    unsigned nterm=--n;
+    while(0==(nterm&1)){//50% of the time we loop just once, 25% of the time twice 12.5% of the time 3 times ...
+      ++twos;
+      nterm>>=1;
+    }
+    num*=nterm;
+    unsigned rterm=r;
+    while(0==(rterm&1)){
+      --twos;//these discarded twos are in the denominator
+      rterm>>=1;
+    }
+    denom*=rterm;
+  }
+  //twos should be a small
+  if(twos>=0){
+    num<<=twos;
+  } else {
+    denom<<=-twos;
+  }
+  return rate(num,denom);
+}
 
 extern "C" {
 
@@ -336,11 +348,12 @@ int splitter(double &d){
 
 ///** version of @see splitter that allows for long or long-long etc integer types.
 
-template <typename Integrish> Integrish intbin(double &d){
+template <typename Integrish,typename Floater> Integrish intbin(Floater &d){
   double eye;
   d=modf(d,&eye);
   return Integrish(eye);
 }
 
-template <> int intbin<int>(double &d);
-template <> long intbin<long>(double &d);
+template <> int intbin<int,double>(double &d);
+template <> long intbin<long,double>(double &d);
+template <> long long intbin<long long,double>(double &d);

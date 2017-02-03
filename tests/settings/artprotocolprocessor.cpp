@@ -76,7 +76,7 @@ bool ArtProtocolProcessor::doLogic(){ //on any interrupt by any component
 
     switch(command) {
     default:
-      if(!NumberParserPieces::startsNumber(command)) {
+      if(!NumberPieces::startsNumber(command)) {
         failed();
         return false;
       }
