@@ -18,6 +18,7 @@ public:
   virtual ~CharScanner();
   /** explicit copy constructor helps compiler out, better than defaulting portion to 0*/
   CharScanner(const CharScanner &other);
+  CharScanner(const Indexer<char>&other);
 
   /** make a new pointer into an existing buffer, the portion of thereof selected by
    * @param portion is -1 (~0) for 0 to pointer, +1 for pointer to allocated, 0 for 0 to allocated.

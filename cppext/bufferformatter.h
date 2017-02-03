@@ -2,63 +2,34 @@
 #define BUFFERFORMATTER_H
 
 #include "charformatter.h"
-#include "numberformatter.h"
-
+#include "numberformat.h"
+#include "halfopen.h"
 #include "utf8.h" //isdigit
+#include "cstr.h" //sane string
 
-
-/** for args safe pritning into a buffer.
+/** for args safe printing into a buffer.
  * This differs from TextFormatter class which will resize the buffer, this will just clip.
 */
 class BufferFormatter {
-  /** wraps format string, gets rewound a lot */
-  CharScanner format;
   /** wraps Text for assembling string */
   CharFormatter body;
   /** stateful number formatting, an inline NF item applies to all higher indexed values */
   NumberFormat nf;
   /** tag of next argument to format+insert */
   unsigned which = BadIndex;//weird value for debug, should always be written to before use by proper code.
-
+  /** bounds of replacement specification */
+  Span spec;
 public:
-  BufferFormatter();
-  ~BufferFormatter();
+  BufferFormatter(const CharFormatter &other,TextKey format);
+//  ~BufferFormatter();
 private:
-  void substitute(TextKey stringy){
-    CharScanner risky=CharScanner::infer(Cstr::violate(stringy));
-    risky.dump();
+  bool insert(const char *stringy,unsigned length);
 
-  }
+  void substitute(Cstr stringy);
 
-  //** compiler might have figured this out, but it is nice to able to breakpoint on this until we have proven the class */
-  void substitute(Cstr stringy){
-    substitute(CharFormatter::infer(stringy.violated()));
-  }
+  void substitute(Indexer<char> buf);
 
-  /** the primary substituter, all others defer to this */
-  void substitute(CharFormatter buf){
-    if(sizing){
-      sizer-=2;
-      sizer+=buf.used();
-    } else {
-      //shove data up
-      //point to '$'
-      body.rewind(2);
-      //overlay
-      body.appendUsed(buf);
-    }
-  }
-
-  void substitute(double value){
-    int space=nf.needs();
-
-    CharFormatter workspace(widest,sizeof(widest));
-    if( !workspace.printNumber(value,nf.precision)) {//if failed to insert anything
-      workspace.printChar('?');//replaces '%'
-      workspace.printDigit(which);
-    }
-    substitute(workspace.used());
-  }
+  void substitute(double value);
 
   /** templated printf:
    *  each argument is pulled out of the pack from left to right.
@@ -73,6 +44,10 @@ private:
     }
   }
 
+  template<typename ... Args> void next(){
+    //done
+  }
+
 //if it is a number format then record it and apply to following items, no substition takes place..
   template<typename ... Args> void compose_item( NumberFormat &item, const Args& ... args){
     nf = item;
@@ -83,13 +58,18 @@ private:
     body.rewind();
     while(body.hasNext()) {
       char c = body.next();
-      if(c == '%'&&body.hasNext()) {
-        //todo: parseInt so that we can have more than 10 args
-        char d = body.next();
-        if(d - '0' == which) { //splice in ref
-          substitute(item);
-          //by not returning here we allow for multiple substitutions of one argument.
+      if(c == '$'&&body.hasNext()) {
+        spec.lowest=body.ordinal()-1;
+        UTF8 d = body.next();
+        if(d.isDigit()){//single digit simple spec
+          if(d - '0' == which) { //splice in ref
+            spec.highest=body.ordinal();
+            substitute(item);//moves pointer into body, so an insertion can't loop to itself or earlier items.
+            //by not returning here we allow for multiple substitutions of one argument.
+          }
         }
+        //todo: parseInt so that we can have more than 10 args
+
       }
     }
     next(args ...);
@@ -97,28 +77,14 @@ private:
 
 public:
 
-  /** @returns maximum number of chars it will take to show the given number */
-  static unsigned estimateNumber(double value);
-  /** @returns maximum number of chars it will take to show the given unicode char (given 1st byte of utf8) */
-  static unsigned estimateSlashu(char unifirst);
-  /** @returns maximum number of chars it will take to show the given string escaping with \u and \U */
-  static unsigned estimateSlashu(TextKey value);
-
-
-public:
-  /** @returns composition of arguments using NumberFormatter rules */
-  template<typename ... Args> static Text compose(TextKey format, const Args ... args){
-    TextFormatter worker(format); //a zero size formatter computes required length via a dry run at formatting
-    worker.sizing=true;
-    worker.compose(format,args ...);
-    worker.sizing=false;
-    worker.compose(format, args ...);
-    return Text(worker.body.internalBuffer());
+  /** */
+  template<typename ... Args> static void composeInto(CharFormatter target,TextKey format, const Args ... args){
+    BufferFormatter worker(target,format); //a zero size formatter computes required length via a dry run at formatting
+    worker.compose_item(args ...);
   }
 
 }; // class TextFormatter
 
-#endif // TEXTFORMATTER_H
 
 
 #endif // BUFFERFORMATTER_H

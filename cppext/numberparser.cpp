@@ -5,65 +5,8 @@
 
 #include "ctype.h"
 
-/** maximum value that can be multiplied by 10 and not exceed 2^64: */
-const u64 DecimalCutoff = (1UL<<63)/5; //2^64 /10 == 2^63/5, needed to take care that the compiler didn't get a wrap.
-
-double NumberParserPieces::packed() const {
-  if(isNan) {
-    return Nan;
-  }
-  if(isInf) {
-    return negative ? -Infinity : Infinity;
-  }
-  int exp = int(exponent);//safe truncation
-  if(negativeExponent) {
-    exp = -exp;
-  }  
-  //exp is now the user given exponent
-
-  double number = predecimal;
-  if(pow10 > 0) { //then trailing digits of predecimal part were lopped off
-    number *= ::pow10(pow10);
-    //ignore all postdecimal processing as numerically insignificant.
-  } else {
-    //have to figure out how many digits the fractional part had
-    double fract = postdecimal;
-    fract *= ::pow10(-div10);
-    number += fract;
-  }
-  number *= ::pow10(exp);//and apply user provide power
-  return negative ? -number : number;
-}
-
-bool NumberParserPieces::seemsOk() const {
-  if (!isNan&&!isInf){
-    if(isZero || predecimal || postdecimal){//perfect zero or had some digits
-      return true;
-    }
-  }
-  return false;
-} // NumberParserState::packed
-
-bool NumberParserPieces::startsNumber(char c){
-  return isdigit(c) || c == '-' || c == '.'; //'.' tolerates lack of a leading zero
-}
-
-void NumberParserPieces::reset(void){
-  isNan = false;
-  isInf = false;
-  negative = false;
-  predecimal = 0;
-  pow10 = 0;
-  postdecimal = 0;
-  div10 = 0;
-  hasEterm = false;
-  exponent = 0;
-  negativeExponent = false;
-} // NumberParserState::reset
-
-
 void PushedNumberParser::reset(){
-  NumberParserPieces::reset();
+  NumberPieces::reset();
   processed = 0;
   phase=Start;
 }

@@ -54,7 +54,11 @@ SOURCES += argset.cpp \
     poissonfeeder.cpp \
     settablegroup.cpp \
     pushedparser.cpp \
-    localonexit.cpp
+    localonexit.cpp \
+    bufferformatter.cpp \
+    numberformat.cpp \
+    countdown.cpp \
+    numberpieces.cpp
 
 
 HEADERS += safely.h \
@@ -126,4 +130,8 @@ HEADERS += safely.h \
     poissonfeeder.h \
     settablegroup.h \
     pushedparser.h \
-    localonexit.h
+    localonexit.h \
+    bufferformatter.h \
+    numberformat.h \
+    countdown.h \
+    numberpieces.h

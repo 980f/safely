@@ -2,29 +2,6 @@
 
 #include "charformatter.h"
 
-NumberFormat::NumberFormat(){
-  clear();
-}
-
-unsigned NumberFormat::needs() const {
-  //todo:0 very bogus math herein
-  if(fieldWidth>0) {
-    return fieldWidth;
-  } else {
-    return precision>0 ? 17 + 1 + 1 + precision : -precision; //todo: add space for E-xxxx
-  }
-}
-
-void NumberFormat::clear(){
-  fieldWidth = BadLength;
-  precision = 17; //ieee 64bit
-}
-
-void NumberFormat::onUse(){
-  if(usages.last()) {
-    clear();
-  }
-}
 
 NumberFormatter::NumberFormatter(int precision, TextKey postfix) :
   postfix(postfix){

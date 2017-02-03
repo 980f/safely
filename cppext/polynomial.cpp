@@ -10,10 +10,10 @@ double polysum(double x,const double *a,int degree, unsigned prime){
       acc += a[i];
     }
   } else {
-    acc*=Pnr(degree,prime);
+    acc*=Cnr(degree,prime);
     for(unsigned i = degree; i-- > prime; ) {
       acc *= x;
-      acc += a[i] * Pnr(i,prime);
+      acc += a[i] * Cnr(i,prime);
     }
   }
   return acc;

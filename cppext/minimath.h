@@ -25,7 +25,7 @@ bool isSignal(double d);
 /** 'signbit' is a macro in math.h that pertains only to floating point arguments
   * @return sign of operand, and convert operand to its magnitude, MININT(0x800...) is still MININT and must be interpreted as unsigned to work correctly
   */
-inline int signabs(int &absolutatus) {
+template <typename Numerical> int signabs(Numerical &absolutatus) {
   if(absolutatus < 0) {
     absolutatus = -absolutatus;
     return -1;
@@ -51,11 +51,12 @@ template< typename mathy > int signof(mathy x) {
   return 0;
 }
 
+/** @returns positivity as a multiplier */
 inline int polarity(bool positive){
   return positive?1:-1;
 }
 
-/** negative if lhs is < rhs, 0 if lhs==rhs, +1 if lhs>rhs \.
+/** negative if lhs is < rhs, 0 if lhs==rhs, +1 if lhs>rhs .
 to sort ascending if returns + then move lhs to higher than rhs.
 */
 template< typename mathy > int compareof(mathy lhs,mathy rhs) {
@@ -107,6 +108,7 @@ inline float ratio(float num, float denom) {
   return num / denom;
 }
 
+/** @returns whether d is a numerical value, excludes signalling values but includes zero.*/
 bool isSignal(double d);
 
 /** quantity of bins needed to hold num items at denom items per bin*/
@@ -164,9 +166,10 @@ template <typename mathy> double squared(mathy x) {
 
 double degree2radian(double theta);
 
-/** n!/r! = n*(n-1)..*(n-r+1)
+/** n!/r!(n-r)! combinatorial function.
+ * Was formerlry named and documented as Pnr, but implementation was correct for Cnr and so was its usages.
 */
-u32 Pnr(unsigned n, unsigned  r);
+u32 Cnr(unsigned n, unsigned  r);
 
 inline u32 min(u32 a, u32 b) {
   if(a < b) {
@@ -286,6 +289,8 @@ extern "C" { //assembly coded in cortexm3.s, usually due to outrageously bad com
 
 } //end extern C for assembly coded routines.
 
-
-template <typename Integrish> Integrish intbin(double &d);
+/** variants of splitter, allowing for greater range. @see splitter is optimized for numbers less than 32k
+@param d is replaced with its fractional part, the function @returns the integer part, @see standard math lib's modf for edge cases.
+*/
+template <typename Integrish, typename Floater> Integrish intbin(Floater &d);
 #endif /* ifndef minimath_h */

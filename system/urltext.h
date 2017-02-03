@@ -2,7 +2,7 @@
 #define URLTEXT_H
 
 #include "cstr.h"
-#include "cheaptricks.h"
+#include "countdown.h"
 #include "charscanner.h"
 #include "char.h"
 
