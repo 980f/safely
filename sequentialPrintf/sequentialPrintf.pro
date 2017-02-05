@@ -1,6 +1,5 @@
-TEMPLATE = app
-CONFIG += console c++11
-CONFIG -= app_bundle
-CONFIG -= qt
+
+include("../consoleapp.pro")
+include("../cppext/lib.pro")
 
 SOURCES += main.cpp

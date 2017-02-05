@@ -35,6 +35,13 @@ template<typename Scalar> Scalar flagged(Scalar&varb){
   return was;
 }
 
+/** take a value, @returns @param varb's value then clears it.*/
+template<typename Scalar> Scalar take(Scalar&varb){
+  Scalar was=varb;
+  varb=0;
+  return was;
+}
+
 /** atomisable test and set
  * if arg is false set it to true and return true else return false.*/
 inline bool notAlready(bool &varb){

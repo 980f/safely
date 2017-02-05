@@ -5,5 +5,5 @@ CONFIG -= qt
 #we want the same language in use everywhere:
 CONFIG += c++11
 
-#safely projects put their application specific includes above the application src path.
+#safely projects put their application specific includes above the module src path.
 INCLUDEPATH += .. 
