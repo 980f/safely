@@ -1,6 +1,6 @@
 # // *INDENT-OFF* protects against pretty printers
-#magic for making a static lib
 
+#magic for making a static lib
 include ("../staticlib.pro")
 
 #permalloc needs a define: this is only non-zero in microcontrollers (heapless systems)
