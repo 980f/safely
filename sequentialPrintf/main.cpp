@@ -2,31 +2,40 @@
 
 using namespace std;
 
-
-#include <tuple>
-
 //dummy writer, will pass a writer function into printer once it works well.
-template<typename Any> void write(Any &c){
+template<typename Any> void write(Any &&c){
   cout<<c;
 }
 
-template<typename First,typename ... Args> auto select(int which,First first,Args ...args){
+bool PrintItem(unsigned ){
+  //must exist for compilation, should never get called.--unless arg is passed end of list.
+  return false;//ran off end of arg list
+}
+
+template<typename First,typename ... Args> bool PrintItem(unsigned which, const First first, const Args ... args){
   if(which==0){
-    return first;
+    write(first);
+    return true;
   } else {
-    return select(which-1,args...);
+    return PrintItem(which-1,args...);
   }
 }
 
-template<typename ... Args>  void  Printf(const char *fmt, std::tuple<Args ...> &pack){
+
+template<typename ... Args> static void  Printf(const char *fmt, const Args ... args){
   char c;
   while((c=*fmt++)){
     if(c!='{'){
       write(c);
+      continue;
     }
     //we've seen an open curly
     unsigned argIndex=*fmt++-'0';//primitive get digit
-    write( select<Args...>(argIndex,pack));
+    if(!PrintItem(argIndex,args...)){
+      write('{');
+      write(argIndex+'0');
+      continue;
+    }
     if(*fmt++!='}'){
       cerr<<"formatting extensions NYI\n";
     }
@@ -34,13 +43,7 @@ template<typename ... Args>  void  Printf(const char *fmt, std::tuple<Args ...> 
 }
 
 
-template<typename ... Args> static void  Printf(const char *fmt, const Args ... args){
-  std::tuple<Args...>pack(args...);
-  Printf(fmt,pack);
-}
-
-
 int main(int , char *[]){
-  Printf("One {1} Two {2} Three {3}",1,2,3);
+  Printf("One {0} Two {1} Three {2}",1,2,"tree");
   return 0;
 }
