@@ -4,7 +4,7 @@
 include ("../staticlib.pro")
 #our sibling with heapless code
 include("../cppext/lib.pro")
-#our sibling with heapless code
+#our sibling with mallocating code, but no OS per se:
 include("../system/lib.pro")
 
 SOURCES += \
@@ -14,7 +14,8 @@ SOURCES += \
     perftimer.cpp \
     stopwatch.cpp \
     filer.cpp \
-    posixlogger.cpp
+    posixlogger.cpp \
+    streamprintf.cpp
 
 HEADERS += \
     fdset.h \
@@ -23,4 +24,5 @@ HEADERS += \
     posixwrapper.h \
     perftimer.h \
     stopwatch.h \
-    posixlogger.h
+    posixlogger.h \
+    streamprintf.h
