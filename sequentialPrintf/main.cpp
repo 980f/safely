@@ -33,7 +33,7 @@ template<typename ... Args> static void  Printf(const char *fmt, const Args ... 
     unsigned argIndex=*fmt++-'0';//primitive get digit
     if(!PrintItem(argIndex,args...)){
       write('{');
-      write(argIndex+'0');
+      write(char(argIndex+'0'));
       continue;
     }
     if(*fmt++!='}'){
@@ -44,6 +44,7 @@ template<typename ... Args> static void  Printf(const char *fmt, const Args ... 
 
 
 int main(int , char *[]){
-  Printf("One {0} Two {1} Three {2}",1,2,"tree");
+  Printf("One {0} Two {1} Three {2} and not {5}",1,2,"tree");
+  cerr<<endl;
   return 0;
 }
