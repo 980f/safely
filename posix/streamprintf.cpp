@@ -11,3 +11,10 @@ StreamPrintf::StreamPrintf(std::ostream &cout):
   cout(cout){
   //we retain a copy as the more derived type of stream while passing it as a base to the baser class.
 }
+
+StreamScanf::StreamScanf(std::istream &stream):
+  StreamFormatter(stream),
+  cin(stream)
+{
+  //#nada
+}
