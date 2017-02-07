@@ -3,10 +3,23 @@
 
 #include <iostream>
 
+//because of templates, we must include this now:
+#include "index.h"
 
 class StreamPrintf {
   std::ostream &cout;
-  //dummy writer, will pass a writer function into printer once it works well.
+  std::ios_base::fmtflags pushedFlags;
+
+  void beginParse();
+
+  template<typename Any> void write(double &&c){
+//    std::cerr<<"Member:"<<&cout<<" cout:"<<&std::cout<<" this:"<<this<<std::endl;
+    cout.flush();
+    std::cerr << '<' << cout.flags() << '>';
+    cout << c;
+  }
+
+
   template<typename Any> void write(Any &&c){
     cout << c;
   }
@@ -25,13 +38,13 @@ class StreamPrintf {
     }
   }
 
-  bool parsingIndex = false;
-  unsigned argIndex = ~0;//init to invalid
+  bool parsingIndex;
+  unsigned argIndex;//init to invalid
 
-  bool parsingFormat = false;
-  bool invertOption = false;
-  bool keepFormat = false;
-  unsigned formatValue = ~0;
+  bool parsingFormat;
+  bool invertOption;
+  bool keepFormat;
+  unsigned formatValue;
 
   /** called after item has been printed */
   void dropIndex();
@@ -49,36 +62,34 @@ class StreamPrintf {
   /** inspects format character @param c and @returns whether an item should be printed. */
   bool printNow(char c); // printNow
 
-  void afterPrinting(){
-    dropIndex();
-    if(!keepFormat) {
-//            cout<<std::ios::reset(~0);//todo: only clear flags that our options might set, or track ones we have set. or save flags when we start formatParsing and
-// write them back here.
-    }
-    dropFormat();
-  }
+  void afterPrinting();
 
 public:
   /** attach to a stream */
   StreamPrintf(std::ostream &ostr);
 
+
   template<typename ... Args> void Printf(const char *fmt, const Args ... args){
     char c;
+    beginParse();
     while((c = *fmt++)) {
       if(printNow(c)) {
-        if(formatValue) {
-          cout.width(formatValue);
-        }
         if(!PrintItem(argIndex,args ...)) {
           missingField();
         }
         afterPrinting();
-
-      } // Printf
+      }
     }
   } // Printf
 
   void startIndex();
+  void clearFormatValue();
+protected:
+// the following did not work as the ostream inherited virtually from the base class that actually had the methods needed:
+//  typedef std::streamsize (std::ostream::*Attributor)(std::streamsize);
+//  void applyFormat(Attributor func);
+  enum FormatValue {Widthly, Precisely};
+  void applyFormat(FormatValue whichly);
 }; // class StreamPrintf
 
 #endif // STREAMPRINTF_H
