@@ -4,8 +4,8 @@
 #include <iostream>
 
 //because of templates, we must include this now:
-#include "index.h"
-
+#include "index.h"  //isValid
+#include "char.h"
 class StreamFormatter {
 protected:
   std::ostream &cout;
@@ -111,9 +111,7 @@ public:
         afterActing();
         break;
       case Escaped:
-        if(c=='n'){//just doing one for proof of principle, will import c-escape stuff and do the usualy suspects
-          c='\n';
-        }
+        c=Char(c).slashee();
         //#JOIN
       case Pass:
         write(c);

@@ -1,6 +1,9 @@
 #include "char.h"
 #include "ctype.h"
-//#include "cheaptricks.h"
+
+
+#include "index.h"  //for escaping
+#include "cstr.h"   //for escaping
 
 bool isPresent(const char *flags, char flag){
   int badStringLimiter = 26; //in case string pointer is garbage we don't want to read all of ram
@@ -15,6 +18,29 @@ bool isPresent(const char *flags, char flag){
   }
   return false;
 } /* isPresent */
+
+/** In the string below there are pairs of (escape code: escaped char) e.g. n\n
+ * it looks confusing as some of the chars being escaped are unchanged by the process.
+ * when removing a slash you search for the char and pass back the odd member of the pair
+ * when adding slashes you find the char and emit a slash and the even member of the pair
+*/
+static const char *SeaScapes="a\a" "b\b" "c\x03" "f\f" "n\n" "r\r" "t\t" "v\v" "\\\\" "//" "''" "??" "\"\"";
+
+
+bool Char::needsSlash()const noexcept{
+  return Index(Cstr(SeaScapes).index(raw)).isOdd();//isOdd includes checking for valid.
+}
+
+/** while named for one usage this works symmetrically */
+char Char::slashee() const noexcept {
+  Index present= Cstr(SeaScapes).index(raw);
+  if(present.isValid()){
+    return SeaScapes[1^present];//xor with 1 swaps even and odd.
+  } else {
+    return raw;
+  }
+}
+
 
 ////////////////////////////////////
 

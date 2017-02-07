@@ -2,6 +2,7 @@
 #include "string.h" //strlen  strchr
 #include "cheaptricks.h" //flagged
 #include "hassettings.h" //for ordinalOfID()
+//todo: use Char class to share the set of escapes, perhaps even integrate utf8
 
 bool AsciiFramer::onReception(int octet) { //#called from an ISR
   if(octet > 0) { //nulls are ignored, so that they can be used as part of flushing a transmitter.
@@ -16,6 +17,7 @@ bool AsciiFramer::onReception(int octet) { //#called from an ISR
       }
       return true;//drop the newline that gets us back into phase.
     }
+    //do crlf to lf translation, as well as lone cr to lf.
     if(octet=='\r'){
       cred=true; //multiple successive \r's become one. cr cr lf == lf
       return true;
