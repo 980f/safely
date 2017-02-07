@@ -65,7 +65,42 @@ public:
     uch |= hexDigit();
   }
 
+  /** if this is a hexadecimal digit then apply it to @param accumulator, @returns whether it did so */
+  template <typename Intish> bool appliedNibble(Intish&accumulator)const noexcept{
+    if(isHexDigit()) {
+      hexDigit(accumulator);
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  /** when you are really sure that this is a decimal digit then call this guy, else call @see appliedDigit */
+  template <typename Intish> void applyTo(Intish&accumulator)const noexcept{
+    int digit = raw - '0';
+    accumulator *= 10;
+    accumulator += digit;
+  }
+
+  /** if this is a decimal digit then apply it to @param accumulator, @returns whether it did so */
+  template <typename Intish> bool appliedDigit(Intish&accumulator)const noexcept{
+    if(isDigit()) {
+      applyTo(accumulator);
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  /** hex digit character for the 0th==low or 1th=high nibble of this char.
+   * we could use a boolean for the nibble select, but want this to look like the unicode variation of this class.*/
   char hexNibble(unsigned sb) const noexcept;
+
+/** @returns whether this char needs a slash preceding it */
+  bool needsSlash() const noexcept;
+
+/** @returns the c-escape partner of this. 'n' goes to newline, a newline goes to 'n' */
+  char slashee()const noexcept;
 };
 
 #endif // CHAR_H
