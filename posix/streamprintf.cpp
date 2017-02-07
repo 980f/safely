@@ -78,7 +78,7 @@ StreamFormatter::Action StreamFormatter::applyItem(char c){
     } else if(parsingIndex){
       startFormat();//and fall through
     } else {
-      return Pass;
+      return Escaped;
     }
   }
   if(c=='\\'){

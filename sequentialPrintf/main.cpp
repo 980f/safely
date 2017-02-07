@@ -13,7 +13,7 @@ int main(int argc, char *argv[]){
       cerr<<"Bad test selection index"<<endl;
     }
   } else {
-    for(which=argc;which-->=2;){//argv0 is command, argv.1 is which index
+    for(which=argc;which-->2;){//argv0 is command, argv.1 is which index
       pf.Printf(argv[which],1,2.3,"tree",-4.1);
     }
   }
