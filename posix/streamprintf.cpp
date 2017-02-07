@@ -81,6 +81,10 @@ StreamFormatter::Action StreamFormatter::applyItem(char c){
       return Pass;
     }
   }
+  if(c=='\\'){
+    slashed=true;
+    return FeedMe;
+  }
   if(parsingIndex) {
     if(appliedDigit(c,argIndex)) {
       return FeedMe;

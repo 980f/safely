@@ -24,7 +24,7 @@ protected:
 
 //format string parse states and values:
   bool parsingIndex;
-  unsigned argIndex;//init to invalid
+  unsigned argIndex;
 
   bool parsingFormat;
   unsigned formatValue;
