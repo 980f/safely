@@ -7,7 +7,7 @@
 #include "cheaptricks.h"
 
 void StreamFormatter::beginParse(){
-  pushed.record(cout);
+  pushed.record(stream);
   dropIndex();
   dropFormat();
 }
@@ -26,10 +26,10 @@ void StreamFormatter::applyFormat(StreamFormatter::FormatValue whichly){
   if(isValid(formatValue)) {
     switch(whichly) {
     case Widthly:
-      cout.width(formatValue);
+      stream.width(formatValue);
       break;
     case Precisely:
-      cout.precision(formatValue);
+      stream.precision(formatValue);
       break;
     }
   }
@@ -49,15 +49,12 @@ void StreamFormatter::startFormat(){
 }
 
 bool StreamFormatter::appliedDigit(char c, unsigned &accumulator){
-  if(Char(c).isDigit()) {
-    unsigned digit = c - '0';
-    if(isValid(accumulator)) {
-      accumulator *= 10;
-      accumulator += digit;
-    } else {
-      //is first digit
-      accumulator = digit;
+  Char digital(c);
+  if(digital.isDigit()) {
+    if(!isValid(accumulator)) {
+      accumulator=0;
     }
+    digital.applyTo(accumulator);
     return true;
   } else {
     return false;
@@ -73,7 +70,7 @@ void StreamFormatter::startIndex(){
 StreamFormatter::Action StreamFormatter::applyItem(char c){
   if(flagged(slashed)){
     if(parsingFormat) {
-      cout.fill(c);
+      stream.fill(c);
       return FeedMe;
     } else if(parsingIndex){
       startFormat();//and fall through
@@ -122,38 +119,38 @@ StreamFormatter::Action StreamFormatter::applyItem(char c){
       break;
     case 'l':          //left align
       applyFormat(Widthly);
-      cout.setf(std::ios_base::left);
+      stream.setf(std::ios_base::left);
       break;
     case 'r':          //right align
       applyFormat(Widthly);
-      cout.setf(std::ios_base::right);
+      stream.setf(std::ios_base::right);
       break;
     case 'i':          //internal align, fills between sign and digits, 0x and hexdigits, money sign and value.
       applyFormat(Widthly);
-      cout.setf(std::ios_base::internal);
+      stream.setf(std::ios_base::internal);
       break;
     case 'd':          //decimal
-      cout << std::dec;
+      stream.setf(std::ios_base::dec);
       break;
     case 'o':          //octal
-      cout << std::oct;
+      stream.setf(std::ios_base::oct);
       break;
     case 'b':          //binary
     case 'h':          //hex
-      cout << std::hex;
+      stream.setf(std::ios_base::hex);
       break;
     case 's':          //scientific
-      cout.setf(std::ios_base::scientific);
+      stream.setf(std::ios_base::scientific);
       break;
     case 'f':          //float
-      cout.setf(std::ios_base::fixed);
+      stream.setf(std::ios_base::fixed);
       break;
     case 'x':
-      cout.setf(std::ios_base::showbase);
+      stream.setf(std::ios_base::showbase);
       break;
     default:
       //use 'c' as fill char:
-      cout.fill(c);
+      stream.fill(c);
       break;
     }     // switch
     clearFormatValue();//just the value, not the state info
@@ -168,29 +165,29 @@ StreamFormatter::Action StreamFormatter::applyItem(char c){
 
 void StreamFormatter::afterActing(){
   if(!keepFormat) {
-    pushed.restore(cout);
+    pushed.restore(stream);
   }
   dropIndex();
   dropFormat();
 }
 
-StreamFormatter::StreamFormatter(std::ostream &ostr) : cout(ostr){
+StreamFormatter::StreamFormatter(std::ostream &ostr) : stream(ostr){
   beginParse();//sets all other fields.
   //theoretically we don't need to do the above, but it helps with debug to not get distracted with lingering trash.
 }
 
-void StreamFormatter::StreamState::record(std::ostream &cout){
+void StreamFormatter::StreamState::record(std::ios &cout){
   flags = cout.flags();
   width = cout.width();
   precision = cout.precision();
   fill = cout.fill();
 }
 
-void StreamFormatter::StreamState::restore(std::ostream &cout){
-  cout.flags(flags);
-  cout.width(width);
-  cout.precision(precision);
-  cout.fill(fill);
+void StreamFormatter::StreamState::restore(std::ios &stream){
+  stream.flags(flags);
+  stream.width(width);
+  stream.precision(precision);
+  stream.fill(fill);
 }
 
 ///////////////////
@@ -200,4 +197,8 @@ void StreamPrintf::printMissingItem(){
   write('}');
 }
 
-StreamPrintf::StreamPrintf(std::ostream &cout):StreamFormatter (cout){}
+StreamPrintf::StreamPrintf(std::ostream &cout):
+  StreamFormatter (cout),
+  cout(cout){
+  //we retain a copy as the more derived type of stream while passing it as a base to the baser class.
+}

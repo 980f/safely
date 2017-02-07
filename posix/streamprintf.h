@@ -8,7 +8,7 @@
 #include "char.h"
 class StreamFormatter {
 protected:
-  std::ostream &cout;
+  std::ios &stream;
 
   /** for controlling the scope of application of formatting. */
   struct StreamState {
@@ -16,8 +16,8 @@ protected:
     std::streamsize width;
     std::streamsize precision;
     char fill;
-    void record(std::ostream &cout);
-    void restore(std::ostream &cout);
+    void record(std::ios &stream);
+    void restore(std::ios &stream);
   };
   //initial implementation is one save and restore per print session:
   StreamState pushed;
@@ -74,8 +74,11 @@ protected://now for the API:
   StreamFormatter(std::ostream &ostr);
 }; // class StreamPrintf
 
-
+///////////////////////
+/// output stream variation
+///
 class StreamPrintf:StreamFormatter {
+  std::ostream&cout;
   template<typename Any> void write(Any &&c){
     cout << c;
   }
@@ -96,7 +99,7 @@ class StreamPrintf:StreamFormatter {
   }
 
 public:
-  StreamPrintf(std::ostream&cout);
+  StreamPrintf(std::ostream&stream);
   template<typename ... Args> void Printf(const char *fmt, const Args ... args){
     char c;
     beginParse();
