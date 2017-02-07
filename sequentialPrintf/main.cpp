@@ -34,13 +34,15 @@ int testScanner(int argc,char *argv[]){
 
   if(isValid(which++)){
     if(which<argc){
-      sf(argv[which],&integer,&dee,&see);
+      sf(argv[which],&see,&integer,&dee);
+      cout<<integer<<","<<dee<<","<<see<<endl;
     } else {
       cerr<<"Bad test selection index"<<endl;
     }
   } else {
     for(which=argc;which-->2;){//argv0 is command, argv.1 is which index
-      sf(argv[which],&integer,&dee,&see);
+      sf(argv[which],&see,&integer,&dee);
+      cout<<integer<<","<<dee<<","<<see<<endl;
     }
   }
   cerr << endl;
