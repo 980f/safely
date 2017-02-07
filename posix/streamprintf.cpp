@@ -3,39 +3,65 @@
 //using namespace std;
 
 #include "char.h"
-#include "cheaptricks.h"
+//#include "index.h"
+
+void StreamPrintf::beginParse(){
+  pushedFlags = cout.flags();
+  dropIndex();
+  dropFormat();
+}
 
 void StreamPrintf::dropIndex(){
   parsingIndex = false;
-  argIndex = ~0;
+  argIndex = BadIndex;
 }
+
+void StreamPrintf::clearFormatValue(){
+  formatValue = BadIndex;
+  invertOption = false;
+}
+
+void StreamPrintf::applyFormat(StreamPrintf::FormatValue whichly){
+  if(isValid(formatValue)) {
+    switch(whichly) {
+    case Widthly:
+      cout.width(formatValue);
+      break;
+    case Precisely:
+      cout.precision(formatValue);
+      break;
+    }
+  }
+  clearFormatValue();
+
+} // StreamPrintf::applyFormat
 
 void StreamPrintf::dropFormat(){
   parsingFormat = false;
-  formatValue = ~0;
-  invertOption = false;
   keepFormat = false;
+  clearFormatValue();
 }
 
 void StreamPrintf::startFormat(){
   parsingIndex = false;
-
   parsingFormat = true;
-  formatValue = 0;
-
-  invertOption = false;
-  keepFormat = false;
 }
 
 bool StreamPrintf::appliedDigit(char c, unsigned &accumulator){
   if(Char(c).isDigit()) {
-    accumulator *= 10;
-    accumulator += c - '0';    //primitive get digit
+    unsigned digit = c - '0';
+    if(isValid(accumulator)) {
+      accumulator *= 10;
+      accumulator += digit;
+    } else {
+      //is first digit
+      accumulator = digit;
+    }
     return true;
   } else {
     return false;
   }
-}
+} // StreamPrintf::appliedDigit
 
 void StreamPrintf::missingField(){
   write('{');
@@ -43,10 +69,9 @@ void StreamPrintf::missingField(){
   write('}');
 }
 
-void StreamPrintf::startIndex()
-{
+void StreamPrintf::startIndex(){
   parsingIndex = true;
-  argIndex = 0;
+  argIndex = BadIndex;
 }
 
 bool StreamPrintf::printNow(char c){
@@ -61,10 +86,8 @@ bool StreamPrintf::printNow(char c){
     if(c=='}') {
       return true;
     }
-    //else is bad format string, what do we do?
-    missingField();
-    dropIndex();
-    //but proceed with trash char getting printed
+    missingField();//emits just the index, leaves off the formatting content, which was already acted upon!
+    afterPrinting();
     return false;
   }
   if(parsingFormat) {
@@ -73,9 +96,7 @@ bool StreamPrintf::printNow(char c){
     }
     switch(c) {
     case '}':          //not sure what we should do with formatValue, some default thing like width?
-      if(formatValue) {
-        cout.width(formatValue);
-      }
+      applyFormat(Widthly);
       return true;
     case '!':
       //todo: do NOT reset stream after print
@@ -85,20 +106,26 @@ bool StreamPrintf::printNow(char c){
       invertOption = true;
       break;
     case 'w':
-      cout.width(formatValue);
-      break;
+      applyFormat(Widthly);
+      return false;
     case 'p':
-      cout.precision(formatValue);
-      break;
+      applyFormat(Precisely);
+      return false;
     default:
       //use 'c' as fill char:
       cout.fill(c);
       break;
     case 'l':          //left align
+      applyFormat(Widthly);
+      cout.setf(std::ios_base::left);
       break;
-    case 'r':          //fight align
+    case 'r':          //right align
+      applyFormat(Widthly);
+      cout.setf(std::ios_base::right);
       break;
-    case 'i':          //internal align
+    case 'i':          //internal align, fills between sign and digits, 0x and hexdigits, money sign and value.
+      applyFormat(Widthly);
+      cout.setf(std::ios_base::internal);
       break;
     case 'd':          //decimal
       cout << std::dec;
@@ -111,12 +138,16 @@ bool StreamPrintf::printNow(char c){
       cout << std::hex;
       break;
     case 's':          //scientific
+      cout.setf(std::ios_base::scientific);
+      break;
     case 'f':          //float
-      //todo: showbase (0x prefix and the like)
+      cout.setf(std::ios_base::fixed);
+      break;
+    case 'x':
+      cout.setf(std::ios_base::showbase);
       break;
     }     // switch
-    formatValue = 0;
-    invertOption = 0;
+    clearFormatValue();//just the value, not the state info
     return false;
   }
   if(c=='{') {
@@ -127,5 +158,15 @@ bool StreamPrintf::printNow(char c){
   return false;
 } // StreamPrintf::printNow
 
+void StreamPrintf::afterPrinting(){
+  if(!keepFormat) {
+    cout.flags(pushedFlags);//pop
+  }
+  dropIndex();
+  dropFormat();
+}
+
 StreamPrintf::StreamPrintf(std::ostream &ostr) : cout(ostr){
+  beginParse();//sets all other fields.
+  //theoretically we don't need to do the above, but it helps with debug to not get distracted with lingering trash.
 }
