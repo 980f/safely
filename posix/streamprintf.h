@@ -58,6 +58,7 @@ protected://now for the API:
   enum Action {
     FeedMe, //feed parser more characters
     Pass,   //process the char, for printing: output it; for scanf compare it
+    Escaped,//the char was an escape char, e.g. if c==n then emit a newline.
     DoItem, //end of format field, act upon it.
   };
   /** inspects format character @param c and @returns what to do */
@@ -109,6 +110,11 @@ public:
         }
         afterActing();
         break;
+      case Escaped:
+        if(c=='n'){//just doing one for proof of principle, will import c-escape stuff and do the usualy suspects
+          c='\n';
+        }
+        //#JOIN
       case Pass:
         write(c);
         break;
