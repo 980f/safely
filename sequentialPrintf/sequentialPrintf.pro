@@ -9,8 +9,4 @@ include("../cppext/lib.pro")
 include("../posix/lib.pro")
 
 
-SOURCES += main.cpp \
-    ../posix/streamprintf.cpp
-
-HEADERS += \
-    ../posix/streamprintf.h
+SOURCES += main.cpp
