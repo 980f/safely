@@ -4,24 +4,25 @@
 
 #include "char.h"
 //#include "index.h"
+#include "cheaptricks.h"
 
-void StreamPrintf::beginParse(){
-  pushedFlags = cout.flags();
+void StreamFormatter::beginParse(){
+  pushed.record(cout);
   dropIndex();
   dropFormat();
 }
 
-void StreamPrintf::dropIndex(){
+void StreamFormatter::dropIndex(){
   parsingIndex = false;
   argIndex = BadIndex;
 }
 
-void StreamPrintf::clearFormatValue(){
+void StreamFormatter::clearFormatValue(){
   formatValue = BadIndex;
   invertOption = false;
 }
 
-void StreamPrintf::applyFormat(StreamPrintf::FormatValue whichly){
+void StreamFormatter::applyFormat(StreamFormatter::FormatValue whichly){
   if(isValid(formatValue)) {
     switch(whichly) {
     case Widthly:
@@ -36,18 +37,18 @@ void StreamPrintf::applyFormat(StreamPrintf::FormatValue whichly){
 
 } // StreamPrintf::applyFormat
 
-void StreamPrintf::dropFormat(){
+void StreamFormatter::dropFormat(){
   parsingFormat = false;
   keepFormat = false;
   clearFormatValue();
 }
 
-void StreamPrintf::startFormat(){
+void StreamFormatter::startFormat(){
   parsingIndex = false;
   parsingFormat = true;
 }
 
-bool StreamPrintf::appliedDigit(char c, unsigned &accumulator){
+bool StreamFormatter::appliedDigit(char c, unsigned &accumulator){
   if(Char(c).isDigit()) {
     unsigned digit = c - '0';
     if(isValid(accumulator)) {
@@ -63,41 +64,45 @@ bool StreamPrintf::appliedDigit(char c, unsigned &accumulator){
   }
 } // StreamPrintf::appliedDigit
 
-void StreamPrintf::missingField(){
-  write('{');
-  write(argIndex);  //but formatting is long lost, this is an indicator of where the problem is so this is good enough.
-  write('}');
-}
 
-void StreamPrintf::startIndex(){
+void StreamFormatter::startIndex(){
   parsingIndex = true;
   argIndex = BadIndex;
 }
 
-bool StreamPrintf::printNow(char c){
+StreamFormatter::Action StreamFormatter::applyItem(char c){
+  if(flagged(slashed)){
+    if(parsingFormat) {
+      cout.fill(c);
+      return FeedMe;
+    } else if(parsingIndex){
+      startFormat();//and fall through
+    } else {
+      return Pass;
+    }
+  }
   if(parsingIndex) {
     if(appliedDigit(c,argIndex)) {
-      return false;
-    }
-    if(c==':') {    //format tweak
-      startFormat();
-      return false;
+      return FeedMe;
     }
     if(c=='}') {
-      return true;
+      return DoItem;
     }
-    missingField();//emits just the index, leaves off the formatting content, which was already acted upon!
-    afterPrinting();
-    return false;
+    if(c==':') { //definitive start of format spec
+      startFormat();
+      return FeedMe;
+    }
+    startFormat();//nominally illegal, treat like 1st char of format spec.
+    //and fall through to if(parsingFormat)
   }
   if(parsingFormat) {
     if(appliedDigit(c,formatValue)) {
-      return false;
+      return FeedMe;
     }
     switch(c) {
     case '}':          //not sure what we should do with formatValue, some default thing like width?
       applyFormat(Widthly);
-      return true;
+      return DoItem;
     case '!':
       //todo: do NOT reset stream after print
       keepFormat = true;
@@ -107,13 +112,9 @@ bool StreamPrintf::printNow(char c){
       break;
     case 'w':
       applyFormat(Widthly);
-      return false;
+      break;
     case 'p':
       applyFormat(Precisely);
-      return false;
-    default:
-      //use 'c' as fill char:
-      cout.fill(c);
       break;
     case 'l':          //left align
       applyFormat(Widthly);
@@ -146,27 +147,53 @@ bool StreamPrintf::printNow(char c){
     case 'x':
       cout.setf(std::ios_base::showbase);
       break;
+    default:
+      //use 'c' as fill char:
+      cout.fill(c);
+      break;
     }     // switch
     clearFormatValue();//just the value, not the state info
-    return false;
+    return FeedMe;
   }
   if(c=='{') {
     startIndex();
-    return false;
+    return FeedMe;
   }
-  write(c);
-  return false;
+  return Pass;
 } // StreamPrintf::printNow
 
-void StreamPrintf::afterPrinting(){
+void StreamFormatter::afterActing(){
   if(!keepFormat) {
-    cout.flags(pushedFlags);//pop
+    pushed.restore(cout);
   }
   dropIndex();
   dropFormat();
 }
 
-StreamPrintf::StreamPrintf(std::ostream &ostr) : cout(ostr){
+StreamFormatter::StreamFormatter(std::ostream &ostr) : cout(ostr){
   beginParse();//sets all other fields.
   //theoretically we don't need to do the above, but it helps with debug to not get distracted with lingering trash.
 }
+
+void StreamFormatter::StreamState::record(std::ostream &cout){
+  flags = cout.flags();
+  width = cout.width();
+  precision = cout.precision();
+  fill = cout.fill();
+}
+
+void StreamFormatter::StreamState::restore(std::ostream &cout){
+  cout.flags(flags);
+  cout.width(width);
+  cout.precision(precision);
+  cout.fill(fill);
+}
+
+///////////////////
+void StreamPrintf::printMissingItem(){
+  write('{');
+  write(argIndex);  //but formatting is long lost, this is an indicator of where the problem is so this is good enough.
+  write('}');
+}
+
+StreamPrintf::StreamPrintf(std::ostream &cout):StreamFormatter (cout){}
