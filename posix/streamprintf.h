@@ -32,7 +32,7 @@ class StreamPrintf:StreamFormatter {
 
 public:
   StreamPrintf(std::ostream&stream);
-  template<typename ... Args> void Printf(const char *fmt, const Args ... args){
+  template<typename ... Args> void operator()(const char *fmt, const Args ... args){
     char c;
     beginParse();
     while((c = *fmt++)) {
@@ -74,9 +74,19 @@ class StreamScanf:StreamFormatter {
     return c==tocheck;
   }
 
-  template<typename Any> void scan(Any &c){
-    cin >> c;
+
+  void scan(int *c){
+    int local=*c;
+    cin >> local;
+    *c=local;
   }
+
+  template<typename Any> void scan(Any *c){
+    Any local=*c;
+    cin >> local;
+    *c=local;
+  }
+
 
   void scanMissingItem(){
     //not sure what to do ... the number converted will be wrong ... so the caller can debug it.
@@ -87,7 +97,7 @@ class StreamScanf:StreamFormatter {
     //return false;//ran off end of arg list
   }
 
-  template<typename First,typename ... Args> void ScanItem(unsigned which, const First first, const Args ... args){
+  template<typename First,typename ... Args> void ScanItem(unsigned which, First &first, Args ... args){
     if(which==0) {
       scan(first);
     } else {
@@ -99,7 +109,7 @@ public:
   StreamScanf(std::istream&stream);
   /** @returns the number of successfully parsed items. If that is less than the number given then the negative of that is returned.
    * an expert might be able to remove the need to put '7' in front of each argument, but at least this guy won't compile if you don't. */
-  template<typename ... Args> int Scanf(const char *fmt, const Args ... args){
+  template<typename ... Args> int operator()(const char *fmt, Args ... args){
     char c;
     int numberScanned=0;
     beginParse();

@@ -7,6 +7,7 @@
 
 void StreamFormatter::beginParse(){
   pushed.record(stream);
+  slashed=false;
   dropIndex();
   dropFormat();
 }
