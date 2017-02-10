@@ -134,4 +134,5 @@ HEADERS += safely.h \
     bufferformatter.h \
     numberformat.h \
     countdown.h \
-    numberpieces.h
+    numberpieces.h \
+    hook.h

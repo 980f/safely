@@ -46,13 +46,19 @@ int testScanner(int argc,char *argv[]){
     }
   }
   cerr << endl;
-
-
-  return 0;
+  return -2;
 }
+
+#include "hook.h"
+//all of the 3 following lines worked :)
+//Hooker<int,int,char*[]> Mainly(5,testScanner);
+Hooker<int,int,char*[]> Mainly(5,testPrinter);
+//Hooker<int,int,char*[]> Mainly(5);
 
 
 int main(int argc, char *argv[]){
-//  testPrinter(argc,argv);
-  testScanner(argc,argv);
+// return testPrinter(argc,argv);
+// return testScanner(argc,argv);
+  int report= Mainly(argc,argv);
+  return report;
 }
