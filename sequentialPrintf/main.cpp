@@ -27,7 +27,6 @@ int testScanner(int argc,char *argv[]){
   double dee=3.14159;
   char see='B';
 
-
   unsigned which=(argc>1)?atoi(argv[1]):BadIndex;
 
   StreamScanf sf(cin);
@@ -52,13 +51,32 @@ int testScanner(int argc,char *argv[]){
 #include "hook.h"
 //all of the 3 following lines worked :)
 //Hooker<int,int,char*[]> Mainly(5,testScanner);
-Hooker<int,int,char*[]> Mainly(5,testPrinter);
-//Hooker<int,int,char*[]> Mainly(5);
+//Hooker<int,int,char*[]> Mainly(5,testPrinter);
+Hooker<int,int,char*[]> Mainly(5);
 
+Hook<int> voidness;
+
+void voidly1(int eye){
+  cout<<"one:"<<eye<<endl;
+}
+
+void voidly2(int eye){
+  cout<<"two:"<<eye<<endl;
+}
+
+int testHook(int argc, char *argv[]){
+  voidness(15);
+  voidness=voidly1;
+  voidness(25);
+  voidness=voidly2;
+  voidness(53);
+  return 64;
+}
 
 int main(int argc, char *argv[]){
 // return testPrinter(argc,argv);
 // return testScanner(argc,argv);
+  Mainly= testHook;
   int report= Mainly(argc,argv);
   return report;
 }
