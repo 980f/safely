@@ -30,9 +30,9 @@ template<typename RetType, typename ... Args> class Hooker {
 /** until I figure out how to code a void type for a return in Hooker here is a simpler version of that */
 template<typename ... Args> class Hook {
   typedef void (*Pointer)(Args ...);
-  Pointer pointer=nullptr;
+  Pointer pointer;
  public:
-  Hook(Pointer fn):pointer(fn){}
+  Hook(Pointer fn=nullptr):pointer(fn){}
 
   Pointer operator =(Pointer fn){
     Pointer was=pointer;
@@ -48,5 +48,7 @@ template<typename ... Args> class Hook {
 
 };
 
+
+//todo: equivalent of sigc hideReturn() and whatever they called supplyReturn()
 
 #endif // HOOK_H
