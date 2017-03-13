@@ -348,12 +348,12 @@ int splitter(double &d){
 
 ///** version of @see splitter that allows for long or long-long etc integer types.
 
-template <typename Integrish,typename Floater> Integrish intbin(Floater &d){
-  double eye;
-  d=modf(d,&eye);
-  return Integrish(eye);
-}
+//template <typename Integrish,typename Floater> Integrish intbin(Floater &d){
+//  double eye;
+//  d=modf(d,&eye);
+//  return Integrish(eye);
+//}
 
-template <> int intbin<int,double>(double &d);
-template <> long intbin<long,double>(double &d);
-template <> long long intbin<long long,double>(double &d);
+//template <> int intbin<int,double>(double &d);
+//template <> long intbin<long,double>(double &d);
+//template <> u64 intbin<u64,double>(double &d);

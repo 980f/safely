@@ -292,5 +292,14 @@ extern "C" { //assembly coded in cortexm3.s, usually due to outrageously bad com
 /** variants of splitter, allowing for greater range. @see splitter is optimized for numbers less than 32k
 @param d is replaced with its fractional part, the function @returns the integer part, @see standard math lib's modf for edge cases.
 */
-template <typename Integrish, typename Floater> Integrish intbin(Floater &d);
+//template <typename Integrish, typename Floater> Integrish intbin(Floater &d);
+//template <> int intbin<int,double>(double &d);
+//template <> long intbin<long,double>(double &d);
+//template <> u64 intbin<u64,double>(double &d);
+
+template <typename Integrish,typename Floater> Integrish intbin(Floater &d){
+  double eye;
+  d= modf(d,&eye);
+  return Integrish(eye);
+}
 #endif /* ifndef minimath_h */

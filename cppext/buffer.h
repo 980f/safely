@@ -86,11 +86,11 @@ public:
    * e.g. a value of 1 after reading a comma will get you a buffer starting with that comma */
   Indexer(const Indexer &other, int rewind = 0) : //default value is clone of created state of other.
     Ordinator(other, rewind),
-
+    //if 0 or ~clipsome start is same as start of other, else start offset from this one's current location
     buffer(rewind<=0 ? other.buffer : other.buffer + (other.pointer - rewind)){
   }
 
-  /** reworks this one to be used region of @param other.
+  /** reworks this one to be visited region of @param other.
    *   carefully implemented so that idx.snap(idx) works sensibly.*/
   void snap(const Indexer &other){
     buffer = other.buffer;

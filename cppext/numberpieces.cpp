@@ -1,10 +1,10 @@
 #include "numberpieces.h"
 
-
+#include "math.h"  //must precede minimath for intbin to have access to modf
 #include "minimath.h"
 #include "cheaptricks.h"
 #include "char.h"
-#include "math.h"
+
 
 template <>double intbin<double,double>(double&);
 
@@ -75,11 +75,11 @@ void NumberPieces::decompose(double d){
   }
 
   if(isNormal(d)){
-    double whole=intbin<double,double>(d);
-    pow10= int(log10(whole));
+    u64 whole=intbin<u64,double>(d);
+    pow10= ilog10(whole);
     if(pow10<0){//number less than 1
       div10=-pow10;
-      postdecimal=d*::pow10(div10);
+      postdecimal=d * ::pow10(div10);
       pow10=0;//jic
       return;
     }

@@ -1,5 +1,10 @@
 include("../consoleapp.pro")
 
+#linaro configuration target:
+target.path = /home/pi/work/ # path on device
+INSTALLS += target
+#end raspberry pi target
+
 #actually using sigc stuff locally as well as hidden perhaps in the libs.
 include("../sigc.pro")
 #our sibling with heaped code
