@@ -1,11 +1,16 @@
 include("../consoleapp.pro")
 include("../cppext/lib.pro")
 
+lpcroot= ../../dro/cortexm/lpc
+
+INCLUDEPATH += $$lpcroot
+DEPENDPATH += $$lpcroot
+
 TARGET = lpcbestbaud
 
 SOURCES += \
     lpcbaud.cpp \
-    ../../cortexm/lpc/baudsearch.cpp
+    $$lpcroot/baudsearch.cpp
 
 HEADERS += \
-    ../../cortexm/lpc/baudsearch.h
+    $$lpcroot/baudsearch.h

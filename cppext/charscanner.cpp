@@ -143,7 +143,11 @@ CharScanner::CharScanner(const ByteScanner&other, int clip) : //
 }
 
 CharScanner::CharScanner(const CharScanner &other) : CharScanner(other,0){
+  //#nada
+}
 
+CharScanner::CharScanner(const Indexer<char> &other): Indexer<char >(other, 0){
+  //#nada
 }
 
 /** ensure content is null terminated at present pointer.
