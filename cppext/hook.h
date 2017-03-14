@@ -3,7 +3,9 @@
 
 /** hook with a return value */
 template<typename RetType, typename ... Args> class Hooker {
+public://expose function's type for use in arguments to be passed to this guy
   typedef RetType (*Pointer)(Args ...);
+private:
   Pointer pointer;
   RetType defaultReturn;
  public:
@@ -29,9 +31,11 @@ template<typename RetType, typename ... Args> class Hooker {
 
 /** until I figure out how to code a void type for a return in Hooker here is a simpler version of that */
 template<typename ... Args> class Hook {
+public://expose function's type for use in arguments to be passed to this guy
   typedef void (*Pointer)(Args ...);
+private:
   Pointer pointer;
- public:
+public:
   Hook(Pointer fn=nullptr):pointer(fn){}
 
   Pointer operator =(Pointer fn){
