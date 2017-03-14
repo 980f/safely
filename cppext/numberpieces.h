@@ -49,7 +49,7 @@ public:
   void decompose(double d);
 
   /** maximum value that can be multiplied by 10 and not exceed 2^64: */
-  const u64 DecimalCutoff = (1UL<<63)/5; //2^64 /10 == 2^63/5, needed to take care that the compiler didn't get a wrap.
+  const u64 DecimalCutoff = (1ULL<<63)/5; //2^64 /10 == 2^63/5, needed to take care that the compiler didn't get a wrap.
 
 }; // class NumberParserState
 
