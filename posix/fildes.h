@@ -15,7 +15,7 @@ public:
   int lastRead;
   int lastWrote;
 protected:
-/** whether this object opened the fd it wraps. That is the normal case but if you want to do multiple operations and retain error info on each step then you might use multiple Fildes objects around teh same fd. */
+/** whether this object opened the fd it wraps. That is the normal case but if you want to do multiple operations and retain error info on each step then you might use multiple Fildes objects around the same fd. */
   bool amOwner;
   int fd;
   bool assignFd(int anFD);

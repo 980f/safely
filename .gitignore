@@ -7,3 +7,4 @@ svnrevision.txt
 svnbranch.txt
 *.bak
 *.autosave
+*~
