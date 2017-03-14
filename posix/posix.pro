@@ -16,7 +16,8 @@ SOURCES += \
     filer.cpp \
     posixlogger.cpp \
     streamprintf.cpp \
-    streamformatter.cpp
+    streamformatter.cpp \
+    filereader.cpp
 
 HEADERS += \
     fdset.h \
@@ -27,4 +28,5 @@ HEADERS += \
     stopwatch.h \
     posixlogger.h \
     streamprintf.h \
-    streamformatter.h
+    streamformatter.h \
+    filereader.h
