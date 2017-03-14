@@ -33,7 +33,7 @@ void dumpStack(const char *prefix){
 
 
 /** a signal handler */
-void fatalHandler(int signal, siginfo_t *signalInfo, void */*data*/){
+void fatalHandler(int signal, siginfo_t *signalInfo, void *data){//#don't hide 'data', some platforms access it.
   bool fatal = false;
   if(SIGSEGV == signal) {
     fatal = true;
