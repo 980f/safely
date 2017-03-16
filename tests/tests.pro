@@ -35,7 +35,8 @@ SOURCES += main.cpp \
     settings/lampsettings.cpp \
     settings/purgerconfig.cpp \
     settings/asciiframer.cpp \
-    settings/fifo.cpp
+    settings/fifo.cpp \
+    filereadertester.cpp
 
 HEADERS += \
     unicodetester.h \
@@ -57,4 +58,5 @@ HEADERS += \
     settings/asciiframer.h \
     settings/asciiframing.h \
     settings/fifo.h \
-    settings/serialagent.h
+    settings/serialagent.h \
+    filereadertester.h

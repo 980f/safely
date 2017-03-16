@@ -7,13 +7,14 @@ void FileReader::launch(){
   // data sink
   cb.aio_buf=&buf.peek();
   // maximum to read
-  cb.aio_nbytes=buf.freespace();
+  cb.aio_nbytes=buf.freespace()-guard;
 
   //start read
   fd.errornumber= aio_read(&cb);
 }
 
-bool FileReader::operator()(){
+bool FileReader::operator()(unsigned guard){
+  this->guard=guard;
 
   EraseThing(cb);//forget prior operation
 

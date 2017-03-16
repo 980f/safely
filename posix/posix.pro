@@ -7,6 +7,8 @@ include("../cppext/lib.pro")
 #our sibling with mallocating code, but no OS per se:
 include("../system/lib.pro")
 
+LIBS += -lrt
+
 SOURCES += \
     fdset.cpp \
     fildes.cpp \
