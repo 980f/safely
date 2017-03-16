@@ -13,6 +13,7 @@ class FileReader {
   Fildes &fd;
   /** the data source */
   ByteScanner &buf;//todo: replace with Indexer<u8> throughout hierarchy
+  unsigned guard;
   typedef Hooker<bool /*go again*/,size_t /*exitcode or number of bytes read */> OnCompletion;
   /** what to call when operation is completed.
    * If the operation succeeded and this function returns true then a new read is launched.
@@ -28,8 +29,9 @@ class FileReader {
 public:
   FileReader(Fildes &fd,ByteScanner &buf,OnCompletion::Pointer onDone);
   /** start read process */
-  bool operator()();
+  bool operator()(unsigned guard=1);//reserve place for a null
 private:
+  /* rerunnable part of operator () */
   void launch();
 };
 
