@@ -36,7 +36,8 @@ SOURCES += main.cpp \
     settings/purgerconfig.cpp \
     settings/asciiframer.cpp \
     settings/fifo.cpp \
-    filereadertester.cpp
+    filereadertester.cpp \
+    testhooker.cpp
 
 HEADERS += \
     unicodetester.h \
@@ -59,4 +60,8 @@ HEADERS += \
     settings/asciiframing.h \
     settings/fifo.h \
     settings/serialagent.h \
-    filereadertester.h
+    filereadertester.h \
+    testhooker.h
+
+DISTFILES += \
+    filereadertester.0

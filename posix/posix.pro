@@ -7,7 +7,8 @@ include("../cppext/lib.pro")
 #our sibling with mallocating code, but no OS per se:
 include("../system/lib.pro")
 
-LIBS += -lrt
+##for async IO add to your executable project:
+#LIBS += -L/usr/lib/x86_64-linux-gnu  -lrt -lpthread
 
 SOURCES += \
     fdset.cpp \

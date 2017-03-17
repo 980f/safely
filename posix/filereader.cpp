@@ -1,16 +1,12 @@
 #include "filereader.h"
 
 
+FileReader::FileReader(Fildes &fd, ByteScanner &buf, OnCompletion::Pointer onDone):
+  fd(fd),
+  buf(buf),
+  continuation(false,onDone)
+{
 
-void FileReader::launch(){
-  cb.aio_fildes=fd.asInt();
-  // data sink
-  cb.aio_buf=&buf.peek();
-  // maximum to read
-  cb.aio_nbytes=buf.freespace()-guard;
-
-  //start read
-  fd.errornumber= aio_read(&cb);
 }
 
 bool FileReader::operator()(unsigned guard){
@@ -27,7 +23,7 @@ bool FileReader::operator()(unsigned guard){
   struct sigaction sig_act;
   sigemptyset(&sig_act.sa_mask);
   sig_act.sa_flags = SA_SIGINFO;//to get our 'this' sent back to us
-  sig_act.sa_sigaction = sighandler;
+  sig_act.sa_sigaction = sighandler; //NB: gnu header is wonky for this member, plays poorly with preprocessor
   fd.errornumber = sigaction( SIGIO, &sig_act, NULL );
 
 //didn't get the struct members that this e.g. code from ibm references, so we stick with signals for now.
@@ -44,6 +40,27 @@ bool FileReader::operator()(unsigned guard){
   return fd.errornumber ==0;//todo: find function on fd
 }
 
+void FileReader::setHandler(OnCompletion::Pointer onDone){
+  continuation=onDone;
+}
+
+void FileReader::block(){
+  struct timespec ts={1000,0};
+  aiocb * list=&cb;
+  aio_suspend(&list,1,&ts);
+}
+
+void FileReader::launch(){
+  cb.aio_fildes=fd.asInt();
+  // data sink
+  cb.aio_buf=&buf.peek();
+  // maximum to read
+  cb.aio_nbytes=buf.freespace()-guard;
+
+  //start read
+  fd.errornumber= aio_read(&cb);
+}
+
 //untested:
 void FileReader::sighandler( int signo, siginfo_t *info, void */*ucontext_t context*/ )  {
   /* Ensure it's our signal */
@@ -53,12 +70,16 @@ void FileReader::sighandler( int signo, siginfo_t *info, void */*ucontext_t cont
   }
 }
 
-void FileReader::notified(int code,int errno){
+void FileReader::notified(int code,int ernumber){
   //a possibly interesting fact:
   if(code==SI_ASYNCIO){
     /* Did the request complete normally? */
-    if (aio_error( &cb ) == 0) { /* Request completed successfully, get the return status of the underlying read operation */
-      size_t ret = aio_return( &cb );
+    int aern=aio_error( &cb );
+    if(aern!=ernumber){
+      printf("which is the real error? %d or %d",aern,ernumber);
+    }
+    if ( aern== 0) { /* Request completed successfully, get the return status of the underlying read operation */
+      __ssize_t ret = aio_return( &cb );
       if(continuation(ret)){
         //caller is responsible for rewinding the buffer
         launch();
@@ -73,11 +94,11 @@ void FileReader::notified(int code,int errno){
     continuation(errno);//todo: verify this is always negative
   }
 
-  /* Did the request complete normally? */
-  if (aio_error( &cb ) == 0) { /* Request completed successfully, get the return status of the underlying read operation */
-    size_t ret = aio_return( &cb );
-    continuation(ret);
-  } else {
-    continuation(-fd.errornumber);
-  }
+//  /* Did the request complete normally? */
+//  if (aio_error( &cb ) == 0) { /* Request completed successfully, get the return status of the underlying read operation */
+//    size_t ret = aio_return( &cb );
+//    continuation(ret);
+//  } else {
+//    continuation(-fd.errornumber);
+  //  }
 }
