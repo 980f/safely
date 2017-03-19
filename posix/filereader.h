@@ -8,7 +8,7 @@
 #include "fildes.h"
 #include "hook.h"
 /** mate aio calls to FilDes class, initially for reader, will likely rename and refactor etc. */
-class FileReader {
+class FileReader: public PosixWrapper {
   /** the file */
   Fildes &fd;
   /** the data source */
@@ -31,7 +31,7 @@ public:
 public:
   FileReader(Fildes &fd,ByteScanner &buf,OnCompletion::Pointer onDone);
   /** start read process */
-  bool operator()(unsigned guard=1);//reserve place for a null
+  bool go(unsigned guard=1);//reserve place for a null
 
   /** having trouble sometimes putting this in constructor arg list: */
   void setHandler(OnCompletion::Pointer onDone);
@@ -42,12 +42,13 @@ public:
     return ercode!=EINPROGRESS;
   }
 
-  /** block, used only for diagnostics on this class  */
-  void block();
+  /** block, used only for diagnostics on this class. @returns whether aio_suspend 'failed'.
+   * I quote 'failed' since it includes things like whether it quit because a signal occured. */
+  bool block(double seconds);
 
 private:
   /* rerunnable part of operator () */
-  void launch();
+  bool launch();
 };
 
 #endif // FILEREADER_H

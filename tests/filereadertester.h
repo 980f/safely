@@ -4,9 +4,13 @@
 #include "filereader.h"
 
 class FileReaderTester{
-  u8 buffer[2048];
+  u8 buffer[2049];
   Fildes fd;
   ByteScanner buf;
+  ssize_t expected;
+  ssize_t received;
+  unsigned blocksin;
+  unsigned blocksexpected;
   FileReader freader;
 
   /* on read complete */

@@ -1,14 +1,9 @@
 #include "posixlogger.h"
-#include <stdio.h>
 #include <stdarg.h>
-#include "unistd.h"
-#include "stdlib.h"
+#include "unistd.h" //fdatasync _exit
 #include <signal.h>
-#include <execinfo.h>
-#include <iostream>
-#include <math.h>
-
-#include "cstr.h"
+#include <execinfo.h> //backtrace
+#include "cstr.h" //nonTrivial
 
 //implements what system/logger.h externs:
 Logger dbg("DBG");
@@ -42,7 +37,7 @@ void fatalHandler(int signal, siginfo_t *signalInfo, void *data){//#don't hide '
     fatal = true;
     fprintf(stderr, "Fault executing instruction\n");
   } else if(SIGUSR1 == signal) {
-    fprintf(stderr, "Debug signal\n");
+    fprintf(stderr, "Stack trace requested\n");
   }
   void *stack[100];
   int stackSize = backtrace(stack, 100);
@@ -78,7 +73,7 @@ void PosixLoggerInit(bool trapSignals){
     sigaction(SIGILL, &sa, nullptr);
     sigaction(SIGUSR1, &sa, nullptr);
     sigaction(SIGSEGV, &sa, nullptr);
-//SIGPIPE's were screwing up our graceful restart on socat disconnect.
+//SIGPIPE's interfere with graceful restart on socat disconnect.
 //    Note that gdb turns the signal back on but you can defeat that with the gdb command: handle SIGPIPE nostop
     sigignore(SIGPIPE);
   }

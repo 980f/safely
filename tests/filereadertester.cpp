@@ -1,11 +1,25 @@
 #include "filereadertester.h"
-#include <fcntl.h> //O_options, need to enum them
+
+#include "fcntlflags.h"
+#include "sys/stat.h"
 #include <cstdio>
+#include "logger.h"
+#include "string.h" //strerror
+
+static Logger info("AIOFILE",true);
 
 bool FileReaderTester::onRead(__ssize_t ret){
   if(ret>=0){
+    ++blocksin;
+    buf.skip(ret);
+    received+=buf.used();
+
     buf[ret]=0;//null terminate, will fail if file is greater than buffer ...
-    printf("%s\n",buf.internalBuffer());
+    info("%s",buf.internalBuffer());
+    if(expected>received){
+      buf.rewind();
+      return true;
+    }
   }
   return false;
 }
@@ -18,20 +32,42 @@ FileReaderTester::FileReaderTester():
 }
 
 
+TextKey testfile[]={
+  "/d/work/safely/tests/filereadertester.1",
+  "filereadertester.0"
+};
+
 void FileReaderTester::run(unsigned which){
   if(which==BadIndex){
-    for(which=1;which-->0;){
+    for(which=countof(testfile);which-->0;){
       run(which);
     }
     return;
   }
-  switch(which){
-  case 0:{
-      if(fd.open("filereadertester.0",O_RDONLY)){
-        if(freader(1)){
-          freader.block();
-        }
-      }
-    } break;
+  TextKey fname=testfile[which];
+
+  struct stat finfo;
+  int posixerr=stat(fname,&finfo);
+  if(posixerr){
+    info("stat(%s) failed, errno:%d (%s)",fname,errno,strerror(errno));
+    return;
   }
+  expected=finfo.st_size;
+  received=0;
+  blocksin=0;
+  blocksexpected= quanta(expected,buf.allocated());
+  if(fd.open(fname,O_RDONLY)){
+    info("Launching read of file %s",fname);
+    if(freader.go(1)){
+      info("waiting for about %d events",blocksexpected);
+      while(blocksin<blocksexpected){
+        if(freader.block(1)){
+          info("While waiting got: %d(%d)",freader.errornumber,strerror(freader.errornumber));
+        }
+        //todo: detect freader errornumber's that are fatal and break
+      }
+      info("Received: %ld of %ld, \tBlocks: %d of %d",received,expected,blocksin,blocksexpected);
+    }
+  }
+
 }

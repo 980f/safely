@@ -32,4 +32,5 @@ HEADERS += \
     posixlogger.h \
     streamprintf.h \
     streamformatter.h \
-    filereader.h
+    filereader.h \
+    fcntlflags.h
