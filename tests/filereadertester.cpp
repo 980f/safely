@@ -31,9 +31,9 @@ FileReaderTester::FileReaderTester():
 
 }
 
-
+//note: 'test all' tests from the bottom up.
 TextKey testfile[]={
-  "/d/work/safely/tests/filereadertester.1",
+  "filereadertester.1",
   "filereadertester.0"
 };
 
@@ -58,11 +58,12 @@ void FileReaderTester::run(unsigned which){
   blocksexpected= quanta(expected,buf.allocated());
   if(fd.open(fname,O_RDONLY)){
     info("Launching read of file %s",fname);
+    buf.rewind();//when this was missing I learned things about how aio_read worked
     if(freader.go(1)){
       info("waiting for about %d events",blocksexpected);
       while(blocksin<blocksexpected){
         if(freader.block(1)){
-          info("While waiting got: %d(%d)",freader.errornumber,strerror(freader.errornumber));
+          info("While waiting got: %d(%s)",freader.errornumber,strerror(freader.errornumber));
         }
         //todo: detect freader errornumber's that are fatal and break
       }
