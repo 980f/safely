@@ -48,7 +48,7 @@ public:
 
 private:
   /* rerunnable part of operator () */
-  bool launch();
+  bool launch(bool more);
 };
 
 #endif // FILEREADER_H

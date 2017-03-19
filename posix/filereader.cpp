@@ -13,7 +13,7 @@ bool FileReader::go(unsigned guard){
   this->guard=guard;
 
   EraseThing(cb);//forget prior operation
-
+  //-- no tdoing this so that we can 'cat' multple files into one buffer: buf.rewind();
   /* define the signal for the aio lib to send when something happens */
   cb.aio_sigevent.sigev_notify = SIGEV_SIGNAL;
   cb.aio_sigevent.sigev_signo = SIGIO;
@@ -24,7 +24,7 @@ bool FileReader::go(unsigned guard){
   sigemptyset(&sig_act.sa_mask);
   sig_act.sa_flags = SA_SIGINFO;//to get our 'this' sent back to us
   sig_act.sa_sigaction = sighandler; //NB: gnu header is wonky for this member, plays poorly with preprocessor
-  return ok(sigaction( SIGIO, &sig_act, NULL )) && launch();
+  return ok(sigaction( SIGIO, &sig_act, NULL )) && launch(false/* not a continuation*/);
 }
 
 void FileReader::setHandler(OnCompletion::Pointer onDone){
@@ -38,7 +38,12 @@ bool FileReader::block(double seconds){
   return failed(aio_suspend(&list,1,&ts));
 }
 
-bool FileReader::launch(){
+bool FileReader::launch(bool more){
+  if(more){
+    cb.aio_offset+=cb.__return_value;//this is gnu glibc specific, could call aio_return to get the value
+  } else {
+    cb.aio_offset=0;
+  }
   cb.aio_fildes=fd.asInt();
   // data sink
   cb.aio_buf=&buf.peek();
@@ -70,7 +75,7 @@ void FileReader::notified(int code,int ernumber){
       __ssize_t ret = aio_return( &cb );
       if(continuation(ret)){//notify recipient, return asks us to repeat
         //caller is responsible for rewinding the buffer
-        if(failed(launch())){//if requested retry fails
+        if(failed(launch(true))){//if requested retry fails
           continuation(-errornumber);
           //but do not allow for chaining after a failure due to possibility of infinite loop
         }
