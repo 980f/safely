@@ -1,5 +1,5 @@
 #include "filereader.h"
-
+//todo: merge with home stuff #include "nanotime.h"
 
 FileReader::FileReader(Fildes &fd, ByteScanner &buf, OnCompletion::Pointer onDone):
   fd(fd),
@@ -9,7 +9,7 @@ FileReader::FileReader(Fildes &fd, ByteScanner &buf, OnCompletion::Pointer onDon
 
 }
 
-bool FileReader::operator()(unsigned guard){
+bool FileReader::go(unsigned guard){
   this->guard=guard;
 
   EraseThing(cb);//forget prior operation
@@ -24,33 +24,21 @@ bool FileReader::operator()(unsigned guard){
   sigemptyset(&sig_act.sa_mask);
   sig_act.sa_flags = SA_SIGINFO;//to get our 'this' sent back to us
   sig_act.sa_sigaction = sighandler; //NB: gnu header is wonky for this member, plays poorly with preprocessor
-  fd.errornumber = sigaction( SIGIO, &sig_act, NULL );
-
-//didn't get the struct members that this e.g. code from ibm references, so we stick with signals for now.
-//  /* Link the AIO request with a thread callback */
-//   cb.aio_sigevent.sigev_notify = SIGEV_THREAD;
-//   cb.aio_sigevent.notify_function = sighandler;
-//   cb.aio_sigevent.notify_attributes = NULL;
-//   cb.aio_sigevent.sigev_value.sival_ptr = this;
-
-
-  // file transfer args:
-  // which file, if not already open will error out
-  launch();
-  return fd.errornumber ==0;//todo: find function on fd
+  return ok(sigaction( SIGIO, &sig_act, NULL )) && launch();
 }
 
 void FileReader::setHandler(OnCompletion::Pointer onDone){
   continuation=onDone;
 }
 
-void FileReader::block(){
-  struct timespec ts={1000,0};
+bool FileReader::block(double seconds){
+  long sec=splitter(seconds);
+  struct timespec ts={sec,long(1e9*seconds)};
   aiocb * list=&cb;
-  aio_suspend(&list,1,&ts);
+  return failed(aio_suspend(&list,1,&ts));
 }
 
-void FileReader::launch(){
+bool FileReader::launch(){
   cb.aio_fildes=fd.asInt();
   // data sink
   cb.aio_buf=&buf.peek();
@@ -58,7 +46,7 @@ void FileReader::launch(){
   cb.aio_nbytes=buf.freespace()-guard;
 
   //start read
-  fd.errornumber= aio_read(&cb);
+  return ok(aio_read(&cb));
 }
 
 //untested:
@@ -78,27 +66,21 @@ void FileReader::notified(int code,int ernumber){
     if(aern!=ernumber){
       printf("which is the real error? %d or %d",aern,ernumber);
     }
-    if ( aern== 0) { /* Request completed successfully, get the return status of the underlying read operation */
+    if(ok(aern)){ /* Request completed successfully, get the return status of the underlying read operation */
       __ssize_t ret = aio_return( &cb );
-      if(continuation(ret)){
+      if(continuation(ret)){//notify recipient, return asks us to repeat
         //caller is responsible for rewinding the buffer
-        launch();
-        if(fd.errornumber!=0){
-          continuation(-fd.errornumber);
+        if(failed(launch())){//if requested retry fails
+          continuation(-errornumber);
+          //but do not allow for chaining after a failure due to possibility of infinite loop
         }
       }
     } else {
-      continuation(-fd.errornumber);
+      continuation(-errornumber);
+      //but do not allow for chaining after a failure
     }
   } else {
-    continuation(errno);//todo: verify this is always negative
+    //wtf("Unexpected signal in " __FILE__);
   }
 
-//  /* Did the request complete normally? */
-//  if (aio_error( &cb ) == 0) { /* Request completed successfully, get the return status of the underlying read operation */
-//    size_t ret = aio_return( &cb );
-//    continuation(ret);
-//  } else {
-//    continuation(-fd.errornumber);
-  //  }
 }

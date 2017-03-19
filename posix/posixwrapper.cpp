@@ -27,8 +27,8 @@ bool PosixWrapper::failure(bool passthrough){
 
 bool PosixWrapper::failed(int zeroorminus1){
   if(zeroorminus1 == -1) {
-    if(changed(errornumber,errno)) {//only log message if different than previous, prevents spam at the loss of occasional meaningful duplicates. If you think you might
-                                    // duplicae an error then clear errornumber before a call.
+    if(changed(errornumber,errno)) {//only log message if different than previous, prevents spam at the loss of occasional meaningful duplicates.
+      // If you think you might repeat an error then clear errornumber before such a call.
       syslog(debug, "Failed: %m");
     }
     return true;
