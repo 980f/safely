@@ -90,6 +90,20 @@ public:
     buffer(rewind<=0 ? other.buffer : other.buffer + (other.pointer - rewind)){
   }
 
+  /** It only makes sense to use this once right after creation of the related buffer.
+   * This method zeroes out trailing part of allocation and then forgets it exists.
+   * The most obvious use of this is to ensure a trailing null on strings.
+   * It might also be useful in putting a trailing nullptr on an array of pointers, but we don't often use this class for that duty.
+   * This is an alternative to using the Zguard function to futz the array before allocating an Indexer to view it.
+   * @returns 0 on success, else how many bytes overlapped the used area of the Indexer.
+*/
+  unsigned zguard(unsigned amount=1){
+    while(amount-->0 && length>pointer){
+      buffer[--length]=Content(0);
+    }
+    return amount;
+  }
+
   /** reworks this one to be visited region of @param other.
    *   carefully implemented so that idx.snap(idx) works sensibly.*/
   void snap(const Indexer &other){

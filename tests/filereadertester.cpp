@@ -11,10 +11,10 @@ static Logger info("AIOFILE",true);
 bool FileReaderTester::onRead(__ssize_t ret){
   if(ret>=0){
     ++blocksin;
-    buf.skip(ret);
-    received+=buf.used();
+    received+=ret;
 
-    buf[ret]=0;//null terminate, will fail if file is greater than buffer ...
+    buf.skip(ret);
+    buf.clearUnused();
     info("%s",buf.internalBuffer());
     if(expected>received){
       buf.rewind();
@@ -59,12 +59,12 @@ void FileReaderTester::run(unsigned which){
   if(fd.open(fname,O_RDONLY)){
     info("Launching read of file %s",fname);
     buf.rewind();//when this was missing I learned things about how aio_read worked
-    if(freader.go(1)){
+    if(freader.go()){
       info("waiting for about %d events",blocksexpected);
       while(blocksin<blocksexpected){
         if(freader.block(1)){
           info("While waiting got: %d(%s)",freader.errornumber,strerror(freader.errornumber));
-          if(freader.errornumber==EINTR){//short block on read it ... EOF whie bytes expected
+          if(freader.errornumber==EINTR){//on read or block shorter than buffer.
             if(received==expected){
               info("...which is pointless, happens in last incompletely filled block");
             }

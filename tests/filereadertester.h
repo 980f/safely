@@ -6,7 +6,7 @@
 class FileReaderTester{
   u8 buffer[2049];
   Fildes fd;
-  ByteScanner buf;
+  Indexer<u8> buf;
   ssize_t expected;
   ssize_t received;
   unsigned blocksin;

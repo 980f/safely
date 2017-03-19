@@ -10,8 +10,7 @@ FileAsyncAccess::FileAsyncAccess(bool reader, Fildes &fd, Indexer<u8> &buf, OnCo
 
 }
 
-bool FileAsyncAccess::go(unsigned guard){
-  this->guard=guard;
+bool FileAsyncAccess::go(){
 
   EraseThing(cb);//forget prior operation
   //-- no tdoing this so that we can 'cat' multple files into one buffer: buf.rewind();
@@ -50,7 +49,7 @@ bool FileAsyncAccess::launch(bool more){
   if(amReader){// data sink
     cb.aio_buf=&buf.peek();
     // maximum to read
-    cb.aio_nbytes=buf.freespace()-guard;
+    cb.aio_nbytes=buf.freespace();
     //start read
     return ok(aio_read(&cb));
   } else {// data source
