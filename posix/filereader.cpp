@@ -1,7 +1,8 @@
 #include "filereader.h"
 //todo: merge with home stuff #include "nanotime.h"
 
-FileReader::FileReader(Fildes &fd, ByteScanner &buf, OnCompletion::Pointer onDone):
+FileAsyncAccess::FileAsyncAccess(bool reader, Fildes &fd, Indexer<u8> &buf, OnCompletion::Pointer onDone):
+  amReader(reader),
   fd(fd),
   buf(buf),
   continuation(false,onDone)
@@ -9,7 +10,7 @@ FileReader::FileReader(Fildes &fd, ByteScanner &buf, OnCompletion::Pointer onDon
 
 }
 
-bool FileReader::go(unsigned guard){
+bool FileAsyncAccess::go(unsigned guard){
   this->guard=guard;
 
   EraseThing(cb);//forget prior operation
@@ -27,43 +28,50 @@ bool FileReader::go(unsigned guard){
   return ok(sigaction( SIGIO, &sig_act, NULL )) && launch(false/* not a continuation*/);
 }
 
-void FileReader::setHandler(OnCompletion::Pointer onDone){
+void FileAsyncAccess::setHandler(OnCompletion::Pointer onDone){
   continuation=onDone;
 }
 
-bool FileReader::block(double seconds){
+bool FileAsyncAccess::block(double seconds){
   long sec=splitter(seconds);
   struct timespec ts={sec,long(1e9*seconds)};
   aiocb * list=&cb;
   return failed(aio_suspend(&list,1,&ts));
 }
 
-bool FileReader::launch(bool more){
+bool FileAsyncAccess::launch(bool more){
   if(more){
+    //maydo: add 'lastSuccessfulTranferAmount' so we can loosen up retry on error in continuation
     cb.aio_offset+=cb.__return_value;//this is gnu glibc specific, could call aio_return to get the value
   } else {
     cb.aio_offset=0;
   }
   cb.aio_fildes=fd.asInt();
-  // data sink
-  cb.aio_buf=&buf.peek();
-  // maximum to read
-  cb.aio_nbytes=buf.freespace()-guard;
-
-  //start read
-  return ok(aio_read(&cb));
+  if(amReader){// data sink
+    cb.aio_buf=&buf.peek();
+    // maximum to read
+    cb.aio_nbytes=buf.freespace()-guard;
+    //start read
+    return ok(aio_read(&cb));
+  } else {// data source
+    cb.aio_buf=buf.internalBuffer();
+    // maximum to send
+    cb.aio_nbytes=buf.used();
+    //start write
+    return ok(aio_write(&cb));
+  }
 }
 
 //untested:
-void FileReader::sighandler( int signo, siginfo_t *info, void */*ucontext_t context*/ )  {
+void FileAsyncAccess::sighandler( int signo, siginfo_t *info, void */*ucontext_t context*/ )  {
   /* Ensure it's our signal */
   if (signo == SIGIO) {
-    FileReader *req= reinterpret_cast<FileReader*>(info->si_value.sival_ptr);
+    FileAsyncAccess *req= reinterpret_cast<FileAsyncAccess*>(info->si_value.sival_ptr);
     req->notified(info->si_code,info->si_errno);
   }
 }
 
-void FileReader::notified(int code,int ernumber){
+void FileAsyncAccess::notified(int code,int ernumber){
   //a possibly interesting fact:
   if(code==SI_ASYNCIO){
     /* Did the request complete normally? */

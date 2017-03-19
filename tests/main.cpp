@@ -120,7 +120,7 @@ int main(int argc, char *argv[]){
     case 'f'://
       {
         FileReaderTester frt;
-        frt.run(~0);
+        frt.run(which);
       }
       break;
     case 'b'://buffer formatting
