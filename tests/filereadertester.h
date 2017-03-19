@@ -11,7 +11,7 @@ class FileReaderTester{
   ssize_t received;
   unsigned blocksin;
   unsigned blocksexpected;
-  FileReader freader;
+  FileAsyncAccess freader;
 
   /* on read complete */
   bool onRead(__ssize_t ret);

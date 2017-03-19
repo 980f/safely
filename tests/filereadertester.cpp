@@ -26,7 +26,7 @@ bool FileReaderTester::onRead(__ssize_t ret){
 
 FileReaderTester::FileReaderTester():
   buf(buffer,sizeof(buffer)),
-  freader(fd,buf,  [this](__ssize_t arg){return this->onRead (arg);})
+  freader(true/*read*/,fd,buf,  [this](__ssize_t arg){return this->onRead (arg);})
 {
 
 }
@@ -64,6 +64,11 @@ void FileReaderTester::run(unsigned which){
       while(blocksin<blocksexpected){
         if(freader.block(1)){
           info("While waiting got: %d(%s)",freader.errornumber,strerror(freader.errornumber));
+          if(freader.errornumber==EINTR){//short block on read it ... EOF whie bytes expected
+            if(received==expected){
+              info("...which is pointless, happens in last incompletely filled block");
+            }
+          }
         }
         //todo: detect freader errornumber's that are fatal and break
       }
