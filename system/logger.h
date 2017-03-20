@@ -20,6 +20,8 @@ public:
   bool enabled;
   Logger(const char *location,bool enabled=true);
 #if LoggerManagement == 0
+  static void listLoggers(Logger &dbg);
+
   virtual
 #endif
   ~Logger();

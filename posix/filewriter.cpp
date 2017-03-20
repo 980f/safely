@@ -7,7 +7,7 @@
 #include "logger.h"
 #include "string.h" //strerror
 
-static Logger bug("FileReader",false);
+static Logger bug("FileWriter",true);
 
 bool FileWriter::onWrite(__ssize_t ret){
   if(ret>=0){//then it is # of bytes transferred

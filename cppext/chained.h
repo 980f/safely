@@ -75,6 +75,15 @@ public:
     Chained<T>::peer=root;
   }
 
+  T* append(T* newbie){
+    if(Chained<T>::peer==nullptr){
+      Chained<T>::peer=newbie;
+      return newbie;
+    } else {
+      return Chained<T>::peer->append(newbie);
+    }
+  }
+
   T* remove(T* moriturus) /*override*/{ //at one time override worked, I guess that was a gcc oops?
     if( Chained<T>::remove(moriturus)){
       if(isOwner){

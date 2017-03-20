@@ -6,7 +6,7 @@
 #include "logger.h"
 #include "string.h" //strerror
 
-static Logger info("AIOFILE",true);
+static Logger info("AIOFILERD",true);
 
 bool FileReaderTester::action(){
   buf.clearUnused();//low performance method of terminating a string to pass as a char *.

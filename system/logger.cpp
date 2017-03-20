@@ -13,6 +13,16 @@ Logger::Logger(const char *location,bool enabled):prefix(location),enabled(enabl
 #endif
 }
 
+#if LoggerManagement == 0
+void Logger::listLoggers(Logger &dbg){
+  Logger *scan=Logger::root.peer;
+  while(scan->peer){
+    scan=scan->peer;
+    dbg("Logger.%s=%d",scan->prefix,scan->enabled);
+  }
+}
+#endif
+
 Logger::~Logger(){
 #if LoggerManagement == 0
   root.remove(this);
