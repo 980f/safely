@@ -109,8 +109,10 @@ extern void testJ(unsigned which);
 #include "filereadertester.h"
 #include "filewritertester.h"
 int main(int argc, char *argv[]){
-  char pwd[512/*whereis maxpath*/];
-  dbg("Working directory is: %s",getcwd(pwd,sizeof(pwd)));
+  Text cwd(getcwd(nullptr,0));//we use Text class because it will free what getcwd allocated. Not so critical unless we are using this program to look for memory leaks in the functions it tests.
+  dbg("Working directory is: %s",cwd.c_str());
+  dbg("Static loggers list:");
+  Logger::listLoggers(dbg);
   while(argc-->0) {
     const char*tes=argv[argc];
     dbg("%d: %s",argc,tes);
