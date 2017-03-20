@@ -75,7 +75,7 @@ public:
     Chained<T>::peer=root;
   }
 
-  T* remove(T* moriturus)override{
+  T* remove(T* moriturus) /*override*/{ //at one time override worked, I guess that was a gcc oops?
     if( Chained<T>::remove(moriturus)){
       if(isOwner){
         delete moriturus;

@@ -79,8 +79,8 @@ ByteScanner Filer::contents(){
 
 bool Filer::readall(int maxalloc){
   if(fd.isOpen()) {
-    FileInfo finfo(fd.asInt());
-    if(finfo.isOk()){
+    FileInfo finfo(fd);
+    if(finfo){
       size = finfo.size();
       if(size > maxalloc) {
         size = maxalloc;
@@ -152,8 +152,7 @@ bool Filer::exists(const char *name){
   if(isTrivial(name)) {
     return false; //pathological
   }
-  FileInfo st(name);
-  return st.isOk();
+  return FileInfo(name).isOk();
 } // exists
 
 int Filer::mv(const char *src, const char *target){

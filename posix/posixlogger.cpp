@@ -6,6 +6,12 @@
 #include "cstr.h" //nonTrivial
 
 //implements what system/logger.h externs:
+#if LoggerManagement == 0
+ChainedAnchor<Logger> Logger::root(nullptr,false);//most will be either static (never delete) or auto (delete by compiler on exit of scope)
+//todo: return logger by name
+//todo: how do we access the list without a gui?
+#endif
+
 Logger dbg("DBG");
 Logger wtf("WTF");
 

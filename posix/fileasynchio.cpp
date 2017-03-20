@@ -7,7 +7,7 @@ FileAsyncAccess::FileAsyncAccess(bool reader, Fildes &fd, ByteScanner &buf, OnCo
   buf(buf),
   continuation(false,onDone)
 {
-
+  //#nada
 }
 
 bool FileAsyncAccess::go(){
@@ -45,7 +45,7 @@ bool FileAsyncAccess::launch(bool more){
   } else {
     cb.aio_offset=0;
   }
-  cb.aio_fildes=fd.asInt();
+  cb.aio_fildes=fd;
   if(amReader){// data sink
     cb.aio_buf=&buf.peek();
     // maximum to read
@@ -61,9 +61,7 @@ bool FileAsyncAccess::launch(bool more){
   }
 }
 
-//untested:
 void FileAsyncAccess::sighandler( int signo, siginfo_t *info, void */*ucontext_t context*/ )  {
-  /* Ensure it's our signal */
   if (signo == SIGIO) {
     FileAsyncAccess *req= reinterpret_cast<FileAsyncAccess*>(info->si_value.sival_ptr);
     req->notified(info->si_code,info->si_errno);
@@ -74,11 +72,8 @@ void FileAsyncAccess::notified(int code,int ernumber){
   //a possibly interesting fact:
   if(code==SI_ASYNCIO){
     /* Did the request complete normally? */
-    int aern=aio_error( &cb );
-    if(aern!=ernumber){
-      printf("which is the real error? %d or %d",aern,ernumber);
-    }
-    if(ok(aern)){ /* Request completed successfully, get the return status of the underlying read operation */
+    errornumber=ernumber;//aio_error( &cb );//unlike most posix functions this one returns what normally would go into errno
+    if(isOk()){ /* Request completed successfully, get the return status of the underlying read operation */
       __ssize_t ret = aio_return( &cb );
       if(continuation(ret)){//notify recipient, return asks us to repeat
         //caller is responsible for rewinding the buffer
