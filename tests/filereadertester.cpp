@@ -9,27 +9,19 @@
 
 static Logger info("AIOFILE",true);
 
-bool FileReaderTester::onRead(__ssize_t ret){
-  if(ret>=0){//then it is # of bytes transferred
-    ++blocksin;
-    received+=ret;
 
-    buf.skip(ret);
-    buf.clearUnused();//low performance method of terminating a string to pass as a char *.
-    info("%s",buf.internalBuffer());
-    if(expected>received){
-      buf.rewind();
-      return true;
-    }
-  }
-  return false;
+bool FileReaderTester::action(){
+  buf.clearUnused();//low performance method of terminating a string to pass as a char *.
+  info("%s",buf.internalBuffer());
+  return true;
 }
 
-FileReaderTester::FileReaderTester():
-  buf(buffer,sizeof(buffer)),
-  freader(true/*read*/,fd,buf,  [this](__ssize_t arg){return this->onRead (arg);})
-{
+void FileReaderTester::onCompletion(){
+  info("completed");
+}
 
+FileReaderTester::FileReaderTester(){
+  buf.zguard(1);//ascii strings
 }
 
 //note: 'test all' tests from the bottom up.
@@ -46,33 +38,19 @@ void FileReaderTester::run(unsigned which){
     return;
   }
   TextKey fname=testfile[which];
-  FileInfo finfo(fname);
-  if(!finfo.isOk()){
-    info("stat(%s) failed, errno:%d (%s)",fname,finfo.errornumber,strerror(finfo.errornumber));
-    return;
-  }
-  expected=finfo.size();
-  received=0;
-  blocksin=0;
-  blocksexpected= quanta(expected,buf.allocated());
-  if(fd.open(fname,O_RDONLY)){
-    info("Launching read of file %s",fname);
-    buf.rewind();//when this was missing I learned things about how aio_read worked
-    if(freader.go()){
-      info("waiting for about %d events",blocksexpected);
-      while(blocksin<blocksexpected){
-        if(freader.block(1)){
-          info("While waiting got: %d(%s)",freader.errornumber,strerror(freader.errornumber));
-          if(freader.errornumber==EINTR){//on read or block shorter than buffer.
-            if(received==expected){
-              info("...which is pointless, happens in last incompletely filled block");
-            }
+
+  if(process(fname)){
+    info("waiting for about %d events",blocksexpected);
+    while(blocksin<blocksexpected){
+      if(freader.block(1)){
+        info("While waiting got: %d(%s)",freader.errornumber,strerror(freader.errornumber));
+        if(freader.errornumber==EINTR){//on read or block shorter than buffer.
+          if(received==expected){
+            info("...which is pointless, happens in last incompletely filled block");
           }
         }
-        //todo: detect freader errornumber's that are fatal and break
       }
-      info("Received: %ld of %ld, \tBlocks: %d of %d",received,expected,blocksin,blocksexpected);
+      //todo: detect freader errornumber's that are fatal and break
     }
   }
-
 }

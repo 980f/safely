@@ -8,7 +8,15 @@ extern void logmessage(const char *prefix,const char *msg,va_list &args);
 extern void dumpStack(const char *prefix);
 
 Logger::Logger(const char *location,bool enabled):prefix(location),enabled(enabled){
-  //#nada
+#if LoggerManagement == 0
+  root.append(this);
+#endif
+}
+
+Logger::~Logger(){
+#if LoggerManagement == 0
+  root.remove(this);
+#endif
 }
 
 void Logger::operator() (const char *msg, ...){

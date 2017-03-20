@@ -21,7 +21,8 @@ SOURCES += \
     streamprintf.cpp \
     streamformatter.cpp \
     fileasynchio.cpp \
-    fileinfo.cpp
+    fileinfo.cpp \
+    filereader.cpp
 
 HEADERS += \
     fdset.h \
@@ -35,4 +36,5 @@ HEADERS += \
     streamformatter.h \
     fcntlflags.h \
     fileasynchio.h \
-    fileinfo.h
+    fileinfo.h \
+    filereader.h

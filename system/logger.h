@@ -1,15 +1,26 @@
 #ifndef LOGGER_H
 #define LOGGER_H
 
+#if LoggerManagement == 0
+#include "chained.h"
+#endif
+
 /** a minimalist logging facade */
-class Logger {
+class Logger
+#if LoggerManagement == 0
+: protected Chained<Logger> {
+  static ChainedAnchor<Logger> root;
+#else
+{
+#endif
+
 public:
   /** must point to static text, is printed on the log before each message */
   const char *prefix;
   bool enabled;
   Logger(const char *location,bool enabled=true);
 
-  virtual ~Logger()=default;
+  ~Logger();
   /** makes usage look like a function */
   void operator() (const char *msg, ...);
 
