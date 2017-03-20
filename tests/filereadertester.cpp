@@ -1,11 +1,11 @@
 #include "filereadertester.h"
 #include <fcntl.h> //O_options, need to enum them
-#include <cstdio>
+#include "logger.h"
 
 bool FileReaderTester::onRead(__ssize_t ret){
   if(ret>=0){
     buf[ret]=0;//null terminate, will fail if file is greater than buffer ...
-    printf("%s\n",buf.internalBuffer());
+    dbg("%s\n",buf.internalBuffer());
   }
   return false;
 }

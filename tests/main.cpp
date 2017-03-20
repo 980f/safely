@@ -101,7 +101,7 @@ void testBufferFormatter(){
 }
 
 
-extern void testJ(unsigned which,bool newer);
+extern void testJ(unsigned which);
 #include "unicodetester.h"
 #include "numberformatter.h"
 #include "testpathparser.h"
@@ -124,10 +124,7 @@ int main(int argc, char *argv[]){
       testBufferFormatter();
       break;
     case 'j': //json tests
-      testJ(which,true);//newer implementation
-      break;
-    case 'J':
-      testJ(which,false);//older impl.
+      testJ(which);//newer implementation
       break;
     case 'p'://pathparser tests
       TestPathParser::run(which);

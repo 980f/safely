@@ -54,6 +54,8 @@ public://extended return value
   /** 'location' recorded at start and end of name token */
   Span name;
   bool quotedName;
+  /** our first user doesn't care about the difference between [ and {, but someone else may so: */
+  bool orderedWad;
   /**
    *  records locations for text extents, passes major events back to caller
    */

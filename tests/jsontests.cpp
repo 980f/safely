@@ -48,7 +48,7 @@ void printNode(unsigned tab,Storable &node){
       } else {
         if(pretty){
           putchar('\n');
-          for(int tabs = tab; tabs-->0; ) {
+          for(unsigned tabs = tab; tabs-->0; ) {
             printf("  ");
           }
         }
@@ -72,60 +72,56 @@ void printNode(unsigned tab,Storable &node){
       printf("\"%s\" ",node.image().c_str());
     }
     break;
-  } // switch  
+  } // switch
   fflush(stdout);
 } // switch
 
-void testJson(const char *block,unsigned size){
-  dbg("testJson: testing: %s",block);
+//void testJson(const char *block,unsigned size){
+//  dbg("testJson: testing: %s",block);
 
-  Indexer<const char> loaded(block,size);
-  Storable *root = nullptr;
-  StoredJSONparser parser(loaded,root);
-  StopWatch perftimer;
-  bool retval = parser.parse(root);
-  perftimer.stop();
-  dbg("JsonParse: after %g ms returned: %d  nodes:%u  scalars:%u depth:%u",perftimer.elapsed()*1000.0, retval,parser.s.totalNodes, parser.s.totalScalar, parser.s.maxDepth.extremum);
+//  Indexer<const char> loaded(block,size);
+//  Storable *root = nullptr;
+//  StoredJSONparser parser(loaded,root);
+//  StopWatch perftimer;
+//  bool retval = parser.parse(root);
+//  perftimer.stop();
+//  dbg("JsonParse: after %g ms returned: %d  nodes:%u  scalars:%u depth:%u",perftimer.elapsed()*1000.0, retval,parser.s.totalNodes, parser.s.totalScalar, parser.s.maxDepth.extremum);
 
-  if(root) {
-    printNode(1,*root);
-    putchar('\n');
-      fflush(stdout);
-  }
-}   // testJson
+//  if(root) {
+//    printNode(1,*root);
+//    putchar('\n');
+//      fflush(stdout);
+//  }
+//}   // testJson
 
-#include "testabstractjsonparser.h"
-
-void testAbstractly(const char *block,unsigned size){
-  dbg("Jabstract: testing: %s",block);
-  Indexer<const char> loaded(block,size);
-
-  TAJParser parser(loaded);
-//  dbg("\nJsonPreParse: nodes:%u  scalars:%u depth:%u",parser.stats.totalNodes, parser.stats.totalScalar, parser.stats.maxDepth.extremum);
-  StopWatch perftimer;
-  parser.parse();
-
-  dbg("JsonParse: after %g ms nodes:%u  scalars:%u depth:%u",perftimer.elapsed()*1000, parser.stats.totalNodes, parser.stats.totalScalar, parser.stats.maxDepth.extremum);
-
-  if(parser.core.root) {
-    printNode(1,*parser.core.root);
-    putchar('\n');
-    fflush(stdout);  //to show up in debugger ASAP.
-  }
-}   // testJson
+//#include "testabstractjsonparser.h"
 
 
-void testJ(unsigned which,bool newer){
+void testJ(unsigned which){
   if(Index(which).isValid()) {
     Cstr test(jsontests[which]);
-    if(newer){
-      testAbstractly(test.c_str(),test.length());
-    } else {
-      testJson(test.c_str(),test.length());
+
+    auto block=test.c_str();
+    auto size=test.length();
+
+    Indexer<const char> loaded(block,size);
+    dbg("StoreJSON: testing: %s",block);
+
+    StoreJsonParser parser(loaded);
+    //  dbg("\nJsonPreParse: nodes:%u  scalars:%u depth:%u",parser.stats.totalNodes, parser.stats.totalScalar, parser.stats.maxDepth.extremum);
+    StopWatch perftimer;
+    parser.parse();
+
+    dbg("JsonParse: after %g ms nodes:%u  scalars:%u depth:%u",perftimer.elapsed()*1000, parser.stats.totalNodes, parser.stats.totalScalar, parser.stats.maxDepth.extremum);
+
+    if(parser.core.root) {
+      printNode(1,*parser.core.root);
+      putchar('\n');
+      fflush(stdout);  //to show up in debugger ASAP.
     }
   } else {
-    for(int which = countof(jsontests); which-->0; ) {      
-      testJ(which,newer);
+    for(unsigned which = countof(jsontests); which-->0; ) {
+      testJ(which);
     }
   }
 }   // testJ

@@ -4,11 +4,11 @@
 #include <malloc.h>
 
 FileName::FileName(){
-  //assign(root);
+
 }
 
 FileName::FileName(const Text  &simple){
-  folder(simple);
+  parse(simple);
 }
 
 FileName &FileName::dirname(void){
@@ -16,24 +16,14 @@ FileName &FileName::dirname(void){
   return *this;
 }
 
-FileName &FileName::folder(const Text  &s){
-  if(s.empty()) {
-    return *this;
-  }
-  unsigned quant=this->quantity();//record before parsing
-
-
-
-//  PathParser::Rules subracket=PathParser::parseInto(*this,s,'/');
-//  if(quant==0){
-//    bracket=subracket;
-//  } else {
-//    //ignore there being a leading / in the added piece
-//    bracket.after = subracket.after;
+//FileName &FileName::folder(const Text  &s){
+//  if(s.empty()) {
+//    return *this;
 //  }
 
-  return *this;
-} // FileName::folder
+
+//  return *this;
+//} // FileName::folder
 
 FileName &FileName::ext(const Text  &s){
   if(empty()){//becomes totality
@@ -49,6 +39,25 @@ FileName &FileName::ext(const Text  &s){
 
 FileName &FileName::erase(){
   clear();
+  return *this;
+}
+
+FileName &FileName::parse(const char *rawpath){
+  Cstr s(rawpath);
+  if(!s.empty()){
+    Indexer<const char> buffer(s.c_str(),s.length());
+    PathParser::Chunker chunker('/');
+    unsigned leaders=chunker.start(buffer)>0;//purge leading slashes on all segments
+    if(empty()){//but if first record that they existed.
+      chunker.bracket.before=leaders>0;
+    }
+    while(Span span=chunker.next(buffer)){
+      Indexer<const char> segment(buffer.view(span.lowest,span.highest));
+      DottedName *folder=new DottedName('.',segment);
+      append(folder);
+    }
+    bracket=chunker.bracket;
+  }
   return *this;
 }
 
@@ -98,7 +107,7 @@ NameStacker::NameStacker(FileName &namer) :
 NameStacker::NameStacker(FileName &namer, const Text &pushsome) :
   path(namer),
   mark(namer.quantity()){
-  path.folder(pushsome);
+  path.parse(pushsome);
 }
 
 

@@ -18,7 +18,7 @@ public:
   Text();
 
   /** makes a copy of the @param given content if @param takeit is false, else presumes the caller is happy with this maintaining the lifetime.
-   * IE: if takeit is true then this class just records the pointer, if false it makes a copy of the data and forgets the given pinter.
+   * IE: if takeit is true then this class just records the pointer, if false it makes a copy of the data and forgets the given pointer.
    * This class *always* frees the data it points at.
  */
   Text(TextKey ptr,bool takeit);
@@ -32,8 +32,11 @@ public:
   /** enforce that a const can't have its resource taken away from it. */
   Text(const Text &other)=delete ;
 
-  /** enforce that a const can't have its resource taken away from it. */
+  /** take content from @param other, other will be empty */
   Text(Text &&other);
+
+  /** take content from @param other, other will be empty */
+  Text(Text &other);
 
 
   /** make a copy of non-null-terminated subset of some string. includes @param begin but not @param end */

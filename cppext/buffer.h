@@ -138,6 +138,22 @@ public:
     return sub;
   }
 
+  /** @returns an Indexer that covers the half open range defined by @param start and @param end.
+   * if end is past the end (e.g. ~0) then the actual end is used.
+   * if start is not valid then an empty indexer is returned.
+   * This does not 'new' anything, the compiler hopefully can elide the implied copy.  */
+  Indexer<Content> view(unsigned start,unsigned end)const{
+    if(end>length){
+      end=length;
+    }
+    if(start<length){
+      return Indexer<Content>(&buffer[start],(end-start)*sizeof (Content));
+    } else {
+      return Indexer<Content>();
+    }
+  }
+
+
   /** reworks this to move start of buffer to be @param howmany past present start.
    * does sensible things if you trim past the current pointer, wipes the whole thing if you trim all of it.
    */

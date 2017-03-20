@@ -8,13 +8,10 @@
 #include "sequence.h"
 #include "localonexit.h"
 
-
-
-
 template <typename Storable, typename TextClass> class AbstractJSONparser;//forward ref for friendliness
-/** data source and sink for parsing */
-template <typename Storable, typename TextClass>
-class JsonConstructor {
+
+/** base class for data source and sink for parsing */
+template <typename Storable, typename TextClass> class JsonConstructor {
   friend class AbstractJSONparser<Storable, TextClass>;
 public: //needs accessor
   /** parent of all that is parsed. It can be supplied or the insertNewChild must set it when given a null parent */
@@ -46,6 +43,7 @@ public:
     parseChild(data.root);
   }
 
+  /** some useless info about the parsed data */
   JsonStats stats;
 
 protected:
@@ -66,12 +64,14 @@ protected:
     return nova;
   }
 
-  /** @returns whether there are more children, for recursively parsing wads. */
+  /** @returns whether there are more children, for recursively parsing wads.
+ @param expectNames is whether this is in a '{' or '[' block */
   bool parseChild(Storable *parent){
     JsonStats::DepthTracker doe(stats);
     //look for name
     while(data.hasNext()) {
       switch (parser.next(data.next())) {
+
       case PushedJSON::BeginWad: //open brace encountered
         for(Storable *nova = assembleItem(parent,true); parseChild(nova); ) {
           //#recurse while there are more to be found

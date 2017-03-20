@@ -20,7 +20,9 @@ SOURCES += \
     posixlogger.cpp \
     streamprintf.cpp \
     streamformatter.cpp \
-    filereader.cpp
+    filereader.cpp \
+    eventloop.cpp \
+    nanoseconds.cpp
 
 HEADERS += \
     fdset.h \
@@ -32,4 +34,6 @@ HEADERS += \
     posixlogger.h \
     streamprintf.h \
     streamformatter.h \
-    filereader.h
+    filereader.h \
+    eventloop.h \
+    nanoseconds.h

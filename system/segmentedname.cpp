@@ -23,40 +23,47 @@ void SegmentedName::purify(){
 
 void SegmentedName::copycat(const SegmentedName &other){
   for(auto index=other.indexer();index.hasNext();){
-    auto item=index.next();
-    this->suffix(Text(item));//construction here forces copy
+    Text &item=index.next();
+    this->suffix(item.c_str());//c_str() here forces copy, see transfer where we take the content
   }
 }
 
 void SegmentedName::transfer(SegmentedName &other){
   for(auto index=other.indexer();index.hasNext();){
-    auto item=index.next();
-    this->suffix(Text(item,true));//construction here nulls original entity
+    Text &item=index.next();
+    this->suffix(item);//construction here nulls original entity
   }
   other.clear();//they are all null so might as well ditch them.
 }
 
 void SegmentedName::prefix(TextKey parent){
-  insert(new Cstr(parent),0);
+  prefix(Cstr(parent));
 }
 
 void SegmentedName::suffix(TextKey child){
-  append(new Cstr(child));
+  suffix(Cstr(child));
 }
 
+void SegmentedName::prefix(Cstr &&parent){
+  insert(new Text(parent,false),0);
+}
 
-void SegmentedName::prefix(const Cstr &parent){
+void SegmentedName::suffix(Cstr &&child){
+  append(new Text(child,false));
+}
+
+void SegmentedName::prefix(Text &parent){
   insert(new Text(parent),0);
 }
 
-void SegmentedName::suffix(const Cstr &child){
-  append(new Text(child));
+void SegmentedName::suffix(Text &child){
+   append(new Text(child));
 }
 
-ChainScanner<Cstr> SegmentedName::indexer(){
-  return ChainScanner<Cstr>(*this);
+ChainScanner<Text> SegmentedName::indexer(){
+  return ChainScanner<Text>(*this);
 }
 
-ConstChainScanner<Cstr> SegmentedName::indexer() const {
-  return ConstChainScanner<Cstr>(*this);
+ConstChainScanner<Text> SegmentedName::indexer() const {
+  return ConstChainScanner<Text>(*this);
 }

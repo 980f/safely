@@ -173,7 +173,7 @@ public:
   /** removes all items. */
   void clear(){
     if(isOwner) {
-      for(int i = v.size(); i-->0; ) {
+      for(int i = v.size(); i-->0; ) {//#explicit iteration to make it easier to debug exceptions
         delete v[i];
       }
     }
