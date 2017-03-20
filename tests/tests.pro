@@ -64,4 +64,5 @@ HEADERS += \
     testhooker.h
 
 DISTFILES += \
-    filereadertester.0
+    filereadertester.0 \
+    filereadertester.1

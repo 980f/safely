@@ -1,6 +1,6 @@
 #include "filer.h"
 
-#include "sys/stat.h"
+#include "fileinfo.h"
 #include "sys/types.h" //mkdir
 #include "errno.h"
 #include <cstdlib>
@@ -11,11 +11,11 @@
 
 
 Filer::Filer(){
-  buffer = 0;
+  buffer = nullptr;
 }
 
 Filer::~Filer(){
-  delete[]  buffer;
+  delete[] buffer;
 }
 
 bool Filer::mkDirDashP(const char *path, bool itsparent){
@@ -79,12 +79,14 @@ ByteScanner Filer::contents(){
 
 bool Filer::readall(int maxalloc){
   if(fd.isOpen()) {
-    struct stat info;
-    int arf = fstat(fd, &info);
-    if(arf == 0) {
-      size = info.st_size;
+    FileInfo finfo(fd);
+    if(finfo){
+      size = finfo.size();
       if(size > maxalloc) {
         size = maxalloc;
+      }
+      if(buffer){//while it is safe to call delete on a nullptr we like to be able to breakpoint on the need to delete
+        delete[] buffer;
       }
       buffer = new unsigned char[size];  //DEL@ destructor
       ByteScanner scanner(buffer, size);
@@ -96,7 +98,7 @@ bool Filer::readall(int maxalloc){
       return true;
     }
   }
-  return failure();
+  return false;
 } /* readall */
 
 bool Filer::cp(const char *src, const char *target, bool dashf, bool dashr){
@@ -150,12 +152,7 @@ bool Filer::exists(const char *name){
   if(isTrivial(name)) {
     return false; //pathological
   }
-  struct stat st;
-  if(0 == ::stat(name, &st)) {
-    return true;
-  } else {
-    return false;
-  }
+  return FileInfo(name).isOk();
 } // exists
 
 int Filer::mv(const char *src, const char *target){
