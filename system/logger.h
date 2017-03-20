@@ -19,7 +19,9 @@ public:
   const char *prefix;
   bool enabled;
   Logger(const char *location,bool enabled=true);
-
+#if LoggerManagement == 0
+  virtual
+#endif
   ~Logger();
   /** makes usage look like a function */
   void operator() (const char *msg, ...);

@@ -13,8 +13,8 @@
 
 //template<typename T> class Chainer;
 template<typename T> class Chained {
-//  friend class Chainer<T>;
-//protected:
+  //  friend class Chainer<T>;
+  //protected:
 public://for SettingsGrouper::init
   T* peer;
 protected:
@@ -80,9 +80,11 @@ public:
       if(isOwner){
         delete moriturus;
         return nullptr;//pro-forma
+      } else {
+        return moriturus;
       }
     } else {
-      return moriturus;
+      return nullptr;
     }
   }
 
