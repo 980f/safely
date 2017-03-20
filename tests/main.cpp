@@ -1,11 +1,12 @@
 #include <iostream>
 
 #include "stdio.h"
-
 #include <initializer_list>  //for inline test data sets
 
 #include "safestr.h"
 #include "logger.h"
+
+#include "unistd.h" //getcwd
 
 SafeStr<14> fortnight;
 
@@ -108,6 +109,8 @@ extern void testJ(unsigned which);
 #include "filereadertester.h"
 
 int main(int argc, char *argv[]){
+  char pwd[512/*whereis maxpath*/];
+  dbg("Working directory is: %s",getcwd(pwd,sizeof(pwd)));
   while(argc-->0) {
     const char*tes=argv[argc];
     dbg("%d: %s",argc,tes);
@@ -117,7 +120,7 @@ int main(int argc, char *argv[]){
     case 'f'://
       {
         FileReaderTester frt;
-        frt.run(~0);
+        frt.run(which);
       }
       break;
     case 'b'://buffer formatting

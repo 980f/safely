@@ -3,7 +3,7 @@
 
 #include "charscanner.h"   //safe buffer
 #include "posixwrapper.h"  //manage errno
-#include "fdset.h"
+struct FDset;//forward reference, we may be relocating this logic elsewhere as we purge select() in favor of poll() #include "fdset.h"
 #include "stdio.h"  //FILE
 
 /** wrapper around file descriptors, especially noteworthy is that it closes the file on destruction, so best use is to create and use locally.*/

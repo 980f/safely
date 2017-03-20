@@ -11,11 +11,18 @@
 class PosixWrapper {
 protected:
   bool failure(bool passthrough = false); //#legacy default arg
-  /** test posix function return value for "ok", log error code if not
-    this updates errornumber member on each call, but only emits a system log message if the errno has changed since the last time a message was sent.
-
-*/
+  /** test posix function return value for "ok". log error code if not.
+    this updates errornumber member on each call, but only emits a system log message if the errno has changed since the last time a message was sent.*/
+public: //so that we can merge
   bool failed(int zeroorminus1);
+  /** syntactic sugar for !@see failed() */
+  bool ok(int zeroorminus1){
+    return !failed(zeroorminus1);
+  }
+  bool isOk()const noexcept{
+    return errornumber==0;
+  }
+
 public:
   /** ERRNO for last operation done using the extend object */
   int errornumber;
@@ -23,7 +30,7 @@ public:
   int debug;
 public:
   PosixWrapper();
-  /** printf like logging, with all the faults therein.*/
+  /** printf like logging via system logging (@see logger.h which is different), with all the faults therein.*/
   void logmsg(const char *fmt, ...);
 }; // class PosixWrapper
 

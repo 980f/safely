@@ -3,14 +3,9 @@
 
 #include "filereader.h"
 
-class FileReaderTester{
-  u8 buffer[2048];
-  Fildes fd;
-  ByteScanner buf;
-  FileReader freader;
-
-  /* on read complete */
-  bool onRead(__ssize_t ret);
+class FileReaderTester: public FileReader{
+  bool action() override;
+  void onCompletion() override;
 public:
   FileReaderTester();
   void run(unsigned which);

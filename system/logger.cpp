@@ -1,23 +1,23 @@
-//(C) 2011 Applied Rigaku Technologies. Proprietary and Confidential.
 #include "logger.h"
 #include "eztypes.h"
 #include "textkey.h"
 #include "stdarg.h"
 
-
-Logger::Logger() : prefix(0){
-  //ctor
-}
+/** you must implement these two functions somewhere in your project */
+extern void logmessage(const char *prefix,const char *msg,va_list &args);
+extern void dumpStack(const char *prefix);
 
 Logger::Logger(const char *location,bool enabled):prefix(location),enabled(enabled){
-  //#nada
+#if LoggerManagement == 0
+  root.append(this);
+#endif
 }
 
 Logger::~Logger(){
-  //dtor
+#if LoggerManagement == 0
+  root.remove(this);
+#endif
 }
-
-extern void logmessage(const char *prefix,const char *msg,va_list &args);
 
 void Logger::operator() (const char *msg, ...){
   if(enabled){
@@ -28,7 +28,6 @@ void Logger::operator() (const char *msg, ...){
   }
 }
 
-extern void dumpStack(const char *prefix);
 void Logger::dumpStack(const char *prefix){
   ::dumpStack(prefix);
 }

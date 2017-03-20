@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <fcntl.h>
+#include "fdset.h"
 
 Fildes::Fildes(){
   errornumber = 0;
