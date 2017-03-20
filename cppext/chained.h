@@ -80,7 +80,7 @@ public:
       Chained<T>::peer=newbie;
       return newbie;
     } else {
-      return Chained<T>::peer->append(newbie);
+      return Chained<T>::peer->Chained<T>::append(newbie);
     }
   }
 

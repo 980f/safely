@@ -43,8 +43,11 @@ FileWriter::FileWriter():
 
 bool FileWriter::process(TextKey fname, const ByteScanner &source){
   if(fd.open(fname,O_CREAT|O_WRONLY|O_TRUNC|O_NONBLOCK)){
-    bug("Launching read of file %s",fname);
+    bug("Launching xfer of file %s",fname);
     buf=source;
+    sent=0;
+    blocksout=0;
+    blocksrequired=quanta(buf.freespace(),512);//todo: access filesystem blocksize from fd.
     if(freader.go()){
       return true;
     }

@@ -45,16 +45,12 @@ bool FileAsyncAccess::launch(bool more){
     cb.aio_offset=0;
   }
   cb.aio_fildes=fd;
+  cb.aio_buf=&buf.peek(); //next spot in buffer
+  cb.aio_nbytes=buf.freespace(); // maximum to xfer
   if(amReader){// data sink
-    cb.aio_buf=&buf.peek();
-    // maximum to read
-    cb.aio_nbytes=buf.freespace();
     //start read
     return ok(aio_read(&cb));
   } else {// data source
-    cb.aio_buf=buf.internalBuffer();
-    // maximum to send
-    cb.aio_nbytes=buf.used();
     //start write
     return ok(aio_write(&cb));
   }
