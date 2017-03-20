@@ -46,7 +46,7 @@ class Storable : public ChangeMonitored, SIGCTRACKABLE {
   friend class StoredEnum;
 public:
   /** number of storables in existence.  For debug of memory leaks. */
-  static int instances;
+  static unsigned instances;
 
   enum Type {  //referring to the type of data in the node
     NotKnown,   //construction error, parse error
@@ -121,20 +121,21 @@ public:
   /** @param isVolatile was added here to get it set earlier for debug convenience */
   Storable(TextKey name, bool isVolatile = false);
   Storable(bool isVolatile = false);
-//todo: why is this virtual? does sigc need that? we shouldn't derive from Storable, we wrap it.
+
+  //todo: why is this virtual? does sigc need that? we shouldn't derive from Storable, we wrap it.
   virtual ~Storable();
 
-  // functions that apply to all types
-  // getters and setters
   /** @returns untyped pointer to this, handy for gtk gui access.*/
   void * raw();
+
   /** @return whether the type actually changed */
   bool setType(Type newtype);
   Type getType() const;
   bool setQuality(Quality q);
-  /** sets a labeling for a numeric value. NB: the pointer is cached in this class, the item better not be deletable! */
+  /** sets a labeling for a numeric value. NB: the pointer is cached in this class, the enumerizer better not be deletable! */
   void setEnumerizer(const Enumerated *enumerated);
   const Enumerated *getEnumerizer() const;
+
   /** @returns whether the text value was converted to a number. @param ifPure is whether to restrict the conversion to strings that are just a number, or whether
    * trailing text is to be ignored. */
   bool convertToNumber(bool ifPure);
@@ -165,7 +166,8 @@ public:
   /** watch all children: (NB: can't unwatch individual kids) */
   sigc::connection addChangeMother(const SimpleSlot &watcher, bool kickme = false) const;
 public:
-  /** class added to guarantee thawing even in the face of exceptions*/
+  /** class added to guarantee thawing even in the face of exceptions.
+   * suspend notifications for the duration of existence of this object. */
   class Freezer {
     bool childrenToo;
     bool onlyChildren;
@@ -177,16 +179,17 @@ public:
     static void freezeNode(Storable &node, bool childrenToo = true, bool onlyChildren = false);
   };
 
-  /** make this node have same structure as givennode, but leave name and present children intact*/
+
 private: //@deprecated, need use case
+  /** make this node have same structure as givennode, but leave name and present children intact*/
   void clone(const Storable &other);
 public:
   /** like an operator =
-   *  rhs is not const due to image() mutating the text when not Textual */
+   *  rhs is not constable due to image() mutating the text when not Textual */
   void assignFrom(Storable &other);
+
   /** set the value of a numerical node */
   double setValue(double value, Quality quality = Edited);
-  // functions that apply to numbers
   /** sets numerical value, if node has an enumerated then the text is set to match, if no enumerated then node type is set to
    * numerical with gay disregard for its previous type. */
   template<typename Numeric> Numeric setNumber(Numeric value, Quality quality = Edited){
@@ -198,7 +201,7 @@ public:
     return static_cast<Numeric>(number);
   }
 
-  /** if not set from file or program execution then set a value on the node */
+  /** if has not set from file or program execution then set a value on the node. Defaults are normally set via ConnectChild macro. */
   template<typename Numeric> Numeric setDefault(Numeric value){
     if(q == Empty || q == Defaulted) {
       setNumber(value, Storable::Defaulted);
@@ -206,8 +209,8 @@ public:
     return getNumber<Numeric>();
   }
 
-  /** @return a functor that when invoked will set this object's value to what is passed at this time.*/
-  template<typename Numeric> sigc::slot<Numeric> getLater(){  //a sigc expert might be able to get rid of this and castTo.
+  /** @return a functor that when invoked will get this object's value.*/
+  template<typename Numeric> sigc::slot<Numeric> getLater(){
     return MyHandler(Storable::getNumber<Numeric> );
   }
 
@@ -244,6 +247,7 @@ public:
 
   /** @returns null pointer if no child by given name exists, else pointer to the child*/
   Storable *existingChild(TextKey childName);
+
   /** @see existingChild() non const version */
   const Storable *existingChild(TextKey childName) const;
 
@@ -255,9 +259,10 @@ public:
   Storable *findNameless(unsigned lastFound = BadIndex);
 
   /** if @param autocreate is true then call child() on each piece of the @param path, else call existingChild() until either a
-   * member is missing or the child is found.
+   * member is missing or the child is found. Upon missing then if @param autocreate is true children are created similar to bash's 'mkdir -p '.
+   *
    * FYI: tolerates null this! */
-  Storable *findChild(TextKey path, bool autocreate = true); /* true as default is legacy from method this replaced.*/
+  Storable *findChild(TextKey path, bool autocreate = true); //# true as the default is legacy from the method this replaced.*/
 
   /** creates node if not present.*/
   Storable &child(TextKey childName);

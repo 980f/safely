@@ -1,12 +1,11 @@
 #ifndef SEGMENTEDNAME_H
 #define SEGMENTEDNAME_H
 
-//#include "textkey.h"
 #include "textpointer.h"
 #include <chain.h>
 
 /** base pathname class, @see Pathname for something useful */
-class SegmentedName:public Chain<Cstr>  {
+class SegmentedName:public Chain<Text> {//prior use of Cstr led to use-after-free possiblilities
   /** there are two reasonable approaches to assignment so we force you to use a named function */
   SegmentedName(const SegmentedName &)=delete;
   void operator =(const SegmentedName &)=delete;
@@ -15,15 +14,19 @@ public://this is a utility class, adding better named functions to its base.
   SegmentedName();
   /** @returns whether there are any path pieces to this name */
   bool empty() const;
-  /** caller is responsible for not freeing stuff passed as TextKey until after this is deleted.
-   *  This class will create Cstr's to hold on to addresses.
-   *  Use case: strings embedded in source code don't go away and don't need to be deletes so use these methods for such static items*/
+
+  /** copies of the text will be made on the heap, this class will not delete the originals. */
   void prefix(TextKey parent);
   void suffix(TextKey child);
 
-  /** using these creates a copy of the string held locally and destroyed at the appropriate time */
-  void prefix(const Cstr &parent);
-  void suffix(const Cstr &child);
+  /** copies of the text will be made on the heap, this class will not delete the originals. */
+  void prefix(Cstr &&parent);
+  void suffix(Cstr &&child);
+
+  /** using these takes the content away from the argument and deletes it when this is deleted */
+  void prefix(Text &parent);
+  void suffix(Text &child);
+
 
   /** @deprecated untested
    * removes trivial path elements */
@@ -38,10 +41,10 @@ public://this is a utility class, adding better named functions to its base.
   void transfer(SegmentedName &other);
 
   /** @returns an indexer, that can alter this */
-  ChainScanner<Cstr> indexer();
+  ChainScanner<Text> indexer();
 
-  /** @returns an indexer, that can only view this, note that the individual pieces are still mutaable. */
-  ConstChainScanner<Cstr> indexer() const;
+  /** @returns an indexer, that can only view this, note that the individual pieces are still mutable. */
+  ConstChainScanner<Text> indexer() const;
 }; // class SegmentedName
 
 #endif // SEGMENTEDNAME_H

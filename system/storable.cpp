@@ -6,29 +6,21 @@
 
 #include "pathparser.h"
 
-//not a class member so that we don't have to force pathparser on all users:
-static const PathParser::Rules slasher('/',false,true);// '.' gives java property naming, '/' would allow use of filename classes. '|' was DAB's choice for ART
+//this is not a class member so that we don't force pathparser on all users:
+static const PathParser::Rules slasher('/',false,true);// '.' gives java property naming, '/' would allow use of filename classes. '|' was used for gtkwrappers access
 
-int Storable::instances(0);
-
-#define bugName fullName().c_str()
+unsigned Storable::instances(0);
 
 using namespace sigc;
-//using namespace Storable;
 
 //the following are only usable within Storable
 #define ForKidsConstly(list) for(ConstChainScanner<Storable> list(wad); list.hasNext(); )
 #define ForKids(list) for(ChainScanner<Storable> list(wad); list.hasNext(); )
 
-//legacy stuff, replace one or the other
-#define ForWad ForKids(list)
-#define ForWadConstly ForKidsConstly(list)
-
-
 Storable::Storable(TextKey name, bool isVolatile) : isVolatile(isVolatile), type(NotKnown), q(Empty), number(0), parent(nullptr), index(-1), enumerated(nullptr), name(name){
   ++instances;
   if(isVolatile) {
-    dbg("creating volatile node %s", bugName);
+    dbg("creating volatile node %s", fullName().c_str());
   }
 }
 
@@ -38,24 +30,22 @@ Storable::Storable(bool isVolatile) : Storable("", isVolatile){
 
 Storable::~Storable(){
   --instances;
-  if(instances < 0) {
-    wtf("freed more storables than we created!");                //which can happen if we double free.
+  if(!Index(instances).isValid ()) {
+    wtf("freed more storables than we created!"); //which can happen if we double free.
   }
-  wad.clear(); //while this is automatic I sometimes want to watch it happen just for this class.
-  //remove all subnodes but send no signals.
 }
 
 void Storable::notify() const {
-//  if(++recursionCounter > 1) {
-//    wtf("recursing %d in %s", recursionCounter, bugName);
-//  }
+  //  if(++recursionCounter > 1) {
+  //    wtf("recursing %d in %s", recursionCounter, bugName);
+  //  }
   watchers.send();
   recursiveNotify();
-//  --recursionCounter;
+  //  --recursionCounter;
 }
 
 void Storable::recursiveNotify() const {
-  if(isVolatile) {
+  if(isVolatile) {//this check is one of the main reasons for existence of isVolatile, to indicate gratuitous or redundant nodes
     return;
   }
   if(parent) {
@@ -185,7 +175,7 @@ bool Storable::isModified() const {
         return true;
       }
     }
-//  JOIN
+    //  JOIN
   case Numerical:
   case Textual:
     return ChangeMonitored::isModified();
@@ -217,9 +207,9 @@ bool Storable::wasModified(){
     }
     return changes > 0 || thiswas;
   }
-//  JOIN;
+    //  JOIN;
   case Numerical:
-  //JOIN;
+    //JOIN;
   case Textual:
     return thiswas;
   } // switch
@@ -292,10 +282,10 @@ void Storable::clone(const Storable&other){ //todo:2 try to not trigger false ch
   filicide(); //dump the present wad, we are cloning, not merging
   type = other.type; //# don't use setType()
   q = other.q; //# don't use setQuality()
-//  setName(other.name);
+  //  setName(other.name);
   enumerated = other.enumerated;
   switch(other.type) {
-//trust compiler to bitch if case missing:--  default:
+  //trust compiler to bitch if case missing:--  default:
   case NotKnown:
     dbg("!Unknown node in tree being copied");
     return; //
@@ -338,7 +328,7 @@ void Storable::assignFrom(Storable&other){
     //implemented for use case of nodes are the backing store of object of identical Stored class
     //we can't trust node order, we must name-match to handle classes built with different versions of software.
     //we must pull values from other, other may have stale nodes (in intended use).
-    ForWad {
+    ForKids(list){
       Storable&kid(list.next());//from datum?
       Storable *older(nonTrivial(kid.name) ? other.existingChild(kid.name) : other.wad[kid.ownIndex()]);
       if(older) {
@@ -395,7 +385,7 @@ Cstr Storable::image(void){
   default:
   case Uncertain:
     resolve(false);
-//  JOIN;
+    //  JOIN;
   case Textual:
     return text;
 
@@ -436,7 +426,7 @@ ConstChainScanner<Storable> Storable::kinder() const {
 
 Storable *Storable::existingChild(TextKey childName){
   //nameless nodes might be mixed in with named ones:
-  ForWad {
+  ForKids(list){
     Storable&one(list.next());
     if(one.name.is(childName)) {
       return &one;
@@ -448,7 +438,7 @@ Storable *Storable::existingChild(TextKey childName){
 const Storable *Storable::existingChild(TextKey childName) const {
   //nameless nodes might be mixed in with named ones:
   if(nonTrivial(childName)) { //added guard to make assignFrom( a wad) easier to code.
-    ForWadConstly {
+    ForKidsConstly(list){
       const Storable&one(list.next());
       if(one.name.is(childName)) {
         return &one;
@@ -472,6 +462,7 @@ Storable *Storable::findNameless(unsigned lastFound){
 Storable *Storable::findChild(TextKey path, bool autocreate){
   SegmentedName genealogy;
   Text parsable(path);
+  //todoL redo with incremental parser
   auto bracket=PathParser::parseInto(genealogy,parsable,slasher.slash);
   if(bracket.before){
     wtf("Storable path names do not (yet) support 'root' syntax: [%s]",path);
@@ -483,39 +474,40 @@ Storable *Storable::findChild(TextKey path, bool autocreate){
   auto progeny(genealogy.indexer());
   Storable *searcher = this;
   while(progeny.hasNext()) {
-    //maydo: if progeny.next is .. found=parent, continue loop
-    auto lname=progeny.next();
+    //if progeny.next is .. then found=parent, continue loop
+    Text &lname=progeny.next();
     if(lname.cmp("..")==0){
       if(Storable * found =searcher->parent) {
         searcher = found;
       } else {//we are at root of this tree.
         //we can't autocreate a root, it would leak if we tried.
+        wtf("Storable find child asked to look above root [%s]",path);
         return nullptr;
       }
-      continue;
+      continue;//look for next child in path
     }
 
-    if(Storable * found = searcher->findChild(lname)) {
+    if(Storable * found = searcher->existingChild(lname)) {
       searcher = found;
-      continue;
-    } else {
-      if(autocreate) {
-        progeny.rewind(1);
-        //build children
-        while(progeny.hasNext()) {
-          searcher = &(searcher->addChild(progeny.next()));
-        }
-        return searcher;//could break, but nice to have a seperate exit for this case.
-      } else {
-        return nullptr;
+      continue;//look for next child in path
+    } else if(autocreate) {
+      //build children expeditiously, could create one via lname and recurse, but that would entail repeat parsing of the path.
+      progeny.rewind(1);//undo the next so we don't have to duplicate code using lname.
+      while(progeny.hasNext()) {
+        searcher = &(searcher->addChild(progeny.next()));
       }
+      break;//created the child (and possibly a few parents as well)
+    } else {
+      return nullptr;
     }
   }
+
+  //path exhausted without an abnormal exit, so we must have found the child:
   return searcher;
 } // findChild
 
 /** creates node if not present.*/
-Storable&Storable::child(TextKey childName){  
+Storable&Storable::child(TextKey childName){
   if(Storable *child = existingChild(childName)) {
     return *child;
   }
@@ -528,7 +520,7 @@ Storable&Storable::operator ()(TextKey name){
 
 Storable&Storable::operator [](int ordinal){
   if(!has(ordinal)) {
-    wtf("nonexisting child of %s referenced by ordinal %d (out of %d).",bugName, ordinal, numChildren());
+    wtf("nonexisting child of %s referenced by ordinal %d (out of %d).",fullName().c_str(), ordinal, numChildren());
     dbg.dumpStack("nth child doesn't exist");
     addChild(""); //better than an NPE so deep in the hierarchy that we don't know where it comes from.
     return *wad.last();

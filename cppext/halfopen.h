@@ -33,6 +33,11 @@ public:
     return span()==0;
   }
 
+  /** syntactic convenience for while loops */
+  operator bool() const {
+    return ! empty();
+  }
+
 };
 
 struct Span: public HalfOpen<Index> {

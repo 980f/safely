@@ -30,9 +30,17 @@ PushedJSON::Action Parser::next(char pushed){
     case ':':
       recordName();
       return PushedJSON::Continue; //null name is not the same as no name
-    case '{': //normal
+    case '[': //array
+      orderedWad=true;
       return BeginWad;
+    case '{': //normal
+      orderedWad=false;
+      return BeginWad;
+    case ']':
+      orderedWad=true;
+      return EndWad;
     case '}': //normal
+      orderedWad=false;
       return EndWad;
     case ',': //sometimes is an extraneous comma, we choose to ignore those.
       return PushedJSON::EndItem;//missing value, possible missing whole child.

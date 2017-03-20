@@ -1,6 +1,6 @@
 #include "storageexporter.h"
 
-//using namespace Glib;
+#include "dottedname.h"
 
 StorageExporter::StorageExporter(std::ostream &fos) : dos(fos){
 
@@ -17,10 +17,9 @@ DelimitingOutputStream &StorageExporter::exportNode(Storable &node, bool header,
   } else if(node.is(Storable::Wad)) {
     ForKinder( node){
       Storable &it(list.next());
-#if USE_GLIB
-      NodeName kidname(Ustring::format(name, ".", kid.name).c_str());
-      exportNode(kid, header, kidname);
-#endif
+      DottedName namer('.',name);
+      namer.suffix (it.name);
+      exportNode(it, header, namer.pack(Converter()));//todo:1 pass in url encoder or the like for Converter.
     }
   }
   return dos;

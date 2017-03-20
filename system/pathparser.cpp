@@ -4,7 +4,7 @@
 
 using namespace PathParser;
 
-unsigned PathParser::length(ConstChainScanner<Cstr> indexer, const Rules &rule, Converter &&converter){
+unsigned PathParser::length(ConstChainScanner<Text> indexer, const Rules &rule, Converter &&converter){
   if(!indexer.hasNext()){
     return 0;//don't inspect rules, i.e. rule.before only matters if we have something before
   }
@@ -19,7 +19,7 @@ unsigned PathParser::length(ConstChainScanner<Cstr> indexer, const Rules &rule, 
   return quantity;
 }
 
-void PathParser::packInto(Indexer<char> &packer,ConstChainScanner<Cstr>feeder,const Rules &rule, Converter &&converter){
+void PathParser::packInto(Indexer<char> &packer,ConstChainScanner<Text>feeder,const Rules &rule, Converter &&converter){
   while(feeder.hasNext()) {
     if(feeder.ordinal()>0 || rule.before){//if not first or if put before first
       packer.next() = rule.slash;
@@ -41,9 +41,12 @@ Text PathParser::pack(const SegmentedName &pieces, const Rules &rule, Converter 
 }
 
 Rules PathParser::parseInto(SegmentedName &pieces, const Text &packed, char seperator){
-  Rules bracket(seperator,false,false);
   Indexer<const char> scan( packed.c_str(),packed.length());
+  return parseInto(pieces,scan,seperator);
+}
 
+Rules PathParser::parseInto(SegmentedName &pieces, Indexer<const char> &scan, char seperator){
+  Rules bracket(seperator,false,false);
   Text::Chunker cutter(scan.internalBuffer());
   if(scan.hasNext()&&scan.peek()==seperator){//if begins with seperator
     bracket.before=true;
@@ -85,4 +88,76 @@ Rules::Rules(char slash, bool after, bool before):slash(slash),after(after),befo
   //#nada
 }
 
+
+
+Chunker::Chunker(char seperator):bracket(seperator,false,false){
+  //#nada
+}
+
+unsigned Chunker::start(Indexer<const char> &scan){
+  unsigned leading=0;
+  while(scan.hasNext()&&bracket.isSlash(scan.peek())){
+    ++leading;
+    scan.skip(1);//burn extra seperating slashes lest they be seen as leading slashes
+  }
+  return leading;
+}
+
+Span Chunker::next(Indexer<const char> &scan){
+  Span cutter;
+  if(scan.hasNext()){
+    if( bracket.isSlash(scan.peek())){//if begins with seperator
+      scan.next();
+      if(!scan.hasNext()){//solitary slash was reporting both before and after slashing
+        return cutter;//exiting early here gives us pre, not post, no pieces.
+      }
+    }
+  } else {
+    return cutter;//which will be empty so caller should quit calling back at us.
+  }
+  cutter.lowest=scan.ordinal();//
+  //cutter.highest is still invalid
+
+  while(scan.hasNext()) {
+    if(bracket.isSlash(scan.next())) {
+      cutter.highest=scan.ordinal()-1;
+      if(cutter.empty()){
+        //adjacent seperators are as if they are one
+        cutter.lowest=scan.ordinal();//which has a side effect of making it invalid, which is good
+      } else {
+        while(scan.hasNext()&&bracket.isSlash(scan.peek())){
+          scan.skip(1);//burn extra seperating slashes lest they be seen as leading slashes
+        }
+        bracket.after=!scan.hasNext();
+        return cutter;//receiver bumps indexer and calls us again
+      }
+    }
+  }
+
+  //the following is suspect
+  if(scan.contains(cutter.lowest)){//then we found a start of something
+    cutter.highest=scan.ordinal();//this trusts internal behavior of ordinal()==lengh when hasNext first fails
+    if(cutter.empty()){
+      bracket.after=true;
+    } else {
+      return cutter;
+    }
+  } else {
+    //if (cutter.lowest==span.length), but not if empty string
+    bracket.after=scan.ordinal()>0;
+  }
+  return cutter;
+}
+
+Rules Chunker::parseInto(SegmentedName &pieces, const Text &packed, char seperator){
+  Chunker chunker(seperator);
+  Indexer<const char> buffer(packed.c_str(),packed.length());
+  chunker.bracket.before=chunker.start(buffer)>0;
+
+  while(Span span=chunker.next(buffer)){
+    Text segment(buffer.internalBuffer(),span);//copies text from inside buffer
+    pieces.suffix(segment);
+  }
+  return chunker.bracket;
+}
 

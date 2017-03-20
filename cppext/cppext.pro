@@ -58,7 +58,8 @@ SOURCES += argset.cpp \
     bufferformatter.cpp \
     numberformat.cpp \
     countdown.cpp \
-    numberpieces.cpp
+    numberpieces.cpp \
+    stacked.cpp
 
 
 HEADERS += safely.h \
@@ -135,4 +136,5 @@ HEADERS += safely.h \
     numberformat.h \
     countdown.h \
     numberpieces.h \
-    hook.h
+    hook.h \
+    stacked.h
