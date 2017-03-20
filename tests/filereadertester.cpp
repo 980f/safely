@@ -1,7 +1,4 @@
 #include "filereadertester.h"
-
-
-
 #include "fcntlflags.h"
 #include "fileinfo.h"
 
@@ -10,7 +7,6 @@
 #include "string.h" //strerror
 
 static Logger info("AIOFILE",true);
-
 
 bool FileReaderTester::action(){
   buf.clearUnused();//low performance method of terminating a string to pass as a char *.
@@ -27,7 +23,7 @@ FileReaderTester::FileReaderTester(){
 }
 
 //note: 'test all' tests from the bottom up.
-TextKey testfile[]={
+static TextKey testfile[]={
   "filereadertester.1",
   "filereadertester.0"
 };

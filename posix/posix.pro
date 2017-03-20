@@ -8,7 +8,7 @@ include("../cppext/lib.pro")
 include("../system/lib.pro")
 
 ##for async IO add to your executable project:
-#LIBS += -L/usr/lib/x86_64-linux-gnu  -lrt -lpthread
+#LIBS += -lrt
 
 SOURCES += \
     fdset.cpp \
@@ -21,7 +21,7 @@ SOURCES += \
     streamprintf.cpp \
     streamformatter.cpp \
     eventloop.cpp \
-    nanoseconds.cpp
+    nanoseconds.cpp \
     fileasynchio.cpp \
     fileinfo.cpp \
     filereader.cpp
@@ -37,7 +37,7 @@ HEADERS += \
     streamprintf.h \
     streamformatter.h \
     eventloop.h \
-    nanoseconds.h
+    nanoseconds.h \
     fcntlflags.h \
     fileasynchio.h \
     fileinfo.h \

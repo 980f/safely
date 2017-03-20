@@ -20,6 +20,7 @@ protected://starting with overloads, will replace with delegates once it is test
   virtual void onCompletion();
 public:
   FileReader();
+  ~FileReader()=default;//ensure fildes is released.
   bool process(TextKey fname);
 private:
   /* on incremental read complete */
