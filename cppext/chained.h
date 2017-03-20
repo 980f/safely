@@ -79,7 +79,10 @@ public:
     if( Chained<T>::remove(moriturus)){
       if(isOwner){
         delete moriturus;
+        return nullptr;//pro-forma
       }
+    } else {
+      return moriturus;
     }
   }
 
