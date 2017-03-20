@@ -8,3 +8,7 @@ svnbranch.txt
 *.bak
 *.autosave
 *~
+*.o
+.qmake.stash
+Makefile
+tests/tests
