@@ -1,7 +1,8 @@
 #include "filereadertester.h"
 
 #include "fcntlflags.h"
-#include "sys/stat.h"
+#include "fileinfo.h"
+
 #include <cstdio>
 #include "logger.h"
 #include "string.h" //strerror
@@ -9,12 +10,12 @@
 static Logger info("AIOFILE",true);
 
 bool FileReaderTester::onRead(__ssize_t ret){
-  if(ret>=0){
+  if(ret>=0){//then it is # of bytes transferred
     ++blocksin;
     received+=ret;
 
     buf.skip(ret);
-    buf.clearUnused();
+    buf.clearUnused();//low performance method of terminating a string to pass as a char *.
     info("%s",buf.internalBuffer());
     if(expected>received){
       buf.rewind();
@@ -45,14 +46,12 @@ void FileReaderTester::run(unsigned which){
     return;
   }
   TextKey fname=testfile[which];
-
-  struct stat finfo;
-  int posixerr=stat(fname,&finfo);
-  if(posixerr){
-    info("stat(%s) failed, errno:%d (%s)",fname,errno,strerror(errno));
+  FileInfo finfo(fname);
+  if(!finfo.isOk()){
+    info("stat(%s) failed, errno:%d (%s)",fname,finfo.errornumber,strerror(finfo.errornumber));
     return;
   }
-  expected=finfo.st_size;
+  expected=finfo.size();
   received=0;
   blocksin=0;
   blocksexpected= quanta(expected,buf.allocated());

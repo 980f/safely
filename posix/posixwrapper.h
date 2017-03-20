@@ -19,6 +19,9 @@ public: //so that we can merge
   bool ok(int zeroorminus1){
     return !failed(zeroorminus1);
   }
+  bool isOk()const noexcept{
+    return errornumber==0;
+  }
 
 public:
   /** ERRNO for last operation done using the extend object */
@@ -27,7 +30,7 @@ public:
   int debug;
 public:
   PosixWrapper();
-  /** printf like logging, with all the faults therein.*/
+  /** printf like logging via system logging (@see logger.h which is different), with all the faults therein.*/
   void logmsg(const char *fmt, ...);
 }; // class PosixWrapper
 

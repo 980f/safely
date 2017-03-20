@@ -16,7 +16,7 @@ class FileAsyncAccess: public PosixWrapper {
   /** the file */
   Fildes &fd;
   /** a view into the data source or sink */
-  Indexer<u8> &buf;
+  ByteScanner &buf;
 
   typedef Hooker<bool /*go again*/,__ssize_t /*exitcode or number of bytes read */> OnCompletion;
   /** what to call when operation is completed.
@@ -26,21 +26,17 @@ class FileAsyncAccess: public PosixWrapper {
 
   /** the thing we are wrapping use of: */
   aiocb cb;
-  /** this will call back to our member fn */
-  static void sighandler(int signo, siginfo_t *info, void *);
-  /* @param code is siginfo_t.si_code */
-  void notified(int code, int ernumber);
 
 public:
   /* connect to user allocated file and buffer objects. This makes it easier to change synch code to async. */
-  FileAsyncAccess(bool reader,Fildes &fd,Indexer<u8> &buf,OnCompletion::Pointer onDone);
+  FileAsyncAccess(bool reader,Fildes &fd,ByteScanner &buf,OnCompletion::Pointer onDone);
   /** start read process */
   bool go();//reserve place for a null
 
   /** having trouble sometimes putting this in constructor arg list: */
   void setHandler(OnCompletion::Pointer onDone);
 
-  /** pollable bit*/
+  /** For polling @returns whether background operation is not still in progress */
   bool isDone() const {
     int ercode=aio_error (&cb);
     return ercode!=EINPROGRESS;
@@ -48,10 +44,15 @@ public:
 
   /** block, used only for diagnostics on this class. @returns whether aio_suspend 'failed'.
    * I quote 'failed' since it includes things like whether it quit because a signal occured.
+   * One of the failures is (on read) whether there was not enough source data to completely fill the buffer.
    * This could also be called 'poll with timeout' */
   bool block(double seconds);
 
 private:
+  /** this will call back to our member fn */
+  static void sighandler(int signo, siginfo_t *info, void *);
+  /* @param code is siginfo_t.si_code */
+  void notified(int code, int ernumber);
   /* rerunnable part of operation */
   bool launch(bool more);
 };

@@ -20,6 +20,9 @@ public:
   FILE * getfp(const char *fargs=0);
   /** for when you need to close the file before this object goes out of scope:*/
   int close(void);
+  /** allocate a buffer that can hold the whole file and read it in.
+   * File must already be successfully opened (so that we don't have to deal with those errors here).
+   * if you read some from the file before calling this the buffer will be big enough for the whole file even though only the remainder will be read in. */
   bool readall(int maxalloc);
   ByteScanner contents();
 public:
