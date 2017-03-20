@@ -35,15 +35,14 @@ bool FileReader::action(){
 }
 
 void FileReader::onCompletion(){
-  bug("Completed");
+  bug("Completed: %ld of %ld, \tBlocks: %d of %d",received,expected,blocksin,blocksexpected);
 }
-
 
 FileReader::FileReader():
   buf(buffer,sizeof(buffer)),
   freader(true/*read*/,fd,buf,  [this](__ssize_t arg){return this->onRead (arg);})
 {
-
+  //#nada
 }
 
 

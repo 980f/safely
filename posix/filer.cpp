@@ -28,7 +28,7 @@ bool Filer::mkDirDashP(const char *path, bool itsparent){
   if(dirpath.empty()) { //empty is not the same as '/', and even if it were we won't allow ourselves to create '/', ain't meaningful AFAIK
     return false;
   }
-  Text normalized=dirpath.pack(FileNameConverter());
+  Text normalized=dirpath.pack();
   if(mkdir(normalized.c_str(), 0777) == 0) {
     return true;
   }
@@ -114,7 +114,7 @@ bool Filer::cp(const char *src, const char *target, bool dashf, bool dashr){
   } else if(dashr) {
     command.suffix("-r");
   }
-  command.suffix(from.pack(FileNameConverter()));
+  command.suffix(from.pack());
   command.suffix(to.pack());
 
   if(int arf = system(PathParser::pack(command,' '))) {//posixwrap

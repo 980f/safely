@@ -3,13 +3,11 @@
 
 #include "aio.h"
 #include "signal.h"
-
-
 #include "fildes.h" //our file <-> safe buffer routines
 #include "hook.h"  //used for callbacks to process file.
-/** mate aio calls to FilDes class, initially for reader, will likely rename and refactor etc.
- * This base is geared towards whole file read and writes, I will add classes for 'big file' reading/writing.
-*/
+/** mate aio calls to FilDes class
+ * Note that the file is left open at the end of transfer, you can chain more data on writes.
+ * The file will be closed when the FileAsyncAccess is deleted. */
 class FileAsyncAccess: public PosixWrapper {
   /** transfer direction. */
   const bool amReader;//const until we can make sense of changing direction while open.
@@ -45,7 +43,8 @@ public:
   /** block, used only for diagnostics on this class. @returns whether aio_suspend 'failed'.
    * I quote 'failed' since it includes things like whether it quit because a signal occured.
    * One of the failures is (on read) whether there was not enough source data to completely fill the buffer.
-   * This could also be called 'poll with timeout' */
+   * This could also be called 'poll with timeout'
+   * @returns whether block() executed ok, which is ambiguous when the last transfer is a partial buffer */
   bool block(double seconds);
 
 private:

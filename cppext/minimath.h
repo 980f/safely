@@ -22,8 +22,9 @@ inline bool isNan(int){
 bool isNormal(double d);
 /** is not a value */
 bool isSignal(double d);
-/** 'signbit' is a macro in math.h that pertains only to floating point arguments
-  * @return sign of operand, and convert operand to its magnitude, MININT(0x800...) is still MININT and must be interpreted as unsigned to work correctly
+
+/** Note: 'signbit' is a macro in math.h that pertains only to floating point arguments
+  * @returns sign of operand, and converts operand to its magnitude, MININT(0x800...) is still MININT and must be interpreted as unsigned to work correctly
   */
 template <typename Numerical> int signabs(Numerical &absolutatus) {
   if(absolutatus < 0) {
@@ -33,19 +34,12 @@ template <typename Numerical> int signabs(Numerical &absolutatus) {
   return absolutatus ? 1 : 0;
 }
 
-inline int signum(int anint) {
-  if(anint < 0) {
-    return -1;
-  }
-  return anint ? 1 : 0;
-}
-
 //yet another filter to reconcile platform math.h issues. Make specializations per platform for performance.
 template< typename mathy > int signof(mathy x) {
   if(x < 0) {
     return -1;
   }
-  if(x > 0) {
+  if(x != 0) {
     return +1;
   }
   return 0;
@@ -56,7 +50,7 @@ inline int polarity(bool positive){
   return positive?1:-1;
 }
 
-/** negative if lhs is < rhs, 0 if lhs==rhs, +1 if lhs>rhs .
+/** @return negative if lhs is < rhs, 0 if lhs==rhs, +1 if lhs>rhs .
 to sort ascending if returns + then move lhs to higher than rhs.
 */
 template< typename mathy > int compareof(mathy lhs,mathy rhs) {
@@ -64,7 +58,7 @@ template< typename mathy > int compareof(mathy lhs,mathy rhs) {
 }
 
 /** 'round to nearest' ratio of integers*/
-inline u32 rate(u32 num, u32 denom) {
+template <typename Integer> Integer rate(Integer num, Integer denom) {
   if(denom == 0) {
     return num == 0 ? 1 : 0; //pathological case
   }
@@ -85,7 +79,7 @@ inline int half(int sum) {
 
 
 /** quantity of bins needed to hold num items at denom items per bin*/
-inline u32 quanta(u32 num, u32 denom) {
+template <typename Integer,typename Inttoo> Integer quanta(Integer num, Inttoo denom) {
   if(denom == 0) {
     return num == 0 ? 1 : 0; //pathological case
   }
@@ -103,7 +97,7 @@ inline double ratio(double num, double denom) {
 /** protect against garbage in (divide by zero) note: 0/0 is 1*/
 inline float ratio(float num, float denom) {
   if(denom == 0) { //pathological case
-    return num == 0 ? 1 : 0; //may someday return signed inf.
+    return num;// == 0 ? 1 : 0; //may someday return signed inf.
   }
   return num / denom;
 }
@@ -119,9 +113,9 @@ inline double rounder(double value, double quantum) {
   return quantum * chunks(value, quantum);
 }
 
-/** canonical value % cycle, minimum positive value
+/** @returns canonical value % cycle, minimum positive value
   0<= return <cycle;
-  % operator gives negative out for negative in.
+  Note: the C '%' operator gives negative out for negative in.
 */
 int modulus(int value, unsigned cycle);
 
@@ -209,6 +203,8 @@ template< typename S1, typename S2 > bool elevate(S1 &a, S2 b,bool orequal=false
   return orequal && a==b1;
 }
 
+//using 'lesser' and 'greater' while we check if all of our compilers now have compatible min and max std functions.
+
 //todo:2 see if compiler can use this for min of convertible types:
 template< typename S1, typename S2 > S1 lesser(S1 a, S2 b) {
   S1 b1 = S1(b); //so incomparable types gives us just one error.
@@ -219,7 +215,7 @@ template< typename S1, typename S2 > S1 lesser(S1 a, S2 b) {
   }
 }
 
-template< typename S1, typename S2 > S1 max(S1 a, S2 b) {
+template< typename S1, typename S2 > S1 greater(S1 a, S2 b) {
   S1 bb = S1(b);
   if(a > bb) {
     return a;
@@ -235,8 +231,10 @@ template< typename Scalar > void swap(Scalar &a, Scalar &b) {
   b = noxor;
 }
 
-extern "C" { //assembly coded in cortexm3.s, usually due to outrageously bad compilation by gcc
-/* @return integer part of d, modify d to be its fractional part.
+
+/** Things that are coded in assembler on some platforms, due to efficiency concerns. In 2009 one version of the GCC compiler for ARM often produced horrible and sometimes incorrect code. Time permitting these should be compiled from the C equivalents and compared to the hand coded assembler to see if we can abandon the assembler due to compiler improvements. */
+extern "C" {
+/* @returns integer part of d, modify d to be its fractional part.
 */
   int splitter(double &d);
 
@@ -245,7 +243,8 @@ extern "C" { //assembly coded in cortexm3.s, usually due to outrageously bad com
 
   //rounded and overflow managed 'multiply by ratio'
   u32 muldivide(u32 arg, u32 num, u32 denom);
-  /** @param fractionalThereof changed from double to float due to compiler error, passed arg in wrong registers!*/
+
+  /** @param fractionalThereof changed from double to float due to compiler error, passed arg in wrong registers! (probably early gcc 4.1, need to retest) */
   u16 saturated(unsigned quantity, float fractionThereof);
 
   //fraction is a fractional multiplier, with numbits stating how many fractional bits it has.

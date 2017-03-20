@@ -1,5 +1,5 @@
 #include "fileasynchio.h"
-//todo: merge with home stuff #include "nanotime.h"
+#include "nanoseconds.h"
 
 FileAsyncAccess::FileAsyncAccess(bool reader, Fildes &fd, ByteScanner &buf, OnCompletion::Pointer onDone):
   amReader(reader),
@@ -32,10 +32,9 @@ void FileAsyncAccess::setHandler(OnCompletion::Pointer onDone){
 }
 
 bool FileAsyncAccess::block(double seconds){
-  long sec=splitter(seconds);
-  struct timespec ts={sec,long(1e9*seconds)};
-  aiocb * list=&cb;
-  return failed(aio_suspend(&list,1,&ts));
+  NanoSeconds ns(seconds);
+  aiocb * list=&cb; //make a list of 1 item:
+  return ok(aio_suspend(&list,1,&ns.ts));
 }
 
 bool FileAsyncAccess::launch(bool more){

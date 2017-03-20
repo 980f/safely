@@ -13,6 +13,7 @@ unsigned Utf8ConverterOut::length(const char *source) const{
   while(true) {
     switch (ex(*scan++)) {
     case Utf8Escaper::More:
+      //keep on looking.
       break;
     case Utf8Escaper::Done:
       totes += ex.bigu?10:6;
@@ -28,6 +29,8 @@ unsigned Utf8ConverterOut::length(const char *source) const{
         totes += 10;//worst case COA
       }
       return totes;
+    default://cancel warning
+      break;
     }
   }
   return BadIndex;//#bug if you get here
@@ -38,7 +41,11 @@ void Utf8ConverterOut::operator()(const char *peeker, Indexer<char> &packer){
   Utf8Escaper ex;
   while(packer.hasNext()){
     switch (ex(*peeker++)) {
+    case Utf8Escaper::Xand:
+      //useless/unused case
+      break;
     case Utf8Escaper::More:
+      //process more bytes
       break;
     case Utf8Escaper::Done:{
       int hexits=ex.bigu?8:4;
