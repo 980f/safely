@@ -107,7 +107,7 @@ extern void testJ(unsigned which);
 #include "numberformatter.h"
 #include "testpathparser.h"
 #include "filereadertester.h"
-
+#include "filewritertester.h"
 int main(int argc, char *argv[]){
   char pwd[512/*whereis maxpath*/];
   dbg("Working directory is: %s",getcwd(pwd,sizeof(pwd)));
@@ -117,12 +117,14 @@ int main(int argc, char *argv[]){
     char group=(*tes++);
     unsigned which=atoi(tes);
     switch(group){
-    case 'f'://
-      {
-        FileReaderTester frt;
-        frt.run(which);
-      }
-      break;
+    case 'w':{
+      FileWriterTester fwt;
+      fwt.run(which);
+    } break;
+    case 'f':{
+      FileReaderTester frt;
+      frt.run(which);
+    } break;
     case 'b'://buffer formatting
       testBufferFormatter();
       break;
@@ -144,11 +146,11 @@ int main(int argc, char *argv[]){
     case 'x':
       DeleteOnExitTestData::testme();
       testdemonic();
-      {
-        int coedata(42);
-        coe(coedata);
-        dbg("coe: %d should be 0",coedata);
-      }
+    {
+      int coedata(42);
+      coe(coedata);
+      dbg("coe: %d should be 0",coedata);
+    }
       break;
     }
   }

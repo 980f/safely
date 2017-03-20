@@ -24,7 +24,8 @@ SOURCES += \
     nanoseconds.cpp \
     fileasynchio.cpp \
     fileinfo.cpp \
-    filereader.cpp
+    filereader.cpp \
+    filewriter.cpp
 
 HEADERS += \
     fdset.h \
@@ -41,4 +42,5 @@ HEADERS += \
     fcntlflags.h \
     fileasynchio.h \
     fileinfo.h \
-    filereader.h
+    filereader.h \
+    filewriter.h

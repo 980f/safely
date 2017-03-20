@@ -1,10 +1,11 @@
 #include "filename.h"
-#include "charformatter.h"
-
-#include <malloc.h>
 
 FileName::FileName(){
+  //#nada
+}
 
+FileName::FileName(TextKey simple){
+  parse(simple);
 }
 
 FileName::FileName(const Text  &simple){

@@ -7,12 +7,13 @@ INSTALLS += target
 
 #actually using sigc stuff locally as well as hidden perhaps in the libs.
 include("../sigc.pro")
+#our sibling with OS code
+include("../posix/lib.pro")
 #our sibling with heaped code
 include("../system/lib.pro")
 #our sibling with heapless code
 include("../cppext/lib.pro")
-#our sibling with OS code
-include("../posix/lib.pro")
+
 
 INCLUDEPATH += settings
 
@@ -37,7 +38,8 @@ SOURCES += main.cpp \
     settings/asciiframer.cpp \
     settings/fifo.cpp \
     filereadertester.cpp \
-    testhooker.cpp
+    testhooker.cpp \
+    filewritertester.cpp
 
 HEADERS += \
     unicodetester.h \
@@ -61,7 +63,8 @@ HEADERS += \
     settings/fifo.h \
     settings/serialagent.h \
     filereadertester.h \
-    testhooker.h
+    testhooker.h \
+    filewritertester.h
 
 DISTFILES += \
     filereadertester.0 \

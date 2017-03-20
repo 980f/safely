@@ -29,7 +29,7 @@ double QuadraticFilter::slope() const {//same as linear
 }
 
 int QuadraticFilter::signA1() const {//same as linear
-  return signum(Y[1]);
+  return signof(Y[1]);
 }
 
 double QuadraticFilter::amplitude() const {

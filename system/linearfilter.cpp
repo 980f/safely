@@ -13,7 +13,7 @@ double LinearFilter::slope() const {
 }
 
 int LinearFilter::signA1() const {
-  return signum(Y[1]);
+  return signof(Y[1]);
 }
 
 double LinearFilter::amplitude() const {
