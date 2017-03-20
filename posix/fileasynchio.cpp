@@ -1,7 +1,7 @@
-#include "filereader.h"
+#include "fileasynchio.h"
 //todo: merge with home stuff #include "nanotime.h"
 
-FileAsyncAccess::FileAsyncAccess(bool reader, Fildes &fd, Indexer<u8> &buf, OnCompletion::Pointer onDone):
+FileAsyncAccess::FileAsyncAccess(bool reader, Fildes &fd, ByteScanner &buf, OnCompletion::Pointer onDone):
   amReader(reader),
   fd(fd),
   buf(buf),

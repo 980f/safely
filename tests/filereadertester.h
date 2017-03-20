@@ -1,12 +1,12 @@
 #ifndef FILEREADERTESTER_H
 #define FILEREADERTESTER_H
 
-#include "filereader.h"
+#include "fileasynchio.h"
 
 class FileReaderTester{
   u8 buffer[2049];
   Fildes fd;
-  Indexer<u8> buf;
+  ByteScanner buf;
   ssize_t expected;
   ssize_t received;
   unsigned blocksin;
