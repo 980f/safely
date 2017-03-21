@@ -56,7 +56,7 @@ bool FileReader::process(TextKey fname){
   received=0;
   blocksin=0;
   blocksexpected= quanta(expected,buf.allocated());
-  if(fd.open(fname,O_RDONLY)){
+  if(fd.open(fname,O_RDONLY | O_NONBLOCK | O_DIRECT)){
     bug("Launching read of file %s",fname);
     buf.rewind();//when this was missing I learned things about how aio_read worked
     if(freader.go()){

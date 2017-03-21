@@ -42,7 +42,7 @@ FileWriter::FileWriter():
 }
 
 bool FileWriter::process(TextKey fname, const ByteScanner &source){
-  if(fd.open(fname,O_CREAT|O_WRONLY|O_TRUNC|O_NONBLOCK)){
+  if(fd.open(fname,O_CREAT|O_WRONLY|O_TRUNC|O_NONBLOCK|O_DIRECT)){
     bug("Launching xfer of file %s",fname);
     buf=source;
     sent=0;

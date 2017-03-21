@@ -39,7 +39,7 @@ void FileReaderTester::run(unsigned which){
 
   if(process(fname)){
     info("waiting for about %d events",blocksexpected);
-    while(blocksin<blocksexpected){
+    while(!freader.isDone() && blocksin<blocksexpected){
       if(freader.block(1)){
         info("While waiting got: %d(%s)",freader.errornumber,strerror(freader.errornumber));
         if(freader.errornumber==EINTR){//on read or block shorter than buffer.
