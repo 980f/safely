@@ -415,6 +415,11 @@ NB this uses references in and out, you connot pass a const onEmpty */
 //the following probably doesn't work, or only works for simple types:
 #define IndexerWrap(thingy, wrapper) Indexer<typeof(thingy)> wrapper(&thingy, sizeof(thingy))
 
+//you must include unistd.h before using this:
+#define BuildIndexer(classname,itemname,count) itemname(reinterpret_cast<classname *>(malloc(count*sizeof(classname))),count*sizeof(classname))
+#define AllocateIndexer(classname,itemname,count) Indexer<classname> BuildIndexer(classname,itemname,count)
+
+
 //raw (bytewise) access to object
 #define IndexBytesOf(indexer, thingy) Indexer<u8> indexer(reinterpret_cast<u8 *>(&thingy), sizeof(thingy))
 
