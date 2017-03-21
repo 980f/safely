@@ -15,10 +15,11 @@ Logger::Logger(const char *location,bool enabled):prefix(location),enabled(enabl
 
 #if LoggerManagement == 0
 void Logger::listLoggers(Logger &dbg){
-  Logger *scan=Logger::root.peer;
+  Chained<Logger> *scan=Logger::root.root;
   while(scan->peer){
     scan=scan->peer;
-    dbg("Logger.%s=%d",scan->prefix,scan->enabled);
+    Logger *log=dynamic_cast<Logger *>(scan);
+    dbg("Logger.%s=%d",log->prefix,log->enabled);
   }
 }
 #endif

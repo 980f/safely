@@ -6,6 +6,8 @@ include ("../staticlib.pro")
 #permalloc needs a define: this is only non-zero in microcontrollers (heapless systems)
 DEFINES += PermAllocPool=0
 
+DEFINES += LoggerManagement=0
+
 SOURCES += argset.cpp \
     bigendianer.cpp \
     centeredslice.cpp \

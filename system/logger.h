@@ -8,7 +8,7 @@
 /** a minimalist logging facade */
 class Logger
 #if LoggerManagement == 0
-: protected Chained<Logger> {
+: public Chained<Logger> {
   static ChainedAnchor<Logger> root;
 #else
 {
