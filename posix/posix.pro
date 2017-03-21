@@ -25,7 +25,8 @@ SOURCES += \
     fileasynchio.cpp \
     fileinfo.cpp \
     filereader.cpp \
-    filewriter.cpp
+    filewriter.cpp \
+    epoller.cpp
 
 HEADERS += \
     fdset.h \
@@ -43,4 +44,5 @@ HEADERS += \
     fileasynchio.h \
     fileinfo.h \
     filereader.h \
-    filewriter.h
+    filewriter.h \
+    epoller.h
