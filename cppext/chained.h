@@ -67,25 +67,30 @@ public:
 
 }; // class Chained
 
-template<typename T> class ChainedAnchor:public Chained<T> {
+template<typename T> class ChainedAnchor {
+  friend T;
   const bool isOwner;
+  T *root;
 public:
 
-  ChainedAnchor(T *root, bool isOwner=true):isOwner(isOwner){
-    Chained<T>::peer=root;
+  ChainedAnchor(T *root, bool isOwner=true):
+    isOwner(isOwner),
+    root(root)
+  {
+    //#nada
   }
 
-  T* append(T* newbie){
-    if(Chained<T>::peer==nullptr){
-      Chained<T>::peer=newbie;
-      return newbie;
+  void append(T* newbie){
+    if(root==nullptr){
+      root=newbie;//newbie must also be Chained<T>
     } else {
-      return Chained<T>::peer->Chained<T>::append(newbie);
+      root->append(newbie);
     }
   }
 
+  //this guy's return requires that Chained<t>'s destructor be virtual
   T* remove(T* moriturus) /*override*/{ //at one time override worked, I guess that was a gcc oops?
-    if( Chained<T>::remove(moriturus)){
+    if( root->Chained<T>::remove(moriturus)){
       if(isOwner){
         delete moriturus;
         return nullptr;//pro-forma
