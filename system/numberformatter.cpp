@@ -8,18 +8,17 @@ NumberFormatter::NumberFormatter(int precision, TextKey postfix) :
   nf.precision = precision;
 }
 
-unsigned NumberFormatter::needs() const {
-  return nf.needs() + postfix.length();
+unsigned NumberFormatter::needs(double value) const {
+  return nf.needs(value) + postfix.length();
 }
 
 Text NumberFormatter::format(double value,bool addone) const {
-  char widest[Zguard(needs())];//gross overestimate of maximum number as text
+  char widest[Zguard(needs(value)+addone)];
   CharFormatter workspace(widest,sizeof(widest));
-
-  if(workspace.printNumber(value,nf.precision + addone)) {//don't add units if number failed to print
+  workspace.zguard();//protect our null
+  if(workspace.printNumber(value,nf.precision + addone)) {//testing so that we don't add units if number failed to print
     workspace.printString(postfix);
   }
-
   return Text(workspace.internalBuffer());//the constructor invoked here copies the content.
 }
 

@@ -41,6 +41,9 @@ public:
     reset();
   }
 
+  /** parse a number */
+  NumberPieces(double d);
+
   bool seemsOk() const;
 
   /** @returns whether the given character is allowed at the start of a number (excludes 0, we don't do 'C' binary formats here */

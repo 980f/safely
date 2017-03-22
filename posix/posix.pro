@@ -26,7 +26,8 @@ SOURCES += \
     filereader.cpp \
     filewriter.cpp \
     epoller.cpp \
-    application.cpp
+    application.cpp \
+    incrementalfiletransfer.cpp
 
 HEADERS += \
     fdset.h \
@@ -45,4 +46,5 @@ HEADERS += \
     filereader.h \
     filewriter.h \
     epoller.h \
-    application.h
+    application.h \
+    incrementalfiletransfer.h

@@ -76,16 +76,12 @@ public:
     return pointer - 1;
   }
 
-  void rewind(void){
-    pointer = 0;
-  }
-
   /**
    * subtract @param backup from pointer, stopping at 0 if excessive.
-   * @see rewind(void) for complete rewind rather than using a hopefully big enough value.
+   * the default will result in a rewind to the beginning.
    * @return this
    */
-  void rewind(unsigned backup){
+  void rewind(unsigned backup=BadLength){
     if(backup <= pointer) {
       pointer -= backup;
     } else {

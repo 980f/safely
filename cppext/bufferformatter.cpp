@@ -12,9 +12,8 @@ BufferFormatter::BufferFormatter(const CharFormatter &other, TextKey format):
 bool BufferFormatter::insert(const char *stringy, unsigned length){
   //body is pointing to char that follows what is to be inserted
   //spec should have the same info, and how much to erase.
-  const unsigned trash=spec.span();
-  //move data up by the difference
-  if(body.move(length-trash)){//then there is room for the insertion
+  //move data out by the difference
+  if(body.move(length-spec.span())){//then there is room for the insertion
     if(length){//in case memmove looks at stringy before length and gets annoyed at a nullptr.
       memmove(body.internalBuffer()+spec.lowest,stringy,length);
     }
@@ -30,27 +29,28 @@ void BufferFormatter::substitute(Cstr stringy){
 }
 
 void BufferFormatter::substitute(Indexer<char> buf){
-  insert(&buf.peek(),buf.allocated());
+  insert(buf.internalBuffer(),buf.used());
 }
 
 void BufferFormatter::substitute(double value){
   NumberPieces p;
   unsigned space=nf.needs(value,&p);
 
-  if(space<=nf.fieldWidth){
-    //print as decimal string
-    if(p.negative){
-      body.printChar('-');
-    }
-    body.printUnsigned(p.predecimal);
-    if(p.pow10){
-      while(p.pow10){
+  if(space<=nf.fieldWidth){//number will fit into space requested
+    //todo: enforce fieldWidth if it is valid, need left vs right align.
+    if(body.move(space-spec.span())){//then there is room for the insertion
+      body.rewind(space-spec.span());
+
+      //print as decimal string
+      if(p.negative){
+        body.printChar('-');
+      }
+      body.printUnsigned(p.predecimal);
+      for(unsigned zeroes=p.pow10;zeroes-->0;){
         body.printChar('0');
       }
       //and we are done
     }
-
-
   } else {
     //print exponential, if possible
   }

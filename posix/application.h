@@ -23,6 +23,8 @@ public:
   void stop(){
     beRunning=false;
   }
+  /** write pid to file. best practice if for that file to be in /tmp so that it evaporates on a crash of the system. */
+  static bool writepid(TextKey pidname);
 };
 
 #endif // APPLICATION_H

@@ -115,11 +115,14 @@ extern void testJ(unsigned which);
 #include "testpathparser.h"
 #include "filereadertester.h"
 #include "filewritertester.h"
+#include "application.h"
 int main(int argc, char *argv[]){
   Text cwd(getcwd(nullptr,0));//we use Text class because it will free what getcwd allocated. Not so critical unless we are using this program to look for memory leaks in the functions it tests.
   dbg("Working directory is: %s",cwd.c_str());
-  dbg("Static loggers list:");
-  Logger::listLoggers(dbg);
+//  dbg("Static loggers list:");
+//  Logger::listLoggers(dbg);
+  //display PID, later will use application class to write it to a file.
+  Application::writepid("/tmp/safely");
   while(argc-->0) {
     const char*tes=argv[argc];
     dbg("%d: %s",argc,tes);

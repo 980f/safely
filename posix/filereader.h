@@ -8,10 +8,10 @@ class FileReader{
   Fildes fd;
 protected:
   ByteScanner buf;
-  ssize_t expected;
-  ssize_t received;
-  unsigned blocksin;
-  unsigned blocksexpected;
+//  ssize_t expected;
+//  ssize_t received;
+//  unsigned blocksin;
+//  unsigned blocksexpected;
 
   FileAsyncAccess freader;
 
@@ -20,11 +20,11 @@ protected://starting with overloads, will replace with delegates once it is test
   virtual void onCompletion();
 public:
   FileReader();
-  ~FileReader()=default;//ensure fildes is released.
+  virtual ~FileReader();//ensure fildes is released.
   bool process(TextKey fname);
 private:
   /* on incremental read complete */
-  bool onRead(__ssize_t ret);
+//  bool onRead(__ssize_t ret);
 };
 
 #endif // FILEREADERTESTER_H

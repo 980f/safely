@@ -27,6 +27,8 @@ public:
   int parseInt(int def = -1);
 
   /** make or remove space, move pointer to stay pointing at same char it did before the move.
+   * for a positive delta the new space is below the current point, often you will want to follow this with a rewind(delta) to point after the last
+   * item returned by next().
  @returns whether a move took place, it won't if delta would move pointer out of bounds. */
   bool move(int delta);
 

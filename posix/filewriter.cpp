@@ -35,7 +35,7 @@ void FileWriter::onCompletion(){
 }
 
 FileWriter::FileWriter():
-  freader(false/*write*/,fd,buf,  [this](__ssize_t arg){return this->onWrite (arg);})
+  freader(false/*write*/,fd,buf)
 {
   //#nada
 }
