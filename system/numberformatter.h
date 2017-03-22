@@ -14,7 +14,7 @@ struct NumberFormatter {
 
   NumberFormatter(int precision, TextKey postfix = "");
 
-  unsigned needs() const;
+  unsigned needs(double value) const;
 
   /** @returns a locally created buffer that holds the image of @param value.
    * @param addone if true adds one to use value of precision without altering the field */

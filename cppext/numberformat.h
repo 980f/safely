@@ -14,7 +14,7 @@ struct NumberFormat {
   int precision;
   /** minimum width, pad with spaces */
   unsigned fieldWidth;
-  /** if true always show sign,  */
+  /** if true always show sign, else no room is taken for positives */
   bool showsign;
   /** how many values it is to be applied to before being forgotten. 0 is forever, ~0 is nearly forever */
   CountDown usages = 0;//default unlimited
@@ -24,7 +24,7 @@ struct NumberFormat {
   /** worst case required*/
   unsigned needs() const;
 
-  /** worst case required*/
+  /** @returns fair estimate of what is required*/
   unsigned needs(double value,NumberPieces *preprint=nullptr) const;
 
   /** set to standard values */

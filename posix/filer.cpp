@@ -8,8 +8,6 @@
 #include "logger.h"
 #include "filename.h"
 
-
-
 Filer::Filer(){
   buffer = nullptr;
 }

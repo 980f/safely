@@ -35,6 +35,11 @@ double NumberPieces::packed() const {
   return negative ? -number : number;
 }
 
+NumberPieces::NumberPieces(double d){
+  reset();
+  decompose(d);
+}
+
 bool NumberPieces::seemsOk() const {
   if (!isNan&&!isInf){
     if(isZero || predecimal || postdecimal){//perfect zero or had some digits

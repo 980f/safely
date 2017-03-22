@@ -12,7 +12,7 @@ NumberFormat::NumberFormat(){
 
 unsigned NumberFormat::needs() const {
   //todo:0 very bogus math herein
-  if(fieldWidth>0) {
+  if(isValid(fieldWidth)&&fieldWidth>0) {
     return fieldWidth;
   } else {
     return precision>0 ? 17 + 1 + 1 + precision : -precision; //todo: add space for E-xxxx

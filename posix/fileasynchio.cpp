@@ -1,17 +1,16 @@
 #include "fileasynchio.h"
 #include "nanoseconds.h"
+#include "logger.h"
 
-FileAsyncAccess::FileAsyncAccess(bool reader, Fildes &fd, ByteScanner &buf, OnCompletion::Pointer onDone):
-  amReader(reader),
-  fd(fd),
-  buf(buf),
-  continuation(false,onDone)
+static Logger faa("FSA",true);
+
+FileAsyncAccess::FileAsyncAccess(bool reader, Fildes &fd, ByteScanner &buf):
+  IncrementalFileTransfer (reader,fd,buf)
 {
   //#nada
 }
 
 bool FileAsyncAccess::go(){
-
   EraseThing(cb);//forget prior operation
   //-- no tdoing this so that we can 'cat' multple files into one buffer: buf.rewind();
   /* define the signal for the aio lib to send when something happens */
@@ -27,9 +26,10 @@ bool FileAsyncAccess::go(){
   return ok(sigaction( SIGIO, &sig_act, NULL )) && launch(false/* not a continuation*/);
 }
 
-void FileAsyncAccess::setHandler(OnCompletion::Pointer onDone){
-  continuation=onDone;
+bool FileAsyncAccess::notDone() const {
+  return !isDone() && (transferred<expected);
 }
+
 
 bool FileAsyncAccess::block(double seconds){
   NanoSeconds ns(seconds);
@@ -48,10 +48,10 @@ bool FileAsyncAccess::launch(bool more){
   cb.aio_buf=&buf.peek(); //next spot in buffer
   cb.aio_nbytes=buf.freespace(); // maximum to xfer
   if(amReader){// data sink
-    //start read
+    //a callback with failure occurs before this function gets to the call to ok.
+    //the chunk handler will have to capture that error and honor it over what launch returns.
     return ok(aio_read(&cb));
   } else {// data source
-    //start write
     return ok(aio_write(&cb));
   }
 }
@@ -65,24 +65,37 @@ void FileAsyncAccess::sighandler( int signo, siginfo_t *info, void */*ucontext_t
 
 void FileAsyncAccess::notified(int code,int ernumber){
   //a possibly interesting fact:
-  if(code==SI_ASYNCIO){
-    /* Did the request complete normally? */
-    errornumber=ernumber;//aio_error( &cb );//unlike most posix functions this one returns what normally would go into errno
-    if(isOk()){ /* Request completed successfully, get the return status of the underlying read operation */
+  if(code==SI_ASYNCIO && ernumber==0){//ernumber is related to the signal, not the trigger for the signal
+    if(!failure(aio_error( &cb ))){ /* Request completed successfully, get the return status of the underlying read operation */
       __ssize_t ret = aio_return( &cb );
-      if(continuation(ret)){//notify recipient, return asks us to repeat
+      if(onChunk(ret)){//notify recipient, return asks us to repeat
         //caller is responsible for rewinding the buffer
         if(failed(launch(true))){//if requested retry fails
-          continuation(-errornumber);
+          onChunk(-errornumber);
           //but do not allow for chaining after a failure due to possibility of infinite loop
         }
       }
     } else {
-      continuation(-errornumber);
+      onChunk(-errornumber);
       //but do not allow for chaining after a failure
     }
   } else {
     //wtf("Unexpected signal in " __FILE__);
   }
 
+}
+
+
+bool FileAsyncAccess::onEachBlock(__ssize_t amount){
+  if(amReader){
+    buf.peek()=0;
+    faa("FSA:READ:%s",buf.internalBuffer());
+  } else {
+    faa("FSA:WRTIE: remaining=%ld",buf.freespace());
+  }
+  return true;
+}
+
+void FileAsyncAccess::onDone(){
+  faa("FSA:ONDONE: not overloaded");
 }

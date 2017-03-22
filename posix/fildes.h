@@ -46,9 +46,9 @@ public:
 @returns a FILE pointer for the same file */
   FILE * getfp(const char *fargs=nullptr);
 
-  /** read from used bytes of buffer */
+  /** read into freespace of buffer */
   int read(ByteScanner&p);
-  /** write to remaining free bytes of buffer */
+  /** write from freespace of buffer */
   int write(ByteScanner&p);
 
   /** @returns isOpen()*/

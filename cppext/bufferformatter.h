@@ -35,7 +35,7 @@ private:
    *  each argument is pulled out of the pack from left to right.
    *  if the argument is a format spec then we alter state and proceed.
    *  for arguments that have a substitute method that will get called.
-   *  Each substitue method eventually gots to substitue  (TextKey) which inserts a string.
+   *  Each substitue method eventually calls substitute (TextKey) which inserts a string.
    */
   template<typename ... Args> void next(const Args& ... args){
     ++which;
@@ -59,7 +59,7 @@ private:
     while(body.hasNext()) {
       char c = body.next();
       if(c == '$'&&body.hasNext()) {
-        spec.lowest=body.ordinal()-1;
+        spec.lowest=body.ordinal()-1;// -1 is to overwrite the '$'
         UTF8 d = body.next();
         if(d.isDigit()){//single digit simple spec
           if(d - '0' == which) { //splice in ref

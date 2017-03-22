@@ -39,7 +39,8 @@ SOURCES += main.cpp \
     settings/fifo.cpp \
     filereadertester.cpp \
     testhooker.cpp \
-    filewritertester.cpp
+    filewritertester.cpp \
+    backgroundfilereader.cpp
 
 HEADERS += \
     unicodetester.h \
@@ -64,7 +65,8 @@ HEADERS += \
     settings/serialagent.h \
     filereadertester.h \
     testhooker.h \
-    filewritertester.h
+    filewritertester.h \
+    backgroundfilereader.h
 
 DISTFILES += \
     filereadertester.0 \

@@ -37,12 +37,12 @@ void FileReaderTester::run(unsigned which){
   TextKey fname=testfile[which];
 
   if(process(fname)){
-    info("waiting for about %d events",blocksexpected);
-    while(!freader.isDone() && blocksin<blocksexpected){
+    info("waiting for about %d events",freader.blocksexpected);
+    while(freader.notDone()){
       if(freader.block(1)){
         info("While waiting got: %d(%s)",freader.errornumber,freader.errorText());
         if(freader.errornumber==EINTR){//on read or block shorter than buffer.
-          if(received==expected){
+          if(freader.transferred==freader.expected){
             info("...which is pointless, happens in last incompletely filled block");
           }
         }

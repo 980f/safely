@@ -41,6 +41,7 @@ void FileWriterTester::run(unsigned which){
   if(testdata.readall(1000000)){
     ByteScanner data(testdata.contents());
 
+// can't use  FILE *tfile=tmpfile(); as it is near impossible to access the filename to pass to a check routine.
     Text fname(tempnam(nullptr,nullptr));
     info("will write to: %s",fname.c_str());
     if(process(fname,data)){

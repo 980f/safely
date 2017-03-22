@@ -5,10 +5,14 @@
 #include <stdarg.h> //for varargs logging
 #include "string.h" //for strerror
 
+bool PosixWrapper ::needsInit=true;
 
 PosixWrapper::PosixWrapper(){
   errornumber = 0;
   debug = 0;
+  if(flagged(needsInit)){
+    openlog("PosixWrapper",LOG_CONS,LOG_USER);
+  }
 }
 
 void PosixWrapper::logmsg(const char *fmt, ...){
@@ -25,9 +29,6 @@ const char *PosixWrapper::errorText() const {
 bool PosixWrapper::setFailed(bool passthrough){
   if(passthrough){
     failure(errno);
-    if(errornumber != 0) {
-      syslog(debug, "Failure: %m");
-    }
   }
   return passthrough;
 }
@@ -42,11 +43,7 @@ bool PosixWrapper::failure(int errcode){
 
 bool PosixWrapper::failed(int zeroorminus1){
   if(zeroorminus1 == -1) {
-    if(changed(errornumber,errno)) {//only log message if different than previous, prevents spam at the loss of occasional meaningful duplicates.
-      // If you think you might repeat an error then clear errornumber before such a call.
-      syslog(debug, "Failed: %m");
-    }
-    return true;
+    return failure(errno);
   } else {
     errornumber = 0;
     return false;

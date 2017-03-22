@@ -24,6 +24,7 @@ public:
    * File must already be successfully opened (so that we don't have to deal with those errors here).
    * if you read some from the file before calling this the buffer will be big enough for the whole file even though only the remainder will be read in. */
   bool readall(int maxalloc);
+
   ByteScanner contents();
 public:
   /** copy file */

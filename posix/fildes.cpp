@@ -33,11 +33,6 @@ bool Fildes::open(const char *devname, int O_stuff){//todo:3 expose 3rd argument
   return assignFd(::open(devname, O_stuff,0777));//3rd arg is only relevant if O_stuff includes O_Creat. The (3) 7's lets umask provide the argument.
 }
 
-//FilePointer Fildes::getfp(const char *fargs){
-//  FilePointer fp(::fdopen(fd,fargs?:"r"));//todo:2 make string to match present state of fd's flags
-//  return fp;
-//}
-
 FILE *Fildes::getfp(const char *fargs){
   return ::fdopen(fd,fargs ?: "r");//todo:2 make string to match present state of fd's flags
 }

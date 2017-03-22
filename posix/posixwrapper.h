@@ -9,6 +9,7 @@
  * This also wraps use of the syslog facility.
  */
 class PosixWrapper {
+  static bool needsInit;
 protected:
   /** for use with functions that return directly the codes that usually go into errno. */
   bool failure(int errcode);
