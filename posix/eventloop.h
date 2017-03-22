@@ -13,46 +13,43 @@
 */
 
 #include <vector>
-#include "poll.h"
+#include "epoller.h" //for internal use and for bit flags for calllers
 
-enum EventType {
-  /* Event types that can be polled for.  These bits may be set in `events'
-     to indicate the interesting event types; they will appear in `revents'
-     to indicate the status of the file descriptor.  */
-  inbound= POLLIN,//		0x001		/* There is data to read.  */
-  ooband=POLLPRI,//		0x002		/* There is urgent data to read.  */
-  outbound=POLLOUT,//		0x004		/* Writing now will not block.  */
+//enum EventType {
+//  /* Event types that can be polled for.  These bits may be set in `events'
+//     to indicate the interesting event types; they will appear in `revents'
+//     to indicate the status of the file descriptor.  */
+//  inbound= POLLIN,//		0x001		/* There is data to read.  */
+//  ooband=POLLPRI,//		0x002		/* There is urgent data to read.  */
+//  outbound=POLLOUT,//		0x004		/* Writing now will not block.  */
 
-//  #if defined __USE_XOPEN || defined __USE_XOPEN2K8
-//  /* These values are defined in XPG4.2.  */
-//  # define POLLRDNORM	0x040		/* Normal data may be read.  */
-//  # define POLLRDBAND	0x080		/* Priority data may be read.  */
-//  # define POLLWRNORM	0x100		/* Writing now will not block.  */
-//  # define POLLWRBAND	0x200		/* Priority data may be written.  */
-//  #endif
+////  #if defined __USE_XOPEN || defined __USE_XOPEN2K8
+////  /* These values are defined in XPG4.2.  */
+////  # define POLLRDNORM	0x040		/* Normal data may be read.  */
+////  # define POLLRDBAND	0x080		/* Priority data may be read.  */
+////  # define POLLWRNORM	0x100		/* Writing now will not block.  */
+////  # define POLLWRBAND	0x200		/* Priority data may be written.  */
+////  #endif
 
-//  #ifdef __USE_GNU
-//  /* These are extensions for Linux.  */
-//  # define POLLMSG	0x400
-//  # define POLLREMOVE	0x1000
-//  # define POLLRDHUP	0x2000
-//  #endif
+////  #ifdef __USE_GNU
+////  /* These are extensions for Linux.  */
+////  # define POLLMSG	0x400
+////  # define POLLREMOVE	0x1000
+////  # define POLLRDHUP	0x2000
+////  #endif
 
-  /* Event types always implicitly polled for.  These bits need not be set in `events', but they will appear in `revents' to indicate the status of the file descriptor.  */
-  error= POLLERR,//		0x008		/* Error condition.  */
-  hangup=POLLHUP,//		0x010		/* Hung up.  */
-  invalid=POLLNVAL,//	0x020		/* Invalid polling request.  */
+//  /* Event types always implicitly polled for.  These bits need not be set in `events', but they will appear in `revents' to indicate the status of the file descriptor.  */
+//  error= POLLERR,//		0x008		/* Error condition.  */
+//  hangup=POLLHUP,//		0x010		/* Hung up.  */
+//  invalid=POLLNVAL,//	0x020		/* Invalid polling request.  */
 
-};
+//};
 
 class EventLoop {
   using Handler= void(*)(void);//todo: args?
-  std::vector<pollfd> fdlist;
-  std::vector<Handler> handlers;
-  unsigned fdused;
-  int nextTimeout;
   bool beRunning;
 public:
+  Epoller poller;
   EventLoop();
   /** this function does not normally return, the thread it is invoked upon blocks.
    * it returns for SIGHUP and the like, while SIGSEGV from callbacks might get logged and ignored.

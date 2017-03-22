@@ -11,9 +11,7 @@ constexpr unsigned evlistsize(unsigned number){
 
 Epoller::Epoller(unsigned maxreport):
   epfd(~0),
-  BuildIndexer(epoll_event,waitlist,maxreport)
-//waitlist(reinterpret_cast<epoll_event *>(malloc(maxreport*sizeof(epoll_event))),maxreport*sizeof(epoll_event))
-{
+  BuildIndexer(epoll_event,waitlist,maxreport){
   epfd=epoll_create1(0);
 }
 
@@ -30,13 +28,15 @@ bool Epoller::close(){
   }
 }
 
-bool Epoller::add(int fd, epoll_event *event){
-  return ok(epoll_ctl(epfd,EPOLL_CTL_ADD,fd,event));
+bool Epoller::watch(int fd, unsigned eventbits, Handler &handler){
+  epoll_event event{eventbits,{&handler}};
+  return ok(epoll_ctl(epfd,EPOLL_CTL_ADD,fd,&event));
 }
 
-bool Epoller::modify(int fd, epoll_event *event)
-{
-  return ok(epoll_ctl(epfd,EPOLL_CTL_MOD,fd,event));
+bool Epoller::modify(int fd, unsigned eventbits,Handler &handler){
+  epoll_event event{eventbits,{&handler}};
+
+  return ok(epoll_ctl(epfd,EPOLL_CTL_MOD,fd,&event));
 }
 
 bool Epoller::remove(int fd){
@@ -44,5 +44,32 @@ bool Epoller::remove(int fd){
 }
 
 bool Epoller::wait(int timeoutms){
-  return ok(epoll_wait(epfd,waitlist.internalBuffer(),waitlist.allocated(),timeoutms));
+  return okValue(numEvents, epoll_wait(epfd,waitlist.internalBuffer(),waitlist.allocated(),timeoutms));
+}
+
+void Epoller::exec(const epoll_event &ev){
+  if(ev.data.ptr){
+    Handler &handler(*reinterpret_cast<Handler *>(ev.data.ptr));
+    handler(ev.events);
+  }
+}
+
+bool Epoller::doEvents(int timeoutms){
+  waitlist.rewind();
+  if(wait(timeoutms)){
+    waitlist.skip(numEvents);
+    while(waitlist.hasNext()){
+      auto event=waitlist.next();
+      if(event.events ==0 ){
+        //we shouldn't be here.
+        logmsg("got a no-event response");
+      } else {
+        exec(event);
+      }
+    }
+    return true;
+  } else {
+    logmsg("doEvents: %s",errorText());
+    return false;
+  }
 }

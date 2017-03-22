@@ -5,7 +5,6 @@
 
 #include <cstdio>
 #include "logger.h"
-#include "string.h" //strerror
 
 static Logger bug("FileReader",false);
 
@@ -49,7 +48,7 @@ FileReader::FileReader():
 bool FileReader::process(TextKey fname){
   FileInfo finfo(fname);
   if(!finfo.isOk()){
-    bug("stat(%s) failed, errno:%d (%s)",fname,finfo.errornumber,strerror(finfo.errornumber));
+    bug("stat(%s) failed, errno:%d (%s)",fname,finfo.errornumber,finfo.errorText());
     return false;
   }
   expected=finfo.size();

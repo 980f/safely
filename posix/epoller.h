@@ -5,7 +5,7 @@
 #include "sys/epoll.h" //for event type
 /** wrap the epoll function set */
 #include "buffer.h"
-
+#include <functional> //for callback
 class Epoller:public PosixWrapper {
   int epfd;
 
@@ -19,13 +19,22 @@ public:
   operator bool()const{
     return epfd>=0;
   }
+  using Handler=std::function<void(unsigned eventbits)>;
 
-  bool add(int fd,struct epoll_event *event);
-  bool modify(int fd,struct epoll_event *event);
+  bool watch(int fd, unsigned eventbits,Handler &handler);
+  bool modify(int fd, unsigned eventbits,Handler &handler);
   bool remove(int fd);
   /** data returned from wait():*/
-  Indexer<struct epoll_event> waitlist;
+  Indexer<epoll_event> waitlist;
+  int numEvents;
   bool wait(int timeoutms);
+
+  /** respond to an event report from wait: */
+  static void exec(const epoll_event &ev);
+
+  /** core of event loop */
+  bool doEvents(int timeoutms);
+
 };
 
 #endif // EPOLLER_H

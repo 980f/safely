@@ -101,6 +101,13 @@ void testBufferFormatter(){
   dbg("\nShould be <One 1984>:<%s>",bigenough);
 }
 
+#include "fildes.h"
+#include  <functional>
+void showSizes(){
+  dbg("Size of fildes: %d",sizeof (Fildes));
+  std::function<void()> *nullfunctor;
+  dbg("Size of minimal functor: %d",sizeof (nullfunctor));
+}
 
 extern void testJ(unsigned which);
 #include "unicodetester.h"
@@ -119,6 +126,9 @@ int main(int argc, char *argv[]){
     char group=(*tes++);
     unsigned which=atoi(tes);
     switch(group){
+    case 'z':
+      showSizes();
+      break;
     case 'w':{
       FileWriterTester fwt;
       fwt.run(which);

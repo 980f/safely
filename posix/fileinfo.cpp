@@ -14,7 +14,7 @@ FileInfo::FileInfo(int fd){
 
 bool FileInfo::from(TextKey filename){
   if(failed(stat(filename,&finfo))){
-    dbg("stat(%s) failed, errno:%d (%s)",filename,errornumber,strerror(errornumber));
+    dbg("stat(%s) failed, errno:%d (%s)",filename,errornumber,errorText());
     return false;
   } else {
     return true;

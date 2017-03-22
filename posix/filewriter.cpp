@@ -5,7 +5,6 @@
 
 #include <cstdio>
 #include "logger.h"
-#include "string.h" //strerror
 
 static Logger bug("FileWriter",true);
 
