@@ -122,7 +122,7 @@ int main(int argc, char *argv[]){
 //  dbg("Static loggers list:");
 //  Logger::listLoggers(dbg);
   //display PID, later will use application class to write it to a file.
-  Application::writepid("/tmp/safely");
+  Application::writepid("tests.pid");
   while(argc-->0) {
     const char*tes=argv[argc];
     dbg("%d: %s",argc,tes);

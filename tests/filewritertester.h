@@ -4,8 +4,8 @@
 #include "filewriter.h"
 
 class FileWriterTester: public FileWriter{
-  bool action() override;
-  void onCompletion() override;
+//  bool action() override;
+//  void onCompletion() override;
 public:
   FileWriterTester();
   void run(unsigned which);

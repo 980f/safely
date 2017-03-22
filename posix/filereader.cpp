@@ -56,7 +56,7 @@ bool FileReader::process(TextKey fname){
     return false;
   }
   freader.prepare(finfo.size());
-  if(fd.open(fname,O_RDONLY | O_NONBLOCK /*| O_DIRECT*/)){
+  if(fd.open(fname,O_RDONLY)){
     bug("Launching read of file %s",fname);
     buf.rewind();//when this was missing I learned things about how aio_read worked
     if(freader.go()){
@@ -65,3 +65,5 @@ bool FileReader::process(TextKey fname){
   }
   return false;
 }
+
+

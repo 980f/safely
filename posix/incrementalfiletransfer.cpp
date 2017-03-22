@@ -12,6 +12,7 @@ IncrementalFileTransfer::IncrementalFileTransfer(bool reader, Fildes &fd, ByteSc
 
 
 void IncrementalFileTransfer::prepare(unsigned amount){
+  fd.setBlocking(false);//don't trust callers.
   transferred=0;
   blockstransferred=0;
   if(amReader){

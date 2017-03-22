@@ -35,6 +35,8 @@ public:
    * @returns whether block() executed ok, which is ambiguous when the last transfer is a partial buffer */
   bool block(double seconds);
 
+  void loiter();
+
 private:
   /** this will call back to our member fn */
   static void sighandler(int signo, siginfo_t *info, void *);

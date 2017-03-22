@@ -9,13 +9,13 @@
 
 static Logger info("AIOFILE.WR",true);
 
-bool FileWriterTester::action(){
+/*bool FileWriterTester::action(){
   return true;
 }
 
 void FileWriterTester::onCompletion(){
   info("completed");
-}
+}*/
 
 FileWriterTester::FileWriterTester(){
 
@@ -45,17 +45,7 @@ void FileWriterTester::run(unsigned which){
     Text fname(tempnam(nullptr,nullptr));
     info("will write to: %s",fname.c_str());
     if(process(fname,data)){
-      info("waiting for about %d events",blocksrequired);
-      while(!freader.isDone() && blocksout<blocksrequired){
-        if(freader.block(2)){
-          info("While waiting got: %d(%s)",freader.errornumber,freader.errorText());
-          if(freader.errornumber==EINTR){//on read or block shorter than buffer.
-            if(remaining()==0){
-              info("...which is curious since we are done.");
-            }
-          }
-        }
-      }
+      fmover.loiter();
     }
   }
 }
