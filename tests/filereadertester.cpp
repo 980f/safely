@@ -4,7 +4,6 @@
 
 #include <cstdio>
 #include "logger.h"
-#include "string.h" //strerror
 
 static Logger info("AIOFILERD",true);
 
@@ -41,7 +40,7 @@ void FileReaderTester::run(unsigned which){
     info("waiting for about %d events",blocksexpected);
     while(!freader.isDone() && blocksin<blocksexpected){
       if(freader.block(1)){
-        info("While waiting got: %d(%s)",freader.errornumber,strerror(freader.errornumber));
+        info("While waiting got: %d(%s)",freader.errornumber,freader.errorText());
         if(freader.errornumber==EINTR){//on read or block shorter than buffer.
           if(received==expected){
             info("...which is pointless, happens in last incompletely filled block");

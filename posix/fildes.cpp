@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include "fdset.h"
+#include "errno.h"
 
 Fildes::Fildes(){
   errornumber = 0;
@@ -93,11 +94,8 @@ bool Fildes::isMarked(FDset&fdset) const {
 
 int Fildes::read(ByteScanner&p){
   if(isOpen()) {
-    lastRead = ::read(fd, &p.peek(), p.freespace());
-    if(lastRead>=0) {
+    if(okValue(lastRead ,::read(fd, &p.peek(), p.freespace()))) {
       p.skip(lastRead);
-    } else {
-      failure();
     }
     return lastRead;
   } else {
@@ -107,11 +105,8 @@ int Fildes::read(ByteScanner&p){
 
 int Fildes::write(ByteScanner&p){
   if(isOpen()) {
-    lastWrote = ::write(fd, &p.peek(), p.freespace());
-    if(lastWrote>=0) {
+    if(okValue(lastWrote, ::write(fd, &p.peek(), p.freespace()))) {
       p.skip(lastWrote);
-    } else {
-      failure();
     }
     return lastWrote;
   } else {
@@ -141,7 +136,7 @@ int Fildes::moveto(Fildes&other){
       }
     }
     if(got < 0) { //then somehow the device got closed.
-      failure();
+      setFailed(true);
       return -1;
     }
   }
