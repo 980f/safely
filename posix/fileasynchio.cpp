@@ -37,6 +37,23 @@ bool FileAsyncAccess::block(double seconds){
   return ok(aio_suspend(&list,1,&ns.ts));
 }
 
+void FileAsyncAccess::loiter(){
+  faa("waiting for about %d events",blocksexpected);
+  while(notDone()){
+    if(block(1)){
+      if(!isOk()){
+        faa("While waiting got: %d(%s)",errornumber,errorText());
+        if(errornumber==EINTR){//on read or block shorter than buffer.
+          if(transferred==expected){
+            faa("...which is pointless, happens in last incompletely filled block");
+          }
+        }
+      }
+    }
+    //todo: detect freader errornumber's that are fatal and break
+  }
+}
+
 bool FileAsyncAccess::launch(bool more){
   if(more){
     //maydo: add 'lastSuccessfulTranferAmount' so we can loosen up retry on error in continuation

@@ -22,6 +22,9 @@ public:
   FileReader();
   virtual ~FileReader();//ensure fildes is released.
   bool process(TextKey fname);
+  /** hang around until transfer seems complete.
+   * implemented for module testing.  */
+  void loiter();
 private:
   /* on incremental read complete */
 //  bool onRead(__ssize_t ret);
