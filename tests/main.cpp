@@ -133,13 +133,11 @@ int main(int argc, char *argv[]){
       showSizes();
       break;
     case 'w':{
-      FileWriterTester fwt;
-      fwt.run(which);
-    } break;
+        FileWriterTester().run(which);
+      } break;
     case 'f':{
-      FileReaderTester frt;
-      frt.run(which);
-    } break;
+        FileReaderTester().run(which);
+      } break;
     case 'b'://buffer formatting
       testBufferFormatter();
       break;
@@ -161,11 +159,11 @@ int main(int argc, char *argv[]){
     case 'x':
       DeleteOnExitTestData::testme();
       testdemonic();
-    {
-      int coedata(42);
-      coe(coedata);
-      dbg("coe: %d should be 0",coedata);
-    }
+      {
+        int coedata(42);
+        coe(coedata);
+        dbg("coe: %d should be 0",coedata);
+      }
       break;
     }
   }
