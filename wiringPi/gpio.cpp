@@ -2,12 +2,16 @@
 
 #include "bitbanger.h"
 #include "index.h"
-const unsigned yesIreallyMeanIt=0x5A000000;
 
+//define this symbol to actually access the physical io space of the PI processor.
+#if FOR_LIVE_PI==1
+#define GPIO_SPACE 0x7e200000
+#else
+#define GPIO_SPACE 0
+#endif
 
-static bool fakeit=true;
 //////////////
-Mapped<unsigned> GPIO::gpioBase(fakeit?0:0x7e200000,40);//just big enough to get to pullup stuff, but not to test interface.
+Mapped<unsigned> GPIO::gpioBase(GPIO_SPACE,40);//just big enough to get to pullup stuff, but not to test interface.
 
 GPIO::GPIO(unsigned pinIndex):
   pinIndex(pinIndex),
