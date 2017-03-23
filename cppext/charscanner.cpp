@@ -106,11 +106,14 @@ ByteScanner ByteScanner::subset(unsigned fieldLength, bool removing){
   return ByteScanner(punter.internalBuffer(),punter.allocated());
 }
 
-void ByteScanner::chuckSpaces(){
-  while(hasNext() && this->next() == ' ') {
-    //remain calm
+bool ByteScanner::chuckSpaces(){
+  while(hasNext()){
+    if(next()!=' '){
+      rewind(1);
+      break;
+    }
   }
-  previous();  //we want to be pointing at the space just before the next item, so a call to next() will return the first relevant character
+  return hasNext();
 }
 
 ///////////////////
@@ -267,3 +270,33 @@ u32 ByteLooker ::getU(unsigned numBytes, u32 def){
     return def;
   }
 } /* getU */
+
+
+bool ByteScanner::nextWord(Indexer<const char> other){
+  while(other.hasNext()&&this->hasNext()){
+    if(this->peek()==other.next()){
+      this->next();
+    } else {
+      rewind(other.used());
+      return false;
+    }
+  }
+  return true;//
+}
+
+bool ByteScanner::find(Indexer<const char> other){
+  unsigned mark=used();
+  if(other.hasNext()){
+    char first=other.next();
+    while(hasNext()){
+      if(next()==first){
+        if(nextWord(other)){//rest of chars match
+          return true;
+        }
+      }
+    }
+    rewind(used()-mark);
+    return false;
+  }
+  return false;//never find 'nothing'
+}
