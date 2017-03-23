@@ -88,9 +88,16 @@ struct ByteScanner : public Indexer<u8> {
 
   /** access to base class version is a syntactic cf */
   ByteScanner subset(unsigned fieldLength, bool removing = true);
-  /** Positions the pointer just before the next character that is not a space (' ') */
-  void chuckSpaces();
+  //// parser assist:
+  /** Positions the pointer so that next() returns the next char that is not a space. @returns hasNext().
+   * If there are no spaces then the buffer is 'consumed', you may wish to mark and rewind on failure. */
+  bool chuckSpaces();
 
+  /** if the next content of this matches other then move past the value and @returns true. else this is unchanged and @returns false */
+  bool nextWord(Indexer<const char> other);//yes. copy the argument
+
+  /** if this contains other then move past the value and @returns true. else this is unchanged and @returns false */
+  bool find(Indexer<const char> other);//yes. copy the argument
 };
 
 struct ByteLooker : public Indexer<const u8> {

@@ -4,7 +4,7 @@
 //todo: import from ezcpp repo
 
 //for non-bit addressable items:
-constexpr bool bit(int patter, unsigned int bitnumber){
+constexpr bool bit(unsigned patter, unsigned int bitnumber){
   return (patter & (1 << bitnumber)) != 0;
 }
 

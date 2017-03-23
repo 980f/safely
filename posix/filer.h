@@ -15,8 +15,8 @@ class Filer : public PosixWrapper {
 public:
   Filer();
   ~Filer();
-  /** see fcntl.h for O_flags. @returns true on a successful open. */
-  bool openFile(const char *fname, int o_flags,bool makeDirs=false);
+  /** see fcntl.h for O_flags. @returns true on a successful open. Note:0 if flags for simple read */
+  bool openFile(const char *fname, int o_flags=0,bool makeDirs=false);
   FILE * getfp(const char *fargs=0);
   /** for when you need to close the file before this object goes out of scope:*/
   int close(void);
