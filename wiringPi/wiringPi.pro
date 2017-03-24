@@ -3,7 +3,7 @@ include ("../consoleapp.pro")
 #sigc stuff may be in the lib functions used.
 include("../sigc.pro")
 #OS code
-include("../posix/lib.pro")
+include("../posix/posix.files")
 
 #heaped code
 include("../system/system.files")
