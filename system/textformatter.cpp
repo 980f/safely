@@ -1,5 +1,5 @@
 #include "textformatter.h"
-
+#include "textpointer.h"
 /*
 The algorithm:
 scan the format string for highest numbered substitution item.
@@ -24,3 +24,14 @@ It seems that whatever we do we end up having to do actual insertions OR regener
 different formatting contexts we won't actually try to reuse an argument's rendering.
 
 */
+
+
+TextFormatter::TextFormatter(TextKey mf):
+  format(nullptr,Cstr(mf).length())
+{
+
+}
+
+TextFormatter::~TextFormatter(){
+  //#nada
+}
