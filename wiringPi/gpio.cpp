@@ -30,8 +30,8 @@ GPIO::operator bool() const noexcept {
 }
 
 void GPIO::configure(unsigned af, unsigned pull){
-  unsigned word=af/10;
-  unsigned fielder=3*(af%10);
+  unsigned word=pinIndex/10;
+  unsigned fielder=3*(pinIndex%10);
   mergeField(gpioBase[word],af,(fielder+3),fielder);
   if(pull!=0){
     //oh joy, inline delays of 150 clocks needed ....
