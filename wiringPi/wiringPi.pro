@@ -6,8 +6,9 @@ include("../sigc.pro")
 include("../posix/lib.pro")
 #heaped code
 include("../system/lib.pro")
+
 #heapless code
-include("../cppext/lib.pro")
+include("../cppext/cppext.files")
 
 #uncommment the following for running on real hardware
 #DEFINES += FOR_LIVE_PI=1

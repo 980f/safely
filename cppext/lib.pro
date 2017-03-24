@@ -3,5 +3,6 @@
 PRE_TARGETDEPS += ../libcppext.a
 DEPENDPATH += ../cppext
 INCLUDEPATH += ../cppext
+
 LIBS += -L.. -lcppext
 

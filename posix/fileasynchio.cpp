@@ -106,9 +106,9 @@ void FileAsyncAccess::notified(int code,int ernumber){
 bool FileAsyncAccess::onEachBlock(__ssize_t amount){
   if(amReader){
     buf.peek()=0;
-    faa("FSA:READ:%s",buf.internalBuffer());
+    faa("FSA:READ:[%d]:%s",amount,buf.internalBuffer());
   } else {
-    faa("FSA:WRTIE: remaining=%ld",buf.freespace());
+    faa("FSA:WRITE:[%d]: remaining=%ld",amount,buf.freespace());
   }
   return true;
 }

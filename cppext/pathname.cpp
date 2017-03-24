@@ -3,5 +3,9 @@
 Pathname::Pathname(Indexer<char> &other,char slasher) :
   CharFormatter(other.internalBuffer(),other.allocated() - 1),
   seperator(slasher){
-  other.clearUnused();
+    other.clearUnused();
+}
+
+Pathname::~Pathname(){
+  //#force vtable creation
 }

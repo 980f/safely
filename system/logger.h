@@ -7,7 +7,7 @@
 
 /** a minimalist logging facade */
 class Logger
-#if LoggerManagement == 0
+#if LoggerManagement == 1
 : public Chained<Logger> {
   static ChainedAnchor<Logger> root;
 #else
@@ -19,7 +19,7 @@ public:
   const char *prefix;
   bool enabled;
   Logger(const char *location,bool enabled=true);
-#if LoggerManagement == 0
+#if LoggerManagement == 1
   static void listLoggers(Logger &dbg);
 
   virtual

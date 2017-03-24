@@ -8,12 +8,12 @@ extern void logmessage(const char *prefix,const char *msg,va_list &args);
 extern void dumpStack(const char *prefix);
 
 Logger::Logger(const char *location,bool enabled):prefix(location),enabled(enabled){
-#if LoggerManagement == 0
+#if LoggerManagement == 1
   root.append(this);
 #endif
 }
 
-#if LoggerManagement == 0
+#if LoggerManagement == 1
 void Logger::listLoggers(Logger &dbg){
   Chained<Logger> *scan=Logger::root.root;
   while(scan->peer){
@@ -25,7 +25,7 @@ void Logger::listLoggers(Logger &dbg){
 #endif
 
 Logger::~Logger(){
-#if LoggerManagement == 0
+#if LoggerManagement == 1
   root.remove(this);
 #endif
 }
