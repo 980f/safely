@@ -14,12 +14,13 @@ int main(int argc, char *argv[]){
     somebit.configure(1,0);//simple output
     out("Configure as output");
     while(1){
-//      somebit.toggle();
-//      out("Toggled it");
+      somebit.toggle();
+      out("Toggled it");
       sleep(1);
-      somebit=0;
+      somebit.toggle();
+//      somebit=1;
       sleep(3);
-      somebit=1;
+//      somebit=0;
     }
   }
   return 0;
