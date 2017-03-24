@@ -2,11 +2,10 @@
 #define DELIMITINGOUTPUTSTREAM_H
 
 #include <ostream>
-#include <ustring.h>
+#include "textpointer.h"
 
 /**
  *  @class DelimitingOutputStream is used to generate comma separated value files.
- *  todo:2 use imbue'ing a locale to manage variations. e.g. make a windows compatible locale for outputting tfr files.
  */
 class DelimitingOutputStream {
 public:
@@ -19,9 +18,7 @@ public:
   //todo:2 selectable separator and quoting rules.
 public:
   DelimitingOutputStream(std::ostream &os, bool withBom = false, bool crlfs = true);//defaulting to micro$ofts choice as that is who we target files at.
-#ifndef NO_GLIB
-  DelimitingOutputStream &put(const Ustring &text);
-#endif
+  DelimitingOutputStream &put(const Text &text);
   DelimitingOutputStream &put(const char *text);
   DelimitingOutputStream &put(int val);
   DelimitingOutputStream &put(float val,int sigfig = 8);

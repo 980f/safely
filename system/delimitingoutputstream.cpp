@@ -70,9 +70,6 @@ DelimitingOutputStream &DelimitingOutputStream::put(const char *text){
   return *this;
 } // DelimitingOutputStream::put
 
-#ifndef NO_GLIB
-DelimitingOutputStream &DelimitingOutputStream::put(const Ustring &text){
+DelimitingOutputStream &DelimitingOutputStream::put(const Text &text){
   return put(text.c_str());
 }
-
-#endif

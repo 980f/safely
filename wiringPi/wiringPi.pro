@@ -4,8 +4,9 @@ include ("../consoleapp.pro")
 include("../sigc.pro")
 #OS code
 include("../posix/lib.pro")
+
 #heaped code
-include("../system/lib.pro")
+include("../system/system.files")
 
 #heapless code
 include("../cppext/cppext.files")
@@ -13,7 +14,8 @@ include("../cppext/cppext.files")
 #uncommment the following for running on real hardware
 #DEFINES += FOR_LIVE_PI=1
 
-SOURCES += main.cpp \
+SOURCES += \
+    main.cpp \
     gpio.cpp
 
 HEADERS += \
