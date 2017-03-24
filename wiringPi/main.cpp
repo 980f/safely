@@ -1,5 +1,6 @@
 #include "gpio.h"
 #include "logger.h"
+#include "unistd.h"
 
 static Logger out("MAIN");
 int main(int argc, char *argv[]){
@@ -12,8 +13,14 @@ int main(int argc, char *argv[]){
     out("Created bit ");
     somebit.configure(1,0);//simple output
     out("Configure as output");
-    somebit.toggle();
-    out("Toggled it");
+    while(1){
+//      somebit.toggle();
+//      out("Toggled it");
+      sleep(1);
+      somebit=0;
+      sleep(3);
+      somebit=1;
+    }
   }
   return 0;
 }

@@ -12,7 +12,7 @@ include("../system/system.files")
 include("../cppext/cppext.files")
 
 #uncommment the following for running on real hardware
-#DEFINES += FOR_LIVE_PI=1
+DEFINES += FOR_LIVE_PI=1
 
 SOURCES += \
     main.cpp \
