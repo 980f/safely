@@ -12,8 +12,8 @@ public:
   //make a true variable for something that is usuall #defined.
   static const int BADFD= -1;
   //retain for post-mortem debug.
-  int lastRead;
-  int lastWrote;
+  ssize_t lastRead;
+  ssize_t lastWrote;
 protected:
 /** whether this object opened the fd it wraps. That is the normal case but if you want to do multiple operations and retain error info on each step then you might use multiple Fildes objects around the same fd. */
   bool amOwner;

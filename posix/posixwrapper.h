@@ -1,6 +1,7 @@
 #ifndef POSIXWRAPPER_H
 #define POSIXWRAPPER_H
 
+#include "errno.h" //because we templated a function that needs it
 /**
  * handy things for wrapping a POSIX C API with a C++ class, if only for errno management.
  * Fairly recent errno implementations are per-thread, but even so one has to store away the errno
@@ -27,7 +28,16 @@ public: //so that we can merge errors from functions called outside of the objec
   }
 
   /** set @param updatee with @param valorminus1, if valorminus1 is -1 then call failure(errno), return valorminus1>=0 */
-  bool okValue(int &updatee,int valorminus1);
+//  bool okValue(int &updatee,int valorminus1);
+  template <typename Integrish> bool okValue(Integrish &target,Integrish value){
+    target=value;
+    if(value==Integrish(~0UL)){//if magic 'all ones' value
+      return ! failure(errno);//record and report on errno.
+    } else {
+      return true;//value deemed ok
+    }
+  }
+
 public:
   /** ERRNO for last operation done using the extend object */
   int errornumber;

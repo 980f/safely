@@ -18,7 +18,7 @@ GPIO::GPIO(unsigned pinIndex):
   mask(1<<(pinIndex%32)),
   offset(pinIndex>=32) //will be zero or 1 for valid pinIndex
 {
-
+//don't configure here, so that we can declare pins before iomap is configured.
 }
 
 void GPIO::operator =(bool value) const noexcept{

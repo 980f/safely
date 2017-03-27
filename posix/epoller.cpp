@@ -44,7 +44,12 @@ bool Epoller::remove(int fd){
 }
 
 bool Epoller::wait(int timeoutms){
-  return okValue(numEvents, epoll_wait(epfd,waitlist.internalBuffer(),waitlist.allocated(),timeoutms));
+  if(okValue(numEvents, epoll_wait(epfd,&waitlist.peek(),waitlist.freespace(),timeoutms))){
+    waitlist.skip(numEvents);
+    return true;
+  } else {
+    return false;
+  }
 }
 
 void Epoller::exec(const epoll_event &ev){
@@ -56,10 +61,10 @@ void Epoller::exec(const epoll_event &ev){
 
 bool Epoller::doEvents(int timeoutms){
   waitlist.rewind();
-  if(wait(timeoutms)){
-    waitlist.skip(numEvents);
-    while(waitlist.hasNext()){
-      auto event=waitlist.next();
+  if(wait(timeoutms)){//HEREIS the actual blocking call!
+    Indexer<epoll_event> list(waitlist,~0);
+    while(list.hasNext()){
+      auto event=list.next();
       if(event.events ==0 ){
         //we shouldn't be here.
         logmsg("got a no-event response");
