@@ -79,7 +79,7 @@ bool Filer::readall(int maxalloc){
   if(fd.isOpen()) {
     FileInfo finfo(fd);
     if(finfo){
-      size = finfo.size();
+      size = unsigned(finfo.size());
       if(size > maxalloc) {
         size = maxalloc;
       }

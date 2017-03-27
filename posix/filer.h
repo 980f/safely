@@ -10,7 +10,7 @@
   * may choose to rework as a derived class instead of containing one.*/
 class Filer : public PosixWrapper {
   unsigned char *buffer;
-  int size;
+  unsigned size;
   Fildes fd;
 public:
   Filer();
