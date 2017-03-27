@@ -4,7 +4,9 @@
 
 #include "memorymapper.h"
 
-/** raspbery pi version of making a pin look like a bool */
+/** raspbery pi version of making a pin look like a bool.
+This module does NOT ensure that the gpio space is available, you must init the memory mapping module yourself.
+*/
 class GPIO {
   unsigned pinIndex;
   unsigned  mask; //32 bits per register

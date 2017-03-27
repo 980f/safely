@@ -50,13 +50,13 @@ bool PosixWrapper::failed(int zeroorminus1){
   }
 }
 
-bool PosixWrapper::okValue(int &updatee, int valorminus1){
-  updatee=valorminus1;
-  if(valorminus1<0){
-    return failure(errno);
-  } else {
-    return true;
-  }
-} // PosixWrapper::failed
+//bool PosixWrapper::okValue(int &updatee, int valorminus1){
+//  updatee=valorminus1;
+//  if(valorminus1<0){
+//    return failure(errno);
+//  } else {
+//    return true;
+//  }
+//}
 
 //end of file

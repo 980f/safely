@@ -17,12 +17,18 @@ protected:
 public:
   /** doesn't do much, but someday we may mate this to gnu getargs */
   Application(unsigned argc, char *argv[]);
+  /** show argv */
+  void logArgs();
+  /** show cwd */
+  void logCwd();
   /** poll for and dispatch on events recorded with looper member */
-  void run();
+  int run();
   /** quit polling */
   void stop(){
     beRunning=false;
   }
+
+
   /** write pid to file. best practice if for that file to be in /tmp so that it evaporates on a crash of the system. */
   static bool writepid(TextKey pidname);
 };

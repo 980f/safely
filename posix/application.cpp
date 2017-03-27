@@ -7,7 +7,8 @@
 #include "fcntlflags.h"
 #include "unistd.h"
 
-static Logger mydbg("EPOLLER",true);
+#include "textpointer.h" //Text class
+static Logger out("EPOLLER",true);
 
 Application::Application(unsigned argc, char *argv[]):
   arglist(const_cast<const char **>(argv),argc*sizeof (const char *)),
@@ -15,10 +16,25 @@ Application::Application(unsigned argc, char *argv[]):
   period(1), //millisecond timing, this is running on near GHz machines ...
   beRunning(false)//startup idle.
 {
-  mydbg("Application Logic initialized");
+  out("Application Logic initialized");
 }
 
-void Application::run(){
+void Application::logArgs(){
+  arglist.rewind();
+  while(arglist.hasNext()){
+    const char *arg=arglist.next();
+    out("arg[%d]=%s",arglist.ordinal()-1,arg);
+  }
+
+}
+
+void Application::logCwd(){
+//we use Text class because it will free what getcwd allocated. Not so critical unless we are using this program to look for memory leaks in the functions it tests.
+  Text cwd(getcwd(nullptr,0));
+  out("Working directory is: %s",cwd.c_str());
+}
+
+int Application::run(){
   beRunning=true;
   while(beRunning){
     if(!looper.doEvents(period)){
@@ -26,19 +42,20 @@ void Application::run(){
       switch (looper.errornumber) {
       case EAGAIN:
       case EINTR: //then a signal was sent, and its handler has run.
-        mydbg("nominal error ignored: %s",looper.errorText());
+        out("nominal error ignored: %s",looper.errorText());
         break;
       case EINVAL:
-        mydbg("egregiously bad timeout or ");
+        out("egregiously bad timeout or ");
         stop();
         break;
       case EBADF: //looper wasn't initialized successfully
-        mydbg("epoll fd was bad.");
+        out("epoll fd was bad.");
         stop();
         break;
       }
     }
   }
+  return looper.errornumber;
 }
 
 bool Application::writepid(TextKey pidname){

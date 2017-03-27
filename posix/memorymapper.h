@@ -12,6 +12,8 @@ public:
   void *map(unsigned addr, unsigned len);
   /** could be static, but we don't want to call it without the context of having accessed map, and it gives us a place to save error codes */
   bool free(void *addr, unsigned size);
+
+  int getError();
   /**create shared one. If this fails abort your application, you can't access whatever it is  */
   static bool init(bool refresh=false);
   static MemoryMapper *Mmap;
