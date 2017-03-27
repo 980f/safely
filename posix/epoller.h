@@ -19,9 +19,9 @@ public:
   operator bool()const{
     return epfd>=0;
   }
-  using Handler=std::function<void(unsigned eventbits)>;
+  using Handler=std::function<void(unsigned /*eventbits*/)>;
 
-  bool watch(int fd, unsigned eventbits,Handler &handler);
+  bool watch(int fd, unsigned eventbits,Handler handler);
   bool modify(int fd, unsigned eventbits,Handler &handler);
   bool remove(int fd);
   /** data returned from wait():*/

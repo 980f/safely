@@ -1,29 +1,17 @@
 #ifndef STOREJSON_H
 #define STOREJSON_H
 
-//for arguments:
 #include "storable.h"
 #include "buffer.h"
 #include "textpointer.h"
 
-////for internals:
-//#include "extremer.h"
-//#include "utf8.h"
-
-//#include "pushedjsonparser.h" //implemented with microcontroller-viable parser
-
-
 #include "abstractjsonparser.h"
-//#include "storable.h"
-//#include "buffer.h"
-
 
 /** must supply and track source data, and be able to recover it from values of ordinal */
 class StoreJsonConstructor: public JsonConstructor<Storable,Text> {
 public:
   /** pointer to data source, exposed for module testing convenience */
   Indexer<const char> data;
-
   StoreJsonConstructor(Indexer<const char> &data);
 
   virtual ~StoreJsonConstructor()=default;
@@ -54,22 +42,5 @@ public: //accessing root when done, should also set it for some usages.
 public:
   StoreJsonParser(Indexer<const char> &data);
 } ;
-
-//public: //stats
-//  JsonStats s;
-
-//private:
-//  Indexer<const char> data;
-//  Storable *root;
-//  PushedJSON::Parser parser;
-
-//  /** @returns whether there are more children, for recursively parsing wads. */
-//  bool parseChild(Storable *parent);
-//  //code fragment
-//  Storable *insertNewChild(Storable *parent, TextKey name);
-//  /** @param evenIfempty might also be called isWad */
-//  Storable *assembleItem(Storable *parent,bool evenIfEmpty=false);
-//}; // class JSONparser
-
 
 #endif // STOREJSON_H

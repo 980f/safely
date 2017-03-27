@@ -24,7 +24,8 @@ SOURCES += \
     epoller.cpp \
     application.cpp \
     incrementalfiletransfer.cpp \
-    memorymapper.cpp
+    memorymapper.cpp \
+    directory.cpp
 
 HEADERS += \
     fdset.h \
@@ -45,4 +46,5 @@ HEADERS += \
     epoller.h \
     application.h \
     incrementalfiletransfer.h \
-    memorymapper.h
+    memorymapper.h \
+    directory.h

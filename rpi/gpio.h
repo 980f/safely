@@ -1,7 +1,6 @@
 #ifndef GPIO_H
 #define GPIO_H
 
-
 #include "memorymapper.h"
 
 /** raspbery pi version of making a pin look like a bool.

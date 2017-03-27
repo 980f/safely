@@ -28,7 +28,7 @@ bool Epoller::close(){
   }
 }
 
-bool Epoller::watch(int fd, unsigned eventbits, Handler &handler){
+bool Epoller::watch(int fd, unsigned eventbits, Handler handler){
   epoll_event event{eventbits,{&handler}};
   return ok(epoll_ctl(epfd,EPOLL_CTL_ADD,fd,&event));
 }
