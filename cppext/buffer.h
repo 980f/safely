@@ -206,11 +206,14 @@ public:
   /** append a null terminated series, but do NOT include the null itself.
    * This copies objects via operator=  , and requires a compare to 0 functionality
    */
-  void cat(const Content *prefilled){
+  bool cat(const Content *prefilled){
     if(prefilled) {
       while( (pointer < length) && (*prefilled != 0)) {
         buffer[pointer++] = *prefilled++; //expect this to copy the object
       }
+      return *prefilled==0;
+    } else {
+      return true;//cat nothing == no truncation
     }
   } /* cat */
 

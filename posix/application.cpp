@@ -58,6 +58,15 @@ int Application::run(){
   return looper.errornumber;
 }
 
+Text Application::hostname(){
+  char maxname[512];
+  if(ok(gethostname(maxname,512))){
+    return Text(maxname);//copies content
+  } else {
+    return Text("noname");
+  }
+}
+
 bool Application::writepid(TextKey pidname){
   FILE* pidler(fopen(pidname,"w"));//want exclusive access
   if(pidler){
