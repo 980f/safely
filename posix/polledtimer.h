@@ -18,6 +18,7 @@ protected:
   Ticks systicksRemaining;
 public:
   PolledTimer(void);
+  virtual ~PolledTimer();//in case derived classes need significant destruction.
   virtual void restart(Ticks ticks);
   void restart(float seconds);//float (not double) as is often in time critical code.
   /** stops countdown without triggering onDone() */
@@ -68,11 +69,3 @@ public:
   virtual void onDone(void);
 
 };
-
-
-/** a server that will update all registered timers.
- * You must arrange for it to get called with each tick */
-extern void PolledTimerServer(void);
-//registration is compile time, your object must be static to be party to this service.
-#define RegisterTimer(name) Register(PolledTimer,name)
-

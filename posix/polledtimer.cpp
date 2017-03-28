@@ -1,24 +1,6 @@
 #include "polledtimer.h"
-#include "tableofpointers.h"
-
-#pragma GCC diagnostic warning "-Wunused-variable"
-
-/**
-  * an isr will determine that the given time has expired,
-  * but the interested code will have to look at object to determine that the event occurred.
-  * as of this note all timers are touched every cycle even if they are finished.
-  * using 2 lists would make the isr faster, but all the restarts slower and restarts dominate first use.
-  */
-
-MakeTable(PolledTimer);
-
-/** name required by systick.h. someday we'll get alias for static class member worked out */
-void PolledTimerServer(void) {
-  ForTable(PolledTimer){
-    (*it)->check();
-  }
-} /* onTick */
-
+#include "onexit.h"
+//#pragma GCC diagnostic warning "-Wunused-variable"
 
 void PolledTimer::check(){
   if(running){
@@ -31,6 +13,11 @@ void PolledTimer::check(){
 PolledTimer::PolledTimer(void){
   running = 0;
   systicksRemaining = 0;
+}
+
+PolledTimer::~PolledTimer(){
+  //#trivial
+  running=0;//reduce use-after-free consequences
 }
 
 /** typically this is overloaded if latency is important.*/

@@ -28,7 +28,10 @@ private:
   static void initModule();
 
 public:
-  GPIO(unsigned pinIndex);
+  GPIO();
+  GPIO(unsigned pinIndex,unsigned af,unsigned pull);
+
+  GPIO& connectTo(unsigned pinIndex);
   /* write bit */
   void operator =(bool value) const noexcept ;
   /* read bit */
@@ -38,7 +41,9 @@ public:
     *this=1-*this;
   }
   /** af=0 for input, 1 for output, remaining values are alternate function select */
-  void configure(unsigned af,unsigned pull);
+  GPIO &configure(unsigned af);
+  /** @param pull: -1 for down, +1 for up, 0 for let it float */
+  GPIO& pullit(int pull);
 };
 
 #endif // GPIO_H

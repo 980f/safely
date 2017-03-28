@@ -25,9 +25,13 @@ SOURCES += \
     application.cpp \
     incrementalfiletransfer.cpp \
     memorymapper.cpp \
-    directory.cpp
+    directory.cpp \
+    polledtimer.cpp \
+    timerfd.cpp
+
 
 HEADERS += \
+    timerfd.h \
     fdset.h \
     fildes.h \
     filer.h \
