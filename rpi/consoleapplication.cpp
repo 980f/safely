@@ -2,7 +2,7 @@
 #include "errno.h" //firstly for polling errors
 #include "filer.h"
 #include "storejson.h" //name is missing a 'd' :(
-
+#include "filename.h"
 
 //needing to get on with development, can't get stable thunking so ...
 static ConsoleApplication *me(nullptr);
@@ -91,7 +91,10 @@ int ConsoleApplication::prelims(){
 
 int ConsoleApplication::loadOptions(){
   Filer optionFile;
-  if(! optionFile.openFile("options.json")){
+  Text hostname=this->hostname();
+  DottedName optsname('.',hostname);
+  optsname.append("json");
+  if(! optionFile.openFile(optsname.pack())){
     logmsg("Couldn't open \"options.json\", error:[%d]%s",optionFile.errornumber,optionFile.errorText());
     return optionFile.errornumber;
   }

@@ -39,4 +39,5 @@ HEADERS += \
     command.h
 
 DISTFILES += \
-    options.json
+    mycraft3.json \
+    andy-T420.json

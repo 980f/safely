@@ -6,10 +6,10 @@ Converter::~Converter(){
 }
 
 unsigned Converter::length(const char *source)const{
-return Cstr(source).length();
+  return Cstr(source).length();
 }
 
-void Converter::operator()(const char *source, Indexer<char> &target){
+bool Converter::operator()(const char *source, Indexer<char> &target){
   target.cat(source);
 }
 

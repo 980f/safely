@@ -13,7 +13,7 @@ public:
   /** length required by conversion of source */
   unsigned length(const char * source) const override ;
   /** convert source into @param packer */
-  void operator()(const char * source,Indexer<char> &packer) override ;
+  bool operator()(const char * source,Indexer<char> &packer) override ;
 };
 
 /** escape to utf8 */
@@ -23,7 +23,7 @@ public:
   /** length required by conversion of source */
   unsigned length(const char * source) const override;
   /** convert source into @param packer */
-  void operator()(const char * source,Indexer<char> &packer) override ;
+  bool operator()(const char * source,Indexer<char> &packer) override ;
 };
 
 /** class for sequentially accessing unicode chars (32 bits each) from utf8 encoded stream */

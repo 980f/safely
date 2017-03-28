@@ -3,7 +3,7 @@
 
 /** startup and eventloop */
 #include "buffer.h"
-#include "textkey.h"
+#include "textpointer.h"
 #include "epoller.h"
 #include "posixwrapper.h"
 
@@ -27,6 +27,7 @@ public:
   void stop(){
     beRunning=false;
   }
+  Text hostname();
 
 
   /** write pid to file. best practice if for that file to be in /tmp so that it evaporates on a crash of the system. */
