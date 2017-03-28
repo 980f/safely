@@ -28,9 +28,20 @@ SOURCES += \
     main.cpp \
     gpio.cpp \
     platform.cpp \
-    consoleapplication.cpp
+    consoleapplication.cpp \
+    finddevice.cpp \
+    serialdevice.cpp \
+    dp5device.cpp \
+    command.cpp
 
 HEADERS += \
     gpio.h \
     piinfo.h \
-    consoleapplication.h
+    consoleapplication.h \
+    finddevice.h \
+    serialdevice.h \
+    dp5device.h \
+    command.h
+
+DISTFILES += \
+    options.json

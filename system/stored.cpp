@@ -3,8 +3,8 @@
 /////////////////
 
 Stored::Stored(Storable&node) : duringConstruction(true), node(node), refreshed(true){
-  onAnyChange(MyHandler(Stored::doParse), false); //# can't call onParse here as required children might not exist.
-  node.preSave.connect(MyHandler(Stored::onPrint));
+  //onAnyChange(MyHandler(Stored::doParse), false); //# can't call onParse here as required children might not exist.
+//  node.preSave.connect(MyHandler(Stored::onPrint));
 }
 
 Stored::~Stored(){

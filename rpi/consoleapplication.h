@@ -1,19 +1,20 @@
 #ifndef CONSOLEAPPLICATION_H
 #define CONSOLEAPPLICATION_H
 
-
-#include "gpio.h"
-#include "logger.h"
-#include <functional>
-#include "errno.h" //firstly for polling errors
-
 #include "application.h"
+#include "gpio.h"
+#include "serialdevice.h"
+#include "dp5device.h"
 
-#include "storedgroup.h" //base class for structured non-volatile data
-#include "storednumeric.h"
-#include "filer.h"
-#include "storejson.h" //name is missing a 'd' :(
+#include "logger.h"
+
 #include "polledtimer.h"
+#include "chain.h"
+#include "timerfd.h"
+
+#include "command.h"
+
+#include "storednumeric.h"
 
 /** configuration classes for this project */
 struct RunIndicator: public Stored {
@@ -37,34 +38,35 @@ struct Options: public Stored {
   WatchdogOptions watchdog;
   /** Run indicator*/
   RunIndicator runLamp;
+  SerialConfiguration hostport;
+  SerialConfiguration tubeport;
 
   Options(Storable &node);
 };
 
 
 
-#define OwnHandler(memberfnname) std::bind(&memberfnname,this,std::placeholders::_1)
-
-#include "polledtimer.h"
-#include "chain.h"
-#include "timerfd.h"
-
 struct ConsoleApplication : public Application {
   //  out("JsonParse: after %g ms nodes:%u  scalars:%u depth:%u",perftimer.elapsed()*1000, parser.stats.totalNodes, parser.stats.totalScalar, parser.stats.maxDepth.extremum);
   Storable root;
   Options opts;
-
-  TimerFD polledTimerServer;
-  Chain<PolledTimer> timerService;
 
   /** a steady "on" while ready for events*/
   GPIO runpin;
   /** toggle now and then to indicate we are alive. */
   GPIO watchDogReset;
 
-  Fildes hostport; // /dev/ttyS0
-  Fildes tubeport; // /dev/ttyUSBx
-  Fildes detectorport;//lib usb will give us the fd's we need.
+
+  TimerFD polledTimerServer;
+  Chain<PolledTimer> timerService;
+
+  Command command;
+  Fildes console;
+  SerialDevice hostport; // /dev/ttyS0
+  SerialDevice tubeport; // /dev/ttyUSBx
+  DP5Device detectorport;//lib usb will give us the fd's we need.
+
+
 
   void ServePolledTimers(unsigned);
 
@@ -82,7 +84,12 @@ struct ConsoleApplication : public Application {
   void printNode(unsigned tab,Storable &node); // switch
   /** react to console input*/
   void consoleInput(unsigned events);
-  /** program logic */
+  /** react to host input */
+  void hostInput(unsigned events);
+  /** react to tube response*/
+  void tubeResponse(unsigned events);
+
+  /** the application entry */
   int main();
 };
 
