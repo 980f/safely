@@ -136,4 +136,5 @@ HEADERS += safely.h \
     countdown.h \
     numberpieces.h \
     hook.h \
-    stacked.h
+    stacked.h \
+    onexit.h

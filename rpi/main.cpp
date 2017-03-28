@@ -14,6 +14,8 @@ static Logger out("MAIN");
 #include "filer.h"
 #include "storejson.h" //name is missing a 'd' :(
 
+#include "polledtimer.h"
+
 
 struct RunIndicator: public Stored {
   StoredInt whichPin;
@@ -86,10 +88,26 @@ void stupid(unsigned events){
   explain(events);
 }
 
+#include "polledtimer.h"
+#include "chain.h"
+#include "timerfd.h"
+
 struct ConsoleApplication : public Application {
   //  out("JsonParse: after %g ms nodes:%u  scalars:%u depth:%u",perftimer.elapsed()*1000, parser.stats.totalNodes, parser.stats.totalScalar, parser.stats.maxDepth.extremum);
   Storable root;
   Options opts;
+
+  TimerFD polledTimerServer;
+
+  Chain<PolledTimer> timerService;
+  GPIO runpin;
+  GPIO watchDogReset;
+
+  void ServePolledTimers(unsigned){
+    for(int ti=timerService.quantity();ti-->0;){
+      timerService[ti]->check();
+    }
+  }
 
   ConsoleApplication (int argc, char *argv[]):
     Application(argc,argv),
@@ -211,19 +229,20 @@ struct ConsoleApplication : public Application {
       return ercode;
     }
 
-    GPIO runpin(opts.runLamp.whichPin);
-    runpin.configure(1,0);
+    runpin.connectTo(opts.runLamp.whichPin);
+    runpin.configure(1);
     runpin=opts.runLamp.onPolarity;
-    GPIO watchDogReset(opts.watchdog.whichPin);
-    watchDogReset.configure(1,0);//simple output
+
+    watchDogReset.connectTo(opts.watchdog.whichPin);
+    watchDogReset.configure(1);//simple output
 
     watchDogReset=opts.watchdog.onStart;
     writepid("pidfile");//in cwd while we are creating program, will be in /tmp when in production.
 
     //setup event handlers.
+    looper.watch(polledTimerServer.asInt(), EPOLLIN | EPOLLET, OwnHandler(ConsoleApplication::ServePolledTimers));
 //    auto step2=         std::bind(&ConsoleApplication::consoleInput,this,std::placeholders::_1);
-    looper.watch(0,EPOLLRDNORM, &stupid);
-                 //OwnHandler(ConsoleApplication::consoleInput));
+    looper.watch(0,EPOLLRDNORM, OwnHandler(ConsoleApplication::consoleInput));
 
 
     //process events

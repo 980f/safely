@@ -4,6 +4,8 @@
 #include "unistd.h"
 
 #include "stdlib.h"
+#include "logger.h"
+
 
 constexpr unsigned evlistsize(unsigned number){
   return sizeof (epoll_event)*number;
@@ -33,7 +35,7 @@ bool Epoller::watch(int fd, unsigned eventbits, Handler handler){
   return ok(epoll_ctl(epfd,EPOLL_CTL_ADD,fd,&event));
 }
 
-bool Epoller::modify(int fd, unsigned eventbits,Handler &handler){
+bool Epoller::modify(int fd, unsigned eventbits, Handler handler){
   epoll_event event{eventbits,{&handler}};
 
   return ok(epoll_ctl(epfd,EPOLL_CTL_MOD,fd,&event));
@@ -62,6 +64,7 @@ void Epoller::exec(const epoll_event &ev){
 bool Epoller::doEvents(int timeoutms){
   waitlist.rewind();
   if(wait(timeoutms)){//HEREIS the actual blocking call!
+    dbg("polled event count %d",waitlist.used());
     Indexer<epoll_event> list(waitlist,~0);
     while(list.hasNext()){
       auto event=list.next();

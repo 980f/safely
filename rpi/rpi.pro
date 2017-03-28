@@ -17,15 +17,17 @@ include("../cppext/lib.pro")
 #cheat to get posix linked twice: create a softlink liblogger.a that points to it and then ...
 LIBS += -llogger
 
-#uncommment the following for running on real hardware
-DEFINES += FOR_LIVE_PI=0
-##didn't work, got a blank $$(IAMPI)
+#set the following for to 1 a binary for real hardware
+IAMPI=0
+DEFINES += FOR_LIVE_PI=$$IAMPI
+#//can't get environment stable accross my systems $$(IAMPI)
 
-message("FOR_LIVE_PI is $$(FOR_LIVE_PI)")
+message("IAMPI is " $$(IAMPI))
 
 SOURCES += \
     main.cpp \
-    gpio.cpp
+    gpio.cpp \
+    platform.cpp
 
 HEADERS += \
     gpio.h \
