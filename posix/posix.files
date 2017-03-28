@@ -27,8 +27,7 @@ SOURCES += \
     memorymapper.cpp \
     directory.cpp \
     polledtimer.cpp \
-    timerfd.cpp \
-    ../system/filenameconverter.cpp
+    timerfd.cpp
 
 
 HEADERS += \

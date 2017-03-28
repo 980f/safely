@@ -1,6 +1,7 @@
 #include "cstr.h"
 #include "safely.h"
 #include "string.h"
+#include "stdlib.h" //strtod
 
 Cstr::Cstr() : ptr(nullptr){
   //#nada
@@ -114,8 +115,32 @@ const char *Cstr::rchr(int chr) const noexcept {
   } else {
     return nullptr;
   }
-} // TextPointer::startsWith
+}
+
+double Cstr::asNumber(Cstr *tail) const noexcept{
+  if(nonTrivial(ptr)){
+    return strtod(ptr, tail ? const_cast<char **>(&tail->ptr) : nullptr);
+  } else {
+    return 0.0;
+  }
+}
 
 void Cstr::clear() noexcept{
   ptr = nullptr;
+}
+
+template<> long Cstr::cvt(long onNull, Cstr *units) const noexcept {
+  if(nonTrivial(ptr)){
+    return strtol(ptr, units? const_cast<char **>(&units->ptr) : nullptr,10);
+  } else {
+    return onNull;
+  }
+}
+
+template<> double Cstr::cvt(double onNull, Cstr *units) const noexcept {
+  if(nonTrivial(ptr)){
+    return strtod(ptr, units? const_cast<char **>(&units->ptr) : nullptr);
+  } else {
+    return onNull;
+  }
 }

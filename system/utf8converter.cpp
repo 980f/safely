@@ -37,7 +37,7 @@ unsigned Utf8ConverterOut::length(const char *source) const{
 }
 
 
-void Utf8ConverterOut::operator()(const char *peeker, Indexer<char> &packer){
+bool Utf8ConverterOut::operator()(const char *peeker, Indexer<char> &packer){
   Utf8Escaper ex;
   while(packer.hasNext()){
     switch (ex(*peeker++)) {
@@ -64,9 +64,10 @@ void Utf8ConverterOut::operator()(const char *peeker, Indexer<char> &packer){
       break;
     case Utf8Escaper::End:
       //todo: if uch is not zero then we clipped the last char
-      return;
+      return false;
     }
   }
+  return true;
 }
 
 unsigned Utf8ConverterIn::length(const char *source) const {
@@ -101,7 +102,7 @@ unsigned Utf8ConverterIn::length(const char *source) const {
   return BadIndex;
 }
 
-void Utf8ConverterIn::operator()(const char *peeker, Indexer<char> &packer){
+bool Utf8ConverterIn::operator()(const char *peeker, Indexer<char> &packer){
   Utf8Decoder dx;
   //#not using elseif below because of one exception and to make it easy to reorder the tests.
   while(packer.hasNext()) {
@@ -131,11 +132,12 @@ void Utf8ConverterIn::operator()(const char *peeker, Indexer<char> &packer){
     case Utf8Decoder::End:
       if(dx.uch){//partial last char ...
         //what do we do?
+        return false;//bad/trashed terminal char
       }
-      return;
+      return true;
     }
   }
-  return;
+  return false;//ran out of room
 }
 
 //todo: force 'remaining' constructor

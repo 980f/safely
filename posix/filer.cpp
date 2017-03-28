@@ -75,7 +75,7 @@ ByteScanner Filer::contents(){
   return ByteScanner(buffer, size);
 }
 
-bool Filer::readall(int maxalloc){
+bool Filer::readall(unsigned maxalloc){
   if(fd.isOpen()) {
     FileInfo finfo(fd);
     if(finfo){
@@ -89,9 +89,9 @@ bool Filer::readall(int maxalloc){
       buffer = new unsigned char[size];  //DEL@ destructor
       ByteScanner scanner(buffer, size);
       int read = fd.read(scanner);
-      if(read != size) {
+      if(unsigned(read) != size) {
         logmsg("funky read in Filer::readall:%d of %d", read, size);
-        read = size;
+//        read = size;
       }
       return true;
     }

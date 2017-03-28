@@ -93,8 +93,8 @@ int ConsoleApplication::loadOptions(){
   Filer optionFile;
   Text hostname=this->hostname();
   DottedName optsname('.',hostname);
-  optsname.append("json");
-  if(! optionFile.openFile(optsname.pack())){
+  optsname.parse("json");
+  if(! optionFile.openFile(optsname.pack(FileNameConverter()))){
     logmsg("Couldn't open \"options.json\", error:[%d]%s",optionFile.errornumber,optionFile.errorText());
     return optionFile.errornumber;
   }
@@ -174,7 +174,8 @@ void ConsoleApplication::printNode(unsigned tab, Storable &node){
 void ConsoleApplication::consoleInput(unsigned events){
   logmsg("Console Events:%u",events);
   if(events&EPOLLRDNORM){
-    if(console.read(command.receiver)>0){//if something was actually read
+    ByteScanner castit(command.receiver);
+    if(console.read(castit)>0){//if something was actually read
       if(command.commandPresent()){
         logmsg("Console command: %s",command.receiver.internalBuffer());
       }

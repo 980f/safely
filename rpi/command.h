@@ -2,12 +2,15 @@
 #define COMMAND_H
 
 #include "charformatter.h"
+#include "dottedname.h" //comma separated list
 /** stx  comma seperated decimals checksum etx*/
 class Command {
-  u8 raw[512];//overkill
-  double params[15];//overkill
+  char raw[512];//overkill
 public:
-  ByteScanner receiver;
+  /** an array of text fields */
+  DottedName parsed;
+  /** comma separated string */
+  CharScanner receiver;
 
   Command();
   bool commandPresent();
@@ -15,10 +18,10 @@ public:
    * wise use would rewind the args as soon as they have been reacted to.
    * The 'used' args are the command. @see takeArgs for best use.
  */
-  ArgSet args;//exposed for easy peeking
-  /** @returns a wrapper around the args that are present, and conditionally marks then as used*/
-  ArgSet takeArgs(bool rewind=true);
+  static char checksum(CharScanner p);
 
+  /** when actually a response, call this to add a checksum to the fields in parsed then pack them into the receiver */
+  void packsum();
 protected:
   bool validCommand();
 };

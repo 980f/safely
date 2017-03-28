@@ -79,6 +79,10 @@ public:
   /** @returns pointer to first character in this string which matches ch. @see chr() */
   const char *rchr(int chr) const noexcept;
 
+  /** strtod */
+  double asNumber(Cstr *tail=nullptr)const noexcept;
+
+  template <typename Numeric> Numeric cvt(Numeric onNull, Cstr *units=nullptr)const noexcept;
   /** forget the target */
   virtual void clear() noexcept;
 
