@@ -171,7 +171,11 @@ void ConsoleApplication::printNode(unsigned tab, Storable &node){
 void ConsoleApplication::consoleInput(unsigned events){
   logmsg("Console Events:%u",events);
   if(events&EPOLLRDNORM){
-    console.read(command.receiver)
+    if(console.read(command.receiver)>0){//if something was actually read
+      if(command.commandPresent()){
+        logmsg("Console command: %s",command.receiver.internalBuffer());
+      }
+    }
   }
 }
 

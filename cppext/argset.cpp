@@ -5,6 +5,11 @@ ArgSet::ArgSet(double* d, unsigned sizeofd) : Indexer<double>(d, sizeofd){
   //#nada
 }
 
+ArgSet::ArgSet(const ArgSet &other, int portion):Indexer<double>(other,portion)
+{
+
+}
+
 /**@return whether @param changed*/
 bool ArgSet::applyto(double &d){
   return changed(d, next(d));

@@ -9,6 +9,9 @@ class ArgSet : public Indexer<double> {
 public:
 /** wrap an existing array of doubles */
   ArgSet(double *d, unsigned sizeofd);
+
+  ArgSet(const ArgSet &other, int portion);
+
 /** @return whether @param changed*/
   bool applyto(double&d);
 /** @return whether @param changed*/
