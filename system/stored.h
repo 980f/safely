@@ -35,7 +35,8 @@ public:
   virtual void onParse(){
   }
 
-  /** this is needed to create slots in base class to call onParse due to onParse being a virtual function and the vtable not usable at the time that sigc needed it to be. IE virtual functions are not usable by sigc in the base class constructor of that class- you only get the base class version */
+  /** this is needed to create slots in base class to call onParse due to onParse being a virtual function and the vtable not usable at the time that sigc needed it to be.
+   * IE virtual functions are not usable by sigc in the base class constructor of that class- you only get the base class version */
   void doParse();
   /** pointer to text value's first char, dangerous! here for some GUI access. */
   TextKey rawText() const;

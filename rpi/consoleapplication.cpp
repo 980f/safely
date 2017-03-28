@@ -1,16 +1,22 @@
 #include "consoleapplication.h"
+#include "errno.h" //firstly for polling errors
+#include "filer.h"
+#include "storejson.h" //name is missing a 'd' :(
 
 
 //needing to get on with development, can't get stable thunking so ...
 static ConsoleApplication *me(nullptr);
 
-void consoleThunk(unsigned evs){
-  if(me) me->consoleInput(evs);
-}
+//void consoleThunk(unsigned evs){
+//  if(me) me->consoleInput(evs);
+//}
 
-void timerThunk(unsigned evs){
-  if(me) me->ServePolledTimers(evs);
-}
+//void timerThunk(unsigned evs){
+//  if(me) me->ServePolledTimers(evs);
+//}
+
+
+#define EventHandler(memberfnname) [](unsigned evs){if(me) me->memberfnname(evs);}
 
 
 RunIndicator::RunIndicator(Storable &node): Stored(node),
@@ -29,7 +35,10 @@ WatchdogOptions::WatchdogOptions(Storable &node): Stored(node),
 Options::Options(Storable &node):Stored(node),
   ConnectChild(exampleInteger,42),
   ConnectChild(watchdog),
-  ConnectChild(runLamp){
+  ConnectChild(runLamp),
+  ConnectChild(hostport),
+  ConnectChild(tubeport)
+{
   //#nada
 }
 
@@ -66,7 +75,18 @@ int ConsoleApplication::prelims(){
       return ENOMEM;
     }
   }
-  return 0;
+
+  console.preopened(0,false);//wrap standard console fd
+  //try all connections before bailing out on bad ones
+  hostport.connect(opts.hostport);
+  tubeport.connect(opts.tubeport);
+  //connect dp5
+  if(hostport.fd.isOpen() && tubeport.fd.isOpen()){
+    return 0;
+  } else {
+    logmsg("quiting because not all ports opened. Fix hardware and try again");
+    return EBADFD;
+  }
 }
 
 int ConsoleApplication::loadOptions(){
@@ -150,6 +170,17 @@ void ConsoleApplication::printNode(unsigned tab, Storable &node){
 
 void ConsoleApplication::consoleInput(unsigned events){
   logmsg("Console Events:%u",events);
+  if(events&EPOLLRDNORM){
+    console.read(command.receiver)
+  }
+}
+
+void ConsoleApplication::hostInput(unsigned events){
+  logmsg("Host Events:%u",events);
+}
+
+void ConsoleApplication::tubeResponse(unsigned events){
+  logmsg("Tube Events:%u",events);
 }
 
 int ConsoleApplication::main(){
@@ -168,10 +199,10 @@ int ConsoleApplication::main(){
   writepid("pidfile");//in cwd while we are creating program, will be in /tmp when in production.
 
   //setup event handlers.
-  looper.watch(polledTimerServer.asInt(), EPOLLIN | EPOLLET, &timerThunk);//OwnHandler(ConsoleApplication::ServePolledTimers));
-  //    auto step2=         std::bind(&ConsoleApplication::consoleInput,this,std::placeholders::_1);
-  looper.watch(0,EPOLLRDNORM, &consoleThunk);//OwnHandler(ConsoleApplication::consoleInput));
-
+  looper.watch(polledTimerServer.asInt(), EPOLLIN | EPOLLET, EventHandler(ServePolledTimers));
+  looper.watch(0,EPOLLRDNORM, EventHandler(consoleInput));
+  looper.watch(hostport.fd.asInt(),EPOLLIN,EventHandler(hostInput));
+  looper.watch(tubeport.fd.asInt(),EPOLLIN,EventHandler(tubeResponse));
   //process events
   int exitcode=Application::run();//all activity from this point in is via callbacks arranged in the previous few lines.
   runpin= ! opts.runLamp.onPolarity;

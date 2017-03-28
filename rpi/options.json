@@ -1,0 +1,15 @@
+ExampleApplication:{
+	watchdog:{
+		whichPin:21,
+		onStart:0,
+		onExit:0
+	}
+	exampleInteger:43
+	hostport:{
+		device:"/dev/serial/by-id/usb-FTDI_FT232R_USB_UART_A1000pPj-if00-port0",
+		baud:115200,
+		parity:"none",
+		bits:8,
+		stop:1
+	}
+}
