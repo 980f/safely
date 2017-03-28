@@ -81,3 +81,23 @@ bool Epoller::doEvents(int timeoutms){
     return false;
   }
 }
+
+
+#define epollexplain(evname) if(epevs & evname){ logmsg( #evname);}
+
+void Epoller::explain(unsigned epevs){
+  epollexplain(EPOLLIN );
+  epollexplain(EPOLLPRI );
+  epollexplain(EPOLLOUT );
+  epollexplain(EPOLLRDNORM);
+  epollexplain(EPOLLRDBAND);
+  epollexplain(EPOLLWRNORM);
+  epollexplain(EPOLLWRBAND);
+  epollexplain(EPOLLMSG);
+  epollexplain(EPOLLERR);
+  epollexplain(EPOLLHUP);
+  epollexplain(EPOLLRDHUP );
+  epollexplain(EPOLLWAKEUP );
+  epollexplain(EPOLLONESHOT);
+  epollexplain(EPOLLET);
+}

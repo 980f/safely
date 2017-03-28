@@ -27,8 +27,10 @@ message("IAMPI is " $$(IAMPI))
 SOURCES += \
     main.cpp \
     gpio.cpp \
-    platform.cpp
+    platform.cpp \
+    consoleapplication.cpp
 
 HEADERS += \
     gpio.h \
-    piinfo.h
+    piinfo.h \
+    consoleapplication.h
