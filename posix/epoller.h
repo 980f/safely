@@ -34,7 +34,10 @@ public:
 
   /** core of event loop */
   bool doEvents(int timeoutms);
-
+  void explain(unsigned epevs);
 };
+
+
+
 
 #endif // EPOLLER_H

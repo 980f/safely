@@ -11,7 +11,7 @@ PosixWrapper::PosixWrapper(){
   errornumber = 0;
   debug = 0;
   if(flagged(needsInit)){
-    openlog("PosixWrapper",LOG_CONS,LOG_USER);
+    openlog("APP",LOG_CONS | LOG_PERROR,LOG_USER);
   }
 }
 
