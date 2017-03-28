@@ -12,3 +12,6 @@ include("../system/lib.pro")
 
 include("posix.files")
 
+DISTFILES += \
+    posixgroup.ld
+

@@ -4,7 +4,7 @@
 #include "charformatter.h"
 /** stx  comma seperated decimals checksum etx*/
 class Command {
-  char raw[512];//overkill
+  u8 raw[512];//overkill
   double params[15];//overkill
 public:
   ByteScanner receiver;
@@ -19,6 +19,8 @@ public:
   /** @returns a wrapper around the args that are present, and conditionally marks then as used*/
   ArgSet takeArgs(bool rewind=true);
 
+protected:
+  bool validCommand();
 };
 
 #endif // COMMAND_H
