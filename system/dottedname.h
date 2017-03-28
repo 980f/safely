@@ -14,6 +14,7 @@ public:
   /** */
   void parse(const char *rawpath);
   void parse(Indexer<const char> scan);
+
   /** @returns bytes needed for image of this.  @param cvt is used to encode the bytes (convert into escape sequences as needed) */
   unsigned length(Converter &&cvt) const;
   /** makes and @returns an image of this */

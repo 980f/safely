@@ -19,11 +19,10 @@ unsigned FileNameConverter::length(const char *source) const{
   return expanded;
 }
 
-bool FileNameConverter::operator()(const char *source, Indexer<char> &packer)
-{
+bool FileNameConverter::operator()(const char *source, Indexer<char> &packer){
   Cstr s(source);
   Indexer<const char>str(s,s.length());
-  unsigned expanded=0;
+
   while(str.hasNext()&&packer.hasNext()){
     Char c=str.next();
     if(escapees.index(c)!=BadIndex){
@@ -38,4 +37,5 @@ bool FileNameConverter::operator()(const char *source, Indexer<char> &packer)
       packer.next()=c;
     }
   }
+  return !str.hasNext();
 }
