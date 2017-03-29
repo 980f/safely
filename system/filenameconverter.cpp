@@ -7,13 +7,11 @@ static Cstr escapees("*?:");
 unsigned FileNameConverter::length(const char *source) const{
   Cstr s(source);
   Indexer<const char>str(s,s.length());
-  unsigned expanded=0;
+  unsigned expanded=str.allocated();
   while(str.hasNext()){
     char c=str.next();
     if(escapees.index(c)!=BadIndex){
-      expanded+=3;
-    } else {
-      ++expanded;
+      expanded+=2;
     }
   }
   return expanded;

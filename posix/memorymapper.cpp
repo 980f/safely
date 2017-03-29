@@ -29,7 +29,15 @@ bool MemoryMapper::free(void *addr, unsigned size){
 }
 
 int MemoryMapper::getError(){
-  return fd.errornumber;
+  if (fd.isOk()){
+    if(fd.isOpen()){
+      return 0;
+    } else {
+      return ENOMEM;
+    }
+  } else {
+    return fd.errornumber;
+  }
 }
 
 bool MemoryMapper::init(bool refresh){

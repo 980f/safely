@@ -30,7 +30,10 @@ void PathParser::packInto(Indexer<char> &packer,ConstChainScanner<Text>feeder,co
     packer.next() = rule.slash;
   }
   //and in case we overestimated the length needed:
-  packer.next()=0;//null terminate since we didn't pre-emptively calloc.
+  if(packer.hasNext()){
+    packer.next()=0;//null terminate since we didn't pre-emptively calloc.
+   //else the zguard where we allocate the buffer provides the terminating null
+  }
 }
 
 Text PathParser::pack(const SegmentedName &pieces, const Rules &rule, Converter &&converter){

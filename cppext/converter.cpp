@@ -10,7 +10,7 @@ unsigned Converter::length(const char *source)const{
 }
 
 bool Converter::operator()(const char *source, Indexer<char> &target){
-  target.cat(source);
+  return target.cat(source);
 }
 
 

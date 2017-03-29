@@ -403,7 +403,7 @@ NB this uses references in and out, you connot pass a const onEmpty */
 */
   static Indexer<Content> make(unsigned quantity, bool zterm=false){
     if(Index(quantity).isValid()){
-      Content *path=new Content[zterm?1+quantity:quantity];
+      Content *path=new Content[quantity+(zterm?1:0)];
       if(zterm){
         path[quantity]=0;//null terminate since we didn't pre-emptively calloc.
       }
