@@ -11,7 +11,7 @@
  */
 class PosixWrapper {
   static bool needsInit;
-protected:
+public:
   /** for use with functions that return directly the codes that usually go into errno. */
   bool failure(int errcode);
   /** test posix function return value for "ok". log error code if not.

@@ -29,8 +29,16 @@ Fildes::~Fildes(){
 }
 
 bool Fildes::open(const char *devname, int O_stuff){//todo:3 expose 3rd argument
+  close();//is a smart close, ignore any errors
+
   amOwner = true;
-  return assignFd(::open(devname, O_stuff,0777));//3rd arg is only relevant if O_stuff includes O_Creat. The (3) 7's lets umask provide the argument.
+  int maybefd;
+  if(okValue(maybefd,::open(devname, O_stuff,0777))){//3rd arg is only relevant if O_stuff includes O_Creat. The (3) 7's lets umask provide the argument.)
+    assignFd(maybefd);
+    return true;
+  } else {
+    return false;
+  }
 }
 
 FILE *Fildes::getfp(const char *fargs){

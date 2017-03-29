@@ -5,7 +5,12 @@ DEPENDPATH += ../posix
 
 #includes this lib in your build
 INCLUDEPATH += ../posix
-LIBS += -L.. -lposix
+
+#almost certainly redundant path to safely libs:
+LIBS += -L..
+
+#get posix linked many times:
+LIBS += @../posix/posixgroup.ld
 
 #for async IO (aio_*), as used in filereader:
 LIBS += -lrt

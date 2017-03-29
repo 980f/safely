@@ -48,6 +48,7 @@ bool Filer::openFile(const char *fname, int o_flags, bool makeDirs){
   if(fd.open(fname, o_flags)) {
     return true; //worked first try
   }
+  errornumber=fd.errornumber;
   if(fd.errornumber == ENOENT) { //if file or directory don't exist
     if(makeDirs) {
       if(mkDirDashP(fname)) {
@@ -95,7 +96,10 @@ bool Filer::readall(unsigned maxalloc){
       }
       return true;
     }
+    errornumber=finfo.errornumber;
+    return false;
   }
+  errornumber=fd.errornumber;
   return false;
 } /* readall */
 
