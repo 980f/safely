@@ -237,7 +237,7 @@ template <unsigned memoryAddress,unsigned bitnumber> struct KnownBit {
 
 
 ///////////////////////////////////////////
-/// a group of discontiguous bits, used for bitmmasking
+/// a group of discontiguous bits, used for bitmasking
 
 
 /** declarative part of 3 step template magic */
