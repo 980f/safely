@@ -9,17 +9,17 @@
 
 
 /** negatory is whether we are seeking smallest else largest
+ * preferLatter exists for use by Extremer class, so that it can share more code with this one even though the concept is only slightly interesting in this class.
  */
 template<typename Scalar,bool negatory=false,bool preferLatter=false> class SimpleExtremer {
 public: //for convenience.
-/** whether any data has been inspected (else location and extremum are not valid)
+/** whether any data has been inspected (else extremum is not valid)
  * This is easier than trying to come up with a type independent initial value of extremum.
 */
   bool started=false;
 public: //could make this read-only
   Scalar extremum;
 public:
-
   /** @returns whether the extremum was updated */
   bool inspect(const Scalar&value){
     if(started) {
