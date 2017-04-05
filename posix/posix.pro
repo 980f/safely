@@ -15,3 +15,9 @@ include("posix.files")
 DISTFILES += \
     posixgroup.ld
 
+HEADERS += \
+    threader.h
+
+SOURCES += \
+    threader.cpp
+

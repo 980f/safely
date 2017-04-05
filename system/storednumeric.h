@@ -52,7 +52,7 @@ public:
 
   /** copy value from node of exactly the same type */
   Numeric operator =(const StoredNumeric< Numeric > &other) {
-    return assign(other.node.Storable::getNumber/*< Numeric >*/());
+    return assign(other.node.Storable::template getNumber< Numeric >());
   }
 
   /** be no higher than argument. is set to minimum of self and rhs */
@@ -145,12 +145,22 @@ public:
 typedef StoredNumeric<double> StoredReal;
 typedef StoredNumeric<int> StoredInt;
 //todo: arrange to tolerate 'true' and 'false' text on underlying node. I think an enumerizer will do it.
+
+
+#if cppGetsFixedOnDerivingFromTemplate //presently have to republish the whole interface
+struct StoredBoolean:public StoredNumeric<bool>{
+  StoredBoolean(Storable &node,bool fallback=false);
+
+  sigc::connection whenSet(SimpleSlot action, bool kickme=false);
+  sigc::connection whenCleared(SimpleSlot action, bool kickme=false);
+
+};
+#else
 typedef StoredNumeric<bool> StoredBoolean;
-
-
 /** filtering adaptors on change signal */
 sigc::connection whenSet(StoredBoolean &thing,SimpleSlot action);
 sigc::connection whenCleared(StoredBoolean &thing,SimpleSlot action);
+#endif
 
 /** lamda for fixing up a group which contains an integer index into some other group*/
 void adjustIndex(int removed, StoredInt &index);
