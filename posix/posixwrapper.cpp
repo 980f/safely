@@ -23,6 +23,16 @@ void PosixWrapper::logmsg(const char *fmt, ...){
 }
 
 const char *PosixWrapper::errorText() const {
+  if(errornumber<0){
+    if(alttext&&numalts){
+      if(-errornumber,numalts){
+        return alttext[-errornumber];
+      } else {
+        return alttext[numalts-1];
+      }
+    }
+    //hopefully strerror handles bogus input.
+  }
   return strerror(errornumber);
 }
 

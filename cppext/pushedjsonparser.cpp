@@ -27,6 +27,12 @@ PushedJSON::Action Parser::next(char pushed){
   case PushedParser::EndValueAndItem:
   case PushedParser::EndItem:
     switch(d.last) {
+    case '=':
+      if(!rule.equalscolon){
+        return PushedJSON::Illegal;//might soften this to allow '=' inside values
+      }
+      //else
+      //JOIN
     case ':':
       recordName();
       return PushedJSON::Continue; //null name is not the same as no name
@@ -42,6 +48,13 @@ PushedJSON::Action Parser::next(char pushed){
     case '}': //normal
       orderedWad=false;
       return EndWad;
+    case ';':
+      if(rule.semicomma){
+        return PushedJSON::EndItem;//missing value, possible missing whole child.
+      } else {
+        return PushedJSON::Illegal;
+      }
+
     case ',': //sometimes is an extraneous comma, we choose to ignore those.
       return PushedJSON::EndItem;//missing value, possible missing whole child.
     case 0: /*abnormal*/

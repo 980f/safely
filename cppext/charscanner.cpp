@@ -24,8 +24,15 @@ int ourStrncmp(const char *one, const char *two, unsigned length){
 bool ByteScanner ::putBytes(unsigned value, unsigned numBytes){
   if(stillHas(numBytes)) {
     const u8 *p = reinterpret_cast<const u8 *>(&value);
-    while(numBytes-- > 0) {
-      next() = *p++;
+    if(bigendian){
+      p+=numBytes;//past the msb of interest
+      while(numBytes-->0){
+        next()=*--p;
+      }
+    } else {
+      while(numBytes-- > 0) {
+        next() = *p++;
+      }
     }
     return true;
   } else {
@@ -37,8 +44,18 @@ u32 ByteScanner ::getU(int numBytes, u32 def){
   //using a pointer to a local precludes compiler optimizing for register use.
   if(stillHas(numBytes)) {
     u32 acc = 0;
-    copyObject(&peek(),&acc,numBytes);
-    skip(numBytes);
+    if(bigendian){
+      u8 *pun=reinterpret_cast<u8 *>(&acc);
+      for(unsigned fill=4-numBytes;fill-->0;){
+        *pun++=0;//unsigned values
+      }
+      while(numBytes-->0){
+        *pun++=next();
+      }
+    } else {
+      copyObject(&peek(),&acc,numBytes);
+      skip(numBytes);
+    }
     return acc;
   } else {
     return def;

@@ -11,6 +11,10 @@
  */
 class PosixWrapper {
   static bool needsInit;
+protected:
+  //added for libusb, extends error numbers in the negative direction.
+  const char **alttext;
+  unsigned numalts;
 public:
   /** for use with functions that return directly the codes that usually go into errno. */
   bool failure(int errcode);

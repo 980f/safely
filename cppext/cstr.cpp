@@ -24,6 +24,10 @@ TextKey Cstr::c_str() const {
   return ptr;
 }
 
+const unsigned char *Cstr::raw() const {
+  return reinterpret_cast<const unsigned char *>(ptr);
+}
+
 Cstr::operator const char *() const {
   return ptr ? ptr : emptyString;//the const in the return type allows us to point to a byte of read-only memory.
 }
