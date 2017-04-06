@@ -28,6 +28,7 @@ public:
   void operator =(TextKey zs);
   bool operator ==(TextKey zs) const;
 
+  void operator =(int value);
   /** calls the given slot with this.c_str() as its argument */
   void applyTo(sigc::slot<void, TextKey> slotty);
   /** on a change to the value will call applyTo with the given slot */

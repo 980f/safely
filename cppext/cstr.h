@@ -35,6 +35,9 @@ public:
    * Name is from/for replacing glib::ustring and std::string */
   TextKey c_str() const;
 
+  /** as byte vs human readable character */
+  const unsigned char*raw() const;
+
   /** @returns whether content is non-existent or trivial */
   bool empty() const;
 

@@ -11,8 +11,8 @@
 class StoreJsonConstructor: public JsonConstructor<Storable,Text> {
 public:
   /** pointer to data source, exposed for module testing convenience */
-  Indexer<const char> data;
-  StoreJsonConstructor(Indexer<const char> &data);
+  Indexer<u8> data;
+  StoreJsonConstructor(Indexer<u8> &data);
 
   virtual ~StoreJsonConstructor()=default;
 
@@ -20,7 +20,7 @@ public:
     return data.hasNext();
   }
 
-  char next(void) override {
+  u8 next(void) override {
     return data.next();
   }
 
@@ -40,7 +40,7 @@ class StoreJsonParser: public AbstractJSONparser<Storable, Text> {
 public: //accessing root when done, should also set it for some usages.
   StoreJsonConstructor core;
 public:
-  StoreJsonParser(Indexer<const char> &data);
+  StoreJsonParser(Indexer<u8> &data);
 } ;
 
 #endif // STOREJSON_H

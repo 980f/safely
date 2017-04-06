@@ -49,6 +49,12 @@ enum Action {
 class Parser:public PushedParser {
 
 public://extended return value
+  struct Rules {
+    //treat semicolons as item terminator
+    bool semicomma=false;
+    bool equalscolon=false;
+  } rule;
+
   /** whether a name was seen, bounds recorded in 'name'. */
   bool haveName;
   /** 'location' recorded at start and end of name token */

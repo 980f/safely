@@ -19,7 +19,7 @@ public: //needs accessor
 protected:
   /** must supply and track source data, and be able to recover it from values of ordinal */
   virtual bool hasNext(void) = 0;
-  virtual char next(void) = 0;
+  virtual u8 next(void) = 0;
 
   /** @returns an object suitable for passing to insertNewChild */
   virtual TextClass extract(Span &span)=0;
@@ -48,8 +48,9 @@ public:
 
 protected:
   JsonConstructor<Storable, TextClass> &data;
+public: //to expose rules, add a tunnel for that.
   PushedJSON::Parser parser;
-
+protected:
   Storable *assembleItem(Storable *parent,bool evenIfEmpty=false){
     Storable *nova=nullptr;
     //we have a value if it was empty quotes or nonTrivial content. JSON null is an anonymous value at this layer of the parser.

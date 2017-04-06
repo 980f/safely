@@ -4,19 +4,19 @@
 #include "cheaptricks.h"
 
 
-StoreJsonParser::StoreJsonParser(Indexer<const char> &data):AbstractJSONparser(core),core(data){
+StoreJsonParser::StoreJsonParser(Indexer<u8> &data):AbstractJSONparser(core),core(data){
   //default inits of members NOT happening!
   stats.reset();
   parser.reset(true);
 }
 
-StoreJsonConstructor::StoreJsonConstructor(Indexer<const char> &data):
+StoreJsonConstructor::StoreJsonConstructor(Indexer<u8> &data):
   data(data){
   //#nada
 }
 
 Text StoreJsonConstructor::extract(Span &span) {
-  return Text(data.internalBuffer(),span);
+  return Text(reinterpret_cast<const char*>(data.internalBuffer()),span);
 }
 
 Storable *StoreJsonConstructor::insertNewChild(Storable *parent, Text &name, bool haveValue, Text &value, bool valueQuoted) {

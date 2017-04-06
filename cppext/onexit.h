@@ -45,4 +45,18 @@ template <typename Scalar> Scalar postAssign(Scalar&varb, Scalar value){
   return was;
 }
 
+//todo: conditionalize this on lib being handy:
+#include "functional"
+struct OnExit {
+  typedef std::function<void(void)> Lamda;
+  Lamda lamda;
+  OnExit(Lamda dolater):lamda(dolater){
+
+  }
+
+  ~OnExit(){
+    lamda();
+  }
+};
+
 #endif // ONEXIT_H

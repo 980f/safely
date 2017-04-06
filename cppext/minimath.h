@@ -34,6 +34,23 @@ template <typename Numerical> int signabs(Numerical &absolutatus) {
   return absolutatus ? 1 : 0;
 }
 
+/** Note: 'signbit' is a macro in math.h that pertains only to floating point arguments
+  * @returns sign of operand, and converts operand to its magnitude, MININT(0x800...) is still MININT and must be interpreted as unsigned to work correctly
+  */
+template <typename Numerical> Numerical absvalue(Numerical absolutatus, int *sign=nullptr) {
+  if(absolutatus < 0) {
+    if(sign){
+      *sign = -1;
+    }
+    return -absolutatus;
+  }
+  if(sign){
+    *sign=absolutatus ? 1 : 0;
+  }
+  return absolutatus;
+}
+
+
 //yet another filter to reconcile platform math.h issues. Make specializations per platform for performance.
 template< typename mathy > int signof(mathy x) {
   if(x < 0) {

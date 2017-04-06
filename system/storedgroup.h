@@ -258,7 +258,7 @@ public:
   } // setSize
 
   /** remove something from given place in list. This DELETES the item, beware of use-after-free.*/
-  virtual void remove(int which){
+  virtual bool remove(int which){
     if(has(which)) { //#while the pod and node can take care of bad indexes locally we don't want to do the notifies if the index is
                      // bad. And now preremoval depends on this check.
       if(preremoval(operator [](which))) {//if not vetoed
@@ -267,13 +267,18 @@ public:
         node.remove(which); //deletes underlying node, which may have its own watchers
         onremoval(which);   //high priority notifications
         dependents(true, which);//lower priority notifications
+        return true;
       }
     }
+    return false;
   } // remove
 
   /** remove something from given place in list. This DELETES the item, beware of use-after-free.*/
-  void removeItem(Groupie &member){
-    remove(ordinalOf(&member));
+  bool removeItem(Groupie &member){
+    if(&member!=nullptr){
+      return remove(ordinalOf(&member));
+    }
+    return false;
   }
 
   /** caller better be damned sure the row is the storage node of a Groupie from this group.*/
@@ -283,16 +288,14 @@ public:
 
   /** remove any member for which the slot is true, @return quantity removed. This DELETES the item, beware of use-after-free.*/
   unsigned removeIf(const sigc::slot<bool, Groupie &> &killit){
-    int deaths = 0; //nice diagnostic versus a simple bool.
-    Storable::Freezer autothaw(node, false); //since node watch doesn't know what is removed wait until possibly multiple removes
-                                             // are done before triggering its watchers (important when some watchers are gui
-                                             // redraws)
+    unsigned deaths = 0; //nice diagnostic versus a simple bool.
 
+    //since node watch doesn't know what is removed wait until possibly multiple removes are done before triggering its watchers (important when some watchers are gui redraws)
+    Storable::Freezer autothaw(node, false);
     for(unsigned which = quantity(); which-- > 0; ) { //#keep reverse iteration, can do remove's with it.
       Groupie &victim(*pod[which]);
       if(killit( victim)) {
-        ++deaths;
-        remove(which); //#works well because we reverse iterate.
+        deaths+=remove(which); //#works well because we reverse iterate.
       }
     }
     return deaths;
@@ -303,7 +306,7 @@ public:
   }
 
   /** @returns quantity removed */
-  int removeAll(){ //#remove one at a time so that reorg demons run
+  unsigned removeAll(){ //#remove one at a time so that reorg demons run
     return removeIf(&anything);
   }
 

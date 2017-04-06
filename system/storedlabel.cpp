@@ -42,6 +42,11 @@ bool StoredLabel::operator ==(const TextValue &zs) const {
   return node.image() == zs;
 }
 
+void StoredLabel::operator =(int value){
+  Text image=NumberFormatter::makeNumber(value);
+  node.setImage(image.c_str());
+}
+
 void StoredLabel::operator =(const char *zs){
   node.setImage(zs);
 }
