@@ -305,6 +305,7 @@ NB this uses references in and out, you connot pass a const onEmpty */
   /** remove at most the given number of items preceding next.
    *  first use is processing escaped chars in a string.
    * This does a memory move, no copy constructor or such will be invoked.
+   * The allocation is not affected, freespace will increase by 'amount'
    */
   Indexer &remove(unsigned int amount){
     if(amount > pointer) {

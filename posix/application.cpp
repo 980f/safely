@@ -10,6 +10,19 @@
 #include "textpointer.h" //Text class
 static Logger out("EPOLLER",true);
 
+bool Application::setQuickCheck(unsigned soonish){
+  if(soonish<quickCheck){
+    quickCheck=soonish;
+    return true;
+  } else {
+    return false;//user might want to try to set it again later.
+  }
+}
+
+void Application::keepAlive(){
+  //do nothing, normally overriden with code that looks for stalled processes.
+}
+
 Application::Application(unsigned argc, char *argv[]):
   arglist(const_cast<const char **>(argv),argc*sizeof (const char *)),
   looper(32), //maydo: figure out size of maximum reasonable poll set.
@@ -37,7 +50,17 @@ void Application::logCwd(){
 int Application::run(){
   beRunning=true;
   while(beRunning){
-    if(!looper.doEvents(period)){
+    //todo: libusb sometimes wants us to get back to it perhaps sooner than our period is set for.
+    int nextPeriod=period;
+    if(quickCheck>0){
+      if(quickCheck<period){
+        nextPeriod=quickCheck;
+        quickCheck=0;
+      } else {
+        quickCheck-=period;
+      }
+    }
+    if(!looper.doEvents(nextPeriod)){
       //some failures are not really something to get upset about
       switch (looper.errornumber) {
       case EAGAIN:
@@ -45,7 +68,7 @@ int Application::run(){
         out("nominal error ignored: %s",looper.errorText());
         break;
       case EINVAL:
-        out("egregiously bad timeout or ");
+        out("egregiously bad timeout or ??? ");
         stop();
         break;
       case EBADF: //looper wasn't initialized successfully
@@ -54,6 +77,7 @@ int Application::run(){
         break;
       }
     }
+    //todo: keepalive routines
   }
   return looper.errornumber;
 }

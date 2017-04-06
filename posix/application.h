@@ -11,9 +11,17 @@ class Application: public PosixWrapper {
 protected:
   Indexer<TextKey> arglist;
   Epoller looper;
-  /** sampleing period in millseconds*/
-  int period;
+  /** sampling period in millseconds*/
+  unsigned period;
+  /** if greater than zero and less than period it replaces period for one cycle */
+private:
+  unsigned quickCheck=0;
+protected:
+  bool setQuickCheck(unsigned soonish);
+  /** clear this to try to get app to exit gracefully */
   bool beRunning;
+  /** called with each event, especially when period is up. Not harmonic */
+  virtual void keepAlive();
 public:
   /** doesn't do much, but someday we may mate this to gnu getargs */
   Application(unsigned argc, char *argv[]);
@@ -21,7 +29,7 @@ public:
   void logArgs();
   /** show cwd */
   void logCwd();
-  /** poll for and dispatch on events recorded with looper member */
+  /** poll for and dispatch on events recorded with looper member. doesn't return under normal usage. */
   int run();
   /** quit polling */
   void stop(){
