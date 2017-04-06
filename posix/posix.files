@@ -27,7 +27,8 @@ SOURCES += \
     memorymapper.cpp \
     directory.cpp \
     polledtimer.cpp \
-    timerfd.cpp
+    timerfd.cpp \
+    microseconds.cpp
 
 
 HEADERS += \
@@ -52,4 +53,5 @@ HEADERS += \
     incrementalfiletransfer.h \
     memorymapper.h \
     directory.h \
-    filenameconverter.h
+    filenameconverter.h \
+    microseconds.h

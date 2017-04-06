@@ -8,7 +8,7 @@ class TimerFD:public PosixWrapper {
 public:
   TimerFD();
   /** set period and initial delay to same value */
-  void setPeriod(double seconds);
+  double setPeriod(double seconds);
   /** acknowledge a timer event, so that it can signal again */
   void ack();
 
