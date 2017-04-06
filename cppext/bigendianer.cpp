@@ -1,5 +1,15 @@
 #include "bigendianer.h"
 
+BigEndianer::BigEndianer(u8 *allocation, unsigned length) : Indexer<u8>(allocation, length){
+}
+
+BigEndianer::BigEndianer(Indexer<u8> other, int clip) : Indexer<u8>(other, clip ){
+}
+
+BigEndianer::~BigEndianer(){
+  //exists to get rid of warning about multiple v-tables.
+}
+
 int BigEndianer::getU16(){
   if(stillHas(2)) {
     u8 high = next();

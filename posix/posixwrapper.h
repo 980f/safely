@@ -13,8 +13,8 @@ class PosixWrapper {
   static bool needsInit;
 protected:
   //added for libusb, extends error numbers in the negative direction.
-  const char **alttext;
-  unsigned numalts;
+  const char **alttext=nullptr;
+  unsigned numalts=0;
 public:
   /** for use with functions that return directly the codes that usually go into errno. */
   bool failure(int errcode);
@@ -44,9 +44,9 @@ public: //so that we can merge errors from functions called outside of the objec
 
 public:
   /** ERRNO for last operation done using the extend object */
-  int errornumber;
+  int errornumber=0;
   /** logging noisiness for the (extended) object */
-  int debug;
+  int debug=0;
 public:
   PosixWrapper();
   /** printf like logging via system logging (@see logger.h which is different), with all the faults therein.*/

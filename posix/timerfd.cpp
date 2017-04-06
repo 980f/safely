@@ -1,22 +1,23 @@
 #include "timerfd.h"
 
 #include "sys/timerfd.h"
-
+#include "nanoseconds.h"
 
 TimerFD::TimerFD(){
   int tfd=timerfd_create(CLOCK_MONOTONIC,TFD_NONBLOCK);
   fd.preopened(tfd,true);
 }
 
-void TimerFD::setPeriod(double seconds){
+double TimerFD::setPeriod(double seconds){
   if(fd.isOk()){
     itimerspec u;
-    u.it_interval.tv_sec=seconds;
-    u.it_interval.tv_nsec=0;//seconds;
+    parseTime(u.it_interval,seconds);
 
     itimerspec old;
     timerfd_settime(fd.asInt(),0,&u,&old);
+    return from(old.it_interval);
   }
+  return Nan;
 }
 
 void TimerFD::ack(){

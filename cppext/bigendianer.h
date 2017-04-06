@@ -8,12 +8,10 @@
 /** utility for packing and unpacking binary values in byte order that might not match the platform order */
 class BigEndianer : public Indexer<u8> {
 public:
-  BigEndianer(u8 * allocation, unsigned length) : Indexer<u8>(allocation, length){
-  }
+  BigEndianer(u8 * allocation, unsigned length);
 
-  BigEndianer(Indexer<u8> other, int clip = 0) : Indexer<u8>(other, clip ){
-  }
-
+  BigEndianer(Indexer<u8> other, int clip = 0);
+ virtual ~BigEndianer();
   int getU16(void);
   int getI16(void);
   void hilo(u16 datum);
