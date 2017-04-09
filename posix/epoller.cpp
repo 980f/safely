@@ -6,6 +6,7 @@
 #include "stdlib.h"
 #include "logger.h"
 
+#include "time.h"
 
 constexpr unsigned evlistsize(unsigned number){
   return sizeof (epoll_event)*number;
@@ -15,6 +16,7 @@ Epoller::Epoller(unsigned maxreport):
   epfd(~0),
   BuildIndexer(epoll_event,waitlist,maxreport){
   epfd=epoll_create1(0);
+  eventTime.start();
 }
 
 Epoller::~Epoller(){
@@ -46,7 +48,9 @@ bool Epoller::remove(int fd){
 }
 
 bool Epoller::wait(int timeoutms){
+  ++waitcount;
   if(okValue(numEvents, epoll_wait(epfd,&waitlist.peek(),waitlist.freespace(),timeoutms))){
+    elapsed=eventTime.elapsed();
     waitlist.skip(numEvents);
     return true;
   } else {

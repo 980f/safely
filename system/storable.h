@@ -38,6 +38,7 @@ typedef Text TextValue;
  *
  * Made sigctrackable as these are often the objects of watched updates.
  *
+ * Todo: global Root node static herein, 'Stored' base recognizes type changes and invokes parse.
  */
 
 class Storable : public ChangeMonitored, SIGCTRACKABLE {
