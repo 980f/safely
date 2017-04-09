@@ -22,7 +22,7 @@ Text StoreJsonConstructor::extract(Span &span) {
 Storable *StoreJsonConstructor::insertNewChild(Storable *parent, Text &name, bool haveValue, Text &value, bool valueQuoted) {
   Storable *nova=parent? &parent->child(name): (root = new Storable(name));
   if(nova){
-    if(haveValue){
+    if(haveValue){//todo: if node already initialized change value according to type. i.e. preserve node.type
       nova->setImage(value,Storable::Parsed);
       if(valueQuoted){
         //keep the text type set by setImage.

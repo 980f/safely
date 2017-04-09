@@ -26,17 +26,18 @@ void Application::keepAlive(){
 Application::Application(unsigned argc, char *argv[]):
   arglist(const_cast<const char **>(argv),argc*sizeof (const char *)),
   looper(32), //maydo: figure out size of maximum reasonable poll set.
-  period(1), //millisecond timing, this is running on near GHz machines ...
+  period(100), //millisecond timing, this is running on near GHz machines ...
   beRunning(false)//startup idle.
 {
   out("Application Logic initialized");
 }
 
 void Application::logArgs(){
-  arglist.rewind();
-  while(arglist.hasNext()){
-    const char *arg=arglist.next();
-    out("arg[%d]=%s",arglist.ordinal()-1,arg);
+  Indexer<TextKey> listlist(arglist);
+//  arglist.rewind();
+  while(listlist.hasNext()){
+    const char *arg=listlist.next();
+    out("arg[%d]=%s",listlist.ordinal()-1,arg);
   }
 
 }
@@ -60,7 +61,9 @@ int Application::run(){
         quickCheck-=period;
       }
     }
-    if(!looper.doEvents(nextPeriod)){
+    if(looper.doEvents(nextPeriod)){
+      keepAlive();
+    } else {
       //some failures are not really something to get upset about
       switch (looper.errornumber) {
       case EAGAIN:
@@ -96,7 +99,7 @@ bool Application::writepid(TextKey pidname){
   if(pidler){
     pid_t pid=getpid();
     int howmany=fprintf(pidler,"%ld\n", long(pid));//coercing type for platform portability
-    dbg("Pidfile %s should be %d bytes long",pidname, howmany);
+    dbg("Pidfile type is %d bytes",sizeof(pid_t));
     fflush(pidler);
     fclose(pidler);//to get it to flush asap
     return true;

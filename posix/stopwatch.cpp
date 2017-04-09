@@ -60,7 +60,7 @@ double StopWatch::elapsed(double *absolutely){
   }
   diff -= started;
   if(diff<0) {//clock rolled over
-    diff += 0.0;//todo:1 proper value before 2032 happens
+    diff += 0.0;//todo:1 proper value before 2038 happens
   }
   return diff;
 } // StopWatch::elapsed

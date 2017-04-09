@@ -6,6 +6,8 @@
 /** wrap the epoll function set */
 #include "buffer.h"
 #include <functional> //for callback
+
+#include "stopwatch.h" //for time services
 class Epoller:public PosixWrapper {
   int epfd;
 
@@ -27,6 +29,8 @@ public:
   /** data returned from wait():*/
   Indexer<epoll_event> waitlist;
   int numEvents;
+  /** FYI: number of times wait() has been called, will wrap so mostly just for debug.*/
+  unsigned waitcount=0;
   bool wait(int timeoutms);
 
   /** respond to an event report from wait: */
@@ -35,6 +39,12 @@ public:
   /** core of event loop */
   bool doEvents(int timeoutms);
   void explain(unsigned epevs);
+
+  /** when events are processed this clock is updated, reading the clock once per event wakeup */
+  StopWatch eventTime;
+  //cached call to eventTime.elapsed(). If someone screws it up it will be fixed on next event.
+  double elapsed;
+
 };
 
 
