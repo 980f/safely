@@ -10,11 +10,11 @@ DottedName::DottedName(char dot, Indexer<const char> initial):bracket(dot){
 }
 
 void DottedName::parse(const char *rawpath){
-  bracket=PathParser::parseInto(*this,rawpath,'.');
+  bracket=PathParser::parseInto(*this,rawpath,bracket.slash);
 }
 
 void DottedName::parse(Indexer<const char> scan){
-  bracket=PathParser::parseInto(*this,scan,'.');
+  bracket=PathParser::parseInto(*this,scan,bracket.slash);
 }
 
 unsigned DottedName::length(Converter &&cvt)const{

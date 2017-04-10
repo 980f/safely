@@ -13,7 +13,7 @@ public:
   int loadFile(Cstr thename);
   void printOn(Fildes &alreadyOpened,unsigned indent=0);
   void printOn(Cstr somefile,unsigned indent=0);
-
+  Cstr originalFile();
 };
 
 #endif // JSONFILE_H
