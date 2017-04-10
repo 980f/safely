@@ -71,11 +71,10 @@ bool Epoller::doEvents(int timeoutms){
   waitlist.rewind();
   if(wait(timeoutms)){//HEREIS the actual blocking call!
 //too frequent    dbg("polled event count %d",waitlist.used());
-
     Indexer<epoll_event> list(waitlist,~0);
     while(list.hasNext()){
       auto event=list.next();
-      dbg("event on fd: %d",event.data.fd);
+      //dbg("event on fd: %d",event.data.fd);
       if(event.events ==0 ){
         //we shouldn't be here.
         logmsg("got a no-event response");

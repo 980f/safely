@@ -63,4 +63,12 @@ double StopWatch::elapsed(double *absolutely){
     diff += 0.0;//todo:1 proper value before 2038 happens
   }
   return diff;
+}
+
+void StopWatch::rollit(){
+  if(running){
+    started = stopped;//#do NOT start(), want to read the clock just once with each roll.
+  } else {
+    start();
+  }
 } // StopWatch::elapsed
