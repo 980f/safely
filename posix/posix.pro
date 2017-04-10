@@ -7,6 +7,10 @@ include("../cppext/lib.pro")
 #our sibling with mallocating code, but no OS per se:
 include("../system/lib.pro")
 
+#sigc in filer/jsonfile
+include("../sigc.pro")
+
+
 ##for async IO add to your executable project:
 #LIBS += -lrt
 
@@ -40,10 +44,10 @@ SOURCES += \
     incrementalfiletransfer.cpp \
     memorymapper.cpp \
     directory.cpp \
-    polledtimer.cpp \
     timerfd.cpp \
     microseconds.cpp \
-    threader.cpp
+    threader.cpp \
+    jsonfile.cpp
 
 
 
@@ -71,7 +75,8 @@ HEADERS += \
     directory.h \
     filenameconverter.h \
     microseconds.h \
-    threader.h
+    threader.h \
+    jsonfile.h
 
 DISTFILES += \
     posixgroup.ld

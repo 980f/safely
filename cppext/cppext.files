@@ -58,7 +58,9 @@ SOURCES += argset.cpp \
     numberformat.cpp \
     countdown.cpp \
     numberpieces.cpp \
-    stacked.cpp
+    stacked.cpp \
+    polledtimer.cpp \
+    softpwm.cpp
 
 
 HEADERS += safely.h \
@@ -137,4 +139,6 @@ HEADERS += safely.h \
     numberpieces.h \
     hook.h \
     stacked.h \
-    onexit.h
+    onexit.h \
+    polledtimer.h \
+    softpwm.h
