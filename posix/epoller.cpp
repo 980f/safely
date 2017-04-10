@@ -50,7 +50,7 @@ bool Epoller::remove(int fd){
 bool Epoller::wait(int timeoutms){
   ++waitcount;
   if(okValue(numEvents, epoll_wait(epfd,&waitlist.peek(),waitlist.freespace(),timeoutms))){
-    elapsed=eventTime.elapsed();
+    elapsed=eventTime.roll();//time since last wait, possibly large the first time after app launch.
     waitlist.skip(numEvents);
     return true;
   } else {
@@ -62,16 +62,20 @@ void Epoller::exec(const epoll_event &ev){
   if(ev.data.ptr){
     Handler &handler(*reinterpret_cast<Handler *>(ev.data.ptr));
     handler(ev.events);
+  } else {
+    dbg("null ptr from event returned by epoll");
   }
 }
 
 bool Epoller::doEvents(int timeoutms){
   waitlist.rewind();
   if(wait(timeoutms)){//HEREIS the actual blocking call!
-    dbg("polled event count %d",waitlist.used());
+//too frequent    dbg("polled event count %d",waitlist.used());
+
     Indexer<epoll_event> list(waitlist,~0);
     while(list.hasNext()){
       auto event=list.next();
+      dbg("event on fd: %d",event.data.fd);
       if(event.events ==0 ){
         //we shouldn't be here.
         logmsg("got a no-event response");

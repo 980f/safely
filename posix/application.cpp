@@ -98,7 +98,7 @@ bool Application::writepid(TextKey pidname){
   FILE* pidler(fopen(pidname,"w"));//want exclusive access
   if(pidler){
     pid_t pid=getpid();
-    int howmany=fprintf(pidler,"%ld\n", long(pid));//coercing type for platform portability
+    fprintf(pidler,"%ld\n", long(pid));//coercing type for platform portability
     dbg("Pidfile type is %d bytes",sizeof(pid_t));
     fflush(pidler);
     fclose(pidler);//to get it to flush asap
