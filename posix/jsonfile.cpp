@@ -100,6 +100,10 @@ void JsonFile::printOn(Cstr somefile, unsigned indent){
   }
 }
 
+Cstr JsonFile::originalFile(){
+  return root.child("#loadedFromFile").image();
+}
+
 
 void JsonFile::printOn(Fildes &alreadyOpened, unsigned indent){
   printNode(indent,root,alreadyOpened.getfp("w"));
