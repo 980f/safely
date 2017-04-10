@@ -9,8 +9,9 @@ public:
   TimerFD();
   /** set period and initial delay to same value */
   double setPeriod(double seconds);
-  /** acknowledge a timer event, so that it can signal again */
-  void ack();
+  /** acknowledge a timer event, so that it can signal again.
+ @returns whether there was an event active, by getting a response to the 'read overflow count' operation */
+  bool ack();
 
   int asInt()const{
     return fd.asInt();

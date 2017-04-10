@@ -6,11 +6,11 @@
 TimerFD::TimerFD(){
   int tfd=timerfd_create(CLOCK_MONOTONIC,TFD_NONBLOCK);
   fd.preopened(tfd,true);
-  itimerspec u;
-  parseTime(u.it_interval,0);
-  parseTime(u.it_value,0);
+//  itimerspec u;
+//  parseTime(u.it_interval,0);
+//  parseTime(u.it_value,0);
 
-  timerfd_settime(fd.asInt(),0,&u,nullptr);
+//  timerfd_settime(fd.asInt(),0,&u,nullptr);
 
 }
 
@@ -27,10 +27,13 @@ double TimerFD::setPeriod(double seconds){
   return Nan;
 }
 
-void TimerFD::ack(){
+bool TimerFD::ack(){
   u8 value[8];
   ByteScanner discard(value,sizeof(value));
-  if(8!=fd.read(discard)){
+  if(8==fd.read(discard)){
+    return true;
+  } else {
     //then we shouldn't have been called.
+    return false;
   }
 }
