@@ -9,7 +9,7 @@
 //this is not a class member so that we don't force pathparser on all users:
 static const PathParser::Rules slasher('/',false,true);// '.' gives java property naming, '/' would allow use of filename classes. '|' was used for gtkwrappers access
 
-unsigned Storable::instances(0);
+//unsigned Storable::instances(0);
 
 using namespace sigc;
 
@@ -18,7 +18,7 @@ using namespace sigc;
 #define ForKids(list) for(ChainScanner<Storable> list(wad); list.hasNext(); )
 
 Storable::Storable(TextKey name, bool isVolatile) : isVolatile(isVolatile), type(NotKnown), q(Empty), number(0), parent(nullptr), index(-1), enumerated(nullptr), name(name){
-  ++instances;
+//  ++instances;
   if(isVolatile) {
     dbg("creating volatile node %s", fullName().c_str());
   }
@@ -29,10 +29,10 @@ Storable::Storable(bool isVolatile) : Storable("", isVolatile){
 }
 
 Storable::~Storable(){
-  --instances;
-  if(!Index(instances).isValid ()) {
-    wtf("freed more storables than we created!"); //which can happen if we double free.
-  }
+//  --instances;
+//  if(!Index(instances).isValid ()) {
+//    wtf("freed more storables than we created!"); //which can happen if we double free.
+//  }
 }
 
 void Storable::notify() const {

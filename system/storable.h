@@ -3,16 +3,13 @@
 
 #include "safely.h"
 
-#if StoreArgsFeatured
 #include "argset.h" //for arrays to mate to hardware structs
-#endif
 
 #include "chain.h" //wrap std::vector to cover its sharp pointy sticks.
 #include "changemonitored.h"
 
 #include "enumerated.h"
 
-//#include "iterate.h"
 #include "logger.h"
 #include "numberformatter.h"
 #include "sigcuser.h"
@@ -28,13 +25,13 @@ typedef TextKey NodeName;
 typedef Text TextValue;
 
 /**
- * non-volatile storage and transport mechanism.
+ * non-volatile key-value storage and transport mechanism.
+ * The key is text and is non-mutable from outside the class.
+ *
  * In most instances some derivative of Stored will wrap each Storable to set its type and other attributes.
  *
  * Storable supports both polled change detection via ChangeMonitored and change notification callbacks via sigc.
  *
- * Note that a Stored object is stored in a file when saveAll() is called, whereas a Storable object that is not wrapped in Stored
- * will not be saved.
  *
  * Made sigctrackable as these are often the objects of watched updates.
  *
@@ -46,8 +43,8 @@ class Storable : public ChangeMonitored, SIGCTRACKABLE {
   friend class StoredLabel; //ditto
   friend class StoredEnum;
 public:
-  /** number of storables in existence.  For debug of memory leaks. */
-  static unsigned instances;
+//  /** number of storables in existence.  For debug of memory leaks. */
+//  static unsigned instances;
 
   enum Type {  //referring to the type of data in the node
     NotKnown,   //construction error, parse error
@@ -81,8 +78,6 @@ private: //#the watchers must be mutable because sigc needs to be able to cull d
   /** sent when any child changes, allows setting a watch on children that may not exist. */
   mutable GatedSignal childwatchers; //# mutable, see @watchers.
 
-//was hunting a bug  mutable int recursionCounter = 0;
-
 protected:
   /** stored value is like a union, although we didn't actually use a union so that a text image of the value can be maintained for debug of parsing and such. */
   Type type;
@@ -109,15 +104,14 @@ protected:
   void recursiveNotify() const;
 private:
   /* non-copyable */
-  Storable(const Storable &noncopyable); // non construction-copyable
-  Storable &operator =(const Storable &noncopyable); // non copyable
+  Storable(const Storable &noncopyable)=delete; // non construction-copyable
+  Storable &operator =(const Storable &noncopyable)=delete; // non copyable
   /**a piece of constructor. @param name is node name */
   Storable &precreate(TextKey name);
 public:
-  /** this is *almost* const, need to work on clone() to make it so.*/
   const TextValue name;
-private:
-  void setName(TextKey name);
+//private:
+//  void setName(TextKey name);
 public:
   /** @param isVolatile was added here to get it set earlier for debug convenience */
   Storable(TextKey name, bool isVolatile = false);
@@ -167,8 +161,8 @@ public:
   /** watch all children: (NB: can't unwatch individual kids) */
   sigc::connection addChangeMother(const SimpleSlot &watcher, bool kickme = false) const;
 public:
-  /** class added to guarantee thawing even in the face of exceptions.
-   * suspend notifications for the duration of existence of this object. */
+  /** guarantee thawing even in the face of exceptions.
+   * suspends notifications for the duration of existence of this object. */
   class Freezer {
     bool childrenToo;
     bool onlyChildren;
@@ -181,8 +175,9 @@ public:
   };
 
 
-private: //@deprecated, need use case
-  /** make this node have same structure as givennode, but leave name and present children intact*/
+private:
+  /** @deprecated, need use case.
+   * make this node have same structure as givennode, but leave name and present children intact*/
   void clone(const Storable &other);
 public:
   /** like an operator =
@@ -202,7 +197,7 @@ public:
     return static_cast<Numeric>(number);
   }
 
-  /** if has not set from file or program execution then set a value on the node. Defaults are normally set via ConnectChild macro. */
+  /** if no value has been set from parsing a file or program execution then set a value on the node. Defaults are normally set via ConnectChild macro. */
   template<typename Numeric> Numeric setDefault(Numeric value){
     if(q == Empty || q == Defaulted) {
       setNumber(value, Storable::Defaulted);
@@ -210,12 +205,12 @@ public:
     return getNumber<Numeric>();
   }
 
-  /** @return a functor that when invoked will get this object's value.*/
+  /** @return a functor that when invoked will get this object's value. */
   template<typename Numeric> sigc::slot<Numeric> getLater(){
     return MyHandler(Storable::getNumber<Numeric> );
   }
 
-  /** hook up to send changes to a simple variable. */
+  /** assigns any new value to @param target. If @param kickme is true does an immediate assignment of the present value. */
   template<typename Numeric> sigc::connection sendChanges(Numeric &target, bool kickme = false){
     if(kickme) {
       target = getNumber<Numeric>();
@@ -226,9 +221,12 @@ public:
   // functions that apply to text
   void setImageFrom(TextKey value, Quality quality = Edited);
   void setImage(const TextKey &value, Quality quality = Edited);
+
   /** this method is not const as we lazily reuse text for image of non-text instances */
   Cstr image(void);
+
   void setDefault(TextKey value);
+
   /** @return whether text value of node textually equals @param zs (at one time a null terminated string) */
   bool operator ==(TextKey zs);
 
@@ -239,6 +237,7 @@ public:
 
   /** @returns an iterator over the children, in ascending order*/
   ChainScanner<Storable> kinder();
+
   /** @returns an iterator over the children, in ascending order*/
   ConstChainScanner<Storable> kinder() const;
 
@@ -252,7 +251,7 @@ public:
   /** @see existingChild() non const version */
   const Storable *existingChild(TextKey childName) const;
 
-  /** find nameless nodes, starting at &param lastFound. Pass BadIndex for 'beginning`.
+  /** find nameless nodes, starting at &param l  astFound. Pass BadIndex for 'beginning`.
    * To walk the list:
    * for(Storable *nemo=node.findNameless();nemo;nemo=node.findNameless(nemo.ownIndex())) dosomething(nemo); //nemo will not be null
    * @deprecated untested
@@ -272,6 +271,7 @@ public:
   Storable &operator ()(TextKey name);
   //these give nth child
   Storable &operator [](int ordinal);
+
   const Storable &operator [](int ordinal) const;
   /** named version of operator [] const */
   const Storable &nth(int ordinal) const;
@@ -287,6 +287,7 @@ public:
 
   //combined presize and addChild to stifle trivial debug spew when adding a row to a table.
   Storable &addWad(int qty, Storable::Type type = NotKnown, TextKey name = "");
+  /** add a bunch of null-named children of the given type to this node. Probably not good to use outside of this class cloning an object.*/
   void presize(int qty, Storable::Type type = NotKnown);
 
   /** remove a child of the wad, only makes sense for use with StoredGroup (or legacy cleanup) */

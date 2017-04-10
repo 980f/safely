@@ -2,6 +2,18 @@
 
 /////////////////
 
+Storable &Stored::Groot(TextKey pathname){
+  if(Cstr(pathname)=="/"){
+    return groot;
+  }
+  Storable *node=Stored::groot.findChild(pathname,true);
+  if(node){
+    return *node;
+  }
+  //else a relative path that looked back past groot (or an independent tree's root)
+  return groot.child(pathname);//which most likely will be non-functional, but at least not null.
+}
+
 Stored::Stored(Storable&node) : duringConstruction(true), node(node), refreshed(true){
   //onAnyChange(MyHandler(Stored::doParse), false); //# can't call onParse here as required children might not exist.
 //  node.preSave.connect(MyHandler(Stored::onPrint));
@@ -120,3 +132,4 @@ NodeName Stored::getName() const {
   return node.name;
 }
 
+Storable Stored::groot("/",true);
