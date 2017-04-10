@@ -6,10 +6,11 @@
 /**
  * base class for interpreter of a storage node.
  * wrapper instead of extending Storable, to lighten each instance's memory footprint.
- * note that gui edit screens work directly on the nodes, watch those on per instance bases if global constraints need to be applied.*/
+ **/
 class Stored : SIGCTRACKABLE {
-  Stored();//# we must attache to a storable, we exist to wrap access to one with type-safety.
-  Stored(const Stored &cantbecopied);//can't copy a subset of a tree, not generically.
+  Stored()=delete;//# we must attache to a storable, we exist to wrap access to one with type-safety.
+  Stored(const Stored &cantbecopied)=delete;//can't copy a subset of a tree, not generically.
+  static Storable groot;
 protected:
   /** used to per-class disable notification causing onParse' to be called before all children exist.
    * Only a few situations have needed to do this.
@@ -19,15 +20,18 @@ protected:
   // yet:
   //    duringConstruction=false;
   //    onParse();
+
 public:
+  /** a global root node, for your convenience */
+  static Storable &Groot(TextKey pathname);
+
   /** being a reference there is little danger in exposing it. It was handy having it available without the extra () of a getter.*/
   Storable &node;
   /** the essential constructor. */
   Stored(Storable &node);
   /** sigc needs this, you probably do for other reasons as well. */
   virtual ~Stored();
-  /** hook for actions to perform prior to export (do any deferred updates)
-   */
+  /** hook for actions to perform prior to export (do any deferred updates) */
   virtual void onPrint(){
   }
 
@@ -60,13 +64,13 @@ public:
   bool notRefreshed() const;
 //end refresh logic.
 
-  /** @returns *copy* of underlying node's name. Since the node name is const as of late 2016 this will stay the name, but manipulating it will not alter the node's
+  /** @returns *copy* of underlying node's name. Since the node name is const as of late 2016 this will stay the name, but manipulating the returned value will not alter the node's
    * name. */
   NodeName getName() const;
 
-//ArgSet stuff is interface to our hardware device protocol
   void getArgs(ArgSet &args);
   void setArgs(ArgSet &args);
+
   sigc::connection watchArgs(const SimpleSlot &watcher, bool kickme = false);
 
   void allocArgs(int qty);
@@ -114,11 +118,14 @@ public:
 
 }; // class Stored
 
+/** Global factory for root nodes. This is a hook for an application to link all of its Stored types in a list for access such as via a web service */
+Stored &TreeFactory(TextKey rootname);
+
 /** the ConnectChid macro is the main usablity feature of this class ensemble.
  * In any derived class of Stored one must have a constructor that takes a Storable.
  *  if you label that argument 'node' then for each Stored-derived member of your Stored-derived class that constructor must have an explicit construction item
  *  (since in turn those need a Storable param) and the ConnectChild macro will find a node named the same as the variable within the enclosing class's node and
- *  use that to init it. using variable arguments for additional construction arguments which are usually default values. */
+ *  use that to init it. This uses var-args for additional construction arguments which are usually default values. */
 #define ConnectChild(varname, ...) varname(node.child( # varname ), ## __VA_ARGS__)
 #define ConnectSibling(varname, ...) varname(node.parent->child( # varname ), ## __VA_ARGS__)
 
