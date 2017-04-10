@@ -36,6 +36,9 @@ public:
   bool isRunning() const;
   /** updates 'stop' if running then @returns time between start and stop as seconds. @param absolutely if not null gets the absolute time reading used in the returned value.*/
   double elapsed(double *absolutely=nullptr);
+
+  /** make last 'elapsed' be a start, retroactively (without reading the system clock again.*/
+  void rollit();
   /** @return seconds of absolute time of stop, or now if running*/
   double absolute();
 };
