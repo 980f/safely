@@ -44,7 +44,12 @@ bool PosixWrapper::setFailed(bool passthrough){
 bool PosixWrapper::failure(int errcode){
   if(changed(errornumber,errcode)) {//only log message if different than previous, prevents spam at the loss of occasional meaningful duplicates.
     // If you think you might repeat an error then clear errornumber before such a call.
-    syslog(debug, "Failed: %m");
+    if(errcode!=0){
+      syslog(debug, "Failed: %s",errorText());//former code only worked when errno was the actual source of the error.
+    }
+//    else {
+//      syslog(debug, "Cleared previous error");
+//    }
   }
   return errcode!=0;
 }

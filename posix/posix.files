@@ -28,7 +28,9 @@ SOURCES += \
     directory.cpp \
     polledtimer.cpp \
     timerfd.cpp \
-    microseconds.cpp
+    microseconds.cpp \
+    threader.cpp
+
 
 
 HEADERS += \
@@ -54,4 +56,5 @@ HEADERS += \
     memorymapper.h \
     directory.h \
     filenameconverter.h \
-    microseconds.h
+    microseconds.h \
+    threader.h
