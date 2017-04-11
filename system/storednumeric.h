@@ -55,7 +55,7 @@ public:
     return assign(other.node.Storable::template getNumber< Numeric >());
   }
 
-  /** be no higher than argument. is set to minimum of self and rhs */
+  /** be no higher than argument: set to minimum of self and rhs */
   bool depress(Numeric rhs){
     Numeric temp=this->native();
     if(::depress(temp,rhs)){
@@ -66,7 +66,7 @@ public:
     }
   }
 
-  /** be no lower than argument is set to maximum of self and rhs */
+  /** be no lower than argument: set to maximum of self and rhs */
   bool elevate(Numeric rhs){
     Numeric temp=this->native();
     if(::elevate(temp,rhs)){
@@ -144,7 +144,8 @@ public:
 
 typedef StoredNumeric<double> StoredReal;
 typedef StoredNumeric<int> StoredInt;
-//todo: arrange to tolerate 'true' and 'false' text on underlying node. I think an enumerizer will do it.
+//got tired of gratuitous int->unsigned warnings:
+typedef StoredNumeric<unsigned> StoredCount;
 
 
 #if cppGetsFixedOnDerivingFromTemplate //presently have to republish the whole interface
@@ -156,6 +157,8 @@ struct StoredBoolean:public StoredNumeric<bool>{
 
 };
 #else
+
+//todo: arrange to tolerate 'true' and 'false' text on underlying node. I think an enumerizer will do it.
 typedef StoredNumeric<bool> StoredBoolean;
 /** filtering adaptors on change signal */
 sigc::connection whenSet(StoredBoolean &thing,SimpleSlot action);
