@@ -31,6 +31,7 @@ PushedJSON::Action Parser::next(char pushed){
       if(!rule.equalscolon){
         return PushedJSON::Illegal;//might soften this to allow '=' inside values
       }
+      d.last=':';//alter token so that downstream guys don't need to have rule.equalscolon access
       //else
       //JOIN
     case ':':
@@ -50,6 +51,7 @@ PushedJSON::Action Parser::next(char pushed){
       return EndWad;
     case ';':
       if(rule.semicomma){
+        d.last=',';//canonical token
         return PushedJSON::EndItem;//missing value, possible missing whole child.
       } else {
         return PushedJSON::Illegal;
