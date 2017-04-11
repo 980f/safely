@@ -34,7 +34,6 @@ Application::Application(unsigned argc, char *argv[]):
 
 void Application::logArgs(){
   Indexer<TextKey> listlist(arglist);
-//  arglist.rewind();
   while(listlist.hasNext()){
     const char *arg=listlist.next();
     out("arg[%d]=%s",listlist.ordinal()-1,arg);
@@ -80,7 +79,6 @@ int Application::run(){
         break;
       }
     }
-    //todo: keepalive routines
   }
   return looper.errornumber;
 }
@@ -99,7 +97,6 @@ bool Application::writepid(TextKey pidname){
   if(pidler){
     pid_t pid=getpid();
     fprintf(pidler,"%ld\n", long(pid));//coercing type for platform portability
-    dbg("Pidfile type is %d bytes",sizeof(pid_t));
     fflush(pidler);
     fclose(pidler);//to get it to flush asap
     return true;

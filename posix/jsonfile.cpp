@@ -29,7 +29,10 @@ int JsonFile::loadFile(Cstr thename){
 
   StoreJsonParser parser(arg);
   parser.core.root=&root;
+  //allow variation of syntax where an '=' is the same as an ':' (when not quoted of course)
+  parser.parser.rule.equalscolon=true;//todo: make this configurable
   parser.parse();
+  root.resolve(true);//until we patch the loader to not create uncertainty
   loadedFrom=thename;//record after success
   //todo: stats?
   return int(parser.stats.totalNodes);
