@@ -17,6 +17,9 @@ bool isNan(double d);
 inline bool isNan(int){
   return false;
 }
+inline bool isNan(unsigned){
+  return false;
+}
 
 /** is a normalized fp number, excludes zero and signals */
 bool isNormal(double d);

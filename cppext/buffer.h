@@ -205,13 +205,15 @@ public:
 
   /** append a null terminated series, but do NOT include the null itself.
    * This copies objects via operator=  , and requires a compare to 0 functionality
+   * @returns whether the whole content was copied (also true if limit ended copy)
    */
-  bool cat(const Content *prefilled){
+  bool cat(const Content *prefilled,unsigned limit=BadLength){
     if(prefilled) {
-      while( (pointer < length) && (*prefilled != 0)) {
+      //do field by field copy, Content might override * and ++ operators.
+      while( (pointer < length) && (*prefilled != 0) && limit-->0) {
         buffer[pointer++] = *prefilled++; //expect this to copy the object
       }
-      return *prefilled==0;
+      return *prefilled==0 || limit==BadLength;//not truncated or truncated by request.
     } else {
       return true;//cat nothing == no truncation
     }
@@ -300,6 +302,17 @@ NB this uses references in and out, you connot pass a const onEmpty */
   /** needed to resolve between Sequence::skip and Ordinator::skip*/
   virtual void skip(unsigned int amount){
     Ordinator::skip(amount);
+  }
+
+  /** move pointer to an 'absolute' location. @returns whether the given location was in the buffer, if not then pointer is set to the canonical 'none left' value. */
+  bool skipto(unsigned point){
+    if(point<length){
+      pointer=point;
+      return true;
+    } else {
+      pointer=length;
+      return false;
+    }
   }
 
   /** remove at most the given number of items preceding next.

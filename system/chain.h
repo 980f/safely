@@ -23,8 +23,6 @@ protected:
   /** filters attempted appends, ill use can still put nulls into the chain.*/
   std::vector<T*> v;
 public:
-  static constexpr unsigned ALL=~0U;
-
   Chain(bool isOwner = true) : isOwner(isOwner), v(0){
     //#nada
   }
@@ -218,7 +216,7 @@ public:
   }
 
   /** move pointer back. If value is bad then pointer goes to 0!*/
-  void rewind(unsigned backup = Chain<T>::ALL){
+  void rewind(unsigned backup = BadLength){
     if(backup <= steps) {
       steps -= backup;
     } else {
@@ -271,7 +269,7 @@ public:
     return steps;
   }
 
-  void rewind(unsigned backup = Chain<T>::ALL){
+  void rewind(unsigned backup = BadLength){
     if(backup <= steps) {
       steps -= backup;
     } else {

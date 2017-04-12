@@ -1,38 +1,42 @@
 #include "cycler.h"
 
+void Cycler::unwrap(){
+  value %= length;
+  while(value>length){//has wrapped
+    value+=length;//wrap it back
+  }
+}
+
 Cycler::Cycler(int length):value(0) {
   setLength(length);//invoke constraint logic
 }
 
-int Cycler::cycle() {
+unsigned Cycler::cycle()const {
   return length;
 }
 
-void Cycler::setLength(int length) {
+void Cycler::setLength(unsigned length) {
   if(length<=0){
     length=1;
   }
   this->length = length;
-  value %= length;
+  unwrap();
 }
 
-int Cycler::operator = (int force) {
-  value = force % length;
+unsigned Cycler::operator =(int force) {
+  value = force;
+  unwrap();
   return value;
 }
 
-int Cycler::increment(void) {
+unsigned Cycler::increment(void) {
   if(++value >= length) {
     value = 0;
   }
   return value;
 }
 
-Cycler::operator unsigned(void) {
-  return value;
-}
-
-Cycler::operator int(void) {//bool was preferred over unsigned until I added this, and bool autoincrements.
+Cycler::operator unsigned(void)const {
   return value;
 }
 
@@ -41,7 +45,7 @@ Cycler::operator bool(void) {
   return increment() == 0;
 }
 
-int Cycler::operator +(int offset) {
+unsigned Cycler::operator +(int offset) const{
   if(!length) {
     return offset;
   }
@@ -49,23 +53,24 @@ int Cycler::operator +(int offset) {
   if(signedMod < 0) {
     return signedMod + length;
   }
-  return signedMod;
+  return unsigned(signedMod);
 }
 
-int Cycler::operator +=(int offset){
+unsigned Cycler::operator +=(int offset){
   return operator =(operator +(offset));
 }
 
-int Cycler::operator -(int offset) {
-  return *this + -offset;
+unsigned Cycler::operator -(int offset) const {
+  //todo: needs validation
+  return (*this + -offset)%length;
 }
 
-int Cycler::operator++ (void) { ///pre increment
+unsigned Cycler::operator++ (void) { ///pre increment
   return increment();
 }
 
-int Cycler::operator++ (int /*dummy*/) { ///post increment
-  int was = value;
+unsigned Cycler::operator++ (int /*dummy*/) { ///post increment
+  unsigned was = value;
   increment();
   return was;
 }

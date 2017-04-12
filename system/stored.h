@@ -118,14 +118,10 @@ public:
 
 }; // class Stored
 
-/** Global factory for root nodes. This is a hook for an application to link all of its Stored types in a list for access such as via a web service */
-Stored &TreeFactory(TextKey rootname);
 
 /** the ConnectChid macro is the main usablity feature of this class ensemble.
  * In any derived class of Stored one must have a constructor that takes a Storable.
- *  if you label that argument 'node' then for each Stored-derived member of your Stored-derived class that constructor must have an explicit construction item
- *  (since in turn those need a Storable param) and the ConnectChild macro will find a node named the same as the variable within the enclosing class's node and
- *  use that to init it. This uses var-args for additional construction arguments which are usually default values. */
+ *  If you label that argument 'node' then for each Stored-derived member of your Stored-derived class that constructor must have an explicit constructor (since in turn those need a Storable param) and the ConnectChild macro will find a node named the same as the variable within the enclosing class's node and use that to init it. This uses var-args for additional construction arguments which are usually default values. */
 #define ConnectChild(varname, ...) varname(node.child( # varname ), ## __VA_ARGS__)
 #define ConnectSibling(varname, ...) varname(node.parent->child( # varname ), ## __VA_ARGS__)
 

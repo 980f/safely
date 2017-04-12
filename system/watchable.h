@@ -21,6 +21,7 @@ protected:
   }
 
 public:
+
   Scalar set(Scalar newvalue){
     if(::changed(varb,newvalue)) {
       post();
@@ -80,7 +81,7 @@ public:
   }
 
   /** if adding int to float you may have to explicitly cast the int */
-  Scalar operator +=(Scalar newvalue){
+  template <typename OtherNumeric> Scalar operator +=(OtherNumeric newvalue){
     return set(varb + newvalue);
   }
 
@@ -95,7 +96,6 @@ public:
   }
 
   //post increment doesn't play well with the concept of watching
-
 
 }; // class Watchable
 
