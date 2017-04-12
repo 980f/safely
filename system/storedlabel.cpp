@@ -18,8 +18,8 @@ TextKey StoredLabel::c_str() const {
   return node.image();
 }
 
-TextValue StoredLabel::toString() const {
-  return TextValue(node.image());
+Text StoredLabel::toString() const {
+  return Text(node.image());
 }
 
 bool StoredLabel::isTrivial() const {
@@ -27,7 +27,7 @@ bool StoredLabel::isTrivial() const {
 }
 
 void StoredLabel::operator =(const StoredLabel&other){
-  if(&other) {
+  if(&other) {//yes, we can get null references.
     node.setImage(other.node.image());
   } else {
     wtf("null rhs in StoredLabel operator =");

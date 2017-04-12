@@ -18,7 +18,7 @@ int JsonFile::loadFile(Cstr thename){
     dbg("Couldn't open \"%s\", error:[%d]%s",thename.c_str(),optionFile.errornumber,optionFile.errorText());
     return optionFile.errornumber;
   }
-  if(! optionFile.readall(~0U)){
+  if(! optionFile.readall()){
     dbg("Couldn't read all of \"%s\", error:[%d]%s",thename.c_str(),optionFile.errornumber,optionFile.errorText());
     return optionFile.errornumber;
   }

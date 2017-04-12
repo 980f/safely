@@ -413,18 +413,16 @@ public:
   /** faster than using slot's when the method is simple enough:*/
   void forEach(void (Groupie::*method)(void)){
     ForValues(list){
-      Groupie &item(list.next());
-
-      (item.*method)();
+//      Groupie &item();
+      (list.next().*method)();
     }
   }
 
   /** experimental, to see if syntax is tolerable: */
   void forall(std::function<void(Groupie &)> action){
     ForValues(list){
-      Groupie &item(list.next());
-
-      action(item);
+//      Groupie &item();
+      action(list.next());
     }
   }
 

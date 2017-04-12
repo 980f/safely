@@ -1,7 +1,7 @@
 #ifndef CHANGEMONITORED_H
 #define CHANGEMONITORED_H
 
-#include "argset.h"
+#include "argset.h" //should seperate this guy out.
 #include "cheaptricks.h" //flagged
 /** manages a "dirty" bit, extended must use the set functions rather than assignment */
 class ChangeMonitored {
@@ -14,6 +14,7 @@ public:
     modified = false;//#true caused things to start up in syntax controlled order rather than as commanded
   }
 
+  virtual ~ChangeMonitored()=default;
   /** made overloadable so that compound objects can clear member flags as well, on a case by case basis.*/
   virtual bool wasModified(){
     return flagged(modified);

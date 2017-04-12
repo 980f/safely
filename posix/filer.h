@@ -23,7 +23,7 @@ public:
   /** allocate a buffer that can hold the whole file and read it in.
    * File must already be successfully opened (so that we don't have to deal with those errors here).
    * if you read some from the file before calling this the buffer will be big enough for the whole file even though only the remainder will be read in. */
-  bool readall(unsigned maxalloc);
+  bool readall(unsigned maxalloc=BadLength);//default arg: effectivley unlimited
 
   ByteScanner contents();
 public:
