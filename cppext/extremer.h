@@ -21,7 +21,7 @@ public: //could make this read-only
   Scalar extremum;
 public:
   /** @returns whether the extremum was updated */
-  bool inspect(const Scalar&value){
+  bool inspect(Scalar value){
     if(started) {
 //if preferLatter we want '=' to fall through and return true, not return false
       if(negatory){
@@ -85,10 +85,11 @@ public:
 }; // class Extremer
 
 //prebuild the common ones:
-class MaxDouble : public Extremer<double,false,false>{};
-class MinDouble : public Extremer<double,true,false>{};
+class MaxDoubleFinder : public Extremer<double,false,false>{};
+class MinDoubleFinder : public Extremer<double,true,false>{};
+class MaxDouble: public SimpleExtremer<double,false,false>{};
+class MinDouble: public SimpleExtremer<double,true,false>{};
 
 //add more wrapped specializations here.
-
 
 #endif // EXTREMER_H
