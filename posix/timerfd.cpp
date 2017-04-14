@@ -3,7 +3,7 @@
 #include "sys/timerfd.h"
 #include "nanoseconds.h"
 
-TimerFD::TimerFD(){
+TimerFD::TimerFD():PosixWrapper ("TimerFD"),fd("TimerFD"){
   int tfd=timerfd_create(CLOCK_MONOTONIC,TFD_NONBLOCK);
   fd.preopened(tfd,true);
 //  itimerspec u;

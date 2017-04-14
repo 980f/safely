@@ -8,7 +8,7 @@
 #include "logger.h"
 #include "filename.h"
 
-Filer::Filer(){
+Filer::Filer(const char *whatfor):PosixWrapper(whatfor),fd (whatfor){
   buffer = nullptr;
 }
 
@@ -78,7 +78,7 @@ ByteScanner Filer::contents(){
 
 bool Filer::readall(unsigned maxalloc){
   if(fd.isOpen()) {
-    FileInfo finfo(fd);
+    FileInfo finfo(fd,"readall");
     if(finfo){
       size = unsigned(finfo.size());
       if(size > maxalloc) {

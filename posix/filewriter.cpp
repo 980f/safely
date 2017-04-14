@@ -35,6 +35,7 @@ static Logger bug("FileWriter",true);
 //}
 
 FileWriter::FileWriter():
+  fd("FileWriter"),
   fmover(false/*write*/,fd,buf)
 {
   //#nada

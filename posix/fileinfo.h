@@ -11,7 +11,7 @@ public:
   /** calls @see from on @param filename */
   FileInfo(TextKey filename);
   /** calls @see from on @param filename */
-  FileInfo(int fd);
+  FileInfo(int fd, const char *whatfor);
   /** @returns whether @param filename 's info was successfully acquired*/
   bool from(TextKey filename);
   /** @returns whether @param fd 's info was successfully acquired, file does NOT have to be open.*/

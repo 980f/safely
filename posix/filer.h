@@ -13,7 +13,7 @@ class Filer : public PosixWrapper {
   unsigned size;
   Fildes fd;
 public:
-  Filer();
+  Filer(const char *whatfor);
   ~Filer();
   /** see fcntl.h for O_flags. @returns true on a successful open. Note:0 if flags for simple read */
   bool openFile(const char *fname, int o_flags=0,bool makeDirs=false);

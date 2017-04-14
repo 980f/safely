@@ -12,7 +12,7 @@ JsonFile::JsonFile(Storable &node):root(node)
 }
 
 int JsonFile::loadFile(Cstr thename){
-  Filer optionFile;
+  Filer optionFile("LoadJSON");
   root.child("#loadedFromFile").setImage(thename);//record where we try to load from.
   if(! optionFile.openFile(thename)){
     dbg("Couldn't open \"%s\", error:[%d]%s",thename.c_str(),optionFile.errornumber,optionFile.errorText());

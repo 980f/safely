@@ -7,7 +7,7 @@
 #include "fdset.h"
 #include "errno.h"
 
-Fildes::Fildes(){
+Fildes::Fildes(const char *whatfor):PosixWrapper (whatfor){
   errornumber = 0;
   lastRead = lastWrote = 0;
   fd = BADFD;
