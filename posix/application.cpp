@@ -8,7 +8,6 @@
 #include "unistd.h"
 
 #include "textpointer.h" //Text class
-static Logger out("EPOLLER",true);
 
 bool Application::setQuickCheck(unsigned soonish){
   if(soonish<quickCheck){
@@ -23,20 +22,21 @@ void Application::keepAlive(){
   //do nothing, normally overriden with code that looks for stalled processes.
 }
 
-Application::Application(unsigned argc, char *argv[]):PosixWrapper ("APP"),
+
+Application::Application(unsigned argc, char *argv[]):PosixWrapper ("APP"),//todo:1 name from arg0 last member
   arglist(const_cast<const char **>(argv),argc*sizeof (const char *)),
   looper(32), //maydo: figure out size of maximum reasonable poll set.
   period(100), //millisecond timing, this is running on near GHz machines ...
   beRunning(false)//startup idle.
 {
-  out("Application Logic initialized");
+  dbg("Application base initialized");
 }
 
 void Application::logArgs(){
   Indexer<TextKey> listlist(arglist);
   while(listlist.hasNext()){
     const char *arg=listlist.next();
-    out("arg[%d]=%s",listlist.ordinal()-1,arg);
+    dbg("arg[%d]=%s",listlist.ordinal()-1,arg);
   }
 
 }
@@ -44,7 +44,7 @@ void Application::logArgs(){
 void Application::logCwd(){
 //we use Text class because it will free what getcwd allocated. Not so critical unless we are using this program to look for memory leaks in the functions it tests.
   Text cwd(getcwd(nullptr,0));
-  out("Working directory is: %s",cwd.c_str());
+  dbg("Working directory is: %s",cwd.c_str());
 }
 
 int Application::run(){
@@ -67,14 +67,14 @@ int Application::run(){
       switch (looper.errornumber) {
       case EAGAIN:
       case EINTR: //then a signal was sent, and its handler has run.
-        out("nominal error ignored: %s",looper.errorText());
+        dbg("nominal error ignored: %s",looper.errorText());
         break;
       case EINVAL:
-        out("egregiously bad timeout or ??? ");
+        dbg("egregiously bad timeout or ??? ");
         stop();
         break;
       case EBADF: //looper wasn't initialized successfully
-        out("epoll fd was bad.");
+        dbg("epoll fd was bad.");
         stop();
         break;
       }

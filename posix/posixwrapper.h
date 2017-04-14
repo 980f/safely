@@ -11,7 +11,7 @@
  * This also wraps use of the syslog facility.
  */
 class PosixWrapper {
-  static bool needsInit;
+
 protected:
   //added for libusb, extends error numbers in the negative direction.
   const char **alttext=nullptr;
@@ -32,8 +32,7 @@ public: //so that we can merge errors from functions called outside of the objec
     return errornumber==0;
   }
 
-  /** set @param updatee with @param valorminus1, if valorminus1 is -1 then call failure(errno), return valorminus1>=0 */
-//  bool okValue(int &updatee,int valorminus1);
+  /** set @param target with @param value, if value is -1 then call failure(errno), @returns value>=0. */
   template <typename Integrish> bool okValue(Integrish &target,Integrish value){
     target=value;
     if(value==Integrish(~0UL)){//if magic 'all ones' value
@@ -46,12 +45,12 @@ public: //so that we can merge errors from functions called outside of the objec
 public:
   /** ERRNO for last operation done using the extend object */
   int errornumber=0;
-  /** logging noisiness for the (extended) object */
-  int debug=0;
+
 public:
   /** @param prefix is used for logging. */
   PosixWrapper(const char *prefix);
-  Logger dbg;//todo: migrate logmsg use into dbg then kill the extra layer it requires.
+  Logger dbg;
+  /** @deprecated  use dbg instead. This will be retained awhile for legacy code */
   void logmsg(const char *fmt, ...);
   /** like strerror but with our stored value, not tied to errno */
   const char *errorText()const;
