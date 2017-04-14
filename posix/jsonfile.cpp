@@ -31,11 +31,14 @@ int JsonFile::loadFile(Cstr thename){
   parser.core.root=&root;
   //allow variation of syntax where an '=' is the same as an ':' (when not quoted of course)
   parser.parser.rule.equalscolon=true;//todo: make this configurable
+  parser.parser.rule.semicomma=true;//needed in case we embed dp5 config :(
+
   parser.parse();
   root.resolve(true);//until we patch the loader to not create uncertainty
   loadedFrom=thename;//record after success
   //todo: stats?
-  return int(parser.stats.totalNodes);
+  dbg("loaded %d nodes, %d levels, from %s",parser.stats.totalNodes,parser.stats.maxDepth.extremum,thename.c_str());
+  return 0;
 }
 
 

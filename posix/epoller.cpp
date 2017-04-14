@@ -77,14 +77,14 @@ bool Epoller::doEvents(int timeoutms){
       //dbg("event on fd: %d",event.data.fd);
       if(event.events ==0 ){
         //we shouldn't be here.
-        logmsg("got a no-event response");
+        dbg("got a no-event response");
       } else {
         exec(event);
       }
     }
     return true;
   } else {
-    logmsg("doEvents: %s",errorText());
+    dbg("doEvents: %s",errorText());
     return false;
   }
 }

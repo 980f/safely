@@ -91,7 +91,7 @@ bool Filer::readall(unsigned maxalloc){
       ByteScanner scanner(buffer, size);
       int read = fd.read(scanner);
       if(unsigned(read) != size) {
-        logmsg("funky read in Filer::readall:%d of %d", read, size);
+        dbg("funky read in Filer::readall:%d of %d", read, size);
 //        read = size;
       }
       return true;

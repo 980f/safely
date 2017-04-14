@@ -40,7 +40,7 @@ public:
 
   /** process the block */
   void parse(){
-    parseChild(data.root);
+    while(parseChild(data.root));
   }
 
   /** some useless info about the parsed data */

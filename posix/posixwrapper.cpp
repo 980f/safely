@@ -6,12 +6,9 @@
 #include <stdarg.h> //for varargs logging
 #include "string.h" //for strerror
 
-bool PosixWrapper ::needsInit=true;
 
 PosixWrapper::PosixWrapper(const char *prefix):dbg(prefix){
-  if(flagged(needsInit)){
-//    openlog("APP",LOG_CONS | LOG_PERROR,LOG_USER);
-  }
+
 }
 
 void PosixWrapper::logmsg(const char *fmt, ...){
@@ -46,7 +43,7 @@ bool PosixWrapper::failure(int errcode){
   if(changed(errornumber,errcode)) {//only log message if different than previous, prevents spam at the loss of occasional meaningful duplicates.
     // If you think you might repeat an error then clear errornumber before such a call.
     if(errcode!=0){
-      logmsg("Failed: %s",errorText());//former code only worked when errno was the actual source of the error.
+      dbg("Failed: %s",errorText());//former code only worked when errno was the actual source of the error.
     }
 //    else {
 //      syslog(debug, "Cleared previous error");

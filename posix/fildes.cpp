@@ -37,7 +37,7 @@ bool Fildes::open(const char *devname, int O_stuff){//todo:3 expose 3rd argument
     assignFd(maybefd);
     return true;
   } else {
-    logmsg("Failed to open %s",devname);
+    dbg("Failed to open %s",devname);
     return false;
   }
 }
