@@ -8,7 +8,7 @@ int Threader::routine(){
   return exitcode;//presumably set by runbody on a soft exit.
 }
 
-Threader::Threader(bool detached){
+Threader::Threader(bool detached):PosixWrapper ("Threader"){
   opts.setDetached(detached);
 }
 
@@ -41,7 +41,7 @@ bool Threader::runbody(){
    return true;
 }
 
-Threader::Attributes::Attributes(){
+Threader::Attributes::Attributes():PosixWrapper ("Threader::Atrributes"){
   failure(pthread_attr_init(&attr));
 }
 

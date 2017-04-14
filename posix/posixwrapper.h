@@ -2,6 +2,7 @@
 #define POSIXWRAPPER_H
 
 #include "errno.h" //because we templated a function that needs it
+#include "logger.h"
 /**
  * handy things for wrapping a POSIX C API with a C++ class, if only for errno management.
  * Fairly recent errno implementations are per-thread, but even so one has to store away the errno
@@ -48,9 +49,11 @@ public:
   /** logging noisiness for the (extended) object */
   int debug=0;
 public:
-  PosixWrapper();
-  /** printf like logging via system logging (@see logger.h which is different), with all the faults therein.*/
+  /** @param prefix is used for logging. */
+  PosixWrapper(const char *prefix);
+  Logger dbg;//todo: migrate logmsg use into dbg then kill the extra layer it requires.
   void logmsg(const char *fmt, ...);
+  /** like strerror but with our stored value, not tied to errno */
   const char *errorText()const;
   /** replaces what was once 'failure' as that name works better for another purpose.
    * if @param passthrough is true then errno is recorded else errornumber is left to a previous value.

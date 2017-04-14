@@ -1,22 +1,23 @@
 #include "posixwrapper.h"
 #include "cheaptricks.h"
 #include <errno.h>
-#include <syslog.h>
+//#include <syslog.h>
+#include "logger.h"
 #include <stdarg.h> //for varargs logging
 #include "string.h" //for strerror
 
 bool PosixWrapper ::needsInit=true;
 
-PosixWrapper::PosixWrapper(){
+PosixWrapper::PosixWrapper(const char *prefix):dbg(prefix){
   if(flagged(needsInit)){
-    openlog("APP",LOG_CONS | LOG_PERROR,LOG_USER);
+//    openlog("APP",LOG_CONS | LOG_PERROR,LOG_USER);
   }
 }
 
 void PosixWrapper::logmsg(const char *fmt, ...){
   va_list args;
   va_start(args, fmt);
-  vsyslog(debug, fmt, args);
+  dbg.varg(fmt, args);
   va_end(args);
 }
 
@@ -45,7 +46,7 @@ bool PosixWrapper::failure(int errcode){
   if(changed(errornumber,errcode)) {//only log message if different than previous, prevents spam at the loss of occasional meaningful duplicates.
     // If you think you might repeat an error then clear errornumber before such a call.
     if(errcode!=0){
-      syslog(debug, "Failed: %s",errorText());//former code only worked when errno was the actual source of the error.
+      logmsg("Failed: %s",errorText());//former code only worked when errno was the actual source of the error.
     }
 //    else {
 //      syslog(debug, "Cleared previous error");

@@ -20,11 +20,30 @@ public:
 
 }; // class Sequence
 
+/** @deprecated, couldn't figure out how to cast the first use case for this. */
+template<typename Content,typename Wrapped> class ConvertingSequence: public Sequence<Content>{
+  Sequence<Wrapped> &wrapped;
+
+public:
+  ConvertingSequence(Sequence<Wrapped> &wrapped):wrapped(wrapped){
+
+  }
+
+  bool hasNext(void) const override {
+    return wrapped.hasNext();
+
+  }
+  Content&next(void) override {
+    return Content(wrapped.next());
+  }
+
+};
+
 /** differs from plain Sequence in the next() returns object via copying, not reference */
 template<typename Content> class ReadonlySequence {
 public:
   virtual bool hasNext(void) const = 0;
-  virtual Content next(void) = 0;
+  virtual Content next() = 0;
 
   virtual void skip(unsigned int qty = 1){
     while(hasNext() && qty-- > 0) {

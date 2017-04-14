@@ -30,12 +30,18 @@ Logger::~Logger(){
 #endif
 }
 
-void Logger::operator() (const char *msg, ...){
+void Logger::operator() (const char *fmt, ...){
   if(enabled){
     va_list args;
-    va_start(args, msg);
-    logmessage(prefix, msg, args);
+    va_start(args, fmt);
+    logmessage(prefix, fmt, args);
     va_end(args);
+  }
+}
+
+void Logger::varg(const char *fmt, va_list &args){
+  if(enabled){
+    logmessage(prefix, fmt, args);
   }
 }
 

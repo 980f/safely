@@ -1,6 +1,8 @@
 #ifndef LOGGER_H
 #define LOGGER_H
 
+#include "stdarg.h" //for relaying arg packs through layers
+
 #if LoggerManagement == 0
 #include "chained.h"
 #endif
@@ -28,6 +30,7 @@ public:
   /** makes usage look like a function */
   void operator() (const char *msg, ...);
 
+  void varg(const char *fmt, va_list &args);
   void dumpStack(const char *prefix);
 }; // class Logger
 

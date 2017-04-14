@@ -3,7 +3,7 @@
 
 static Logger trace("IncrementalFile",true);
 
-IncrementalFileTransfer::IncrementalFileTransfer(bool reader, Fildes &fd, ByteScanner &buf):
+IncrementalFileTransfer::IncrementalFileTransfer(bool reader, Fildes &fd, ByteScanner &buf):PosixWrapper ("IFT"),
   amReader(reader),
   fd(fd),
   buf(buf){

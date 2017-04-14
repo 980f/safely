@@ -2,13 +2,13 @@
 #include "logger.h"
 #include "string.h"
 
-FileInfo::FileInfo(TextKey filename){
+FileInfo::FileInfo(TextKey filename):PosixWrapper (filename){
   if(nonTrivial(filename)){
     from(filename);
   }
 }
 
-FileInfo::FileInfo(int fd){
+FileInfo::FileInfo(int fd,const char *whatfor):PosixWrapper (whatfor){
   from(fd);
 }
 

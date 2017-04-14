@@ -12,7 +12,7 @@ constexpr unsigned evlistsize(unsigned number){
   return sizeof (epoll_event)*number;
 }
 
-Epoller::Epoller(unsigned maxreport):
+Epoller::Epoller(unsigned maxreport):PosixWrapper ("Epoller"),
   epfd(~0),
   BuildIndexer(epoll_event,waitlist,maxreport){
   epfd=epoll_create1(0);
@@ -63,7 +63,7 @@ void Epoller::exec(const epoll_event &ev){
     Handler &handler(*reinterpret_cast<Handler *>(ev.data.ptr));
     handler(ev.events);
   } else {
-    dbg("null ptr from event returned by epoll");
+    ::dbg("null ptr from event returned by epoll");
   }
 }
 

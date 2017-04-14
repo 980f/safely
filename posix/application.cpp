@@ -23,7 +23,7 @@ void Application::keepAlive(){
   //do nothing, normally overriden with code that looks for stalled processes.
 }
 
-Application::Application(unsigned argc, char *argv[]):
+Application::Application(unsigned argc, char *argv[]):PosixWrapper ("APP"),
   arglist(const_cast<const char **>(argv),argc*sizeof (const char *)),
   looper(32), //maydo: figure out size of maximum reasonable poll set.
   period(100), //millisecond timing, this is running on near GHz machines ...

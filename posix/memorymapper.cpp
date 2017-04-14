@@ -6,7 +6,7 @@
 MemoryMapper *MemoryMapper::Mmap=nullptr;
 
 //rather than have a compiler control create a regular file for simulation and link to /dev/gpiomem for rpi real operation.
-MemoryMapper::MemoryMapper(){
+MemoryMapper::MemoryMapper():fd("MemoryMapper"){
   fd.open("safe-memory", O_RDWR | O_SYNC);
 }
 

@@ -20,7 +20,7 @@ protected:
   int fd;
   bool assignFd(int anFD);
 public:
-  Fildes();
+  Fildes(const char *whatfor);
   /** since we close on going out of scope if you share an fd you must take care to use pointer or reference*/
   ~Fildes();
   bool open(const char *devname, int O_stuff); //open a named file
