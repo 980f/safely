@@ -48,7 +48,8 @@ SOURCES += \
     microseconds.cpp \
     threader.cpp \
     jsonfile.cpp \
-    performancetimer.cpp
+    performancetimer.cpp \
+    activityperformance.cpp
 
 
 
@@ -78,7 +79,8 @@ HEADERS += \
     microseconds.h \
     threader.h \
     jsonfile.h \
-    performancetimer.h
+    performancetimer.h \
+    activityperformance.h
 
 DISTFILES += \
     posixgroup.ld
