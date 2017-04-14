@@ -2,7 +2,7 @@
 #define RANGED_H
 #include "range.h"
 
-/** Range<double> was very popular, and we can add some utilities for it:*/
+/** Range&gt;double&lt; was very popular, and we add some utilities for it:*/
 class Ranged :public Range<double> {
 public:
   Ranged();
