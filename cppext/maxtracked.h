@@ -6,11 +6,13 @@
 class MaxTracked:public SimpleExtremer<unsigned,false,false>{
   unsigned latestValue;
 public:
-  MaxTracked(unsigned initValue){
-    inspect(initValue);
+  /** @param initValue is a starting value, @param andInspect is whether to including this in the determination of maximum */
+  MaxTracked(unsigned initValue=0,bool andInspect=true){
+    latestValue=initValue;
+    if(andInspect){
+      inspect(initValue);
+    }
   }
-
-  MaxTracked()=default;
 
   unsigned operator =(unsigned value){
     latestValue=value;
