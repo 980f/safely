@@ -13,3 +13,4 @@ svnbranch.txt
 .qmake.stash
 Makefile
 tests/tests
+usb/
