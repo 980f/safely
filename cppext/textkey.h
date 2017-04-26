@@ -4,6 +4,11 @@
 /** marker for internal tag for text, especially useful in getting 'const' onto the correct place */
 typedef const char* TextKey;
 
+/** for converting text as bytes to bytes */
+inline const unsigned char *raw(const char *ptr){
+  return reinterpret_cast<const unsigned char *>(ptr);
+}
+
 /** add 1 to reserve space for null terminator
  * this is a marker for '1+' or '+1'
  */
