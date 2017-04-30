@@ -18,7 +18,7 @@ public:
   /* connect to user allocated file and buffer objects. This makes it easier to change synch code to async. */
   FileAsyncAccess(bool reader,Fildes &fd,ByteScanner &buf);
   /** start read process */
-  bool go();//reserve place for a null
+  bool go();
 
   /** For polling @returns whether background operation is not still in progress */
   bool isDone() const {
@@ -35,8 +35,11 @@ public:
    * @returns whether block() executed ok, which is ambiguous when the last transfer is a partial buffer */
   bool block(double seconds);
 
+  /** similar to block this polls for completion, but doesn't suspend the thread. This is for testing. */
   void loiter();
 
+  /** issue a cancel request, man aio_cancel for full behavior */
+  void cancel();
 private:
   /** this will call back to our member fn */
   static void sighandler(int signo, siginfo_t *info, void *);
