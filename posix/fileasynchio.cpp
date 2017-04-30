@@ -54,6 +54,10 @@ void FileAsyncAccess::loiter(){
   }
 }
 
+void FileAsyncAccess::cancel(){
+  aio_cancel(fd,&cb);
+}
+
 bool FileAsyncAccess::launch(bool more){
   if(more){
     //maydo: add 'lastSuccessfulTranferAmount' so we can loosen up retry on error in continuation
