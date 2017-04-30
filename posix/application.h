@@ -22,6 +22,10 @@ protected:
   bool beRunning;
   /** called with each event, especially when period is up. Not harmonic */
   virtual void keepAlive();
+
+  //until epoll works sanely on both platforms run() will just run a timer.
+  bool justTime;
+
 public:
   /** doesn't do much, but someday we may mate this to gnu getargs */
   Application(unsigned argc, char *argv[]);
@@ -35,9 +39,9 @@ public:
   void stop(){
     beRunning=false;
   }
-  Text hostname();
 
-
+public: //utilities
+  Text hostname();//not static as we record errors
   /** write pid to file. best practice if for that file to be in /tmp so that it evaporates on a crash of the system. */
   static bool writepid(TextKey pidname);
 };

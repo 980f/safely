@@ -11,9 +11,6 @@ private:
    * This is used to reduce the 'number of seconds' used in some calculations to make sure nanoseconds don't get discarded when added to seconds.
 */
   static __time_t epoch;
-public:
-  /** timestamp reported as seconds since roughly the start of the application */
-  double asSeconds(const timespec &ts);
 private:
   void readit(timespec &ts);
   const int CLOCK_something;
@@ -24,7 +21,10 @@ protected:
   bool running;
 public:
   /** @param beRunning is whether to start timer upon construction.
-      @param realElseProcess is whether to track realtime or thread-active-time */
+      @param realElseProcess is whether to track realtime or thread-active-time.
+NB: thread time is only sane if the StopWatch stays associated with the same physical CPU in a SMP system.
+Most of the time 'real' makes more sense, but when debugging 'process' time is more like what will be encountered when not debugging.
+ */
   StopWatch(bool beRunning=true,bool realElseProcess=false);//defaults are for performance timing.
 
   /** @returns elasped time and restarts interval. Use this for cyclic sampling. @param absolutely if not null gets the absolute time reading used in the returned value.*/
