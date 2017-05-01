@@ -62,21 +62,23 @@ void printNode(unsigned tab, Storable &node, FILE *fp){
   switch (node.getType()) {
   case Storable::Wad:
     fprintf(fp,"{");
-    for(auto list(node.kinder()); list.hasNext(); ) {
+//    if(node.numChildren()==0){
+//        dbg("if following for loop doesn't iterate then compiler skipped a bunch of code");
+//    }
+    for(ChainScanner<Storable> list(node.kinder()); list.hasNext(); ) {
       Storable & it(list.next());
       printNode(pretty?tab + 1:BadIndex,it,fp);
       if(list.hasNext()) {
         fputc(',',fp);
-      } else {
-        if(pretty){
-          fputc('\n',fp);
-          for(unsigned tabs = tab; tabs-->0; ) {
-            fprintf(fp,"  ");
-          }
-        }
-        fputc('}',fp);
       }
     }
+    if(pretty){
+      fputc('\n',fp);
+      for(unsigned tabs = tab; tabs-->0; ) {
+        fprintf(fp,"  ");
+      }
+    }
+    fputc('}',fp);
     break;
   case Storable::Numerical:
     fprintf(fp,"%g ",node.getNumber<double>());

@@ -364,6 +364,7 @@ NB this uses references in and out, you connot pass a const onEmpty */
   Indexer appendAll(const Indexer<Content> &other){
     if(stillHas(other.length)) {
       Indexer<Content> cat(other, 0);
+      cat.dump();//this was missing for a long time.
       catFrom(cat, other.length);
     }
     return *this;
