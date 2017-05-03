@@ -41,6 +41,9 @@ Most of the time 'real' makes more sense, but when debugging 'process' time is m
   void rollit();
   /** @return seconds of absolute time of stop, or now if running*/
   double absolute();
+
+  /** @returns the number of cycles of frequency @param atHz that have @see elapsed() */
+  unsigned cycles(double atHz);
 };
 
 #endif // STOPWATCH_H
