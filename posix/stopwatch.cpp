@@ -48,6 +48,12 @@ double StopWatch::absolute(){
   return stopped;
 }
 
+unsigned StopWatch::cycles(double atHz){
+  double seconds=elapsed();
+  double events=seconds*atHz;
+  return unsigned(events);//want truncation.
+}
+
 double StopWatch::elapsed(double *absolutely){
   double diff = absolute();
   if(absolutely) {
