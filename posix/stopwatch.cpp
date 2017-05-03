@@ -48,10 +48,11 @@ double StopWatch::absolute(){
   return stopped;
 }
 
-unsigned StopWatch::cycles(double atHz){
-  double seconds=elapsed();
+unsigned StopWatch::cycles(double atHz,bool andRoll){
+  double seconds=andRoll?roll():elapsed();
+  //could provide for more precise cycling by adjusting start by fraction of events *1/atHz.
   double events=seconds*atHz;
-  return unsigned(events);//want truncation.
+  return unsigned(events);//#we want truncation, rounding would be bad.
 }
 
 double StopWatch::elapsed(double *absolutely){

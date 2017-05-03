@@ -43,7 +43,7 @@ Most of the time 'real' makes more sense, but when debugging 'process' time is m
   double absolute();
 
   /** @returns the number of cycles of frequency @param atHz that have @see elapsed() */
-  unsigned cycles(double atHz);
+  unsigned cycles(double atHz, bool andRoll=true);
 };
 
 #endif // STOPWATCH_H
