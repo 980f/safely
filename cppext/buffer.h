@@ -187,7 +187,8 @@ public:
     }
   } // trimLeading
 
-  /** actually put 0's into the buffer starting at @param ender. Content is modified, this buffer object itself is unchanged. */
+  /** nulls content from offset ender through present pointer.
+   * actually put 0's into the buffer starting at @param ender. Content is modified, this buffer object itself is unchanged. */
   void truncate(unsigned ender){
     while(ender < pointer) {
       buffer[ender++] = 0;
