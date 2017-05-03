@@ -76,7 +76,7 @@ struct ByteScanner : public Indexer<u8> {
 
   //used internally, but also useful externally
   bool putBytes(unsigned value, unsigned numBytes);
-  u32 getU(int numBytes, u32 def = 0);
+  u32 getU(unsigned numBytes, u32 def = 0);
 
   /**had to copy from the base class, couldn't figure out how to cast one template into another.*/
   void grab(CharScanner&other);
