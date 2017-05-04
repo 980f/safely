@@ -32,6 +32,8 @@ struct NanoSeconds {
     return ts;
   }
 
+  void setMillis(unsigned ms);
+
 };
 
 #endif // NANOSECONDS_H

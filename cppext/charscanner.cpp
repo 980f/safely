@@ -40,17 +40,14 @@ bool ByteScanner ::putBytes(unsigned value, unsigned numBytes){
   }
 } /* putBytes */
 
-u32 ByteScanner ::getU(int numBytes, u32 def){
+u32 ByteScanner ::getU(unsigned numBytes, u32 def){
   //using a pointer to a local precludes compiler optimizing for register use.
   if(stillHas(numBytes)) {
     u32 acc = 0;
     if(bigendian){
-      u8 *pun=reinterpret_cast<u8 *>(&acc);
-      for(unsigned fill=4-numBytes;fill-->0;){
-        *pun++=0;//unsigned values
-      }
+      u8 *pun=reinterpret_cast<u8 *>(&acc)+numBytes;
       while(numBytes-->0){
-        *pun++=next();
+        *--pun=next();
       }
     } else {
       copyObject(&peek(),&acc,numBytes);

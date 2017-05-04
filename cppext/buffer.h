@@ -187,7 +187,8 @@ public:
     }
   } // trimLeading
 
-  /** actually put 0's into the buffer starting at @param ender. Content is modified, this buffer object itself is unchanged. */
+  /** nulls content from offset ender through present pointer.
+   * actually put 0's into the buffer starting at @param ender. Content is modified, this buffer object itself is unchanged. */
   void truncate(unsigned ender){
     while(ender < pointer) {
       buffer[ender++] = 0;
@@ -364,6 +365,7 @@ NB this uses references in and out, you connot pass a const onEmpty */
   Indexer appendAll(const Indexer<Content> &other){
     if(stillHas(other.length)) {
       Indexer<Content> cat(other, 0);
+      cat.dump();//this was missing for a long time.
       catFrom(cat, other.length);
     }
     return *this;

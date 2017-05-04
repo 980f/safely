@@ -9,6 +9,10 @@
 
 #include "textpointer.h" //Text class
 
+#include "time.h" //for epoll override
+#include "nanoseconds.h"
+#include "cheaptricks.h" //take()
+
 bool Application::setQuickCheck(unsigned soonish){
   if(soonish<quickCheck){
     quickCheck=soonish;
@@ -26,7 +30,7 @@ void Application::keepAlive(){
 Application::Application(unsigned argc, char *argv[]):PosixWrapper ("APP"),//todo:1 name from arg0 last member
   arglist(const_cast<const char **>(argv),argc*sizeof (const char *)),
   looper(32), //maydo: figure out size of maximum reasonable poll set.
-  period(100), //millisecond timing, this is running on near GHz machines ...
+  period(100), //millisecond timing, default here is slow
   beRunning(false)//startup idle.
 {
   dbg("Application base initialized");
@@ -54,29 +58,40 @@ int Application::run(){
     int nextPeriod=period;
     if(quickCheck>0){
       if(quickCheck<period){
-        nextPeriod=quickCheck;
-        quickCheck=0;
+        nextPeriod=take(quickCheck);
       } else {
         quickCheck-=period;
       }
     }
-    if(looper.doEvents(nextPeriod)){
+    if(justTime){
+
+      NanoSeconds sleeper;
+      NanoSeconds dregs;
+      dregs.setMillis(nextPeriod);
+      do {
+        sleeper=dregs;
+      } while(nanosleep(&sleeper.ts,&dregs.ts));//returns 0 on normal completion, else errno is set and dregs is timeremaining
+      looper.elapsed=looper.eventTime.roll();//emulate looper's wait.
       keepAlive();
     } else {
-      //some failures are not really something to get upset about
-      switch (looper.errornumber) {
-      case EAGAIN:
-      case EINTR: //then a signal was sent, and its handler has run.
-        dbg("nominal error ignored: %s",looper.errorText());
-        break;
-      case EINVAL:
-        dbg("egregiously bad timeout or ??? ");
-        stop();
-        break;
-      case EBADF: //looper wasn't initialized successfully
-        dbg("epoll fd was bad.");
-        stop();
-        break;
+      if(looper.doEvents(nextPeriod)){
+        keepAlive();
+      } else {
+        //some failures are not really something to get upset about
+        switch (looper.errornumber) {
+        case EAGAIN:
+        case EINTR: //then a signal was sent, and its handler has run.
+          dbg("nominal error ignored: %s",looper.errorText());
+          break;
+        case EINVAL:
+          dbg("egregiously bad timeout or ??? ");
+          stop();
+          break;
+        case EBADF: //looper wasn't initialized successfully
+          dbg("epoll fd was bad.");
+          stop();
+          break;
+        }
       }
     }
   }
