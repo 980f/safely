@@ -14,9 +14,12 @@ constexpr unsigned evlistsize(unsigned number){
 
 Epoller::Epoller(unsigned maxreport):PosixWrapper ("Epoller"),
   epfd(~0),
-  BuildIndexer(epoll_event,waitlist,maxreport){
+  BuildIndexer(epoll_event,waitlist,maxreport),
+  numEvents(BadLength),//init for debug
+  eventTime(true,true),//use real time, process may sleep
+  elapsed(0)
+{
   epfd=epoll_create1(0);
-  eventTime.start();
 }
 
 Epoller::~Epoller(){
@@ -48,9 +51,17 @@ bool Epoller::remove(int fd){
 }
 
 bool Epoller::wait(int timeoutms){
+  static StopWatch reactionTime;
+  static unsigned long shortwait=0;
+  reactionTime.start();
   ++waitcount;
   if(okValue(numEvents, epoll_wait(epfd,&waitlist.peek(),waitlist.freespace(),timeoutms))){
     elapsed=eventTime.roll();//time since last wait, possibly large the first time after app launch.
+    reactionTime.stop();
+    double waitedFor=reactionTime.elapsed();
+    if(waitedFor<timeoutms/1000.0){
+      ++shortwait;
+    }
     waitlist.skip(numEvents);
     return true;
   } else {
