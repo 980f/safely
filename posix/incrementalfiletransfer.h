@@ -13,6 +13,7 @@ public:
   Fildes &fd;
   /** a view into the data source or sink */
   ByteScanner &buf;
+  /** progress report */
   ssize_t expected;
   ssize_t transferred;
   unsigned blockstransferred;

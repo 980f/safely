@@ -10,7 +10,7 @@ struct FDset;//forward reference, we may be relocating this logic elsewhere as w
 class Fildes : public PosixWrapper {
 public:
   //make a true variable for something that is usuall #defined.
-  static const int BADFD= -1;
+  static const int BADFD= ~0;
   //retain for post-mortem debug.
   ssize_t lastRead;
   ssize_t lastWrote;
@@ -56,7 +56,7 @@ public:
   /** @returns isOpen()*/
   bool mark(FDset&fdset) const;
   /** @returns whether bit associated with this is a one in the fdset.*/
-  bool isMarked(FDset&fdset) const;
+  bool isMarked(const FDset &fdset) const;
   /** moves all bytes pending on this' OS read buffer to the other file.
     *
     * @returns 0 on full success, a positive number if some bytes are dropped, -1 for read error (see the fd's lastRead for details) -2 for write error (see that fd's lastWrote for detail. */

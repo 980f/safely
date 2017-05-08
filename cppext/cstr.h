@@ -38,6 +38,10 @@ public:
   /** as byte vs human readable character */
   const unsigned char*raw() const;
 
+  const char *notNull() const;
+
+  const char *nullIfEmpty() const;
+
   /** @returns whether content is non-existent or trivial */
   bool empty() const;
 

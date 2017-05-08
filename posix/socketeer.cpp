@@ -3,98 +3,41 @@
 #include <sys/socket.h>  //struct sockaddr, gethostbyname_r
 
 #include "logger.h"
-static Logger bug("SEER:");
+#include "cheaptricks.h"
+#include "string.h" //errno, we should make our own header for that!
 
-int Socketeer::resolve(){
-  char someinfo[100];//noone tells me how big this should be!
-  struct hostent *result=&he;
-  if(hostip!=0){
-    bug("Already resolved to <%x>",hostip);
-  }
-  else {
-    bug("Resolving Host named <%s>",hostname);
-    int herrno;
-    int error= gethostbyname_r (
-      hostname, &he,
-      someinfo, sizeof(someinfo)-1,
-      &result, //pointer to pointer to same thing that 'he' is a pointer to.
-      &herrno
-    );
-    if( error){
-      bug("Resolve failed: %s",error);
-      hostip=0;
-      failure(errno);
-      return error;
-    }
-    hostip=*(int *)he.h_addr_list[0];
-  }
-  host.sin_family = AF_INET;      // address family == internet
-  host.sin_port = htons(port);    // u16, network byte order */
-  host.sin_addr.s_addr = hostip;  // u32 network byte order
-  EraseThing(host.sin_zero/*8*/); // zero the rest of the struct */
-  return 0;
-}
-
-Socketeer& Socketeer::init(int hostip,int port){
-  this->hostip=hostip;
-  this->port=port;
-  setBlocking(false);
-  return *this;
-}
-
-Socketeer &Socketeer::init(const char *hostname, int port){
-  this->hostname=hostname;
-  this->port=port;
-  setBlocking(false);
-  return *this;
-}
-
-
-const char * Socketeer::setReadTimeout(int timeoutMillis){
-  if(timeoutMillis>0){
-    if(isBlocking){
-      setBlocking(false);
-    }
-    readtoMillis=timeoutMillis;
-  }
-  return 0;
-}
-
-#include <poll.h>
+#include <poll.h>  //for blocking connect.
 #define POLLTimeout 0x8000
 
-int Socketeer::waitFor(int events, int timout){
-  pollfd info;
-  info.fd = fd;
-  info.events = events;//POLLIN | POLLOUT /* superfluous | POLLERR | POLLHUP*/; //read ready, write ready, error, hangup.
-  int rc=poll (&info, 1, timout);
-  if(rc>0){//==1 to be picky
-    return info.revents;
+
+static Logger bug("SEER:");
+
+bool Socketeer::makeSocket(){
+  if(!resolve()){
+    bug("Resolve error:\"%s\"",connectArgs.errorText(""));
+    errornumber=connectArgs.lastErrno;
+    return false;//couldn't resolve host
   }
-  if(rc==0){//timeout
-    return POLLTimeout;//lump in with other errors
+
+  int fnum;
+  if(okValue(fnum,::socket(connectArgs.res->ai_family, connectArgs.res->ai_socktype |SOCK_NONBLOCK, connectArgs.res->ai_protocol))){
+    return preopened(fnum,true);
+  } else {
+    return false;
   }
-  return rc;
 }
 
-//char Socketeer::read(){
-//  if(isOpen()){
-//    int revents;
-//    if(okValue(revents,waitFor(POLLIN,readtoMillis))){
-//      if(revents>0 && (revents & POLLIN)){
-//        read
-//        char onecharbuf;
-//        int numread=read(fnum,&onecharbuf,1);
-//        if(numread==1){
-//          return onecharbuf;
-//        }
-//        lastErrno=errno;
-//        } else {
-//          lastErrno=revents;
-//        }
-//    }
-//    return -1;///not a char
-//}
+bool Socketeer::resolve(){
+//hint: AI_NUMERICSERV if hostname is a stringified numerical address.
+  return connectArgs.get(hostname.c_str(),portnumber,service.nullIfEmpty());
+}
+
+
+Socketeer &Socketeer::init(TextKey hostname, TextKey service){
+  this->hostname=hostname;
+  this->service=service;
+  return *this;
+}
 
 const char *Socketeer::badError(const char *detail){
   bug(detail);
@@ -102,113 +45,195 @@ const char *Socketeer::badError(const char *detail){
   return detail;
 }
 
-const char * Socketeer::Connect(int milliTimeout){
-  if(isOpen()){
+
+const char * Socketeer::connect(){
+  if(connected>0){
     return "already connected";
   }
-  int fnum;
-  if(okValue(fnum,socket(AF_INET, SOCK_STREAM, 0))){// af_inet==IPV4 ,sock_stream ==TCP
-    preopened(fnum,true);
-  } else {
-    return "Couldn't make socket";
-  }
 
-  resolve();
-
-  if(!setBlocking(false)){//so that we can time it out.
-    return badError("couldn't clear blocking for connecting");
-  }
-
-  bug("Calling connect");
-  if(failed( connect(fd, (struct sockaddr *)&host, sizeof(struct sockaddr)))){
-    if (errornumber== EINPROGRESS) {
-      errornumber=0;//the above code is proper for 'waiting'
-      bug("Waiting up to %d millis for connection to complete.",milliTimeout);
-
-      int pollresponse = waitFor(POLLIN | POLLOUT, milliTimeout);
-      bug("Wait got: %04x",pollresponse);//give them the raw code
-
-      errornumber=pollresponse;//just in case we forget
-      //report just the most significant fault
-      if(pollresponse<0){
-        return badError("Socket error");
-      }
-      if (pollresponse & POLLTimeout){
-        return badError("POLLTimeout");
-      }
-      if (pollresponse & POLLNVAL){
-        return badError("POLLNVAL");
-      }
-      if (pollresponse & POLLERR){
-        return badError("POLLERR");
-      }
-      if (pollresponse & POLLHUP){
-        return badError("POLLHUP");
-      }
-      if (!(pollresponse & (POLLIN | POLLOUT))){
-        return badError("Neither POLLIN or POLLOUT");
-      }
+  if(connected<0){
+    if(makeSocket()){
+      connected=0;
     } else {
-      return badError("Couldn't connect");
+      return "Couldn't make socket";
     }
   }
-
-  bug("Connected OK");
-
-//todo:1 do we leave it nonblocking?
-  errornumber=0;//ESUCCESS
-  return nullptr;//success
+  //todo:1 iterate over connectArgs and try until one works.
+  addrinfo *one=connectArgs.res;
+  if(failed( ::connect(fd, one->ai_addr, one->ai_addrlen))){
+    if (errornumber== EINPROGRESS || errornumber==EALREADY) {
+      errornumber=0;//the above codes are 'still working on it'
+      return nullptr;
+    } else {
+      //todo:1 do we release socket and go to connected=-1?
+      return errorText();
+    }
+  } else {
+    connected=1;
+    connectArgs.keep(one);
+    //maydo: connectArgs.free();
+//maudo:    connectArgs.clip();//todo: integrate this with keep, i.e. keep (what we need from) the given one and free the rest.
+    bug("Connected OK");
+    errornumber=0;//forget any lingering error indication.
+    return nullptr;//success
+  }
 }
 
+void Socketeer::flush(){
+  u8 bytes[4096];
+  ByteScanner toilet(bytes,sizeof(bytes));
+//can we stat a socket fd?
+  unsigned notforever=10000;
+  while(notforever-- && read(toilet)==sizeof(bytes)){
+    //#nada
+  }
+}
 
-///* blocking half duplex reader
-//on error return negative of number of bytes read before error.
-//0 bytes is an error in its own right.
+bool Socketeer::serve(unsigned backlog){
+  if(makeSocket()){
 
-//@todo: this seems useless, it might read past interesting char!
-//must read a byte at a time.
-//*/
-//int Socketeer::ReceiveUntil(char *buf,int maxlen,int termchar){
-//  int received;
-//  int wad;
+    if(!setSocketOption(SO_REUSEADDR, 1)){
+      bug("Couldn't set REUSEADDR, proceeding anyway");
+    }
 
-//  for(received=0;received<maxlen;){
-//    wad=recv(fnum, &buf[received], maxlen-received, 0 /*flags*/);
-//    if(wad>0){
-//      received+=wad;
-//      if(buf[received-1]==termchar){
-//        return received; //success
-//      }
-//    } else {
-//      lastErrno=errno;
-//      break;
-//    }
+    if(ok(bind(fd, connectArgs.res->ai_addr,connectArgs.res->ai_addrlen))){
+      if(ok(listen(fd,backlog))){
+        return true;
+      } else {
+        bug("Couldn't listen");
+      }
+    } else {
+      bug("Couldn't bind");
+    }
+  } else {
+    bug("Couldn't make socket");
+  }
+  return false;
+}
+
+bool Socketeer::accept(const Spawner &spawner, bool blocking){
+  SockAddress sadr;
+  int newfd=accept4(fd, &sadr.address, &sadr.length, blocking?0:SOCK_NONBLOCK);
+  if(newfd!=BADFD){
+    //we have a new socket!
+    //and its address!
+    spawner(newfd,sadr);
+    return true;
+  } else {
+    return false;
+  }
+}
+
+Socketeer::Socketeer ():Fildes("SOCK"),
+  portnumber(BadIndex),
+  connected(-1)
+{
+  //#nada
+}
+
+Socketeer::Socketeer(int newfd, SockAddress &sadr):Fildes("ClientSocket"){
+  preopened(newfd,true);
+//save other stuff for debug:
+  connectArgs.connected=sadr;
+}
+
+//int Socketeer::waitFor(int events, int timout){
+//  pollfd info;
+//  info.fd = fd;
+//  info.events = events;//POLLIN | POLLOUT /* superfluous | POLLERR | POLLHUP*/; //read ready, write ready, error, hangup.
+//  int rc=poll (&info, 1, timout);
+//  if(rc>0){//==1 to be picky
+//    return info.revents;
 //  }
-//  return -received; //error
+//  if(rc==0){//timeout
+//    return POLLTimeout;//lump in with other errors
+//  }
+//  return rc;
 //}
 
-//int Socketeer::Send(const char *string){
-//  if(fnum>0){
-//    return send(fnum, string, strlen(string), 0);
-//  } else {
-//    return -1;
-//  }
-//}
+///////////////////////////////
 
-//int Socketeer::Recv(char *buf,int maxlen){
-//  if(isOpen()){
-//    int any=waitFor(POLLIN,readtoMillis);
-//    if(any>0 && (any&POLLIN)){
-//      return recv(fnum, buf,maxlen , 0);//may not read all, but at least one byte should be there
-//    }
-//  }
-//  return -1;
-//}
+bool HostInfo::get(const char *name, unsigned port, const char *service){
+  getError=getaddrinfo(name, service,&hints,&res);
+  gotten=res!=nullptr;
+  lastErrno= getError?errno:0;
+  if(getError){
+    return false;
+  } else {
+    if(service==nullptr){
+      if(port){
+        //inject port number into addr structs in the list.
+        //that involves knowing what kind of address each is.
+        //for now they had all better by inet addrs:
+        for(addrinfo*ai=res;ai;ai=ai->ai_next){
+          //todo: switch on res->ai_family
+          sockaddr_in &host( *reinterpret_cast<sockaddr_in *>( ai->ai_addr));
+          host.sin_port=port;
+        }
+      }
+    }
+    return true;
+  }
+}
 
-Socketeer::Socketeer ():Fildes("SOCK"){
-  hostname=0;
-  hostip=0;
-  port=0;
-  isBlocking=false;
-  readtoMillis=0;
+void HostInfo::keep(addrinfo *one){
+  if(one==nullptr){
+    one=res;
+  }
+  if(one==nullptr){
+    return;
+  }
+  memmove(&connected.address,one->ai_addr,connected.length=one->ai_addrlen);
+}
+
+const char *HostInfo::errorText(const char *ifOk){
+  if(getError){
+    if(getError==EAI_SYSTEM){
+      return strerror(lastErrno);
+    }
+    return gai_strerror(getError);
+  } else {
+    return ifOk;
+  }
+}
+
+void HostInfo::free(){
+  if(flagged(gotten)){
+    freeaddrinfo(res);
+  } else {
+    delete res;//pathological
+  }
+  res=nullptr;//improve detection of use after free
+}
+
+void HostInfo::clip(){
+//todo: detect which member we use, free the others and set res to it. Until then we use the first and ditch the rest.
+  if(gotten && res && res->ai_next){
+    freeaddrinfo(res->ai_next);
+  }
+}
+
+HostInfo::HostInfo():
+  gotten(false),
+  getError(0),
+  res(nullptr)
+{
+  hint();
+}
+
+HostInfo::~HostInfo(){
+  free();
+}
+
+void HostInfo::hint(bool tcp){
+  hints.ai_family= AF_UNSPEC ;//   AF_INET and AF_INET6.
+  hints.ai_socktype=tcp?SOCK_STREAM:SOCK_DGRAM;// SOCK_STREAM , someday: SOCK_DGRAM, 0 for any
+  hints.ai_protocol =tcp?6:17;  //6 to limit to TCP, 17 for UDP else see https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml
+  hints.ai_flags =0; //todo: systematize for numeric name
+
+  //the rest are zeroed for safety.
+  hints.ai_addrlen=0;
+  hints.ai_addr=nullptr;
+  hints.ai_canonname=nullptr;
+  hints.ai_next=nullptr;
 }

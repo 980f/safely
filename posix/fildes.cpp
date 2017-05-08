@@ -92,7 +92,7 @@ bool Fildes::mark(FDset&bitset) const {
   }
 }
 
-bool Fildes::isMarked(FDset&fdset) const {
+bool Fildes::isMarked(const FDset&fdset) const {
   return isOpen() && fdset.includes(fd);
 }
 

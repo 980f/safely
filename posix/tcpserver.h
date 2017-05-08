@@ -26,11 +26,6 @@ class TcpServer:public sigc::trackable {
   int connects;
   int disconnects;
 
-//  /** on asynch accept returns this guy parses the event and calls spawnClient */
-//  void onAccept(Glib::RefPtr<Gio::AsyncResult>& event);
-  //  /** gio socket rendition */
-//  Glib::RefPtr<Gio::SocketListener> listenerp;
-
 public:
   /** successfully bound etc. */
   bool listening;//
