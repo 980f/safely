@@ -48,8 +48,10 @@ public:
 
   /** read into freespace of buffer */
   int read(ByteScanner&p);
+  int read(u8* buf,unsigned len);//placeholder
   /** write from freespace of buffer */
   int write(ByteScanner&p);
+  int write(u8* buf,unsigned len);//placeholder
 
   /** @returns isOpen()*/
   bool mark(FDset&fdset) const;

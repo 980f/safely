@@ -101,6 +101,8 @@ public:
 
 /** @returns the c-escape partner of this. 'n' goes to newline, a newline goes to 'n' */
   char slashee()const noexcept;
+
+  char asUpper() const noexcept;
 };
 
 #endif // CHAR_H

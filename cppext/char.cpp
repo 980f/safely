@@ -41,6 +41,10 @@ char Char::slashee() const noexcept {
   }
 }
 
+char Char::asUpper() const noexcept {
+  return  toupper(raw);
+}
+
 
 ////////////////////////////////////
 
