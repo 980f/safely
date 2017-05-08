@@ -20,7 +20,12 @@ class BufferFormatter {
   /** bounds of replacement specification */
   Span spec;
 public:
-  BufferFormatter(const CharFormatter &other,TextKey format);
+  BufferFormatter(const Indexer<u8> &other, TextKey format);
+  BufferFormatter(char *raw, unsigned sizeofraw,TextKey format);
+  BufferFormatter(unsigned char *raw, unsigned sizeofraw,TextKey format);
+
+  /** prepare for new format run. @returns this */
+  BufferFormatter &setFormat(TextKey format);
 //  ~BufferFormatter();
 private:
   bool insert(const char *stringy,unsigned length);
@@ -81,6 +86,10 @@ public:
   template<typename ... Args> static void composeInto(CharFormatter target,TextKey format, const Args ... args){
     BufferFormatter worker(target,format); //a zero size formatter computes required length via a dry run at formatting
     worker.compose_item(args ...);
+  }
+
+  template<typename ... Args> void print( const Args ... args){
+    compose_item(args ...);
   }
 
 }; // class TextFormatter

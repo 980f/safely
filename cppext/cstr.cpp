@@ -7,7 +7,11 @@ Cstr::Cstr() : ptr(nullptr){
   //#nada
 }
 
-Cstr::Cstr(TextKey target) : ptr(target){
+Cstr::Cstr(TextKey target):ptr(target){
+
+}
+
+Cstr::Cstr(unsigned char *target) : ptr(reinterpret_cast<char *>(target)){
   //#nada
 }
 

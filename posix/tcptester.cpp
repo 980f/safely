@@ -31,7 +31,7 @@ void TcpTester::TestService::reader(ByteScanner &raw){
 }
 
 bool TcpTester::TestService::writer(ByteScanner &raw){
-  raw.grab(buffer);
+  raw.getTail(buffer);
   buffer.rewind();
   return true;
 }

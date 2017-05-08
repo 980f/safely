@@ -80,7 +80,7 @@ public:
   }
 
   /* if @param rewind is negative then the new indexer covers just the data before the old one's pointer minus the ~rewind value, i.e. data already visited excluding
-   * the most recent. NB that a clip of ~0 gets everything beneath the pointer, ~1 ends the new Indexer one shy of the oldone's pointer (such as removing a comma).
+   * the most recent. NB that a clip of ~0 gets everything beneath the pointer (same values as getHead), ~1 ends the new Indexer one shy of the oldone's pointer (such as removing a comma).
    * a rewind of 0 gets you the equivalent of rewind(all) then clone() i.e. it ignores the other's pointer and gives you the construction time view of the other.
    * a rewind>0 gets you the unvisited part of the other, with the given number of already visited elements.
    * e.g. a value of 1 after reading a comma will get you a buffer starting with that comma */
@@ -106,7 +106,7 @@ public:
 
   /** reworks this one to be visited region of @param other.
    *   carefully implemented so that idx.snap(idx) works sensibly.*/
-  void snap(const Indexer &other){
+  void getHead(const Indexer &other){
     buffer = other.buffer;
     length = other.pointer;
     pointer = 0;
@@ -121,7 +121,7 @@ public:
   }
 
   /** tail end of other, without 'removing' it from other. Very suitable for a lookahead parser */
-  void grab(const Indexer<Content> &other){
+  void getTail(const Indexer<Content> &other){
     pointer = 0;
     buffer = &other.peek();
     length = other.freespace();
@@ -130,14 +130,14 @@ public:
   /** @returns an indexer that covers the freespace of this one. this one is not modified */
   Indexer<Content> remainder() const {
     Indexer<Content> rval;
-    rval.grab(*this);
+    rval.getTail(*this);
     return rval;
   }
 
   /** reduce length to be that used and reset pointer.
    * useful for converting from a write buffer to a read buffer, but note that the original buffer size is lost.*/
   void freeze(){
-    snap(*this);
+    getHead(*this);
   }
 
   /** @returns an Indexer that covers just the @param fieldLength next members of this, @param removing is whether to remove them from this one's scan.
@@ -397,7 +397,7 @@ NB this uses references in and out, you connot pass a const onEmpty */
 
   void forRemaining(functoid eff) const {
     Indexer<Content> list;
-    list.grab(*this);
+    list.getTail(*this);
     while(list.hasNext()) {
       (*eff)(list.next());
     }

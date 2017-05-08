@@ -59,7 +59,7 @@ u32 ByteScanner ::getU(unsigned numBytes, u32 def){
   }
 } // ByteScanner::getU
 
-void ByteScanner::grab(CharScanner &other){
+void ByteScanner::getTail(CharScanner &other){
   //#invalid cast:    grab(reinterpret_cast<ByteScanner>(other));
   buffer = reinterpret_cast<u8*>(other.buffer);
   if(other.ordinal()>0) {//want front end.
@@ -164,8 +164,14 @@ CharScanner::CharScanner(const CharScanner &other) : CharScanner(other,0){
 }
 
 CharScanner::CharScanner(const Indexer<char> &other): Indexer<char >(other, 0){
-  //#nada
+    //#nada
 }
+
+CharScanner::CharScanner(const Indexer<u8> &other):
+    Indexer<char >(reinterpret_cast<char *>(other.internalBuffer()), other.allocated()){
+    //#nada
+}
+
 
 /** ensure content is null terminated at present pointer.
  * maydo: return null if we can't put a null at the end

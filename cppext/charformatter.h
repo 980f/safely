@@ -17,8 +17,10 @@ public:
   /** construct around buffer associated with @param other, shares the buffer!*/
   CharFormatter(const Indexer<char>  &other);
   /** construct around buffer associated with @param other, shares the buffer!*/
+  CharFormatter(const Indexer<unsigned char>  &other);
+  /** construct around buffer associated with @param other, shares the buffer!*/
   CharFormatter(ByteScanner &other);
-
+  CharFormatter();
   /** parse a double from current pointer */
   double parseDouble(void);
 

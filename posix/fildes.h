@@ -47,11 +47,11 @@ public:
   FILE * getfp(const char *fargs=nullptr);
 
   /** read into freespace of buffer */
-  int read(ByteScanner&p);
+  int read(Indexer<u8>&p);
   int read(u8* buf,unsigned len);//placeholder
   /** write from freespace of buffer */
-  int write(ByteScanner&p);
-  int write(u8* buf,unsigned len);//placeholder
+  int write(Indexer<u8> &p);
+  int write(const u8* buf,unsigned len);//placeholder
 
   /** @returns isOpen()*/
   bool mark(FDset&fdset) const;
