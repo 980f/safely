@@ -29,14 +29,28 @@ bool Socketeer::makeSocket(){
 
 bool Socketeer::resolve(){
 //hint: AI_NUMERICSERV if hostname is a stringified numerical address.
-  return connectArgs.get(hostname.c_str(),portnumber,service.nullIfEmpty());
+  return connectArgs.lookup(hostname.c_str(),portnumber,service.nullIfEmpty());
 }
 
 
-Socketeer &Socketeer::init(TextKey hostname, TextKey service){
+Socketeer &Socketeer::init(TextKey hostname, unsigned portnum,TextKey service){
   this->hostname=hostname;
+  this->portnumber=portnum;
   this->service=service;
   return *this;
+}
+
+bool Socketeer::isConnected(){
+  return connected>0;
+}
+
+bool Socketeer::isDead(){
+  //todo: how do we detect a client is dead? Probably by last read error.
+  if(lastRead==EPIPE){
+    disconnect();
+    lastRead=0;
+  }
+  return connected<0;
 }
 
 const char *Socketeer::badError(const char *detail){
@@ -79,6 +93,21 @@ const char * Socketeer::connect(){
   }
 }
 
+void Socketeer::disconnect(){
+  switch(connected){
+  case -1: //already dead
+    return;
+  case 0: //while connecting
+    connected=-1;
+    return;
+  case 1: //
+    close();
+    connected=-1;
+    return;
+  }
+  return;
+}
+
 void Socketeer::flush(){
   u8 bytes[4096];
   ByteScanner toilet(bytes,sizeof(bytes));
@@ -90,35 +119,46 @@ void Socketeer::flush(){
 }
 
 bool Socketeer::serve(unsigned backlog){
-  if(makeSocket()){
+  if(connected>0){
+    return true;//"already serving";
+  }
 
-    if(!setSocketOption(SO_REUSEADDR, 1)){
-      bug("Couldn't set REUSEADDR, proceeding anyway");
-    }
+  if(connected<0){
+    if(makeSocket()){
+      connected=0;
 
-    if(ok(bind(fd, connectArgs.res->ai_addr,connectArgs.res->ai_addrlen))){
-      if(ok(listen(fd,backlog))){
-        return true;
+      if(!setSocketOption(SO_REUSEADDR, 1)){
+        bug("Couldn't set REUSEADDR, proceeding anyway");
+      }
+
+      if(ok(bind(fd, connectArgs.res->ai_addr,connectArgs.res->ai_addrlen))){
+        if(ok(listen(fd,backlog))){
+          connected=1;
+          return true;
+        } else {
+          //does 'unbinding' make sense?
+          bug("Couldn't listen");
+        }
       } else {
-        bug("Couldn't listen");
+        bug("Couldn't bind");
       }
     } else {
-      bug("Couldn't bind");
+      return "Couldn't make socket";
     }
-  } else {
-    bug("Couldn't make socket");
   }
   return false;
 }
 
 bool Socketeer::accept(const Spawner &spawner, bool blocking){
-  SockAddress sadr;
-  int newfd=accept4(fd, &sadr.address, &sadr.length, blocking?0:SOCK_NONBLOCK);
-  if(newfd!=BADFD){
-    //we have a new socket!
-    //and its address!
-    spawner(newfd,sadr);
-    return true;
+  if(connected>0){
+    SockAddress sadr;
+    int newfd=accept4(fd, &sadr.address, &sadr.length, blocking?0:SOCK_NONBLOCK);
+    if(newfd!=BADFD){      //we have a new socket! //and its address!
+      spawner(newfd,sadr);
+      return true;
+    } else {
+      return false;
+    }
   } else {
     return false;
   }
@@ -153,7 +193,7 @@ Socketeer::Socketeer(int newfd, SockAddress &sadr):Fildes("ClientSocket"){
 
 ///////////////////////////////
 
-bool HostInfo::get(const char *name, unsigned port, const char *service){
+bool HostInfo::lookup(const char *name, unsigned port, const char *service){
   getError=getaddrinfo(name, service,&hints,&res);
   gotten=res!=nullptr;
   lastErrno= getError?errno:0;

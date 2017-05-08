@@ -22,6 +22,7 @@ protected://we are a base class
 public:
   Cstr();
   Cstr(TextKey target);
+  Cstr(unsigned char *target);
 
   //virtual destructor as this is a base for classes which may do smart things with the pointer on destruction.
   virtual ~Cstr();

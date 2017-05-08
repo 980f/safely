@@ -19,6 +19,7 @@ public:
   /** explicit copy constructor helps compiler out, better than defaulting portion to 0*/
   CharScanner(const CharScanner &other);
   CharScanner(const Indexer<char>&other);
+  CharScanner(const Indexer<u8>&other);
 
   /** make a new pointer into an existing buffer, the portion of thereof selected by
    * @param portion is -1 (~0) for 0 to pointer, +1 for pointer to allocated, 0 for 0 to allocated.
@@ -79,14 +80,14 @@ struct ByteScanner : public Indexer<u8> {
   u32 getU(unsigned numBytes, u32 def = 0);
 
   /**had to copy from the base class, couldn't figure out how to cast one template into another.*/
-  void grab(CharScanner&other);
+  void getTail(CharScanner&other);
 
-  void grab(ByteScanner&other){
-    Indexer<u8>::grab(other);
+  void getTail(ByteScanner&other){
+    Indexer<u8>::getTail(other);
   }
 
-  void grab(Indexer<u8>&other){
-    Indexer<u8>::grab(other);
+  void getTail(Indexer<u8>&other){
+    Indexer<u8>::getTail(other);
   }
 
   /** access to base class version is a syntactic cf */
@@ -118,7 +119,7 @@ struct ByteLooker : public Indexer<const u8> {
   u32 getU(unsigned numBytes, u32 def = 0);
 
   /**had to copy from the base class, couldn't figure out how to cast one template into another.*/
-  void grab(CharScanner&other){
+  void getTail(CharScanner&other){
     //#invalid cast:    grab(reinterpret_cast<ByteScanner>(other));
     buffer = reinterpret_cast<const u8*>(other.internalBuffer());
     Ordinator::grab(other);

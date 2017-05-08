@@ -29,18 +29,16 @@ public:
   /** set hints, ie make given entity suitable for use in the hints param of getaddrinfo() */
   void hint(bool tcp=true);
   /** @param node  name of host, null for localhost (serving, in which case also set hints AI_PASSIVE)
-   * @param service  standard name or decimal string of port
+   * @param service  standard name or decimal string of port or nullptr in which case set @param port to something interesting.
    * if you know the name is numeric update the hints.ai_flags to reflect that to save time and resources.
 */
-  bool get(const char *name, unsigned port=0,const char *service=nullptr);
+  bool lookup(const char *name, unsigned port=0,const char *service=nullptr);
   void keep(addrinfo *one=nullptr);
   const char *errorText(const char *ifOk="OK");
   void free();
   /** free all but first */
   void clip();
   ~HostInfo();
-
-
   //flags for hints: AI_NUMERICHOST, AI_PASSIVE&& null node for server.
 };
 
@@ -65,17 +63,18 @@ public:
   /** build one around a client that a server has accepted */
   Socketeer (int newfd,SockAddress &sadr);
   /** record connection parameters but don't do anything with them. @returns this */
-  Socketeer &init(TextKey hostname, TextKey service);
+  Socketeer &init(TextKey hostname, unsigned portnum, TextKey service);
 //  /** record connection parameters but don't do anything with them. @returns this */
 //  Socketeer &init(unsigned hostip, unsigned port);
 
-  bool isConnected(){
-    return connected>0;
-  }
+  bool isConnected();
+
+  bool isDead();
 
   /** connect using stored host parameters, @returns nullptr on success else it is an error message. */
   const char * connect();//returns error message or null string pointer
 
+  void disconnect(); //forcefully close, release resources
   /** note that some socket options are settable in the socket() call.
 */
   template <typename ArgType> bool setSocketOption(unsigned optionEnum, ArgType optval,unsigned level=SOL_SOCKET){
