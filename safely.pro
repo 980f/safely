@@ -7,5 +7,8 @@ CONFIG += c++14
 #rpi gcc is 4.9, needs a kick in the std:
 QMAKE_CXXFLAGS += -std=c++14
 
+#signed chars are such a pain.
+CCFLAG += -funsigned-char
+
 #safely projects put their application specific library altering includes above the module src path.
 INCLUDEPATH += .. 
