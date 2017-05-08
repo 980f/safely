@@ -246,7 +246,7 @@ int SocketAddress::len() const {
 
 bool SocketAddress::connect(int fd){
   // return (-1 == ::connect(...))
-  return ~0==::connect(fd, reinterpret_cast<sockaddr *>(&sin), sizeof(sin));
+  return Fildes::BADFD==::connect(fd, reinterpret_cast<sockaddr *>(&sin), sizeof(sin));
 }
 
 

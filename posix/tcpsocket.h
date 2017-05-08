@@ -57,13 +57,13 @@ public:
 
 //////////////////////////////////////////////
 
-/** client socket */
+/** client socket. Uses aio (via incrementalfiletransfer.cpp) to move bytes in background.
+ */
 class TcpSocket:public TcpSocketBase {
-public:
-  //  TcpSocketStats socketStats;
+
 protected:
   /** create from an fd of an open (connected) socket or use the default arg and call connect() */
-  TcpSocket(int fd=~0,u32 remoteAddress=0,int port=0);
+  TcpSocket(int fd=BadIndex,u32 remoteAddress=0,int port=0);
 
   /** enables attempts to reconnect */
   bool autoConnect;

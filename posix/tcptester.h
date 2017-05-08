@@ -40,6 +40,7 @@ public:
   TcpTester(int port,int backlog=3);
 
   TcpSocket *spawnClient(int client_fd, u32 ipv4);
+  /** BLOCKING server that responds with a fixed message to any message received. */
   bool runMiniServer(int port);
 };
 

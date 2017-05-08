@@ -1,8 +1,5 @@
 #include "storedsettable.h"
 
-//using namespace Glib;
-
-
 SettableAdaptor::SettableAdaptor(Storable &node,Settable&unstored) :
   Stored(node),
   wrapped(unstored){
