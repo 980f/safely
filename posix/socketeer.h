@@ -95,6 +95,9 @@ public:
   using Spawner = std::function<void (int /*fd*/, SockAddress &/*sadr*/)>;
   bool accept(const Spawner &spawner,bool blocking=false);
 
+  unsigned atPort(){
+    return isConnected()? this->portnumber:BadIndex;
+  }
 };
 
 #endif
