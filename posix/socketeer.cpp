@@ -205,10 +205,11 @@ bool HostInfo::lookup(const char *name, unsigned port, const char *service){
         //inject port number into addr structs in the list.
         //that involves knowing what kind of address each is.
         //for now they had all better by inet addrs:
+        unsigned hostport=htons(port);
         for(addrinfo*ai=res;ai;ai=ai->ai_next){
           //todo: switch on res->ai_family
           sockaddr_in &host( *reinterpret_cast<sockaddr_in *>( ai->ai_addr));
-          host.sin_port=port;
+          host.sin_port=hostport;
         }
       }
     }
