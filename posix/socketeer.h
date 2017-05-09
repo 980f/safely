@@ -10,6 +10,8 @@
 struct SockAddress {
   sockaddr address;
   socklen_t length=sizeof(address);
+  unsigned getPort();
+  unsigned getIpv4();
 };
 
 /** wrapper to make sure we free any we fetch*/
@@ -92,12 +94,18 @@ public:
   /** starts listening, you will have to poll for accepts*/
   bool serve(unsigned backlog=1);
 
-  using Spawner = std::function<void (int /*fd*/, SockAddress &/*sadr*/)>;
+  using Spawner = std::function<bool (int /*fd*/, SockAddress &/*sadr*/)>;
+  /** @returns whether a new connection was spawned. That requires that there be one pending and the spawner agent agrees to connect it.
+   * @param blocking determines the blocking state of any newly spawned client connection. */
   bool accept(const Spawner &spawner,bool blocking=false);
 
   unsigned atPort(){
     return isConnected()? this->portnumber:BadIndex;
   }
+//maydo: but so far we don't have a need for 'flags'
+//  bool receive(Indexer<u8> &p,int flags){
+//    recv(fd,&p.peek(),p.freespace(),flags);
+//  }
 };
 
 #endif

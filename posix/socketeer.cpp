@@ -152,10 +152,16 @@ bool Socketeer::serve(unsigned backlog){
 bool Socketeer::accept(const Spawner &spawner, bool blocking){
   if(connected>0){
     SockAddress sadr;
-    int newfd=accept4(fd, &sadr.address, &sadr.length, blocking?0:SOCK_NONBLOCK);
-    if(newfd!=BADFD){      //we have a new socket! //and its address!
-      spawner(newfd,sadr);
-      return true;
+    int newfd=BADFD;
+    if(okValue(newfd,accept4(fd, &sadr.address, &sadr.length, blocking?0:SOCK_NONBLOCK))){
+      //we have a new socket! //and its address!
+      bug("accepted: %08x on port %u at fd: %d",sadr.getIpv4(),sadr.getPort(),newfd);
+      if(spawner(newfd,sadr)){
+        return true;
+      } else {//it was rejected by external rule
+        Fildes::Close(newfd);
+        return false;
+      }
     } else {
       return false;
     }
@@ -177,20 +183,6 @@ Socketeer::Socketeer(int newfd, SockAddress &sadr):Fildes("ClientSocket"){
   connectArgs.connected=sadr;
 }
 
-//int Socketeer::waitFor(int events, int timout){
-//  pollfd info;
-//  info.fd = fd;
-//  info.events = events;//POLLIN | POLLOUT /* superfluous | POLLERR | POLLHUP*/; //read ready, write ready, error, hangup.
-//  int rc=poll (&info, 1, timout);
-//  if(rc>0){//==1 to be picky
-//    return info.revents;
-//  }
-//  if(rc==0){//timeout
-//    return POLLTimeout;//lump in with other errors
-//  }
-//  return rc;
-//}
-
 ///////////////////////////////
 
 bool HostInfo::lookup(const char *name, unsigned port, const char *service){
@@ -202,15 +194,19 @@ bool HostInfo::lookup(const char *name, unsigned port, const char *service){
   } else {
     if(service==nullptr){
       if(port){
+        unsigned curious(0);
         //inject port number into addr structs in the list.
         //that involves knowing what kind of address each is.
-        //for now they had all better by inet addrs:
         unsigned hostport=htons(port);
         for(addrinfo*ai=res;ai;ai=ai->ai_next){
-          //todo: switch on res->ai_family
-          sockaddr_in &host( *reinterpret_cast<sockaddr_in *>( ai->ai_addr));
-          host.sin_port=hostport;
+          ++curious;
+          if(ai->ai_family==AF_INET){
+            sockaddr_in &host( *reinterpret_cast<sockaddr_in *>( ai->ai_addr));
+            host.sin_port=hostport;
+          }
+          //todo: IPV6
         }
+        dbg("There were %d choices of addrinfo",curious);
       }
     }
     return true;
@@ -277,4 +273,22 @@ void HostInfo::hint(bool tcp){
   hints.ai_addr=nullptr;
   hints.ai_canonname=nullptr;
   hints.ai_next=nullptr;
+}
+
+unsigned SockAddress::getPort(){
+  if(address.sa_family==AF_INET){
+    sockaddr_in &sin(*reinterpret_cast<sockaddr_in*>(&address));
+    return ntohs(sin.sin_port);
+  } else {
+    return BadIndex;
+  }
+}
+
+unsigned SockAddress::getIpv4(){
+  if(address.sa_family==AF_INET){
+    sockaddr_in &sin(*reinterpret_cast<sockaddr_in*>(&address));
+    return ntohl(sin.sin_addr.s_addr);
+  } else {
+    return BadIndex;//todo:0 this is NOT a bad ip address, need to get that from some RFC.
+  }
 }

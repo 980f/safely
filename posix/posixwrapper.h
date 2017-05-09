@@ -32,6 +32,10 @@ public: //so that we can merge errors from functions called outside of the objec
     return errornumber==0;
   }
 
+  bool isWaiting(){
+    return pleaseWait;
+  }
+
   /** set @param target with @param value, if value is -1 then call failure(errno), @returns value>=0. */
   template <typename Integrish> bool okValue(Integrish &target,Integrish value){
     target=value;
@@ -45,7 +49,8 @@ public: //so that we can merge errors from functions called outside of the objec
 public:
   /** ERRNO for last operation done using the extend object */
   int errornumber=0;
-
+  /** when errno is EAGAIN or EWOULDBLOCK this gets set and errornumber is left unchange */
+  bool pleaseWait=false;
 public:
   /** @param prefix is used for logging. */
   PosixWrapper(const char *prefix);
