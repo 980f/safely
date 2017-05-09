@@ -49,7 +49,9 @@ SOURCES += \
     threader.cpp \
     jsonfile.cpp \
     performancetimer.cpp \
-    activityperformance.cpp
+    activityperformance.cpp \
+    iosource.cpp \
+    tcpsocket.cpp
 
 
 
@@ -80,7 +82,9 @@ HEADERS += \
     threader.h \
     jsonfile.h \
     performancetimer.h \
-    activityperformance.h
+    activityperformance.h \
+    iosource.h \
+    tcpsocket.h
 
 DISTFILES += \
     posixgroup.ld

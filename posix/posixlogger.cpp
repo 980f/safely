@@ -29,7 +29,7 @@ void logmessage(const char *prefix,const char *msg,va_list &args){
 
 void dumpStack(const char *prefix){
   dbg("StackTrace requested by %s",prefix);
-  raise(SIGUSR1);
+  //todo:0 ++ restore this functionality raise(SIGUSR1);
 }
 
 
