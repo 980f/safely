@@ -22,6 +22,7 @@ protected://we are a base class
 public:
   Cstr();
   Cstr(TextKey target);
+  Cstr(unsigned char *target);
 
   //virtual destructor as this is a base for classes which may do smart things with the pointer on destruction.
   virtual ~Cstr();
@@ -37,6 +38,10 @@ public:
 
   /** as byte vs human readable character */
   const unsigned char*raw() const;
+
+  const char *notNull() const;
+
+  const char *nullIfEmpty() const;
 
   /** @returns whether content is non-existent or trivial */
   bool empty() const;

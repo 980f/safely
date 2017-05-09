@@ -7,7 +7,11 @@ Cstr::Cstr() : ptr(nullptr){
   //#nada
 }
 
-Cstr::Cstr(TextKey target) : ptr(target){
+Cstr::Cstr(TextKey target):ptr(target){
+
+}
+
+Cstr::Cstr(unsigned char *target) : ptr(reinterpret_cast<char *>(target)){
   //#nada
 }
 
@@ -28,8 +32,24 @@ const unsigned char *Cstr::raw() const {
   return reinterpret_cast<const unsigned char *>(ptr);
 }
 
+const char *Cstr::notNull() const {
+  if(ptr){
+    return ptr;
+  } else {
+    return emptyString;//the const in the return type allows us to point to a byte of read-only memory.
+  }
+}
+
+const char *Cstr::nullIfEmpty() const {
+  if(empty()){
+    return nullptr;
+  } else {
+    return ptr;
+  }
+}
+
 Cstr::operator const char *() const {
-  return ptr ? ptr : emptyString;//the const in the return type allows us to point to a byte of read-only memory.
+  return notNull();
 }
 
 bool Cstr::empty() const {

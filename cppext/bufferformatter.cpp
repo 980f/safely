@@ -1,12 +1,30 @@
 #include "bufferformatter.h"
 #include "string.h" //memmove
 
-BufferFormatter::BufferFormatter(const CharFormatter &other, TextKey format):
-  body(other)
+BufferFormatter::BufferFormatter(const Indexer<u8> &other, TextKey format):
+  body(reinterpret_cast<char *>(other.peek()),other.freespace())
 {
-  body.grab(other);
+  //body.getTail(other);
   body.cat(format);
   body.next()=0;//cat doesn't include the null, we do so here to stop the parsing of the format
+  body.clearUnused();//for debug
+}
+
+BufferFormatter::BufferFormatter(char *raw, unsigned sizeofraw, TextKey format):body(raw,sizeofraw){
+  setFormat(format);
+}
+
+BufferFormatter::BufferFormatter(unsigned char *raw, unsigned sizeofraw, TextKey format):
+    BufferFormatter(reinterpret_cast<char *>(raw),sizeofraw,format){
+//  setFormat(format);
+}
+
+BufferFormatter& BufferFormatter::setFormat(TextKey format){
+  body.rewind();
+  body.cat(format);
+  body.next()=0;//cat doesn't include the null, we do so here to stop the parsing of the format
+  body.clearUnused();//for debug
+  return *this;
 }
 
 bool BufferFormatter::insert(const char *stringy, unsigned length){
