@@ -56,6 +56,11 @@ bool Fildes::setBlocking(bool block) const {
   return setSingleFlag(O_NONBLOCK, !block);
 }
 
+void Fildes::Close(int &somefd){
+  ::close(somefd);
+  somefd=BADFD;
+}
+
 bool Fildes::setSingleFlag(int bitfield, bool one) const {
   if(!isOpen()) {
     return false;

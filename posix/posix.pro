@@ -53,7 +53,8 @@ SOURCES += \
     socketeer.cpp \
     tcpserver.cpp \
     tcpsocket.cpp \
-    tcptester.cpp
+    tcptester.cpp \
+    telnetserver.cpp
 
 
 
@@ -88,7 +89,8 @@ HEADERS += \
     socketeer.h \
     tcpserver.h \
     tcpsocket.h \
-    tcptester.h
+    tcptester.h \
+    telnetserver.h
 
 DISTFILES += \
     posixgroup.ld

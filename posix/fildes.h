@@ -63,6 +63,9 @@ public:
   int moveto(Fildes&other);
   /**set file to either blocking or not blocking */
   bool setBlocking(bool block) const;
+
+  /** close it then forget which it was */
+  static void Close(int &somefd);
 };
 
 #endif // FILDES_H
