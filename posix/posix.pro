@@ -50,8 +50,11 @@ SOURCES += \
     jsonfile.cpp \
     performancetimer.cpp \
     activityperformance.cpp \
-    iosource.cpp \
-    tcpsocket.cpp
+    socketeer.cpp \
+    tcpserver.cpp \
+    tcpsocket.cpp \
+    tcptester.cpp \
+    telnetserver.cpp
 
 
 
@@ -83,8 +86,11 @@ HEADERS += \
     jsonfile.h \
     performancetimer.h \
     activityperformance.h \
-    iosource.h \
-    tcpsocket.h
+    socketeer.h \
+    tcpserver.h \
+    tcpsocket.h \
+    tcptester.h \
+    telnetserver.h
 
 DISTFILES += \
     posixgroup.ld

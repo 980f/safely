@@ -35,7 +35,7 @@ Text::Text(Text &other) : Cstr(other){
 }
 
 
-Text::Text(TextKey other, const Span &span):Cstr(nullptr){
+Text::Text(TextKey other, const Span &span):Cstr(TextKey(nullptr)){
   if(nonTrivial(other)&&span.ordered()) {
     unsigned length = span.span();
     char *ptr = reinterpret_cast<char *>(malloc(Zguard(length)));

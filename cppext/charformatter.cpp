@@ -43,12 +43,22 @@ CharFormatter::CharFormatter(char * content, unsigned size) : CharScanner(conten
 
 //this should clone or wrap the remaining part of 'other'
 CharFormatter::CharFormatter(const Indexer<char> &other) : CharScanner(other,0){
-  //nada
+    //nada
 }
+
+CharFormatter::CharFormatter(const Indexer<unsigned char> &other): CharScanner( reinterpret_cast<char *>(other.internalBuffer()),other.used()){
+    //nada
+}
+
 
 //this should clone or wrap the remaining part of 'other'
 CharFormatter::CharFormatter(ByteScanner &other) : CharScanner(other,0){
-  //nada
+    //nada
+}
+
+CharFormatter::CharFormatter()
+{
+
 }
 
 double CharFormatter::parseDouble(void){

@@ -40,6 +40,12 @@ bool PosixWrapper::setFailed(bool passthrough){
 }
 
 bool PosixWrapper::failure(int errcode){
+  if(errcode==EAGAIN || errcode== EWOULDBLOCK){
+    pleaseWait=true;
+    return false;
+  } else {
+    pleaseWait=false;
+  }
   if(changed(errornumber,errcode)) {//only log message if different than previous, prevents spam at the loss of occasional meaningful duplicates.
     // If you think you might repeat an error then clear errornumber before such a call.
     if(errcode!=0){

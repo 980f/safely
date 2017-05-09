@@ -10,7 +10,7 @@ struct FDset;//forward reference, we may be relocating this logic elsewhere as w
 class Fildes : public PosixWrapper {
 public:
   //make a true variable for something that is usuall #defined.
-  static const int BADFD= -1;
+  static const int BADFD= ~0;
   //retain for post-mortem debug.
   ssize_t lastRead;
   ssize_t lastWrote;
@@ -47,20 +47,25 @@ public:
   FILE * getfp(const char *fargs=nullptr);
 
   /** read into freespace of buffer */
-  int read(ByteScanner&p);
+  int read(Indexer<u8>&p);
+  int read(u8* buf,unsigned len);//placeholder
   /** write from freespace of buffer */
-  int write(ByteScanner&p);
+  int write(Indexer<u8> &p);
+  int write(const u8* buf,unsigned len);//placeholder
 
   /** @returns isOpen()*/
   bool mark(FDset&fdset) const;
   /** @returns whether bit associated with this is a one in the fdset.*/
-  bool isMarked(FDset&fdset) const;
+  bool isMarked(const FDset &fdset) const;
   /** moves all bytes pending on this' OS read buffer to the other file.
     *
     * @returns 0 on full success, a positive number if some bytes are dropped, -1 for read error (see the fd's lastRead for details) -2 for write error (see that fd's lastWrote for detail. */
   int moveto(Fildes&other);
   /**set file to either blocking or not blocking */
   bool setBlocking(bool block) const;
+
+  /** close it then forget which it was */
+  static void Close(int &somefd);
 };
 
 #endif // FILDES_H

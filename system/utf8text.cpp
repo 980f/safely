@@ -4,8 +4,6 @@
 
 #include "utf8converter.h"
 
-//using namespace Utf8Text;
-
 //utf8 -> u32 -> \u or \U
 Text Utf8Text::encode(Cstr utf8s, Index presized){
   if(! presized.isValid()){
