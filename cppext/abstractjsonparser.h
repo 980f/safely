@@ -2,7 +2,9 @@
 #define ABSTRACTJSONPARSER_H
 
 /** an abstract json parser.
- * One migh use this as a base class, although that might be more complex then copy-pasting from a concrete instance such as @see StoredJSONparser */
+ *  @see StoredJSONparser.
+todo:1 replace template with abstract base classes.
+*/
 
 #include "pushedjsonparser.h"
 #include "sequence.h"
