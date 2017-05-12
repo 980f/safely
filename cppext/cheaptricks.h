@@ -25,22 +25,21 @@ template<typename Scalar1, typename Scalar2=Scalar1> bool changed(Scalar1 &targe
   }
 }
 
-/** atomisable test-and-clear */
-template<typename Scalar> Scalar flagged(Scalar&varb) ISRISH; //mark as needing critical optimization
-
-template<typename Scalar> Scalar flagged(Scalar&varb){
-/** this implementation isn't actually atomic, we managed to single thread our whole codebase. */
-  Scalar was = varb;
-  varb = 0;
-  return was;
-}
-
-/** take a value, @returns @param varb's value then clears it.*/
+/** atomisable test-and-clear take a value, @returns @param varb's value then clears it.*/
 template<typename Scalar> Scalar take(Scalar&varb){
   Scalar was=varb;
   varb=0;
   return was;
 }
+
+/** originally was the same code as the newer 'take' but since the code was found duplicated in another file the name wasn't quote right.
+ * 'flagged' is still a very good name for the boolean implementation of take, so we rework it thusly:
+*/
+bool flagged(bool &varb) ISRISH; //mark as needing critical optimization
+inline bool flagged(bool &varb){
+  return take(varb);
+}
+
 
 /** atomisable test and set
  * if arg is false set it to true and return true else return false.*/
