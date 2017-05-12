@@ -5,7 +5,7 @@
 #include "logger.h"
 #include <errno.h>
 #include "netinet/tcp.h"
-#include "cheapTricks.h"
+#include "cheaptricks.h"
 
 #include "microseconds.h"
 
