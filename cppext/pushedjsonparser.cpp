@@ -7,7 +7,7 @@ using namespace PushedJSON;
 
 void Parser::recordName(){
   name.take(value);
-  quotedName=postAssign(wasQuoted,false);
+  quotedName=take(wasQuoted);
   haveName = true;
 }
 

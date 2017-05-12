@@ -38,13 +38,6 @@ public:
   }
 };
 
-/** form of AssignOnExit for use in a return statement: */
-template <typename Scalar> Scalar postAssign(Scalar&varb, Scalar value){
-  Scalar was = varb;
-  varb = value;
-  return was;
-}
-
 //todo: conditionalize this on lib being handy:
 #include "functional"
 struct OnExit {

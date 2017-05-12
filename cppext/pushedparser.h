@@ -2,23 +2,26 @@
 #define PUSHEDPARSER_H
 
 #include "halfopen.h" //Span
-#include "countdown.h"
+#include "countdown.h" //ignore trailing chars of a utf8 sequence
 
-/** factored out of PushedJSONParser to share with CSV parsing */
+/** separate text into chunks of trimmed text and note the non-text chars that separate said chunks.
+ * factored out of PushedJSONParser to share with CSV parsing.
+ */
 class PushedParser {
 public:
   PushedParser();
   virtual ~PushedParser()=default;
   /** items that will result in an 'EndItem' indication */
 
-  const char * seperators;
+  const char * seperators=nullptr;
+  /** location attributes of an input char, useful for diagnosing formatting errors, but also used to denote boundary of text chunks*/
   struct Diag {
     unsigned location=0;//number of chars total
     /** number of newelines that have been seen */
     unsigned row=0;//number of lines, for error messages
     /** number of bytes inspected since last newline was seen */
     unsigned column=0;//where in row
-    //last char examined, retained for error messages
+    //last char examined, retained for error messages (and abused for refined view of alternate special chars)
     char last=0;
 
     void reset(){
@@ -30,7 +33,7 @@ public:
 
   } d;
 
-  bool inQuote;
+  bool inQuote=false;
   /** used to skip over utf extended chars */
   CountDown utfFollowers;
 
@@ -45,13 +48,14 @@ public:
     Before, //nothing known, expect name or value
     Inside, //inside quotes
     After, //inside unquoted text: we're tolerant so this can be a name or a symbolic value
-  } phase;
+  } phase=Before;
 
   /** 'location' recorded at start and end of token */
   Span value;
   /** whether value was found with quotes around it */
-  bool wasQuoted;
+  bool wasQuoted=false;
 
+  /** tells caller what to do with the token which was terminated by the character passed to next() */
   enum Action {
     //these tend to pass through all layers, to where the character source is:
     Continue,   //continue scanning
@@ -69,18 +73,18 @@ public:
 
   const char *lookFor(const char *seps);
   /**
-   *  records locations for text extents, passes major events back to caller
+   *  records locations for text extents in value, passes major events back to caller
    */
   Action next(char pushed);
 
-  /** called by entity that called next() after it has handled an item, to make sure we don't duplicate items if code is buggy. */
+  /** called by entity that called next() after it has handled an item, to make sure we don't duplicate items if code oor input stream is buggy. */
   void itemCompleted();
 
   /** @param fully is whether to prepare for a new stream, versus just prepare for next item. */
   void reset(bool fully);
 
   /** subtract the @param offset from all values derived from location, including location.
-   * this is useful when a buffer is reused, such as in reading a file a line at a time. */
+   * this is useful when a buffer is reused, such as in processing a file a block at a time. */
   void shift(unsigned offset);
 
 private:
