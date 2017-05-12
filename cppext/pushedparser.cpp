@@ -34,8 +34,10 @@ const char *PushedParser::lookFor(const char *seps){
   return postAssign(seperators,seps);
 }
 
+/** @param andItem should be true when the seperator marks a prefix vs the end of a value.
+ Basically it indicates a string terminated by a token rather than whitespace, whitespace is not a separator.*/
 PushedParser::Action PushedParser::endValue(bool andItem){
-  wasQuoted=postAssign(inQuote,false);
+  wasQuoted=take(inQuote);
   phase = andItem?Before:After;
   value.highest=d.location;
   return andItem?EndValueAndItem:EndValue;
@@ -66,7 +68,7 @@ PushedParser::Action PushedParser::next(char pushed){
       case Before: //file ended with a start quote.
         return Illegal;
       case Inside: //act like endquote was missing
-        return endValue(true);
+        return endValue(true);//attempt recovery at unexpected EOF
       case After:
         return Illegal;//shouldn't be able to get here.
       }
@@ -75,7 +77,7 @@ PushedParser::Action PushedParser::next(char pushed){
       case Before:
         return Done;
       case Inside:
-        return endValue(true);
+        return endValue(true);//attempt recovery at unexpected EOF
       case After:
         return EndItem; //eof push out any partial node
       }
@@ -93,7 +95,7 @@ PushedParser::Action PushedParser::next(char pushed){
   //we still process it
   if(inQuote) {
     if(ch.is('"')) {//end quote
-      return endValue(false);
+      return endValue(false);//end of an token, not sure if it is a terminal token.
     }
     if(ch.is('\\')){
       ++utfFollowers;//ignores all escapes, especially \"
@@ -109,10 +111,10 @@ PushedParser::Action PushedParser::next(char pushed){
   switch (phase) {
   case Inside:
     if(ch.isWhite()) {
-      return endValue(false);
+      return endValue(false);//typical case: whitespace seperator, seperates tokens but doesn't identify what type of token.
     }
     if(ch.in(seperators)){
-      return endValue(true);
+      return endValue(true);//typical case: there is no whitespace between token and special character
     }
     return Continue;
 //    break;//end Inside

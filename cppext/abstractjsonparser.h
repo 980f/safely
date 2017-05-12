@@ -18,6 +18,7 @@ template <typename Storable, typename TextClass> class JsonConstructor {
 public: //needs accessor
   /** parent of all that is parsed. It can be supplied or the insertNewChild must set it when given a null parent */
   Storable *root=nullptr;
+  bool treatRootSpecial=true;//for loading a file onto an existing node we want teh file content to be wrappped with braces that do not cause a new child to be made.
 protected:
   /** must supply and track source data, and be able to recover it from values of ordinal */
   virtual bool hasNext(void) = 0;
@@ -42,7 +43,7 @@ public:
 
   /** process the block */
   void parse(){
-    while(parseChild(data.root));
+    parseChild(data.root);
   }
 
   /** some useless info about the parsed data */
@@ -67,24 +68,28 @@ protected:
     return nova;
   }
 
-  /** @returns whether there are more children, for recursively parsing wads.
- @param expectNames is whether this is in a '{' or '[' block */
+  /** @returns whether there are more children, for recursively parsing wads. This exists for the BeginWad clause herein. */
   bool parseChild(Storable *parent){
     JsonStats::DepthTracker doe(stats);
     //look for name
     while(data.hasNext()) {
       switch (parser.next(data.next())) {
 
-      case PushedJSON::BeginWad: //open brace encountered
-        for(Storable *nova = assembleItem(parent,true); parseChild(nova); ) {
+      case PushedJSON::BeginWad: {//open brace encountered
+        //special treatment for node that matches top level of file
+        Storable *nova = ((parent==data.root)&&data.treatRootSpecial)? parent : assembleItem(parent,true);
+        while(parseChild(nova)) {
           //#recurse while there are more to be found
         }
-        return true; //end of this wad isn't the same as end of possibly enclosing wad.
+      } return true; //end of this wad isn't the same as end of possibly enclosing wad.
 
       case PushedJSON::EndItem:  //comma between siblings
         assembleItem(parent);
         return true;
 
+      case PushedJSON::Done:
+        //we probably don't get this as the 'while' will exit instead of passing an EOF to the parser.
+        //#JOIN to try to finish off a trailing not quite closed wad. If multiple open
       case PushedJSON::EndWad:   //closing wad
         assembleItem(parent);
         return false;
@@ -92,8 +97,8 @@ protected:
       case PushedJSON::Illegal: //unexpected char
         data.exclaim(parser.d);
         break;
-      default:
-        break;//to stifle warnings
+      case PushedJSON::Continue:
+        continue;
       } // switch
     }
     auto finial=parser.next(0);
