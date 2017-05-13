@@ -2,8 +2,8 @@
 
 /////////////////
 
-Storable &Stored::Groot(TextKey pathname){
-  if(Cstr(pathname)=="/"){
+Storable &Stored::Groot(TextKey pathname){  
+  if(Cstr(pathname).empty()){
     return groot;
   }
   Storable *node=Stored::groot.findChild(pathname,true);

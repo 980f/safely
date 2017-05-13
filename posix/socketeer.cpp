@@ -152,8 +152,9 @@ bool Socketeer::serve(unsigned backlog){
 bool Socketeer::accept(const Spawner &spawner, bool blocking){
   if(connected>0){
     SockAddress sadr;
+    int flags=blocking?0:SOCK_NONBLOCK;
     int newfd=BADFD;
-    if(okValue(newfd,accept4(fd, &sadr.address, &sadr.length, blocking?0:SOCK_NONBLOCK))){
+    if(okValue(newfd,accept4(fd, &sadr.address, &sadr.length, flags))){
       //we have a new socket! //and its address!
       bug("accepted: %08x on port %u as fd: %d",sadr.getIpv4(),sadr.getPort(),newfd);
       if(spawner(newfd,sadr)){

@@ -10,7 +10,8 @@ bool TelnetServer::enroll(int newfd, SockAddress &sadr){
   //purge dead ones, then try to add newone
   purge();
   if(clients.quantity()<maxClients){
-    clients.append(new Socketeer(newfd,sadr));
+    Socketeer &newby=*clients.append(new Socketeer(newfd,sadr));
+    newby.setBlocking(false);
     return true;
   } else {
     return false;
