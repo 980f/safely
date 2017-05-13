@@ -21,6 +21,8 @@
  *  One then uses the copy constructor to create a reader, with the pointer at zero and its allocation where the writer's pointer ended.
  *  Copy constructing a reader from another reader to get two pointers into the same content is done by using the copy constructor with rewind=0.
  *
+ * The term "primary buffer" is used in comments to refer to one which describes an actuall allocation of memory whereas this class often represents a view within such.
+ * It is up to the user to note when that is the case and to not use a mutator which changes the range of a primary buffer.
  *  todo: many of the functions were named for first use, not how they work. As such the names eventually did not match other usages.
  *  todo: C++11 and C++14 iterator and lambda helpers.
  *  todo: const versions of some methods.
@@ -41,6 +43,10 @@
  *
  */
 
+
+//instead of random segv's make them fault at 0
+#define CppExtBufferFailureGuard  if(length==0){return NullRef(Content);}
+
 template<typename Content> class CircularIndexer;  //so we can cyclically access a subset of one of the following.
 
 template<typename Content> class Indexer : public LatentSequence<Content>, public Ordinator {
@@ -58,7 +64,6 @@ private:
   }
 
 public:
-
   /** forgets present buffer and records start and length of some other one.
    *  @returns this */
   Indexer<Content> &wrap(Content *wrapped, unsigned int sizeofBuffer){
@@ -248,14 +253,9 @@ public:
 
   /** on overrun of buffer returns last valid entry*/
   virtual Content &next(void){
+    CppExtBufferFailureGuard
     return buffer[pointer < length ? pointer++ : length - 1];
   }
-
-  /** on overrun of buffer returns @param onEmpty.
-NB this uses references in and out, you connot pass a const onEmpty */
-//  Content &next(Content &onEmpty){
-//    return pointer < length ? buffer[pointer++] : onEmpty;
-//  }
 
   virtual Content next(Content onEmpty){
     return pointer < length ? buffer[pointer++] : onEmpty;
@@ -264,6 +264,7 @@ NB this uses references in and out, you connot pass a const onEmpty */
 
   /** @returns indexth element, <b>modulo length<b> for invalid indexes. */
   Content &operator [](unsigned int index) const {
+    CppExtBufferFailureGuard
     return buffer[index < length ? index : index % length];
   }
 
@@ -273,6 +274,7 @@ NB this uses references in and out, you connot pass a const onEmpty */
   }
 
   Content &operator *(void){
+    CppExtBufferFailureGuard
     return buffer[pointer < length ? pointer : length - 1];
   }
 
@@ -283,11 +285,13 @@ NB this uses references in and out, you connot pass a const onEmpty */
 
   /** @return current object ('s reference), rigged for sensible behavior when buffer is used circularly*/
   Content &peek(void) const {
+    CppExtBufferFailureGuard
     return buffer[pointer < length ? pointer : 0];
   }
 
-  /**@return reference to item most likely delivered by last call to next()*/
+  /** @returns reference to item most likely delivered by last call to next()*/
   Content &previous(void) const {
+    CppExtBufferFailureGuard
     return buffer[pointer >= length ? length - 1 : (pointer ? pointer - 1 : 0)];
   }
 
@@ -319,15 +323,37 @@ NB this uses references in and out, you connot pass a const onEmpty */
   /** remove at most the given number of items preceding next.
    *  first use is processing escaped chars in a string.
    * This does a memory move, no copy constructor or such will be invoked.
-   * The allocation is not affected, freespace will increase by 'amount'
+   * The allocation is reduced, don't do this to a primary buffer.
    */
   Indexer &remove(unsigned int amount){
     if(amount > pointer) {
       amount = pointer;
     }
-    copyObject(&buffer[pointer - amount], &buffer[pointer], (length - pointer) * sizeof(Content));
+    copyObject(&buffer[pointer], &buffer[pointer - amount], (length - pointer) * sizeof(Content));
     Ordinator::remove(amount);
     return *this;
+  }
+
+  /** remove bytes from the start of the allocation, actually moving data.
+ This method does NOT alter the allocation. This only makes sense for a receive buffer as you peel items off the front. */
+  Indexer &removeFirst(unsigned amount){
+    if(amount > pointer) {
+      amount = pointer;
+    }
+    copyObject(&buffer[amount], &buffer[0], (amount) * sizeof(Content));
+    pointer -=amount;
+    return *this;
+  }
+
+  /** seeks in used portion of buffer for something that operator=='s @param item.
+@deprecated untested */
+  unsigned findFirst(const Content &item){
+    for(int peek=0;peek<pointer;++peek){
+      if(item==buffer[peek]){
+        return peek;
+      }
+    }
+    return BadIndex;
   }
 
   /** if next() has been called at least once then replace the item that next() returned with the given one.
@@ -430,6 +456,7 @@ NB this uses references in and out, you connot pass a const onEmpty */
   }
 
 }; // class Indexer
+#undef CppExtBufferFailureGuard
 
 //the following probably doesn't work, or only works for simple types:
 #define IndexerWrap(thingy, wrapper) Indexer<typeof(thingy)> wrapper(&thingy, sizeof(thingy))

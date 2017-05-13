@@ -244,9 +244,10 @@ bool CharScanner::matches(const char *s){
   return !me.hasNext()||me.next()==0;//occasionally we get a null term on our counted string.
 } // CharScanner::matches
 
-void CharScanner::operator =(CharScanner &other){
-  rewind();
-  cat(other.asciiz());
+void CharScanner::operator =(CharScanner &&other){
+  this->buffer=other.buffer;
+  this->length=other.allocated();
+  this->pointer=other.used();
 }
 
 void CharScanner::trimNulls(void){

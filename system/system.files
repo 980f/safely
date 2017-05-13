@@ -75,4 +75,5 @@ HEADERS += \
     utf8transcoder.h \
     utf8converter.h \
     dottedname.h \
-    filenameconverter.h
+    filenameconverter.h \
+    allocatedindexer.h

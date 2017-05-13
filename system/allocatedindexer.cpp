@@ -1,6 +1,3 @@
 #include "allocatedindexer.h"
 
-AllocatedIndexer::AllocatedIndexer()
-{
-
-}
+//#fool IDE into checking header for typo's
