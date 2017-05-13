@@ -78,14 +78,18 @@ int CharFormatter::parseInt(int def){
   }
 }
 
+
 bool CharFormatter::move(int delta){
   if(delta==0){
     return true;//successfully did nothing, as was requested.
   }
-  unsigned target=pointer+delta;
-  if(contains(target)){
-    unsigned amount=allocated()-delta>0?target:pointer;
-    memmove(buffer+target,buffer+pointer,amount);//memmove promises to deal with overlap sanely
+  unsigned target=pointer+delta;//data at pointer should move to target
+  if(canContain(target)){
+    unsigned amount=freespace();//max that will move
+    if(delta>0){
+      amount-=delta;//don't push data past end of allocation.
+    }
+    copyObject(buffer+pointer,buffer+target,amount);//promises to deal with overlap sanely
     pointer=target;
     return true;
   } else {
@@ -138,8 +142,8 @@ bool CharFormatter::printAtWidth(unsigned int value, unsigned width){
   if(stillHas(width)) {
     printChar(' ', width - numDigits);
     while(numDigits--> 0) {
-      unsigned digit = value / Decimal1[numDigits];
-      value -= digit * Decimal1[numDigits];
+      unsigned digit = value / i32pow10(numDigits);
+      value -= digit * i32pow10(numDigits);
       printDigit(digit);
     }
     return true;
@@ -158,24 +162,30 @@ bool CharFormatter::printUnsigned(unsigned int value){
   int numDigits = ilog10(value) + 1;
   if(stillHas(numDigits)) {//this doesn't include checking for room for a separator
     while(numDigits--> 0) {
-      unsigned digit = value / Decimal1[numDigits]; //division is actually fast on this processor ... albeit not single cycle
-      value -= digit * Decimal1[numDigits];//todo:2 look for quo:rem routine for this micro.
+      unsigned digit = revolutions(value ,i32pow10(numDigits));
       printDigit(digit);
     }
     return true;
   } else {
     return false;
   }
-
-  //  return checker.commit();
 }
 
-bool CharFormatter::printUnsigned(u64 value)
-{
-  //todo: real code!
-  return printUnsigned(u32(value));
-} /* printUnsigned */
-
+bool CharFormatter::printUnsigned(u64 value){
+  if(value == 0) {
+    return printChar('0');
+  }
+  int numDigits = ilog10(value) + 1;
+  if(stillHas(numDigits)) {
+    while(numDigits--> 0) {
+      unsigned digit = revolutions(value ,i64pow10(numDigits));
+      printDigit(digit);
+    }
+    return true;
+  } else {
+    return false;
+  }
+}
 //alh made return compatible with other methods of this class.
 bool CharFormatter::printHex(unsigned value, unsigned width){
   if(stillHas(width)) {
@@ -265,6 +275,59 @@ bool CharFormatter::printNumber(double d, int sigfig){
         }
         checker &= printUnsigned(u32(d));
         //todo:2 trim trailing zeroes here stop at DP  and if you see that add one back on.
+      }
+    }
+  }
+  return checker.commit();
+}
+
+bool CharFormatter::printNumber(double d, const NumberFormat &nf, bool addone){
+  TransactionalBuffer<char > checker(*this);
+  NumberPieces np(d); //decompose number into digits and field sizes.
+  if(np.isZero) { //to avert taking the log of 0. and frequent value.
+    checker &= printChar('0');
+  } else if(np.isNan) {
+    checker &= printString(nf.showsign?"+NaN":"NaN");
+  } else if(np.isInf) {
+    return checker &= printString(np.negative?"-Inf":nf.showsign?"+Inf":"Inf");
+  } else {
+    if(nf.scientific){
+      checker&=printString("Oops!");
+    } else {
+      if(nf.showsign && !np.negative){
+        checker &= printChar('+');
+      }
+      if(np.negative){
+        checker &= printChar('-');
+      }
+      checker&= printUnsigned(np.predecimal);
+      if(nf.decimals>0){
+        checker&=printChar('.');//not doing locale's herein.
+        int stillwant=nf.decimals+addone;
+        if(np.postdecimal==0){//frequent case, when number was actually an integer
+          checker&=printChar('0',stillwant);
+        } else {
+          if(np.div10>0){
+            //the number we have has been boosted by that many digits
+            if(np.div10>=stillwant){
+              checker &=printChar('0',stillwant);
+              stillwant=0;
+            } else {
+              checker &=printChar('0',np.div10);
+               stillwant-=np.div10;
+            }
+          }
+          if(stillwant>0){
+//            int available=1+ilog10(np.postdecimal);//number of digits available
+            u64 divisor=i64pow10(19-stillwant);
+            u64 postdec=np.postdecimal/divisor;//todo: round
+            int stillhave=1+ilog10(postdec);//double checking
+            if(stillhave<stillwant){
+              checker &=printChar('0',stillwant-stillhave);
+            }
+            checker &=printUnsigned(postdec);
+          }
+        }
       }
     }
   }

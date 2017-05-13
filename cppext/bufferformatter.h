@@ -92,7 +92,7 @@ public:
     compose_item(args ...);
   }
 
-}; // class TextFormatter
+};
 
 
 

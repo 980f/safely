@@ -7,15 +7,15 @@ const double Nan = std::numeric_limits<double>::quiet_NaN();
 
 u32 log2Exponent(u32 number){
   //can be really fast in asm
-  for(u32 exp=0;exp<32;++exp){
-    if(number){
-      number>>=1;
+  for(u32 exp = 0; exp<32; ++exp) {
+    if(number) {
+      number >>= 1;
     } else {
       return exp;
     }
   }
   return 32;
-}
+} // log2Exponent
 
 #include <cmath>
 bool isSignal(double d){
@@ -30,12 +30,12 @@ bool isNormal(double d){
   return std::isnormal(d);
 }
 
-#else
+#else // ifdef __linux__
 //firmware platform didn't have a useful limits.h so ...
-static int64_t InfPattern=0x7FFLL<<52;
-static int64_t NanPattern=0x7FF8LL<<48;
+static int64_t InfPattern = 0x7FFLL << 52;
+static int64_t NanPattern = 0x7FF8LL << 48;
 
-const double Infinity=pun(double,InfPattern);
+const double Infinity = pun(double,InfPattern);
 const double Nan(pun(double,NanPattern));
 
 
@@ -43,25 +43,23 @@ bool isSignal(double d){
   return d == Nan || d == Infinity;
 }
 
-
 bool isNan(double arg){
   return arg == Nan;
 }
-
 
 bool isNormal(double d){//mimicing std::isnormal which means 'is fully normalized fp number'
   return d!=0 && !isSignal(d);
 }
 
-#endif
+#endif // ifdef __linux__
 
 const u32 Decimal1[] = {
-  1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000,
+  1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000
 };
 
 /** @returns the number of decimal digits needed to represent the given integer, -1 if the number is 0 */
 int ilog10(u32 value){
-  for(int log=countof(Decimal1);log-->0;){
+  for(int log = countof(Decimal1); log-->0; ) {
     if(Decimal1[log]<=value) {
       return log;
     }
@@ -70,20 +68,43 @@ int ilog10(u32 value){
 }
 
 const u64 Decimal2[] = {
-  10000000000UL, 100000000000UL, 1000000000000UL, 10000000000000UL, 100000000000000UL, 1000000000000000UL, 10000000000000000UL, 100000000000000000UL, 1000000000000000000UL, 10000000000000000000UL //added zeroes until compiler told me the number was too big
+  10000000000UL, 100000000000UL, 1000000000000UL, 10000000000000UL, 100000000000000UL, 1000000000000000UL, 10000000000000000UL, 100000000000000000UL, 1000000000000000000UL, 10000000000000000000UL
+  //compiler reported overflow when I added one more.
 };
 
 /** @returns the number of decimal digits needed to represent the given integer, -1 if the number is 0 */
 int ilog10(u64 value){
-  for(int log=countof(Decimal2);log-->0;){
+  for(int log = countof(Decimal2); log-->0; ) {
     if(Decimal2[log]<=value) {
-      return log+10;
+      return log + 10;
     }
   }
   return ilog10(u32(value));
 }
 
+u32 i32pow10(unsigned power){
+  if(power<countof(Decimal1)) {
+    return Decimal1[power];
+  }
+  return 0;//this should get the caller's attention.
+}
 
+u64 i64pow10(unsigned power){
+  if(power>=countof(Decimal1)) {
+    power -= countof(Decimal1);
+    if(power<countof(Decimal2)) {
+      return Decimal2[power];
+    }
+    return 0;//overflow
+  } else {
+    return Decimal1[power];
+  }
+} // i64pow10
+
+
+u64 keepDecimals(u64 p19,unsigned digits){
+  return rate(p19,i64pow10(19-digits));
+}
 
 //uround and sround are coded to be like they will in optimized assembly
 u16 uround(float scaled){
@@ -111,7 +132,7 @@ s16 sround(float scaled){ //#this would be so much cleaner and faster in asm!
 
 int modulus(int value, unsigned cycle){
   /* since most use cases are within one cycle we use add/sub rather than try to make divide work.*/
-  if(cycle<=1){
+  if(cycle<=1) {
     return value;
   }
   while(value < 0) {
@@ -121,7 +142,7 @@ int modulus(int value, unsigned cycle){
     value -= cycle;
   }
   return value;
-}
+} // modulus
 
 u16 saturated(unsigned quantity, float fractionThereof){
   double dee(quantity * fractionThereof);
@@ -134,11 +155,10 @@ u16 saturated(unsigned quantity, float fractionThereof){
   }
 } /* saturated */
 
-
 #undef __STRICT_ANSI__
 #include <cmath>
 
-u32 chunks(double num, double denom) {
+u32 chunks(double num, double denom){
   double _ratio = ratio(num, denom);
 
   if(_ratio >= 0) {
@@ -148,7 +168,7 @@ u32 chunks(double num, double denom) {
   }
 }
 
-int fexp(double d) {//todo:1 remove dependence on cmath.
+int fexp(double d){ //todo:1 remove dependence on cmath.
   int ret;
   if(d == 0.0) { //frexp returns 0, which makes it look bigger than numbers between 0 and 1.
     return -1023;//one less than any non-zero number will give
@@ -157,7 +177,7 @@ int fexp(double d) {//todo:1 remove dependence on cmath.
   return ret;
 }
 
-double pow10(int exponent) {
+double pow10(int exponent){
   return pow(double(10), exponent);
 }
 
@@ -168,7 +188,7 @@ double pow10(int exponent) {
 #endif
 
 double degree2radian(double theta){
-  return theta*(M_PI/180);
+  return theta * (M_PI / 180);
 }
 
 #define gotFlogWorking 0
@@ -177,14 +197,14 @@ double degree2radian(double theta){
 
 #ifndef M_LN2
 #warning platform specific M_LN2
-static const double M_LN2 (0.69314718055994530942);
+static const double M_LN2(0.69314718055994530942);
 #endif
 
 double flog(u32 number){
   int exponent = log2Exponent(number);
   int malign = number << (30 - exponent); //unsigned 1.31
 
-  malign = 1<<31 - malign; //
+  malign = 1 << 31 - malign; //
   //goose until x is less than 1/2
   return -1.0; //not yet implemented
 }
@@ -194,38 +214,38 @@ static double LN2 = 0.69314718055994530942;
 double flog(u32 number){
 
   static u32 fractroots[] = { //fractional part of the roots of 2
-                              0x6A09E667,
-                              0x306FE0A3,
-                              0x172B83C7,
-                              0xB5586CF,
-                              0x59B0D31,
-                              0x2C9A3E7,
-                              0x163DA9F,
-                              0xB1AFA5,
-                              0x58C86D,
-                              0x2C605E,
-                              0x162F39,
-                              0xB175E,
-                              0x58BA0,
-                              0x2C5CC,
-                              0x162E5,
-                              0xB172,
-                              0x58B9,
-                              0x2C5C,
-                              0x162E,
-                              0xB17,
-                              0x58B,
-                              0x2C5,
-                              0x162,
-                              0xB1,
-                              0x58,
-                              0x2C,
-                              0x16,
-                              0xB,
-                              0x5,
-                              0x2,
-                              0x1,
-                            };
+    0x6A09E667,
+    0x306FE0A3,
+    0x172B83C7,
+    0xB5586CF,
+    0x59B0D31,
+    0x2C9A3E7,
+    0x163DA9F,
+    0xB1AFA5,
+    0x58C86D,
+    0x2C605E,
+    0x162F39,
+    0xB175E,
+    0x58BA0,
+    0x2C5CC,
+    0x162E5,
+    0xB172,
+    0x58B9,
+    0x2C5C,
+    0x162E,
+    0xB17,
+    0x58B,
+    0x2C5,
+    0x162,
+    0xB1,
+    0x58,
+    0x2C,
+    0x16,
+    0xB,
+    0x5,
+    0x2,
+    0x1,
+  };
   int exponent = log2Exponent(number);
   int malign = number << (31 - exponent); //actually is unsigned 1.31
 
@@ -251,6 +271,7 @@ double flog(u32 number){
   packer |= logish << (52 - 32);
   return pun(double, packer) * M_LN2; //M_LN2 log base e of 2.
 } /* flog */
+
 #else /* if gotFlogWorking == 2 */
 double flog(u32 number){
   if(number == 0) {
@@ -280,66 +301,68 @@ double logRatio(u32 over, u32 under){
   //now do simple series expansion using ratio powers.
 
 } /* logRatio */
+
 #else /* if logoptimized */
 //someday we will optimize the following:
 double logRatio(u32 over, u32 under){
   return flog(over) - flog(under);
 }
+
 #endif /* if logoptimized */
 
 /** n!/r!(n-r)! = n*(n-1)..*(n-r+1)/r*(r-1)..
-This is done in a complicated fashion to increase the range over what could be done if the factorials were computed then divided.
-*/
-u32 Cnr(unsigned n, unsigned  r){
-  if(r<=0){//frequent case and avert naive divide by zero
+ *  This is done in a complicated fashion to increase the range over what could be done if the factorials were computed then divided.
+ */
+u32 Cnr(unsigned n, unsigned r){
+  if(r<=0) {//frequent case and avert naive divide by zero
     return 1;
   }
-  if(r==1){//fairly frequent case
+  if(r==1) {//fairly frequent case
     return n;
   }
-  if(r==2){
+  if(r==2) {
     //divide the even number by 2, via shift.
-    if(n&1){
-      return n*((n-1)>>1);
+    if(n & 1) {
+      return n * ((n - 1) >> 1);
     } else {
-      return (n>>1)*(n-1);
+      return (n >> 1) * (n - 1);
     }
   }
 
-  u32 num=n;
-  u32 denom=r;
+  u32 num = n;
+  u32 denom = r;
   //optimize range by removing power of 2 from factorials while computing them
-  int twos=0;
-  while(r-->0){
-    unsigned nterm=--n;
-    while(0==(nterm&1)){//50% of the time we loop just once, 25% of the time twice 12.5% of the time 3 times ...
+  int twos = 0;
+  while(r-->0) {
+    unsigned nterm = --n;
+    while(0==(nterm & 1)) {//50% of the time we loop just once, 25% of the time twice 12.5% of the time 3 times ...
       ++twos;
-      nterm>>=1;
+      nterm >>= 1;
     }
-    num*=nterm;
-    unsigned rterm=r;
-    while(0==(rterm&1)){
+    num *= nterm;
+    unsigned rterm = r;
+    while(0==(rterm & 1)) {
       --twos;//these discarded twos are in the denominator
-      rterm>>=1;
+      rterm >>= 1;
     }
-    denom*=rterm;
+    denom *= rterm;
   }
   //twos should be a small
-  if(twos>=0){
-    num<<=twos;
+  if(twos>=0) {
+    num <<= twos;
   } else {
-    denom<<=-twos;
+    denom <<= -twos;
   }
   return rate(num,denom);
-}
+} // Cnr
 
 extern "C" {
 
 /* @return integer part of d, modify d to be its fractional part.
-*/
+ */
 int splitter(double &d){
   double eye;
-  d=modf(d,&eye);  //todo:2 this can be done very efficiently via bit twiddling. "modf()" has an inconvenient argument order and return type.
+  d = modf(d,&eye);  //todo:2 this can be done very efficiently via bit twiddling. "modf()" has an inconvenient argument order and return type.
   return int(eye);
 }
 

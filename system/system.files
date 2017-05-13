@@ -34,7 +34,8 @@ SOURCES += \
     utf8transcoder.cpp \
     utf8converter.cpp \
     dottedname.cpp \
-    filenameconverter.cpp
+    filenameconverter.cpp \
+    textformatter.cpp
 
 HEADERS += \
     chain.h \

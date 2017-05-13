@@ -12,7 +12,7 @@ struct NumberFormatter {
   /** commonly used for unit-of-measure or SI multiplier. Note: this does not automatically add a space between the digits and this text, do that yourself. */
   Text postfix;
 
-  NumberFormatter(int precision, TextKey postfix = "");
+  NumberFormatter(int precision, TextKey postfix = nullptr);
 
   unsigned needs(double value) const;
 

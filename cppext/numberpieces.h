@@ -12,8 +12,10 @@ public:
   bool isInf;
   bool isZero;
   bool negative;
+
   /** whether mantissa had a decimal point*/
   bool hadRadixPoint;
+  /** digits left of decimal point */
   u64 predecimal;
   /** additional zeros to append to predecimal. If not zero then can ignore postdecimal and div10 */
   int pow10;
@@ -25,7 +27,7 @@ public:
   bool hasEterm;
   /** whether an explicit exponent was negative*/
   bool negativeExponent;
-  /** explicit exponent (only valid if hasEterm is true) */
+  /** true exponent */
   u64 exponent; //this large just so that we can easily share a function
   /** set as if we just saw zero*/
   void reset(void);

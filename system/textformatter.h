@@ -14,7 +14,7 @@
 
 */
 class TextFormatter : public Text {
-  /** wraps format string, gets rewound a lot */
+  /** wraps format string, gets rewound a lot during sizing */
   CharScanner format;
   /** wraps Text for assembling string */
   CharFormatter body;
@@ -47,76 +47,53 @@ class TextFormatter : public Text {
 
   TextFormatter(TextKey mf);
 private:
-  TextFormatter();
+  TextFormatter()=delete;
 public:
   ~TextFormatter();
 private:
-  void substitute(TextKey stringy){
-    CharScanner risky=CharScanner::infer(Cstr::violate(stringy));
-    risky.dump();
-    if(sizing) {
-      sizer -= 2; //remove tag
-      sizer += risky.allocated()-1;
-    } else {
-//      body.remove(2);
-      //todo: insert string without changing body allocation.
-    }
-  }
+  void substitute(TextKey stringy);
 
   //** compiler might have figured this out, but it is nice to able to breakpoint on this until we have proven the class */
-  void substitute(Cstr stringy){
-    substitute(CharFormatter::infer(stringy.violated()));
-  }
+  void substitute(Cstr stringy);
 
   /** the primary substituter, all others defer to this */
-  void substitute(CharFormatter buf){
-    if(sizing){
-      sizer-=2;
-      sizer+=buf.used();
-    } else {
-      //shove data up
-      //point to '$'
-      body.rewind(2);
-      //overlay
-      body.appendUsed(buf);
-    }
-  }
+  void substitute(CharFormatter buf);
 
-  void substitute(double value){
-    char widest[Zguard(nf.needs())];
-    CharFormatter workspace(widest,sizeof(widest));
-    if( !workspace.printNumber(value,nf.precision)) {//if failed to insert anything
-      workspace.printChar('?');//replaces '%'
-      workspace.printDigit(which);
-    }
-    substitute(workspace.used());
-  }
+  void substitute(double value);
+
+  /** needed in case format string references this non-printable item. Might use that instead of counting to reuse these.
+   * could also not bump 'which' when one is encountered, but that has its own confusions.
+*/
+  void substitute( const NumberFormat &item);
+
+  bool onSizingCompleted();
 
   /** templated printf:
    *  each argument is pulled out of the pack from left to right.
    *  if the argument is a format spec then we alter state and proceed.
    *  for arguments that have a substitute method that will get called.
-   *  Each substitue method eventually gots to substitue  (TextKey) which inserts a string.
+   *  Each substitute method eventually inserts a string.
    */
   template<typename ... Args> void next(const Args& ... args){
     ++which;
-    if(sizeof ... (args) > 0) {//terminates tail recursion
-      compose_item( args ...);
-    }
+    compose_item( args ...);
   }
 
-//if it is a number format then record it and apply to following items, no substition takes place..
-  template<typename ... Args> void compose_item( NumberFormat &item, const Args& ... args){
-    nf = item;
-    next(args ...);
-  }
 
   template<typename NextArg, typename ... Args> void compose_item( NextArg&item, const Args& ... args){
     body.rewind();
+    bool slashed=false;
     while(body.hasNext()) {
       char c = body.next();
-      if(c == '%'&&body.hasNext()) {
-        //todo: parseInt so that we canhave more than 10 args
+      if(flagged(slashed)){
+        continue;
+      }
+      if(c=='\\'){
+        slashed=true;
+        continue;
+      }
+      if(c == '$'&&body.hasNext()) {
+        //todo: parseInt so that we can have more than 10 args
         char d = body.next();
         if(d - '0' == which) { //splice in ref
           substitute(item);
@@ -124,8 +101,22 @@ private:
         }
       }
     }
-    next(args ...);
+    next(args...);
   } // compose_item
+
+  template<typename ... Args> void compose_item( ){
+    //# here is where we can do any post processing such as freeing of no longer needed caching of converted items.
+  }
+
+//  template<typename ... Args> void compose_item( NumberFormat &item, const Args& ... args){
+//    substitute(item);
+//    next(args...);
+//  }
+
+  template<typename ... Args> void compose_item( const NumberFormat &item, const Args& ... args){
+    substitute(item);
+    next(args...);
+  }
 
 public:
 
@@ -138,14 +129,26 @@ public:
 
 
 public:
+  template<typename ... Args> bool apply(const Args ... args){
+    which=0;
+    sizing=true;
+    sizer=format.allocated();//instead of adding one for each simple char we will subtract for the substititution tags.
+    compose_item(args ...);
+    if(onSizingCompleted()){
+      which=0;
+      compose_item(args ...);
+      return true;
+    } else {
+      //couldn't allocate a buffer or the string to build is empty.
+      return false;
+    }
+  }
+
   /** @returns composition of arguments using NumberFormatter rules */
   template<typename ... Args> static Text compose(TextKey format, const Args ... args){
-    TextFormatter worker(format); //a zero size formatter computes required length via a dry run at formatting
-    worker.sizing=true;
-    worker.compose(format,args ...);
-    worker.sizing=false;
-    worker.compose(format, args ...);
-    return Text(worker.body.internalBuffer());
+    TextFormatter worker(format);
+    worker.apply(args...);
+    return worker;
   }
 
 }; // class TextFormatter

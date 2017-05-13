@@ -15,7 +15,7 @@ unsigned NumberFormat::needs() const {
   if(isValid(fieldWidth)&&fieldWidth>0) {
     return fieldWidth;
   } else {
-    return precision>0 ? 17 + 1 + 1 + precision : -precision; //todo: add space for E-xxxx
+    return decimals>=0 ? 19 + 1 + 1 + decimals : 3-decimals;
   }
 }
 
@@ -31,22 +31,28 @@ unsigned NumberFormat::needs(double value, NumberPieces *preprint) const {
   if(preprint->isInf) {
     return 4;//we need a sign in various usages to even call this guy.
   }
-
   unsigned necessary=0;
-
-  if(preprint->negative) {//print optional sign
+  if(scientific){
+    //sigfigs+1 if sigfigs>exponent sa we'll need a d.p.
+    //exponent if >sigfigs then add pow10 for its extra zeroes
+  } else {
+    //leading zero if number <0, else add room
+    necessary+=decimals+decimals>0;
+    if(preprint->negativeExponent){
+      ++necessary;
+    } else {
+      necessary+=(1+preprint->exponent);
+    }
+  }
+  //we have satisfied number of decimals or sigfigs requirement.
+  if(preprint->negative||showsign) {//print optional sign or forced sign
     ++necessary;
   }
 
-  necessary+=ilog10(preprint->predecimal);
-  if(preprint->pow10==0){
-    return necessary;
-  }
-  necessary+=preprint->pow10;
-
   if(isValid(fieldWidth)){
     if(necessary<=fieldWidth){
-      //will print some blanks and proceed
+      //will print some blanks and proceed, we only implement right-align in fixed fields.
+      return fieldWidth;
     } else {
       if(preprint->div10>0 && (necessary-preprint->div10)<fieldWidth){
         //truncate precision since we can
@@ -62,11 +68,11 @@ unsigned NumberFormat::needs(double value, NumberPieces *preprint) const {
 
 void NumberFormat::clear(){
   fieldWidth = BadLength;
-  precision = 17; //ieee 64bit
+  decimals = 0;
 }
 
 void NumberFormat::onUse(){
   if(usages.last()) {
-    clear();
+    clear();//only clear on the transition to not used, if count already 0 then use forever.
   }
 }

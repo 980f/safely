@@ -5,6 +5,7 @@
 #include "cheaptricks.h"
 #include "char.h"
 
+static const double p19=::pow10(19);
 
 template <>double intbin<double,double>(double&);
 
@@ -15,11 +16,9 @@ double NumberPieces::packed() const {
   if(isInf) {
     return negative ? -Infinity : Infinity;
   }
-  int exp = int(exponent);//safe truncation
-  if(negativeExponent) {
-    exp = -exp;
+  if(isZero){
+    return 0.0;
   }
-  //exp is now the user given exponent
 
   double number = predecimal;
   if(pow10 > 0) { //then trailing digits of predecimal part were lopped off
@@ -28,10 +27,18 @@ double NumberPieces::packed() const {
   } else {
     //have to figure out how many digits the fractional part had
     double fract = postdecimal;
-    fract *= ::pow10(-div10);
+    fract /= p19;
     number += fract;
   }
-  number *= ::pow10(exp);//and apply user provide power
+  if(hasEterm){
+    //note that exponent sometimes is used as a cache for printing logic, it is not to be applied unless hasEterm is true.
+    int exp = int(exponent);//safe truncation
+    if(negativeExponent) {
+      exp = -exp;
+    }
+//      exp is now the scientific notation exponent
+    number *= ::pow10(exp);//and apply user provide power
+  }
   return negative ? -number : number;
 }
 
@@ -56,6 +63,7 @@ bool NumberPieces::startsNumber(char c){
 void NumberPieces::reset(void){
   isNan = false;
   isInf = false;
+  isZero = false;
   negative = false;
   predecimal = 0;
   pow10 = 0;
@@ -73,26 +81,41 @@ void NumberPieces::decompose(double d){
     isNan=true;
     return;
   }
-  negative=signabs(d);
+
+  negative=signabs(d)<0;
   if(isSignal(d)){
     isInf=true;
     return;
   }
-
+  if(d==0.0){
+    isZero=true;
+    return;
+  }
   if(isNormal(d)){
-    u64 whole=intbin<u64,double>(d);
-    pow10= ilog10(whole);
-    if(pow10<0){//number less than 1
-      div10=-pow10;
-      postdecimal=d * ::pow10(div10);
-      pow10=0;//jic
-      return;
-    }
-    if(pow10>19 /*(floor(log10(2^64)*/){
+    double fraction=d;
+    double exp=log10(d);
+    negativeExponent=signabs(exp)<0;
+    exponent=int(exp);
+
+    //todo:0 check against DecimalCutoff, intbin will truncate if d>than that.
+    u64 whole=intbin<u64,double>(fraction);
+
+    if(negativeExponent){//number less than 1
+      div10=exponent-19;
+      postdecimal=fraction * p19;
+      //should loop or somesuch to deal with really small values.
+    } else if(exponent>19 /*(floor(log10(2^64)*/){
       //divide by 10 until it fits
-      pow10-=19;//is supposed to be extra zeroes needed.
-      whole*=::pow10(pow10);
+      pow10=exponent-19;
+      fraction=d * ::pow10(pow10);
+      whole=intbin<u64,double>(fraction);
       predecimal=unsigned(whole);
+      hasEterm=true;
+    } else {
+      pow10=0;
+      predecimal=unsigned(whole);
+      div10=0;
+      postdecimal=fraction * p19;//as many digits as we dare
     }
   } else {
     //todo:wtf?
