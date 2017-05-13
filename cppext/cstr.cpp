@@ -161,6 +161,16 @@ template<> long Cstr::cvt(long onNull, Cstr *units) const noexcept {
   }
 }
 
+template<> unsigned Cstr::cvt(unsigned onNull, Cstr *units) const noexcept {
+  if(nonTrivial(ptr)){
+    return strtoul(ptr, units? const_cast<char **>(&units->ptr) : nullptr,10);
+  } else {
+    return onNull;
+  }
+}
+
+
+
 template<> double Cstr::cvt(double onNull, Cstr *units) const noexcept {
   if(nonTrivial(ptr)){
     return strtod(ptr, units? const_cast<char **>(&units->ptr) : nullptr);

@@ -52,7 +52,7 @@ bool Fildes::preopened(int fd,bool urit){
   return assignFd(fd);
 }
 
-bool Fildes::setBlocking(bool block) const {
+bool Fildes::setBlocking(bool block)  {
   return setSingleFlag(O_NONBLOCK, !block);
 }
 
@@ -61,29 +61,46 @@ void Fildes::Close(int &somefd){
   somefd=BADFD;
 }
 
-bool Fildes::setSingleFlag(int bitfield, bool one) const {
+bool Fildes::setSingleFlag(int bitfield, bool one)  {
   if(!isOpen()) {
     return false;
   }
   int flags;
-  flags = fcntl(fd, F_GETFL, 0);
-  if(flags != -1) {
+  if(okValue(flags,fcntl(fd, F_GETFL, 0))) {
+    int existing=flags;
     if(one) {
       flags |= bitfield;
     } else {
       flags &= ~bitfield;
     }
-    fcntl(fd, F_SETFL, flags);
+    if(changed(existing,flags)){
+      return ok(fcntl(fd, F_SETFL, flags));
+    } else {
+      return true;//didn't need to change.
+    }
+  } else {
+    return false;
+  }
+}
+
+bool Fildes::getSingleFlag(int bitfield, bool &bit) {
+  if(!isOpen()) {
+    return false;
+  }
+  int flags;
+  if(okValue(flags,fcntl(fd, F_GETFL, 0))) {
+    bit= (flags&bitfield)!=0;
     return true;
   } else {
     return false;
   }
-} /* setSingleFlag */
+
+}
 
 int Fildes::close(void){
   if(amOwner&&isOpen()) {
     amOwner = false;
-    return Close(fd);//when we close an fd someone else can claim it.
+    return ::close(postAssign(fd,BADFD));//when we close an fd someone else can claim it.
   } else {
     return 0; //not an error to close something that isn't open
   }
@@ -132,7 +149,17 @@ int Fildes::write(const u8 *buf, unsigned len){
   } else {
     return lastWrote = -1; //todo:2 error code
   }
-} // Fildes::write
+}
+
+int Fildes::write(char c, unsigned repeats){
+  if(repeats<=4096){
+    u8 reps[repeats];
+    fillObject(reps,sizeof(reps),c);
+    return write(reps,repeats);
+  } else {
+    return -1;
+  }
+}
 
 //todo:3 configuration parameter for how much we are willing to transfer before checking other channels
 #define CHUNK 3000

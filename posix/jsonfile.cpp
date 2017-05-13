@@ -41,19 +41,23 @@ int JsonFile::loadFile(Cstr thename){
   return 0;
 }
 
-
-//bug: empty wads do not print closing },
-void printNode(unsigned tab, Storable &node, FILE *fp){
-  if(fp==nullptr){
-    fp=stderr;
-  }
-  bool pretty=Index(tab).isValid();
-  if(pretty){
+bool indent(FILE *fp, unsigned tab){
+  if(Index(tab).isValid()){
     fputc('\n',fp);
     for(unsigned tabs = tab; tabs-->0; ) {
       fprintf(fp,"  ");
     }
+    return true;
+  } else {
+    return false;
   }
+}
+
+void printNode(unsigned tab, Storable &node, FILE *fp){
+  if(fp==nullptr){
+    fp=stderr;
+  }
+  bool pretty=indent(fp, tab);
   if(node.name.empty()) {
     //just print tabs
   } else {
@@ -62,22 +66,14 @@ void printNode(unsigned tab, Storable &node, FILE *fp){
   switch (node.getType()) {
   case Storable::Wad:
     fprintf(fp,"{");
-//    if(node.numChildren()==0){
-//        dbg("if following for loop doesn't iterate then compiler skipped a bunch of code");
-//    }
     for(ChainScanner<Storable> list(node.kinder()); list.hasNext(); ) {
       Storable & it(list.next());
-      printNode(pretty?tab + 1:BadIndex,it,fp);
+      printNode((pretty?  tab + 1 : tab),it,fp);
       if(list.hasNext()) {
         fputc(',',fp);
       }
     }
-    if(pretty){
-      fputc('\n',fp);
-      for(unsigned tabs = tab; tabs-->0; ) {
-        fprintf(fp,"  ");
-      }
-    }
+    indent(fp, tab);
     fputc('}',fp);
     break;
   case Storable::Numerical:

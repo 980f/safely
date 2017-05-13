@@ -27,7 +27,12 @@ public:
   /** takes ownership of an FD, if @param urit is true ("You are it")*/
   bool preopened(int fd,bool urit=true);
   /** set/clear a fcntl accessible flag, @returns success of operation */
-  bool setSingleFlag(int bitfield, bool one) const;
+  bool setSingleFlag(int bitfield, bool one);
+
+  /** @param bit is true if the @param bitfield flag is set, @returns whether bit was updated.
+   * If you cheat and send a multi-bit bitfield you'll have to read the code to see what happens. */
+  bool getSingleFlag(int bitfield,bool &bit);
+
   int close(void);
   /**make this transparently usable as an fd number*/
   operator int() const {
@@ -52,6 +57,8 @@ public:
   /** write from freespace of buffer */
   int write(Indexer<u8> &p);
   int write(const u8* buf,unsigned len);//placeholder
+  /** write a character a bunch of times. Handy for things like indenting a nested text printout. */
+  int write(char c, unsigned repeats=1);
 
   /** @returns isOpen()*/
   bool mark(FDset&fdset) const;
@@ -62,7 +69,7 @@ public:
     * @returns 0 on full success, a positive number if some bytes are dropped, -1 for read error (see the fd's lastRead for details) -2 for write error (see that fd's lastWrote for detail. */
   int moveto(Fildes&other);
   /**set file to either blocking or not blocking */
-  bool setBlocking(bool block) const;
+  bool setBlocking(bool block);
 
   /** close it then forget which it was */
   static void Close(int &somefd);
