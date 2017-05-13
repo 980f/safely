@@ -32,33 +32,28 @@ public: //so that we can merge errors from functions called outside of the objec
     return errornumber==0;
   }
 
-  bool isWaiting(){
-    return pleaseWait;
-  }
+  /** @returns whether last error was just some variant of 'try again later' */
+  bool isWaiting();
 
   /** set @param target with @param value, if value is -1 then call failure(errno), @returns value>=0. */
   template <typename Integrish> bool okValue(Integrish &target,Integrish value){
     target=value;
-    if(value==Integrish(~0UL)){//if magic 'all ones' value
-      return ! failure(errno);//record and report on errno.
-    } else {
-      return true;//value deemed ok
-    }
+    return !setFailed(value==Integrish(~0UL));
   }
 
 public:
   /** ERRNO for last operation done using the extend object */
   int errornumber=0;
-  /** when errno is EAGAIN or EWOULDBLOCK this gets set and errornumber is left unchange */
-  bool pleaseWait=false;
+
 public:
   /** @param prefix is used for logging. */
   PosixWrapper(const char *prefix);
   Logger dbg;
-  /** @deprecated  use dbg instead. This will be retained awhile for legacy code */
-  void logmsg(const char *fmt, ...);
-  /** like strerror but with our stored value, not tied to errno */
+//  /** @deprecated  use dbg instead. This will be retained awhile for legacy code */
+//  void logmsg(const char *fmt, ...);
+  /** like @see strerror() but with our stored value, not tied to errno */
   const char *errorText()const;
+
   /** replaces what was once 'failure' as that name works better for another purpose.
    * if @param passthrough is true then errno is recorded else errornumber is left to a previous value.
    * @returns passthrough.

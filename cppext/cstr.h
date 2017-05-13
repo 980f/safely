@@ -8,7 +8,8 @@
  * Assiduous use will make it hard for you to make use-after-free bugs.
  *
  * This class wraps a pointer and null checks all uses, vs letting str*() lib functions seg fault.
- * only str* functions which do NOT alter the string should be wrapped here. When data is free'd the pointer is nulled so instead of use-fater-free you get a trivial string.
+ * NB: only str* functions which do NOT alter the string should be wrapped here.
+ * When data is free'd the pointer is nulled so instead of use-after-free you get a trivial string.
  *
  * While most of the functions are readily inlined we are putting them in a cpp file and will trust LTO (link time optimisation) to figure that out.
  */
@@ -41,6 +42,7 @@ public:
 
   const char *notNull() const;
 
+  /** @returns the pointer if the string length is >0 else returns nullptr.*/
   const char *nullIfEmpty() const;
 
   /** @returns whether content is non-existent or trivial */
@@ -53,7 +55,7 @@ public:
   /** @returns whether last character exists and is same as @param isit. an empty string will positively match char(0) */
   bool endsWith(char isit) const noexcept;
 
-  /** @returns whether @param other exactly matches this' content */
+  /** @returns whether @param other exactly matches this' content, with nullptr matching the same or "" */
   bool is(TextKey other) const  noexcept;
 
   char operator [](const Index &index) const noexcept;
@@ -63,7 +65,7 @@ public:
     return !is(other);
   }
 
-  /** needed by changed() template function if we kill the != one*/
+  /** needed by changed() template function if we kill the != one */
   bool operator ==(TextKey other) const  noexcept{
     return is(other);
   }

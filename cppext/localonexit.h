@@ -130,18 +130,6 @@ public:
 
 }; // class AssignOnExit
 
-
-/** marker for potential atomic value shift
- * assign new value but return previous, kinda like value++
- * X previous= postAssign<x>(thingy, newvalue);
- * previous is value of thingy before the assignment, thingy has newvalue.
-*/
-template<typename Scalar> Scalar postAssign(Scalar&varb, Scalar value){
-  Scalar was = varb;
-  varb = value;
-  return was;
-}
-
 /** usage: DeleteOnExit<typeofinstance>moriturus(&instance);
  *  for functions with multiple exits, or that might get hit with exceptions.
  *  NB: you must name an instance else it immediately deletes after construction.

@@ -155,18 +155,18 @@ bool Socketeer::accept(const Spawner &spawner, bool blocking){
     int newfd=BADFD;
     if(okValue(newfd,accept4(fd, &sadr.address, &sadr.length, blocking?0:SOCK_NONBLOCK))){
       //we have a new socket! //and its address!
-      bug("accepted: %08x on port %u at fd: %d",sadr.getIpv4(),sadr.getPort(),newfd);
+      bug("accepted: %08x on port %u as fd: %d",sadr.getIpv4(),sadr.getPort(),newfd);
       if(spawner(newfd,sadr)){
         return true;
       } else {//it was rejected by external rule
         Fildes::Close(newfd);
-        return false;
+        return false;//service rejected the connection
       }
     } else {
-      return false;
+      return false;//no connection (we are polling so this is normal)
     }
   } else {
-    return false;
+    return false;//not listening.
   }
 }
 
@@ -181,6 +181,8 @@ Socketeer::Socketeer(int newfd, SockAddress &sadr):Fildes("ClientSocket"){
   preopened(newfd,true);
 //save other stuff for debug:
   connectArgs.connected=sadr;
+  portnumber=sadr.getPort();
+  connected=isOpen();
 }
 
 ///////////////////////////////

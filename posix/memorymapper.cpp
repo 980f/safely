@@ -48,3 +48,7 @@ bool MemoryMapper::init(bool refresh){
   Mmap=new MemoryMapper();
   return Mmap!=nullptr && Mmap->fd.isOpen();
 }
+
+bool MemoryMapper::isOperational(){
+  return Mmap!=nullptr && Mmap->fd.isOpen();
+}

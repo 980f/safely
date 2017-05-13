@@ -50,11 +50,11 @@ class Socketeer: public Fildes {
 private:
   Text hostname;//name as either a URL name, or dotted decimal IPV4 or hex:IPV6
   Text service;//name from /etc/services file or decimal image of port to connect to/serve.
-  unsigned portnumber; //use when service is trivial.
+  unsigned portnumber=0; //use when service is trivial.
   /***/
   HostInfo connectArgs;
   /** -1 not connected, 0 trying, 1 am connected */
-  int connected;
+  int connected=-1;
 private:
   bool makeSocket();
   bool resolve();//convert hostname into ip address.

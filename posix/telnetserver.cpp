@@ -2,6 +2,11 @@
 
 //called from socketeer accept
 bool TelnetServer::enroll(int newfd, SockAddress &sadr){
+  if(unsigned(newfd)<3){
+    dbg("accept() gave us a console fd! : %u; We will not use that.",newfd);
+//    return false;//absurd fd, caller will close it.
+  }
+
   //purge dead ones, then try to add newone
   purge();
   if(clients.quantity()<maxClients){
