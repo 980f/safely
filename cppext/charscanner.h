@@ -46,7 +46,7 @@ public:
   virtual bool matches(const char*s);
 
   /** copy content, cf: clone() which just points into the other one's buffer!*/
-  void operator =(CharScanner &other);
+  void operator =(CharScanner &&other);
   bool isBlank();
 
   /** @return a null terminated subset of this, modifying this to omit the returned part and the separator */

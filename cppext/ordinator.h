@@ -109,7 +109,7 @@ public:
       amount = pointer;
     }
     pointer -= amount;
-    length -= amount;//todo:2 this is probably a bug for SOME uses, the buffer doesn't change size just cause we discard an entry.
+    length -= amount;
   }
 
   /** if other isn't at its start then we get the part past, else we get a copy */
