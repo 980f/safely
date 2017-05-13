@@ -36,6 +36,10 @@ public:
     commit();
   }
 
+  operator bool() const {
+    return !failed;
+  }
+
   bool willRollback(void) const {
     return failed;
   }

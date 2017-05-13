@@ -10,12 +10,14 @@
  *
  * when one of these is an arg... list we just store its attributes to another one, so copy-assign must be cheap. */
 struct NumberFormat {
-  /** see printf x.y rules, the x goes to fieldWidth but the sign and y go here. */
-  int precision;
+  /** number of digits after radix */
+  int decimals;
   /** minimum width, pad with spaces */
   unsigned fieldWidth;
   /** if true always show sign, else no room is taken for positives */
   bool showsign;
+  /** if true then decimals is sigfigs */
+  bool scientific;
   /** how many values it is to be applied to before being forgotten. 0 is forever, ~0 is nearly forever */
   CountDown usages = 0;//default unlimited
 

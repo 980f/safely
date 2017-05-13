@@ -5,7 +5,7 @@
 
 NumberFormatter::NumberFormatter(int precision, TextKey postfix) :
   postfix(postfix){
-  nf.precision = precision;
+  nf.decimals = precision;
 }
 
 unsigned NumberFormatter::needs(double value) const {
@@ -16,7 +16,7 @@ Text NumberFormatter::format(double value,bool addone) const {
   char widest[Zguard(needs(value)+addone)];
   CharFormatter workspace(widest,sizeof(widest));
   workspace.zguard();//protect our null
-  if(workspace.printNumber(value,nf.precision + addone)) {//testing so that we don't add units if number failed to print
+  if(workspace.printNumber(value,nf,addone)) {//testing so that we don't add units if number failed to print
     workspace.printString(postfix);
   }
   return Text(workspace.internalBuffer());//the constructor invoked here copies the content.

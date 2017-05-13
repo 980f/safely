@@ -1,11 +1,12 @@
 #ifndef CHARFORMATTER_H
 #define CHARFORMATTER_H
 #include "charscanner.h"
-#include "argset.h"
+#include "argset.h" //todo:1 remove this legacy, extend this class with another if needed.
+
 /** print human readable stuff into a checked buffer.
  *  next layer down tries to preserve a terminating null, but you have to ask it to do so.
  */
-
+#include "numberformat.h"
 class CharFormatter : public CharScanner {
 public:
   /** unsafe version, uses strlen */
@@ -46,6 +47,7 @@ public:
 
   bool printSigned(int value);
   bool printNumber(double d, int sigfig = 9);//9: 200 million is biggest number that we won't lose a bit of.
+  bool printNumber(double d, const NumberFormat &nf, bool addone=false);
 
   bool printString(TextKey s);
 

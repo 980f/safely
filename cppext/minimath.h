@@ -139,6 +139,19 @@ inline double rounder(double value, double quantum) {
 */
 int modulus(int value, unsigned cycle);
 
+/** @param accum is reduced to a number less than @param length, @returns the number of subtractions that were necessary to do so.
+ * Named for use in reporting rotary position from encoder without an index pulse to pick out the revolutions.
+*/
+template<typename Integrish, typename Integrash> Integrish revolutions(Integrish &accum, Integrash length){
+  if(length==0){
+    return accum;
+  }
+  //todo: see if std::div or std::remquo can be applied here, for greater portability or whatever.
+  Integrish cycles=accum/length;
+  accum=accum%length;
+  return cycles;
+}
+
 /** standard math lib's f_r_exp does a stupid thing for some args, we wrap it here and fix that.*/
 int fexp(double d) ISRISH;
 
@@ -165,11 +178,22 @@ template <typename floating> bool nearly(floating value, floating other, int bit
   return cf <= f1 && cf <= f2;
 }
 
-extern const u32 Decimal1[];
-int ilog10(u32 value);
+//tables were tricky to access, let's see who needs them.
+//extern const u32 Decimal1[];
+//extern const u64 Decimal2[];
 
-extern const u64 Decimal2[];
-int ilog10(u64 value);
+/** @returns The base 10 exponent of @param value. Note that the number of digits for values >0 is 1+ilog10().
+ * For zero this returns -1, most logic will have problems if you don't check that. */
+int ilog10(u32 value);
+/** an integer power of 10. out of bounds arg gets you nothing but trouble ... */
+u32 i32pow10(unsigned power);
+
+/** an integer power of 10. out of bounds arg gets you nothing but trouble ... */
+u64 i64pow10(unsigned power);
+
+/** @param p19 is 1-^19 times a fractional value. @param digits is the number of digits past the virtual radix point you are interested in.
+@returns a properly rounded int that has those digits of interest, but you may need to pad with leading zeroes. */
+u64 keepDecimals(u64 p19,unsigned digits);
 
 /** filtering in case we choose to optimize this */
 double pow10(int exponent);

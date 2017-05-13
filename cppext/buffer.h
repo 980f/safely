@@ -345,6 +345,22 @@ public:
     return *this;
   }
 
+  /** if you lookedahead and instead of just skipping you want to move data in the buffer  */
+  bool removeNext(unsigned amount){
+    //data start is pointer+amount
+    unsigned start=pointer+amount;
+    if(canContain(start)){//don't pull from past end
+      //data quantity is freespace-amount
+      unsigned quantity=freespace()-amount;
+      if(canContain(quantity)){//slightly bogus, but a negative quantity will fail this test.
+        //target is pointer
+        copyObject(buffer+(start), &peek(), quantity * sizeof(Content));
+        return true;
+      }
+    }
+    return false;
+  }
+
   /** seeks in used portion of buffer for something that operator=='s @param item.
 @deprecated untested */
   unsigned findFirst(const Content &item){
