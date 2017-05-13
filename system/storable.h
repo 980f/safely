@@ -259,9 +259,11 @@ public:
   Storable *findNameless(unsigned lastFound = BadIndex);
 
   /** if @param autocreate is true then call child() on each piece of the @param path, else call existingChild() until either a
-   * member is missing or the child is found. Upon missing then if @param autocreate is true children are created similar to bash's 'mkdir -p '.
-   *
-   * FYI: tolerates null this! */
+   * member is missing or the child is found.
+   * You may still get a nullptr with autocreate==true if the path is horribly defective, such as having ..'s that go above the root, or even more horribly if 'this' is null.
+   * While ".." is specially treated as the parent of where you are in the path, "." is not implemented which means a child named "." will be looked for.
+   * The ".." is honored anywhere in the path, although that is usually not sensible.
+   * */
   Storable *findChild(TextKey path, bool autocreate = true); //# true as the default is legacy from the method this replaced.*/
 
   /** creates node if not present.*/

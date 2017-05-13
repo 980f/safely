@@ -101,7 +101,7 @@ bool Epoller::doEvents(int timeoutms){
 }
 
 
-#define epollexplain(evname) if(epevs & evname){ logmsg( #evname);}
+#define epollexplain(evname) if(epevs & evname){ dbg( #evname);}
 
 void Epoller::explain(unsigned epevs){
   epollexplain(EPOLLIN );

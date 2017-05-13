@@ -25,11 +25,22 @@ template<typename Scalar1, typename Scalar2=Scalar1> bool changed(Scalar1 &targe
   }
 }
 
+
+/** marker for potential atomic value shift
+ * assign new value but return previous, kinda like value++
+ * X previous= postAssign<x>(thingy, newvalue);
+ * previous is value of thingy before the assignment, thingy has newvalue.
+*/
+template<typename Scalar> Scalar postAssign(Scalar&varb, Scalar value){
+  Scalar was = varb;
+  varb = value;
+  return was;
+}
+
+
 /** atomisable test-and-clear take a value, @returns @param varb's value then clears it.*/
 template<typename Scalar> Scalar take(Scalar&varb){
-  Scalar was=varb;
-  varb=0;
-  return was;
+  return postAssign(varb,Scalar(0));
 }
 
 /** originally was the same code as the newer 'take' but since the code was found duplicated in another file the name wasn't quote right.

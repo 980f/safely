@@ -17,6 +17,8 @@ public:
   /**create shared one. If this fails abort your application, you can't access whatever it is  */
   static bool init(bool refresh=false);
   static MemoryMapper *Mmap;
+
+  static bool isOperational();
 };
 
 

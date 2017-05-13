@@ -3,13 +3,10 @@
 #include "charformatter.h"
 
 #include "segmentedname.h" //for debug reports
+#include "pathparser.h" //for finding a child by a pathname
 
-#include "pathparser.h"
-
-//this is not a class member so that we don't force pathparser on all users:
+//this is not a class member so that we don't force pathparser.h on all users:
 static const PathParser::Rules slasher('/',false,true);// '.' gives java property naming, '/' would allow use of filename classes. '|' was used for gtkwrappers access
-
-//unsigned Storable::instances(0);
 
 using namespace sigc;
 
@@ -460,19 +457,24 @@ Storable *Storable::findNameless(unsigned lastFound){
 }
 
 Storable *Storable::findChild(TextKey path, bool autocreate){
+  if(this==nullptr){
+    return nullptr;
+  }
   SegmentedName genealogy;
   Text parsable(path);
-  //todoL redo with incremental parser
+  Storable *searcher = this;
+
   auto bracket=PathParser::parseInto(genealogy,parsable,slasher.slash);
   if(bracket.before){
-    wtf("Storable path names do not (yet) support 'root' syntax: [%s]",path);
+    while(searcher&&searcher->parent){
+      searcher=parent;
+    }
   }
   if(bracket.after) {
-    wtf("Storable findChild is ignoring trailing seperator: [%s]",path);
+    wtf("Storable findChild is ignoring trailing separator: [%s]",path);
   }
 
   auto progeny(genealogy.indexer());
-  Storable *searcher = this;
   while(progeny.hasNext()) {
     //if progeny.next is .. then found=parent, continue loop
     Text &lname=progeny.next();
@@ -481,8 +483,8 @@ Storable *Storable::findChild(TextKey path, bool autocreate){
         searcher = found;
       } else {//we are at root of this tree.
         //we can't autocreate a root, it would leak if we tried.
-        wtf("Storable find child asked to look above root [%s]",path);
-        return nullptr;
+        wtf("Storable::findChild asked to look above root [%s]",path);
+        return nullptr;//we do NOT autocreate in this case.
       }
       continue;//look for next child in path
     }
@@ -555,11 +557,6 @@ Storable&Storable::createChild(const Storable&other){
 Storable&Storable::finishCreatingChild(Storable&noob){
   noob.index = wad.quantity();
   wad.append(&noob); //todo:sorted insert
-  /* notify on add caused more problems than it solved. Only StoredGroups should need watchers that care about new entities (for things like a sum). Adding a new member
-   * to a struct should not matter to anything.
-   * This is consistent with us not notifying on remove.
-   * notify();
-   */
   return noob;
 }
 

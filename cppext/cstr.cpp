@@ -83,7 +83,7 @@ int Cstr::cmp(TextKey rhs) const noexcept {
   } else {//this wraps nullptr
     return nonTrivial(rhs) ? -1 : 0;
   }
-} // Zstring::cmp
+}
 
 bool Cstr::startsWith(TextKey other) const noexcept {
   if(ptr == nullptr) {

@@ -83,7 +83,7 @@ bool Fildes::setSingleFlag(int bitfield, bool one) const {
 int Fildes::close(void){
   if(amOwner&&isOpen()) {
     amOwner = false;
-    return ::close(fd);
+    return Close(fd);//when we close an fd someone else can claim it.
   } else {
     return 0; //not an error to close something that isn't open
   }
@@ -105,8 +105,8 @@ int Fildes::read(Indexer<u8> &p){
   if(isOpen()) {
     if(okValue(lastRead ,::read(fd, &p.peek(), p.freespace()))) {
       p.skip(lastRead);
-    }
-    return lastRead;
+    }    
+    return isWaiting()?0:lastRead;
   } else {
     return lastRead = -1;//todo:2 ensure errno is 'file not open'
   }
