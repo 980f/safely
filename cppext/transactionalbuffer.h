@@ -68,13 +68,15 @@ public:
   }
 
   bool operator &= (bool ok) {
-    failed |= !ok;
-    return ok;
+    if(!ok){//#leave expanded for debug
+      failed=true;
+    }
+    return !failed;
   }
 
   /** user must call this instead of the wrapped buffer's next or the class is in vain.*/
   Content& next(void){
-    failed &= !Indexer <Content>::hasNext();
+    failed |= !Indexer <Content>::hasNext();
     return Indexer <Content>::next();
   } /* next */
 };

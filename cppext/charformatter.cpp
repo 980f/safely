@@ -125,11 +125,14 @@ bool CharFormatter::printChar(char ch){
 }
 
 bool CharFormatter::printChar(char ch, unsigned howMany){
-  //todo:0 debate- most members of this class do nothing unless they can do all that their name implies. this method will do a part of what is requested.
-  while(howMany--> 0 && hasNext()) {
-    next() = ch;
+  if(stillHas(howMany)){
+    while(howMany--> 0 && hasNext()) {
+      next() = ch;
+    }
+    return true;
+  } else {
+    return false;
   }
-  return howMany==0;
 }
 
 bool CharFormatter::printAtWidth(unsigned int value, unsigned width){
@@ -310,17 +313,14 @@ bool CharFormatter::printNumber(double d, const NumberFormat &nf, bool addone){
           if(np.div10>0){
             //the number we have has been boosted by that many digits
             if(np.div10>=stillwant){
-              checker &=printChar('0',stillwant);
-              stillwant=0;
+              checker &=printChar('0',take(stillwant));
             } else {
               checker &=printChar('0',np.div10);
-               stillwant-=np.div10;
+              stillwant-=np.div10;
             }
           }
           if(stillwant>0){
-//            int available=1+ilog10(np.postdecimal);//number of digits available
-            u64 divisor=i64pow10(19-stillwant);
-            u64 postdec=np.postdecimal/divisor;//todo: round
+            u64 postdec=keepDecimals(np.postdecimal,stillwant);
             int stillhave=1+ilog10(postdec);//double checking
             if(stillhave<stillwant){
               checker &=printChar('0',stillwant-stillhave);

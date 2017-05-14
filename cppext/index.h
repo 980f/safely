@@ -1,6 +1,7 @@
 #ifndef INDEX_H
 #define INDEX_H
 
+#include "cheaptricks.h"
 /** unsigned is used for all index operations.
  * For prior uses of int typically the only negative index value is a marker, -1.
  * It happens that if you view -1 as an unsigned it is the maximum possible value. That has the advantage of replacing the signed integer dance:
@@ -76,6 +77,29 @@ struct Index {
   unsigned operator ++ () noexcept {
     return ++raw;
   }
+
+  /** @returns present value, then sets it to zero. */
+  unsigned take() noexcept {
+    return take(raw);
+  }
+
+  /** @returns up to @param howMany if present value is greater than that, else returns present value. Value is post-decremented by howMany but doesn't wrap.
+   * If howMany is BadIndex then this returns BadIndex and doesn't change. <- If we drop that rule BadIndex is 'take all', for which functionality there is a specific method.
+   * EG: if presently ==5 and you take 3 this will return 3 and become ==2. if presently ==1 and you take 3 this returns 1 and becomes 0.
+*/
+  unsigned take(unsigned howMany) noexcept {
+    if(howMany<raw){
+      raw-=howMany;
+      return howMany;
+    }
+    if(howMany==BadIndex){
+      return BadIndex;
+      //and make no change.
+    }
+    return take(raw);
+  }
+
+
 
 };
 
