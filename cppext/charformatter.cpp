@@ -289,7 +289,7 @@ bool CharFormatter::printNumber(double d, const NumberFormat &nf, bool addone){
   //first: round!
   if(d!=0.0){
       u64 lsd= i64pow10(nf.decimals);
-      d+=0.5*lsd;
+      d+=0.5/lsd;
     //and now we can truncate later on
   }
   TransactionalBuffer<char > checker(*this);

@@ -99,7 +99,7 @@ void TextFormatter::substitute(double value){
   if(processing(width)){
     CharFormatter workspace=makeWorkspace(width);
     if(workspace.isUseful()) {
-      if( !workspace.printNumber(value,nf)) {//if failed to insert anything
+      if( ! workspace.printNumber(value,nf)) {//if failed to insert anything
         onFailure(workspace);
       }
       reclaimWaste(workspace);

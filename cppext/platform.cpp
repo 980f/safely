@@ -1,4 +1,4 @@
-#include <string.h>
+#include <cstring>
 #include "minimath.h"
 
 /**
@@ -11,7 +11,7 @@ some other platform optimizations seem to have slipped in ...
 //todo:2 figure out some #define's to switch between os's
 extern "C" {
   void copyObject(const void *source, void *target, u32 length) {
-    memcpy(target, source, length);
+    memmove(target, source, length);
   }
 
   void fillObject(void *target, u32 length, u8 fill) {
