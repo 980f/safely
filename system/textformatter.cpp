@@ -3,58 +3,53 @@
 #include "stdlib.h"
 
 /*
-The algorithm:
-scan the format string for highest numbered substitution item.
-calloc that many pieces
-* Until we allow for more than 10 items do a fixed worst case allocation
-*
-scan the format string processing FormatControls and computing the length of each item referenced.
-
-sum that all up and allocate once a buffer big enough to hold all.
-
-count the number of substitution instances and allocate a list of insertion items
-
-scan the format again, recording which and where for each submarker
-
-scan the list above concatenating pieces linearly. Generated items get generated more than once if they are referenced more than once. That is sub-optimal.
-
-?? can we recurse to dynamically allocate items?
-For each number argument we can use the stack and recursion to allocate a buffer that we use a part of.
-As we unwind the stack we have to 'use up' the value.
-
-It seems that whatever we do we end up having to do actual insertions OR regenerate numbers. Since multiple references are rare, and in fact might be done with
-different formatting contexts we won't actually try to reuse an argument's rendering.
-
-*/
+ *  The algorithm:
+ *  scan the format string processing FormatControls and computing the length of each item referenced.
+ *  sum that all up and allocate once a buffer big enough to hold all.
+ *  scan the format string again inserting processed strings.
+ *
+ *  Data lifetimes:
+ *  ) the given format is strdup'd in this by the constructor
+ *  ) the body member wraps that
+ *  ) the sizing iterates over it
+ *  ) a new buffer is allocated and its address is held in 'body'
+ *  ) the new buffer is overwritten with the originally strdup'd data
+ *  ) we release the strdup'd data and retain the allocation.
+ *  ) on deletion of this object we delete the allocated block.
+ *
+ * todo: apply field with info somehow, need new classes for each type if we are going to mimic what was done for doubles.
+ */
 
 
-TextFormatter::TextFormatter(TextKey mf):
-  format(Cstr(mf).violated(),Cstr(mf).length()),
-  body(Cstr(mf).violated(),Cstr(mf).length())
-{
-
+TextFormatter::TextFormatter(TextKey mf) :
+  Text(mf){//strdup argument, so that it may evaporate
+  body.wrap(violated(),length());
 }
 
 TextFormatter::~TextFormatter(){
   //#nada
 }
 
-
-
-
+bool TextFormatter::processing(unsigned width){
+  if(sizing) {
+    sizer += width-2;
+    return false;
+  } else {
+    return true;
+  }
+}
 
 void TextFormatter::substitute(CharFormatter buf){
-  unsigned width=buf.used();
-  if(sizing){
-    sizer-=2;//dollar and digit
-    sizer+=width;
-  } else {
-    //shove data up
-    if(body.move(width-2)){
-    //point to '$'
-      body.rewind(width+2);
-      //overlay
-      body.appendUsed(buf);
+  unsigned width = buf.allocated();
+  if(processing(width)){
+    CharFormatter workspace=makeWorkspace(width);
+    if(workspace.isUseful()){
+      if(! workspace.appendAll(buf)){
+        if(width>=2){
+          onFailure(workspace);
+        }
+      }
+      reclaimWaste(workspace);
     }
   }
 }
@@ -67,48 +62,88 @@ void TextFormatter::substitute(TextKey stringy){
   substitute(Cstr(stringy));
 }
 
-void TextFormatter::substitute(double value){
-  unsigned width=Zguard(nf.needs());
-  if(sizing){
-    sizer+=width-2;
-  } else {
-    //shove data up
-    if(body.move(width-2)){
+bool TextFormatter::openSpace(unsigned width){
+  if(body.move(width - 2)) {//2: dollar and digit
+    termloc+=width-2;
     //point to '$'
-      body.rewind(width);
-      //overlay
-      CharFormatter workspace(&body.peek(),width);
+    body.rewind(width);
+    return true;
+  } else {
+    return false;
+  }
+}
+
+void TextFormatter::reclaimWaste(const CharFormatter &workspace){
+  body.skip(workspace.used());
+  //pull data back down over unused stuff
+  unsigned excess=workspace.freespace();
+  termloc-= excess;
+  body.removeNext(excess);
+}
+
+CharFormatter TextFormatter::makeWorkspace(unsigned width){
+  if(openSpace(width)) {
+    return CharFormatter(&body.peek(),width);
+  } else {
+    return CharFormatter();
+  }
+}
+
+void TextFormatter::onFailure(CharFormatter workspace){
+  workspace.printChar('?');//replaces '%'
+  workspace.printDigit(which);
+}
+
+void TextFormatter::substitute(double value){
+  unsigned width = Zguard(nf.needs());
+  if(processing(width)){
+    CharFormatter workspace=makeWorkspace(width);
+    if(workspace.isUseful()) {
       if( !workspace.printNumber(value,nf)) {//if failed to insert anything
-        workspace.printChar('?');//replaces '%'
-        workspace.printDigit(which);
+        onFailure(workspace);
       }
-      //todo: remove excess allocation
-      body.skip(workspace.used());
-      //pull data back down over unused stuff
-      body.removeNext(workspace.freespace());
+      reclaimWaste(workspace);
     } else {
       //leave marker in place, or perhaps overwrite % with '?'
     }
   }
   nf.onUse();
-}
+} // TextFormatter::substitute
+
+void TextFormatter::substitute(u64 value){
+  //not using double, we don't want its formatting rules applied to actual integers
+  unsigned width = Zguard(1 + ilog10(value));
+  if(processing(width)){
+    CharFormatter workspace=makeWorkspace(width);
+    if(workspace.isUseful()) {
+      if(!workspace.printUnsigned(value)) {//if failed to insert anything
+        onFailure(workspace);
+      }
+      reclaimWaste(workspace);
+    } else {
+      //leave marker in place, or perhaps overwrite % with '?'
+    }
+  }
+
+} // TextFormatter::substitute
 
 void TextFormatter::substitute(const NumberFormat &item){
-  //this should not actually get called. we migth still use it to relocate some code from header to here should this ever become more than an assignement.
-  nf = item;
+  //this should not actually get called. we migth still use it to relocate some code from header to here should this ever become more than an assignment.
+  nf = item;//copies fields, the original doesn't need to linger.
 }
 
 bool TextFormatter::onSizingCompleted(){
-  sizing=false;
-  if(sizer>0){
-    clear();
-    body.wrap(reinterpret_cast<char*>(malloc(sizer)),sizer);
-    this->ptr=body.internalBuffer();
-
-    if(body.allocated()>0){
-      body.appendAll(format);
+  sizing = false;
+  sizer=Zguard(sizer);//because we dropped the null on our format string.
+    body.wrap(reinterpret_cast<char*>(malloc(sizer)),sizer);//wrap new allocation
+    if(body.isUseful()) {//if malloc worked
+      body.cat(c_str(),length());//copy in present stuff
+      body.clearUnused();//emphatic nulling
+//      this->operator =(body.internalBuffer());//release original (copy of) format and hold on to new
+      clear();
+      this->ptr=body.internalBuffer();
       return true;
     }
-  }
+
   return false;
-}
+} // TextFormatter::onSizingCompleted
