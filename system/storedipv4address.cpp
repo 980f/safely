@@ -11,15 +11,8 @@ StoredIPV4Address::StoredIPV4Address(Storable &node) : Stored(node),
 }
 
 Text StoredIPV4Address::dotstring(u32 ipv4){
-  u32 accumulator(ipv4);
-  u8 bytes[4];
-  for(int i = 4; i-->0; ) {
-    bytes[i] = accumulator >> 24;
-    accumulator <<= 8;
-  }
-  return TextFormatter::compose("%1.%2.%3.%4",bytes[3],bytes[2],bytes[1],bytes[0]);
-//  Text workspace("999.999.999.999");//todo: fix textformatter or appy bufferformatter
-//  return workspace;//TextFormatter::compose("%1.%2.%3.%4",bytes[3],bytes[2],bytes[1],bytes[0]);
+  u8 *bytes=reinterpret_cast<u8*>(&ipv4);
+  return TextFormatter::compose("$0.$1.$2.$3",bytes[3],bytes[2],bytes[1],bytes[0]);
 }
 
 void StoredIPV4Address::makeText(){
