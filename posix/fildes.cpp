@@ -140,6 +140,17 @@ int Fildes::write(Indexer<u8>&p){
   }
 }
 
+int Fildes::write(Indexer<u8> &&p){
+  if(isOpen()) {
+    if(okValue(lastWrote, ::write(fd, &p.peek(), p.freespace()))) {
+      p.skip(lastWrote);
+    }
+    return lastWrote;
+  } else {
+    return lastWrote = -1; //todo:2 error code
+  }
+}
+
 int Fildes::write(const u8 *buf, unsigned len){
   if(isOpen()) {
     if(okValue(lastWrote, ::write(fd,buf, len))) {

@@ -61,6 +61,10 @@ CharFormatter::CharFormatter()
 
 }
 
+Indexer<u8> CharFormatter::asBytes(){
+  return Indexer<u8>(reinterpret_cast<u8*>(buffer),used());
+}
+
 double CharFormatter::parseDouble(void){
   NumberParser n;
   //maydo: use transactional buffer? if so then have to return a status and pass a pointer.
