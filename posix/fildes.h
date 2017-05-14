@@ -56,9 +56,12 @@ public:
   int read(u8* buf,unsigned len);//placeholder
   /** write from freespace of buffer */
   int write(Indexer<u8> &p);
+
+  int write(Indexer<u8> &&p);
+
   int write(const u8* buf,unsigned len);//placeholder
   /** write a character a bunch of times. Handy for things like indenting a nested text printout. */
-  int write(char c, unsigned repeats=1);
+  int write(char c, unsigned repeats);//a default arg makes this and write(Indexer<u8>) ambiguous
 
   /** @returns isOpen()*/
   bool mark(FDset&fdset) const;

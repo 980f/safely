@@ -22,6 +22,10 @@ public:
   /** construct around buffer associated with @param other, shares the buffer!*/
   CharFormatter(ByteScanner &other);
   CharFormatter();
+
+
+  Indexer<u8> asBytes();
+
   /** parse a double from current pointer */
   double parseDouble(void);
 
