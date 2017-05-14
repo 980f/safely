@@ -208,7 +208,8 @@ bool CharFormatter::printSigned(int value){
   }
 }
 
-#define _2gig 2147483648.0
+const double _2gig=2147483648.0;
+//todo:1 const double _u63=
 
 bool CharFormatter::printNumber(double d, int sigfig){
   if(d == 0.0) { //to avert taking the log of 0. and frequent value.
@@ -285,6 +286,12 @@ bool CharFormatter::printNumber(double d, int sigfig){
 }
 
 bool CharFormatter::printNumber(double d, const NumberFormat &nf, bool addone){
+  //first: round!
+  if(d!=0.0){
+      u64 lsd= i64pow10(nf.decimals);
+      d+=0.5*lsd;
+    //and now we can truncate later on
+  }
   TransactionalBuffer<char > checker(*this);
   NumberPieces np(d); //decompose number into digits and field sizes.
   if(np.isZero) { //to avert taking the log of 0. and frequent value.
@@ -295,7 +302,7 @@ bool CharFormatter::printNumber(double d, const NumberFormat &nf, bool addone){
     return checker &= printString(np.negative?"-Inf":nf.showsign?"+Inf":"Inf");
   } else {
     if(nf.scientific){
-      checker&=printString("Oops!");
+      checker&=printNumber(d,nf.decimals+addone);
     } else {
       if(nf.showsign && !np.negative){
         checker &= printChar('+');
@@ -303,6 +310,7 @@ bool CharFormatter::printNumber(double d, const NumberFormat &nf, bool addone){
       if(np.negative){
         checker &= printChar('-');
       }
+
       checker&= printUnsigned(np.predecimal);
       if(nf.decimals>0){
         checker&=printChar('.');//not doing locale's herein.
@@ -320,7 +328,7 @@ bool CharFormatter::printNumber(double d, const NumberFormat &nf, bool addone){
             }
           }
           if(stillwant>0){
-            u64 postdec=keepDecimals(np.postdecimal,stillwant);
+            u64 postdec=truncateDecimals(np.postdecimal,stillwant);
             int stillhave=1+ilog10(postdec);//double checking
             if(stillhave<stillwant){
               checker &=printChar('0',stillwant-stillhave);

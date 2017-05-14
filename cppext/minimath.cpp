@@ -106,6 +106,13 @@ u64 keepDecimals(u64 p19,unsigned digits){
   return rate(p19,i64pow10(19-digits));
 }
 
+u64 truncateDecimals(u64 p19,unsigned digits){
+  if(digits<=19){
+    return p19/i64pow10(19-digits);
+  }
+  return 0;
+}
+
 //uround and sround are coded to be like they will in optimized assembly
 u16 uround(float scaled){
   if(scaled < 0.5) { //fp compares are the same cost as integer.

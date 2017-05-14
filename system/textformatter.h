@@ -11,15 +11,19 @@
 /** class for formatting values into a Text object. this replaces most of glib::ustring's extensions to std::string
  * compared to other string class implemenations this takes pain to realloc only when absolutely necessary. It does not do fancy memory management like copy-on-write,,
  * the fanciest thing it does is predict what a bunch of concatenation will require before attempting that concatenation, allocating just what is needed.
+(first pass it overallocates numbers, until we are sure we can perfectly predict the size of numbers we overallocate, still allocating just once, and have some extra leftover bytes).
+
 
 */
 class TextFormatter : public Text {
-  /** wraps format string, gets rewound a lot during sizing */
-  CharScanner format;
+public://4diagnostics
   /** wraps Text for assembling string */
   CharFormatter body;
   /** stateful number formatting, an inline NF item applies to all higher indexed values */
   NumberFormat nf;
+protected:
+  /** where a terminator should be */
+  unsigned termloc=BadIndex;
   /** whether we are computing size of final string or assembling it */
   bool sizing=true;
   /** tag of next argument to format+insert */
@@ -27,43 +31,22 @@ class TextFormatter : public Text {
   /** when we have no space the print is a dry run that computes instead of formats */
   unsigned sizer = 0;
 
-  struct Piece {
-    // how many times reference in the string, usually 0 or 1
-    unsigned refcount;
-    // how many bytes it needed.
-    unsigned length;
-  };
-
-//todo: count and malloc  Piece *lengthCache=nullptr;
-  Piece lengthCache[10];//so long as we only can handle single digit place indicators we can do a fixed allocation here.
-
-  struct Insertion {
-    int which;
-    //offset from start of final string where the insertion goes.
-    int position;
-  };
-  //we allocate this by summing the refcounts of the lengthCache items.
-  Insertion *inserts=nullptr;
-
-  TextFormatter(TextKey mf);
 private:
   TextFormatter()=delete;
 public:
   ~TextFormatter();
 private:
-  void substitute(TextKey stringy);
 
-  //** compiler might have figured this out, but it is nice to able to breakpoint on this until we have proven the class */
-  void substitute(Cstr stringy);
-
-  /** the primary substituter, all others defer to this */
   void substitute(CharFormatter buf);
-
+  void substitute(Cstr stringy);
+  void substitute(TextKey stringy);
+  //at the moment int's get rolled in with doubles.
   void substitute(double value);
+  void substitute(u64 value);
+  void substitute(u8 value);
 
-  /** needed in case format string references this non-printable item. Might use that instead of counting to reuse these.
-   * could also not bump 'which' when one is encountered, but that has its own confusions.
-*/
+
+  /** compiler insists we have this, needed in case the format string references this non-printable item.*/
   void substitute( const NumberFormat &item);
 
   bool onSizingCompleted();
@@ -74,16 +57,12 @@ private:
    *  for arguments that have a substitute method that will get called.
    *  Each substitute method eventually inserts a string.
    */
-  template<typename ... Args> void next(const Args& ... args){
-    ++which;
-    compose_item( args ...);
-  }
 
 
   template<typename NextArg, typename ... Args> void compose_item( NextArg&item, const Args& ... args){
     body.rewind();
     bool slashed=false;
-    while(body.hasNext()) {
+    while(body.hasNext()&&body.ordinal()<termloc) {
       char c = body.next();
       if(flagged(slashed)){
         continue;
@@ -101,42 +80,45 @@ private:
         }
       }
     }
-    next(args...);
+    //inlined to reduce stack depth, we only had two copies:    next(args...);
+      ++which;
+      compose_item( args ...);
   } // compose_item
+
+  template<typename ... Args> void compose_item( const NumberFormat &item, const Args& ... args){
+    substitute(item);
+    //inlined to reduce stack depth, we only had two copies:    next(args...);
+    ++which;
+    compose_item( args ...);
+  }
 
   template<typename ... Args> void compose_item( ){
     //# here is where we can do any post processing such as freeing of no longer needed caching of converted items.
   }
 
-//  template<typename ... Args> void compose_item( NumberFormat &item, const Args& ... args){
-//    substitute(item);
-//    next(args...);
-//  }
+  bool openSpace(unsigned width);
+  void reclaimWaste(const CharFormatter &workspace);
 
-  template<typename ... Args> void compose_item( const NumberFormat &item, const Args& ... args){
-    substitute(item);
-    next(args...);
-  }
+  CharFormatter makeWorkspace(unsigned width);
+  bool processing(unsigned width);
+  void onFailure(CharFormatter workspace);
 
 public:
+  TextFormatter(TextKey mf);
 
-  /** @returns maximum number of chars it will take to show the given number */
-  static unsigned estimateNumber(double value);
-  /** @returns maximum number of chars it will take to show the given unicode char (given 1st byte of utf8) */
-  static unsigned estimateSlashu(char unifirst);
-  /** @returns maximum number of chars it will take to show the given string escaping with \u and \U */
-  static unsigned estimateSlashu(TextKey value);
+//  /** apply destroys the memory of the format. To reuse this object (?why bother?) */
+//  void setFormat(TextKey another);
 
-
-public:
+  /** applys args, @returns whether it actually did so. This object *is* Text so it has c_str() etc. if needed. */
   template<typename ... Args> bool apply(const Args ... args){
     which=0;
     sizing=true;
-    sizer=format.allocated();//instead of adding one for each simple char we will subtract for the substititution tags.
+    termloc=sizer=body.allocated();//instead of adding one for each simple char we will subtract for the substititution tags.
     compose_item(args ...);
     if(onSizingCompleted()){
       which=0;
       compose_item(args ...);
+      body[termloc]=0;//clip trash from overallocating workspace for numbers.
       return true;
     } else {
       //couldn't allocate a buffer or the string to build is empty.

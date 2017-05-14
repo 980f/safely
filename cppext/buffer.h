@@ -95,6 +95,17 @@ public:
     buffer(rewind<=0 ? other.buffer : other.buffer + (other.pointer - rewind)){
   }
 
+  /** @returns whether this seems to be a useful object. Note that it might have no freespace(), but it will have content.
+ It was created to detect buffers that were created around a malloc or the like return.*/
+  bool isUseful() const {
+    return buffer!=nullptr && length>0 && length!=BadLength && pointer <=length;
+  }
+
+  /** @returns whether this isUseful or a perfectly empty 'null' one.*/
+  bool isLegal() const {
+    return isUseful() || (length==0 && buffer==nullptr && pointer==0);
+  }
+
   /** It only makes sense to use this once right after creation of the related buffer.
    * This method zeroes out trailing part of allocation and then forgets it exists.
    * The most obvious use of this is to ensure a trailing null on strings.
@@ -404,13 +415,14 @@ public:
   }
 
   /** append all or none of the allocation of @param other to this, leaving @param other untouched. */
-  Indexer appendAll(const Indexer<Content> &other){
+  bool appendAll(const Indexer<Content> &other){
     if(stillHas(other.length)) {
       Indexer<Content> cat(other, 0);
       cat.dump();//this was missing for a long time.
       catFrom(cat, other.length);
+      return true;
     }
-    return *this;
+    return false;
   }
 
   /** set unused content to 0. pointer is unmodified
