@@ -30,9 +30,9 @@ TextFormatter::~TextFormatter(){
   //#nada
 }
 
-bool TextFormatter::processing(unsigned width){
+bool TextFormatter::processing(){
   if(sizing) {
-    sizer += width-2;
+    sizer += width - substWidth;
     return false;
   } else {
     return true;
@@ -40,19 +40,19 @@ bool TextFormatter::processing(unsigned width){
 }
 
 void TextFormatter::substitute(CharFormatter buf){
-  unsigned width = buf.allocated();
-  if(processing(width)){
-    CharFormatter workspace=makeWorkspace(width);
-    if(workspace.isUseful()){
-      if(! workspace.appendAll(buf)){
-        if(width>=2){
-          onFailure(workspace);
-        }
+  width = buf.allocated();
+
+  CharFormatter workspace = makeWorkspace();
+  if(workspace.isUseful()) {
+    if(!workspace.appendAll(buf)) {
+      if(width>=substWidth) {
+        onFailure(workspace);
       }
-      reclaimWaste(workspace);
     }
+    reclaimWaste(workspace);
   }
-}
+
+} // TextFormatter::substitute
 
 void TextFormatter::substitute(Cstr stringy){
   substitute(CharFormatter::infer(stringy.violated()));
@@ -62,9 +62,9 @@ void TextFormatter::substitute(TextKey stringy){
   substitute(Cstr(stringy));
 }
 
-bool TextFormatter::openSpace(unsigned width){
-  if(body.move(width - 2)) {//2: dollar and digit
-    termloc+=width-2;
+bool TextFormatter::openSpace(){
+  if(body.move(width - substWidth)) {//2: dollar and digit
+    termloc += width - substWidth;
     //point to '$'
     body.rewind(width);
     return true;
@@ -76,13 +76,13 @@ bool TextFormatter::openSpace(unsigned width){
 void TextFormatter::reclaimWaste(const CharFormatter &workspace){
   body.skip(workspace.used());
   //pull data back down over unused stuff
-  unsigned excess=workspace.freespace();
-  termloc-= excess;
+  unsigned excess = workspace.freespace();
+  termloc -= excess;
   body.removeNext(excess);
 }
 
-CharFormatter TextFormatter::makeWorkspace(unsigned width){
-  if(openSpace(width)) {
+CharFormatter TextFormatter::makeWorkspace(){
+  if(processing()&&openSpace()) {
     return CharFormatter(&body.peek(),width);
   } else {
     return CharFormatter();
@@ -95,36 +95,31 @@ void TextFormatter::onFailure(CharFormatter workspace){
 }
 
 void TextFormatter::substitute(double value){
-  unsigned width = Zguard(nf.needs());
-  if(processing(width)){
-    CharFormatter workspace=makeWorkspace(width);
-    if(workspace.isUseful()) {
-      if( ! workspace.printNumber(value,nf)) {//if failed to insert anything
-        onFailure(workspace);
-      }
-      reclaimWaste(workspace);
-    } else {
-      //leave marker in place, or perhaps overwrite % with '?'
+  width = Zguard(nf.needs());
+  CharFormatter workspace = makeWorkspace();
+  if(workspace.isUseful()) {
+    if( !workspace.printNumber(value,nf)) {   //if failed to insert anything
+      onFailure(workspace);
     }
+    reclaimWaste(workspace);
   }
   nf.onUse();
 } // TextFormatter::substitute
 
 void TextFormatter::substitute(u64 value){
   //not using double, we don't want its formatting rules applied to actual integers
-  unsigned width = Zguard(1 + ilog10(value));
-  if(processing(width)){
-    CharFormatter workspace=makeWorkspace(width);
-    if(workspace.isUseful()) {
-      if(!workspace.printUnsigned(value)) {//if failed to insert anything
-        onFailure(workspace);
-      }
-      reclaimWaste(workspace);
-    } else {
-      //leave marker in place, or perhaps overwrite % with '?'
+  width = Zguard(1 + ilog10(value));
+  CharFormatter workspace = makeWorkspace();
+  if(workspace.isUseful()) {
+    if(!workspace.printUnsigned(value)) {  //if failed to insert anything
+      onFailure(workspace);
     }
-  }
+    reclaimWaste(workspace);
+  } 
+}
 
+void TextFormatter::substitute(u8 value){
+  substitute(u64(value));//need this to distinguish char * from implied char &
 } // TextFormatter::substitute
 
 void TextFormatter::substitute(const NumberFormat &item){
@@ -134,16 +129,16 @@ void TextFormatter::substitute(const NumberFormat &item){
 
 bool TextFormatter::onSizingCompleted(){
   sizing = false;
-  sizer=Zguard(sizer);//because we dropped the null on our format string.
-    body.wrap(reinterpret_cast<char*>(malloc(sizer)),sizer);//wrap new allocation
-    if(body.isUseful()) {//if malloc worked
-      body.cat(c_str(),length());//copy in present stuff
-      body.clearUnused();//emphatic nulling
+  sizer = Zguard(sizer);//because we dropped the null on our format string.
+  body.wrap(reinterpret_cast<char*>(malloc(sizer)),sizer);  //wrap new allocation
+  if(body.isUseful()) {  //if malloc worked
+    body.cat(c_str(),length());  //copy in present stuff
+    body.clearUnused();  //emphatic nulling
 //      this->operator =(body.internalBuffer());//release original (copy of) format and hold on to new
-      clear();
-      this->ptr=body.internalBuffer();
-      return true;
-    }
+    clear();
+    this->ptr = body.internalBuffer();
+    return true;
+  }
 
   return false;
 } // TextFormatter::onSizingCompleted

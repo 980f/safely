@@ -30,7 +30,10 @@ protected:
   unsigned which = BadIndex;//weird value for debug, should always be written to before use by proper code.
   /** when we have no space the print is a dry run that computes instead of formats */
   unsigned sizer = 0;
-
+//got tired of passing this around, nice to have it handy
+  unsigned width=BadLength;
+  //width of field being replaced
+  unsigned substWidth=BadLength;
 private:
   TextFormatter()=delete;
 public:
@@ -75,6 +78,8 @@ private:
         //todo: parseInt so that we can have more than 10 args
         char d = body.next();
         if(d - '0' == which) { //splice in ref
+          substWidth=2;//dollar and digit
+          width=BadLength;//for debug
           substitute(item);
           //by not returning here we allow for multiple substitutions of one argument.
         }
@@ -96,11 +101,11 @@ private:
     //# here is where we can do any post processing such as freeing of no longer needed caching of converted items.
   }
 
-  bool openSpace(unsigned width);
+  bool openSpace();
   void reclaimWaste(const CharFormatter &workspace);
 
-  CharFormatter makeWorkspace(unsigned width);
-  bool processing(unsigned width);
+  CharFormatter makeWorkspace();
+  bool processing();
   void onFailure(CharFormatter workspace);
 
 public:
