@@ -185,6 +185,8 @@ template <typename floating> bool nearly(floating value, floating other, int bit
 /** @returns The base 10 exponent of @param value. Note that the number of digits for values >0 is 1+ilog10().
  * For zero this returns -1, most logic will have problems if you don't check that. */
 int ilog10(u32 value);
+int ilog10(u64 value);
+
 /** an integer power of 10. out of bounds arg gets you nothing but trouble ... */
 u32 i32pow10(unsigned power);
 
