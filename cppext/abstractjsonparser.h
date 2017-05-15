@@ -18,7 +18,7 @@ template <typename Storable, typename TextClass> class JsonConstructor {
 public: //needs accessor
   /** parent of all that is parsed. It can be supplied or the insertNewChild must set it when given a null parent */
   Storable *root=nullptr;
-  bool treatRootSpecial=true;//for loading a file onto an existing node we want teh file content to be wrappped with braces that do not cause a new child to be made.
+  bool treatRootSpecial=true;//for loading a file onto an existing node we want the file content to be wrappped with braces that do not cause a new child to be made.
 protected:
   /** must supply and track source data, and be able to recover it from values of ordinal */
   virtual bool hasNext(void) = 0;
@@ -77,7 +77,7 @@ protected:
 
       case PushedJSON::BeginWad: {//open brace encountered
         //special treatment for node that matches top level of file
-        Storable *nova = ((parent==data.root)&&data.treatRootSpecial)? parent : assembleItem(parent,true);
+        Storable *nova = ((parent==data.root)&&flagged(data.treatRootSpecial))? parent : assembleItem(parent,true);
         while(parseChild(nova)) {
           //#recurse while there are more to be found
         }
