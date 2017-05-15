@@ -20,6 +20,8 @@ struct NanoSeconds {
     this->operator= (seconds);
   }
 
+  NanoSeconds(const NanoSeconds &other)=default;\
+
   void operator=(double seconds){
     parseTime (ts,seconds);
   }
@@ -33,6 +35,8 @@ struct NanoSeconds {
   }
 
   void setMillis(unsigned ms);
+
+  NanoSeconds operator -(const NanoSeconds &lesser);
 
 };
 

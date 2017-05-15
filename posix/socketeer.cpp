@@ -73,7 +73,7 @@ const char * Socketeer::connect(){
     }
   }
   //todo:1 iterate over connectArgs and try until one works.
-  addrinfo *one=connectArgs.res;
+  addrinfo *one=connectArgs.bestAddress();
   if(failed( ::connect(fd, one->ai_addr, one->ai_addrlen))){
     if (errornumber== EINPROGRESS || errornumber==EALREADY) {
       errornumber=0;//the above codes are 'still working on it'
@@ -86,7 +86,7 @@ const char * Socketeer::connect(){
     connected=1;
     connectArgs.keep(one);
     //maydo: connectArgs.free();
-//maudo:    connectArgs.clip();//todo: integrate this with keep, i.e. keep (what we need from) the given one and free the rest.
+//maydo:    connectArgs.clip();//todo: integrate this with keep, i.e. keep (what we need from) the given one and free the rest.
     bug("Connected OK");
     errornumber=0;//forget any lingering error indication.
     return nullptr;//success
@@ -202,12 +202,15 @@ bool HostInfo::lookup(const char *name, unsigned port, const char *service){
         //that involves knowing what kind of address each is.
         unsigned hostport=htons(port);
         for(addrinfo*ai=res;ai;ai=ai->ai_next){
-          ++curious;
           if(ai->ai_family==AF_INET){
+            lastipv4=curious;
             sockaddr_in &host( *reinterpret_cast<sockaddr_in *>( ai->ai_addr));
             host.sin_port=hostport;
+          } else if(ai->ai_family==AF_INET6){
+            sockaddr_in6 &host( *reinterpret_cast<sockaddr_in6 *>( ai->ai_addr));
+            host.sin6_port=hostport;
           }
-          //todo: IPV6
+          ++curious;
         }
         dbg("There were %d choices of addrinfo",curious);
       }
@@ -215,6 +218,16 @@ bool HostInfo::lookup(const char *name, unsigned port, const char *service){
     return true;
   }
 }
+
+addrinfo *HostInfo::bestAddress(){
+  for(addrinfo*ai=res;ai;ai=ai->ai_next){
+    if(ai->ai_family==AF_INET){
+      return ai;
+    }
+  }
+  return res;
+}
+
 
 void HostInfo::keep(addrinfo *one){
   if(one==nullptr){
@@ -252,6 +265,7 @@ void HostInfo::clip(){
     freeaddrinfo(res->ai_next);
   }
 }
+
 
 HostInfo::HostInfo():
   gotten(false),

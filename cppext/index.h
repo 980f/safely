@@ -21,7 +21,7 @@ inline bool isValid(unsigned index){
 
 /** marker class for an integer used as an array index or related value. Leave all in header file as we need to strongly urge the compiler to inline all this code  */
 struct Index {
-  Index(unsigned raw):raw(raw){}
+  Index(unsigned raw=BadIndex):raw(raw){}
 
   unsigned raw;
 
