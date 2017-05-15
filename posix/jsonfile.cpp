@@ -32,6 +32,7 @@ int JsonFile::loadFile(Cstr thename){
   //allow variation of syntax where an '=' is the same as an ':' (when not quoted of course)
   parser.parser.rule.equalscolon=true;//todo: make this configurable
   parser.parser.rule.semicomma=true;//needed in case we embed dp5 config :(
+  parser.parser.lookFor(StandardJSONFraming ";=");
 
   parser.parse();
   root.resolve(true);//until we patch the loader to not create uncertainty
