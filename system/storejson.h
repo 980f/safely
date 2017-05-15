@@ -7,7 +7,7 @@
 
 #include "abstractjsonparser.h"
 
-/** must supply and track source data, and be able to recover it from values of ordinal */
+/** must supply and track source data, and be able to extract data via ordinals */
 class StoreJsonConstructor: public JsonConstructor<Storable,Text> {
 public:
   /** pointer to data source, exposed for module testing convenience */
