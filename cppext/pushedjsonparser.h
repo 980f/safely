@@ -84,5 +84,7 @@ private:
   void endToken(unsigned mark);
 }; // class Parser
 
+#define StandardJSONFraming ":{,}[]"
+
 } // namespace PushedJSON
 #endif // PUSHEDJSONPARSER_H

@@ -28,7 +28,7 @@ Storable *StoreJsonConstructor::insertNewChild(Storable *parent, Text &name, boo
         //keep the text type set by setImage.
       } else {//mark for further inspection by datum user.
         //might be 'true' 'false' 'null' or some custom token
-        nova->setType(Storable::Uncertain);//mark for deferred interpretation
+        nova->setType(Storable::Uncertain);//todo:0 too agressive, should preserve known types//mark for deferred interpretation
       }
     } else {//either a trivial value (a formal json defect) or a parent
       if(valueQuoted){

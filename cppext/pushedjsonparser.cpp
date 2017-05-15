@@ -89,7 +89,7 @@ void Parser::shift(unsigned offset){
 }
 
 Parser::Parser(){
-  lookFor(":{,}");
+  lookFor(StandardJSONFraming);
   reset(true);
 }
 
