@@ -12,7 +12,7 @@ private:
 */
   static __time_t epoch;
 private:
-  void readit(timespec &ts);
+  bool readit(timespec &ts);
   const int CLOCK_something;
 protected:
   NanoSeconds started;
@@ -44,6 +44,8 @@ Most of the time 'real' makes more sense, but when debugging 'process' time is m
 
   /** @returns the number of cycles of frequency @param atHz that have @see elapsed() */
   unsigned cycles(double atHz, bool andRoll=true);
+  /** @return last clock value sampled, either as absolute (time since program start) or since stopwatch.start()*/
+  double lastSnap(bool absolute) const;
 };
 
 #endif // STOPWATCH_H

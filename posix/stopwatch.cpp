@@ -3,9 +3,14 @@
 
 __time_t StopWatch::epoch = 0;
 
-void StopWatch::readit(timespec &ts){
-  clock_gettime(CLOCK_something,&ts);
-  ts.tv_sec-=epoch;
+bool StopWatch::readit(timespec &ts){
+  if(clock_gettime(CLOCK_something,&ts)){
+    ts.tv_nsec+=1;//a breakpoint so that we can inspect errno
+    return false;
+  } else {
+    ts.tv_sec-=epoch;
+    return true;
+  }
 }
 
 StopWatch::StopWatch(bool beRunning,bool realElseProcess) :
@@ -63,6 +68,14 @@ unsigned StopWatch::cycles(double atHz,bool andRoll){
     }
   }
   return cycles;
+}
+
+double StopWatch::lastSnap(bool absolute) const{
+  if(absolute){
+    return stopped;
+  } else {
+    return stopped-started;
+  }
 }
 
 double StopWatch::elapsed(double *absolutely){

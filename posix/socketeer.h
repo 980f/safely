@@ -21,6 +21,13 @@ class HostInfo {
 public: //
   int lastErrno;//like posixwrapper, migth refactor to use it.
 public:
+  Index lastipv4;//which res member is an ipv4, -1 if none
+  bool haveIpv4(){
+    return lastipv4.isValid();
+  }
+
+  addrinfo *anIpv4();
+
   addrinfo *res;
   addrinfo hints;
 
@@ -42,6 +49,7 @@ public:
   void clip();
   ~HostInfo();
   //flags for hints: AI_NUMERICHOST, AI_PASSIVE&& null node for server.
+  addrinfo *bestAddress();
 };
 
 
