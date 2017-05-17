@@ -5,7 +5,6 @@ __time_t StopWatch::epoch = 0;
 
 bool StopWatch::readit(timespec &ts){
   if(clock_gettime(CLOCK_something,&ts)){
-    ts.tv_nsec+=1;//a breakpoint so that we can inspect errno
     return false;
   } else {
     ts.tv_sec-=epoch;
@@ -17,7 +16,7 @@ StopWatch::StopWatch(bool beRunning,bool realElseProcess) :
   CLOCK_something(realElseProcess ? CLOCK_MONOTONIC : CLOCK_THREAD_CPUTIME_ID){
   readit(started);
   if(epoch==0) {//once per application start
-    epoch = take(started.ts.tv_sec);
+//needs to be per-watch    epoch = take(started.ts.tv_sec);
   }
   stopped = started;
   running = beRunning;

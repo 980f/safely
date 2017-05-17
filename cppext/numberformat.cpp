@@ -62,13 +62,14 @@ unsigned NumberFormat::needs(double value, NumberPieces *preprint) const {
       }
     }
   }
-
   return necessary;
 }
 
 void NumberFormat::clear(){
   fieldWidth = BadLength;
   decimals = 0;
+  scientific=false;
+  showsign=false;
 }
 
 void NumberFormat::onUse(){

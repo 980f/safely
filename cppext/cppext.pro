@@ -66,7 +66,8 @@ SOURCES += argset.cpp \
     stacked.cpp \
     polledtimer.cpp \
     softpwm.cpp \
-    maxtracked.cpp
+    maxtracked.cpp \
+    abstractpin.cpp
 
 
 HEADERS += safely.h \
@@ -148,5 +149,6 @@ HEADERS += safely.h \
     onexit.h \
     polledtimer.h \
     softpwm.h \
-    maxtracked.h
+    maxtracked.h \
+    abstractpin.h
 
