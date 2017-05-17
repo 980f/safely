@@ -14,6 +14,10 @@ Fildes::Fildes(const char *whatfor):PosixWrapper (whatfor){
   amOwner = false;
 }
 
+Fildes::Fildes(const Fildes &other):Fildes(other.dbg.prefix){
+  this->fd = other.fd;
+}
+
 bool Fildes::assignFd(int anFD){
   this->fd = anFD;
   lastRead = lastWrote = 0;

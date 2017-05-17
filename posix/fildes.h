@@ -21,6 +21,8 @@ protected:
   bool assignFd(int anFD);
 public:
   Fildes(const char *whatfor);
+  /** copies ONLY the fd, none of the other state, and most especially is NOT the owner of the underlying file descriptor */
+  Fildes(const Fildes &other);
   /** since we close on going out of scope if you share an fd you must take care to use pointer or reference*/
   ~Fildes();
   bool open(const char *devname, int O_stuff); //open a named file
