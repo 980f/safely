@@ -22,8 +22,9 @@ bool Application::setQuickCheck(unsigned soonish){
   }
 }
 
-void Application::keepAlive(){
+bool Application::keepAlive(){
   //do nothing, normally overriden with code that looks for stalled processes.
+  return true;
 }
 
 
@@ -72,10 +73,10 @@ int Application::run(){
         sleeper=dregs;
       } while(nanosleep(&sleeper.ts,&dregs.ts));//returns 0 on normal completion, else errno is set and dregs is timeremaining
       looper.elapsed=looper.eventTime.roll();//emulate looper's wait.
-      keepAlive();
+      beRunning=keepAlive();
     } else {
       if(looper.doEvents(nextPeriod)){
-        keepAlive();
+        beRunning=keepAlive();
       } else {
         //some failures are not really something to get upset about
         switch (looper.errornumber) {

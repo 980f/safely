@@ -3,7 +3,8 @@
 #include "charformatter.h"
 
 #include "segmentedname.h" //for debug reports
-#include "pathparser.h" //for finding a child by a pathname
+#include "dottedname.h"
+//#include "pathparser.h" //for finding a child by a pathname
 
 //this is not a class member so that we don't force pathparser.h on all users:
 static const PathParser::Rules slasher('/',false,true);// '.' gives java property naming, '/' would allow use of filename classes. '|' was used for gtkwrappers access
@@ -453,32 +454,32 @@ Storable *Storable::findNameless(unsigned lastFound){
   return nullptr;
 }
 
+Storable &Storable::getRoot() {
+  Storable *searcher = this;
+
+  while(searcher&&searcher->parent){
+    searcher=parent;
+  }
+  return *searcher;
+}
+
 Storable *Storable::findChild(TextKey path, bool autocreate){
   if(this==nullptr){
     return nullptr;
   }
-  SegmentedName genealogy;
-  Text parsable(path);
-  Storable *searcher = this;
+  DottedName genealogy(slasher.slash,path);
+  Storable *searcher = (genealogy.bracket.before)?&getRoot():this;
 
-  auto bracket=PathParser::parseInto(genealogy,parsable,slasher.slash);
-  if(bracket.before){
-    while(searcher&&searcher->parent){
-      searcher=parent;
-    }
-  }
-  if(bracket.after) {
+  if(genealogy.bracket.after) {
     wtf("Storable findChild is ignoring trailing separator: [%s]",path);
   }
 
   auto progeny(genealogy.indexer());
   while(progeny.hasNext()) {
-    //if progeny.next is .. then found=parent, continue loop
     Text &lname=progeny.next();
-    if(lname.cmp("..")==0){
-      if(Storable * found =searcher->parent) {
-        searcher = found;
-      } else {//we are at root of this tree.
+    if(lname.cmp("..")==0){  //if progeny.next is .. then found=parent, continue loop
+      searcher=searcher->parent;
+      if(!searcher){
         //we can't autocreate a root, it would leak if we tried.
         wtf("Storable::findChild asked to look above root [%s]",path);
         return nullptr;//we do NOT autocreate in this case.
