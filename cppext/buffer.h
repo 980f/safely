@@ -54,10 +54,16 @@ template<typename Content> class Indexer : public LatentSequence<Content>, publi
 protected:
   Content *buffer;
 private:
+  /** only call this after idiot checking all of the args.*/
+  void movem(unsigned from, unsigned to, unsigned amount){
+    copyObject(buffer+from, buffer+to, (amount) * sizeof(Content));
+  }
+
+
   /** copy @param qty from start of source to end of this. This is a raw copy, no new objects are created */
   void catFrom(Indexer<Content> &source, unsigned qty){
     if(stillHas(qty) && qty <= source.used()) {
-      copyObject(&source.peek(), &peek(), qty * sizeof(Content));
+      movem(source.pointer, pointer, qty);
       source.skip(qty);
       skip(qty);
     }
@@ -340,7 +346,7 @@ public:
     if(amount > pointer) {
       amount = pointer;
     }
-    copyObject(&buffer[pointer], &buffer[pointer - amount], (length - pointer) * sizeof(Content));
+    movem(pointer,(pointer - amount),(length - pointer));
     Ordinator::remove(amount);
     return *this;
   }
@@ -348,11 +354,12 @@ public:
   /** remove bytes from the start of the allocation, actually moving data.
  This method does NOT alter the allocation. This only makes sense for a receive buffer as you peel items off the front. */
   Indexer &removeFirst(unsigned amount){
-    if(amount > pointer) {
-      amount = pointer;
+    if(amount>=pointer){//remove all
+      pointer=0;
+    } else {
+      movem(amount,0,amount);
+      pointer -=amount;
     }
-    copyObject(&buffer[amount], &buffer[0], (amount) * sizeof(Content));
-    pointer -=amount;
     return *this;
   }
 
@@ -361,11 +368,10 @@ public:
     //data start is pointer+amount
     unsigned start=pointer+amount;
     if(canContain(start)){//don't pull from past end
-      //data quantity is freespace-amount
+      //data quantity is freespace-amount being removed since we are removing from the freespace
       unsigned quantity=freespace()-amount;
       if(canContain(quantity)){//slightly bogus, but a negative quantity will fail this test.
-        //target is pointer
-        copyObject(buffer+(start), &peek(), quantity * sizeof(Content));
+        movem(start,pointer,quantity);
         return true;
       }
     }
