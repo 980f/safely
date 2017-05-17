@@ -304,6 +304,9 @@ public:
   void getArgs(ArgSet &args, bool purify = false);
   /** overwrite child nodes setting them to the given values, adding nodes as necessary to store all of the args.*/
   void setArgs(ArgSet &args);
+
+  /** @returns rootnode of this node, this if this is a root node.*/
+  Storable &getRoot();
 private:
   Storable &finishCreatingChild(Storable &noob);
 }; // class Storable

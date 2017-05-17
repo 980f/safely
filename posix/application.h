@@ -21,7 +21,7 @@ protected:
   /** clear this to try to get app to exit gracefully */
   bool beRunning;
   /** called with each event, especially when period is up. Not harmonic */
-  virtual void keepAlive();
+  virtual bool keepAlive();
 
   //until epoll works sanely on both platforms run() will just run a timer.
   bool justTime;
