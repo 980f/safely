@@ -33,12 +33,9 @@ Storable::~Storable(){
 }
 
 void Storable::notify() const {
-  //  if(++recursionCounter > 1) {
-  //    wtf("recursing %d in %s", recursionCounter, bugName);
-  //  }
+  //#we don't check isvolatile here as volatile nodes are often of singular interest, they just aren't of general interest (should not trigger group watch).
   watchers.send();
   recursiveNotify();
-  //  --recursionCounter;
 }
 
 void Storable::recursiveNotify() const {

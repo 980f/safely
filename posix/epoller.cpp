@@ -51,7 +51,7 @@ bool Epoller::remove(int fd){
 }
 
 bool Epoller::wait(int timeoutms){
-  static StopWatch reactionTime;
+  static StopWatch reactionTime(false,true);//perhaps using the wrong timebase caused epoller to not wait?
   static unsigned long shortwait=0;
   reactionTime.start();
   ++waitcount;

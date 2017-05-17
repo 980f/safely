@@ -10,7 +10,8 @@ struct ActivityPerformance {
   MaxDouble good;
   MaxDouble bad;
 public:
-  ActivityPerformance();
+  /** @param really selects real time vs process time*/
+  ActivityPerformance(bool really);
   void start(){
     pt.start();
   }

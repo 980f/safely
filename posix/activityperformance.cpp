@@ -1,7 +1,7 @@
 #include "activityperformance.h"
 
-ActivityPerformance::ActivityPerformance():
-  pt(false)//don't be running before first use, confuses debug
+ActivityPerformance::ActivityPerformance(bool really):
+  pt(false,really)//don't be running before first use, confuses debug
 {
   //#nada
 }
