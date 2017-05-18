@@ -316,7 +316,7 @@ bool CharFormatter::printNumber(double d, const NumberFormat &nf, bool addone){
       }
 
       checker&= printUnsigned(np.predecimal);
-      if(nf.decimals>0){
+      if(nf.decimals>0 &&np.postdecimal>0){
         checker&=printChar('.');//not doing locale's herein.
         int stillwant=nf.decimals+addone;
         if(np.postdecimal==0){//frequent case, when number was actually an integer
@@ -347,7 +347,7 @@ bool CharFormatter::printNumber(double d, const NumberFormat &nf, bool addone){
 } /* printNumber */
 
 bool CharFormatter::printString(TextKey s){
-  TransactionalBuffer<char > checker(*this);
+  TransactionalBuffer<char > checker(*this);//todo:00 wrongly rewinds pointer
   if(s) {
     while(*s && printChar(*s++)) {
       //empty body

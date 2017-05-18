@@ -4,6 +4,7 @@
 #include "posixwrapper.h"
 #include "fildes.h"
 class TimerFD:public PosixWrapper {
+public://handy for debug
   Fildes fd;
 public:
   TimerFD();
@@ -16,6 +17,7 @@ public:
   int asInt()const{
     return fd.asInt();
   }
+
 };
 
 #endif // TIMERFD_H

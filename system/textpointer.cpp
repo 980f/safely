@@ -49,7 +49,8 @@ Text::Text(TextKey other, const Span &span):Cstr(TextKey(nullptr)){
 
 }
 
-Text::Text(const char *ptr,bool takeit) : Cstr( nonTrivial(ptr) ? (takeit ? ptr : strdup(ptr)) : nullptr){
+Text::Text(const char *ptr,bool takeit) :
+  Cstr( nonTrivial(ptr) ? (takeit ? ptr : strdup(ptr)) : nullptr){
   //we now own what was passed, or the duplicate we created.
   tbg("construct by takeit:%b  %p:%p",takeit,this,ptr);
 }
@@ -84,7 +85,7 @@ void Text::take(const TextKey &other){
 void Text::copy(TextKey other){
   tbg("copying by cstr %p:%p  <-%p",this,ptr,other);
 
-  if(ptr != other) { //# if not passed self as a pointer to this' storage.
+  if(ptr && ptr != other) { //# if not passed self as a pointer to this' storage.
     clear();
   }
   if(nonTrivial(other)) {//definitely same data

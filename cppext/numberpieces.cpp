@@ -64,7 +64,7 @@ void NumberPieces::reset(void){
   isNan = false;
   isInf = false;
   isZero = false;
-  negative = false;
+  negative = false; hadRadixPoint=false;
   predecimal = 0;
   pow10 = 0;
   postdecimal = 0;
