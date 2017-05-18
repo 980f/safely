@@ -92,7 +92,7 @@ public:   //made public for sibling access, could hide it with some explicit sib
   Storable *parent;
 protected:
   /** cached coordinate of this item in its parent's wad, updated by parent when that parent reorganizes its wad.*/
-  int index;
+  unsigned index;
   /** children of this node */
   Chain<Storable> wad;
   /** set by StoredEnum when one is created, maintains parallel text.*/
@@ -152,7 +152,7 @@ public:
   Text fullName() const;
 
   /** the index is often not meaningful, but always is valid. It is -1 for a root node.*/
-  int ownIndex() const {
+  unsigned ownIndex() const {
     return index;
   }
 
@@ -293,7 +293,7 @@ public:
   void presize(int qty, Storable::Type type = NotKnown);
 
   /** remove a child of the wad, only makes sense for use with StoredGroup (or legacy cleanup) */
-  bool remove(int which);
+  bool remove(unsigned which);
   bool removeChild(Storable &node);
   bool removeChild(Cstr name);
 
