@@ -361,6 +361,14 @@ void Storable::setImageFrom(TextKey value, Storable::Quality quality){
     setType(Textual);
     setQuality(quality);
   } else {
+    if(quality==Parsed){//then retain type if it is known and set according to type
+      if(type==Numerical){
+        text=value; //#bypass change detect here
+        bool impure(true);//4 debug
+        setValue(toDouble(text.c_str(), &impure),quality);
+        return;//already invoked change in setValue
+      }
+    }
     notifeye = changed(text, value);  //todo:00 don't use changed template, do inline to avoid casting
     notifeye |= setQuality(quality);
   }
