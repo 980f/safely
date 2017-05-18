@@ -19,6 +19,7 @@ Text NumberFormatter::format(double value,bool addone) const {
   if(workspace.printNumber(value,nf,addone)) {//testing so that we don't add units if number failed to print
     workspace.printString(postfix);
   }
+  workspace.next()=0;
   return Text(workspace.internalBuffer());//the constructor invoked here copies the content.
 }
 

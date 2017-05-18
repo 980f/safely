@@ -389,7 +389,7 @@ Cstr Storable::image(void){
       return enumerated->token(int(number));//don't update text, this is much more efficient since enumerated is effectively static.
     } else {
       //set the internal image without triggering change detect
-      text.take(NumberFormatter::makeNumber(number));
+      text.copy(NumberFormatter::makeNumber(number));
       return text;
     }
   case Wad:

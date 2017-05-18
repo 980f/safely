@@ -18,13 +18,16 @@ unsigned NumberFormat::needs() const {
     return decimals>=0 ? 19 + 1 + 1 + decimals : 3-decimals;
   }
 }
-
+//this code must track charformatter::printnumber
 unsigned NumberFormat::needs(double value, NumberPieces *preprint) const {
   NumberPieces p;
   if(preprint==nullptr){
     preprint=&p;
   }
   preprint->decompose(value);
+  if(preprint->isZero){
+    return 1;
+  }
   if(preprint->isNan) {
     return 4;//size of our text
   }
@@ -35,9 +38,10 @@ unsigned NumberFormat::needs(double value, NumberPieces *preprint) const {
   if(scientific){
     //sigfigs+1 if sigfigs>exponent sa we'll need a d.p.
     //exponent if >sigfigs then add pow10 for its extra zeroes
+    necessary+=10;//todo:00 finish this!
   } else {
     //leading zero if number <0, else add room
-    necessary+=decimals+decimals>0;
+    necessary+=decimals+(decimals>0);
     if(preprint->negativeExponent){
       ++necessary;
     } else {
