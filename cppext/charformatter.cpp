@@ -347,7 +347,7 @@ bool CharFormatter::printNumber(double d, const NumberFormat &nf, bool addone){
 } /* printNumber */
 
 bool CharFormatter::printString(TextKey s){
-  TransactionalBuffer<char > checker(*this);//todo:00 wrongly rewinds pointer
+  TransactionalBuffer<char > checker(*this);
   if(s) {
     while(*s && printChar(*s++)) {
       //empty body
