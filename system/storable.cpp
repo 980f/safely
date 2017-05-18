@@ -15,8 +15,15 @@ using namespace sigc;
 #define ForKidsConstly(list) for(ConstChainScanner<Storable> list(wad); list.hasNext(); )
 #define ForKids(list) for(ChainScanner<Storable> list(wad); list.hasNext(); )
 
-Storable::Storable(TextKey name, bool isVolatile) : isVolatile(isVolatile), type(NotKnown), q(Empty), number(0), parent(nullptr), index(-1), enumerated(nullptr), name(name){
-//  ++instances;
+Storable::Storable(TextKey name, bool isVolatile) :
+  isVolatile(isVolatile),
+  type(NotKnown),
+  q(Empty),
+  number(0),
+  parent(nullptr),
+  index(BadIndex),
+  enumerated(nullptr),
+  name(name){
   if(isVolatile) {
     dbg("creating volatile node %s", fullName().c_str());
   }
@@ -584,10 +591,10 @@ void Storable::presize(int qty, Storable::Type type){
   }
 }
 
-bool Storable::remove(int which){
+bool Storable::remove(unsigned which){
   if(wad.removeNth(which)) {//if something was actually removed
-    //renumber children, must follow removal to make for-loop cute
-    for(int ci = wad.quantity(); ci-- > which; ) { //from last downto item newly dropped into 'which' slot
+    //renumber children, follow the removal makes it easy:
+    for(unsigned ci = wad.quantity(); ci-- > which; ) { //from last downto item newly dropped into 'which' slot
       --(wad[ci]->index);
     }
     also(true);
