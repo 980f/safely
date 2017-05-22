@@ -131,6 +131,8 @@ public:
     }
   }
 
+  Indexer<u8> asBytes();
+
   /** @returns composition of arguments using NumberFormatter rules */
   template<typename ... Args> static Text compose(TextKey format, const Args ... args){
     TextFormatter worker(format);

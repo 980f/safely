@@ -26,6 +26,10 @@ TextFormatter::TextFormatter(TextKey mf) :
   body.wrap(violated(),length());
 }
 
+Indexer<u8> TextFormatter::asBytes(){
+  return Indexer<u8> (reinterpret_cast<u8*>(body.internalBuffer()),body.used());
+}
+
 TextFormatter::~TextFormatter(){
   //#nada
 }
