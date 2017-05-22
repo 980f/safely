@@ -217,6 +217,13 @@ public:
     }
   }
 
+  void clipRange(Index high, Index low=0){
+    if(high<length){
+      length=high;
+    }
+    skip(low);//todo: alter buffer address
+  }
+
   /** reworks this one to be a byte accessor of the filled portion of another one,
    * which usually only makes sense if this one's Content type is 8 bit.
    * hmm, can do 32 <->16 bit conversions if both types are little endian.*/

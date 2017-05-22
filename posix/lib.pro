@@ -12,7 +12,7 @@ LIBS += -L..
 #get posix linked many times:
 LIBS += @../posix/posixgroup.ld
 
-#for async IO (aio_*), as used in filereader:
+#for async IO (aio_*), as used in filereader: rt:"glibc runtime"
 LIBS += -lrt
 
 #you will have to explicitly include cppext/lib.pro and (probably) system/lib.pro
