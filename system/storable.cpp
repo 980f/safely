@@ -375,6 +375,10 @@ void Storable::setImageFrom(TextKey value, Storable::Quality quality){
         setValue(toDouble(text.c_str(), &impure),quality);
         return;//already invoked change in setValue
       }
+      if(type==Wad && AllowRemoteWadOperations){
+        Storable &child=addChild(value);
+        dbg("Created child %s, parent %s",child.name,parent?parent->name:"root");
+      }
     }
     notifeye = changed(text, value);  //todo:00 don't use changed template, do inline to avoid casting
     notifeye |= setQuality(quality);
@@ -478,6 +482,19 @@ Storable &Storable::getRoot() {
   return *searcher;
 }
 
+int Storable::setSize(unsigned qty){
+  int changes=0;
+  while(qty<wad.quantity()){
+    wad.removeLast();
+    --changes;
+  }
+  while(qty>wad.quantity()){
+    addChild("");
+    ++changes;
+  }
+  return changes;
+}
+
 Storable *Storable::findChild(TextKey path, bool autocreate){
   if(this==nullptr){
     return nullptr;
@@ -500,6 +517,9 @@ Storable *Storable::findChild(TextKey path, bool autocreate){
         return nullptr;//we do NOT autocreate in this case.
       }
       continue;//look for next child in path
+    }
+    if(lname.startsWith('#')){
+      int which=
     }
 
     if(Storable * found = searcher->existingChild(lname)) {

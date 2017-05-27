@@ -35,7 +35,10 @@ typedef Text TextValue;
  *
  * Made sigctrackable as these are often the objects of watched updates.
  *
- * Todo: global Root node static herein, 'Stored' base recognizes type changes and invokes parse.
+ * Todo: (in Stored?) global Root node static herein, 'Stored' base recognizes type changes and invokes parse.
+ * todo:1 writing a string to a wad creates a child by that name.
+ * todo:1 writing a negative number to a wad removes the indicated child
+ * todo:1 writing a positive number to a wad increase its size to that value.
  */
 
 class Storable : public ChangeMonitored, SIGCTRACKABLE {
@@ -110,8 +113,6 @@ private:
   Storable &precreate(TextKey name);
 public:
   const TextValue name;
-//private:
-//  void setName(TextKey name);
 public:
   /** @param isVolatile was added here to get it set earlier for debug convenience */
   Storable(TextKey name, bool isVolatile = false);
