@@ -32,10 +32,8 @@ typedef Text TextValue;
  *
  * Storable supports both polled change detection via ChangeMonitored and change notification callbacks via sigc.
  *
- *
  * Made sigctrackable as these are often the objects of watched updates.
  *
- * Todo: (in Stored?) global Root node static herein, 'Stored' base recognizes type changes and invokes parse.
  * todo:1 writing a string to a wad creates a child by that name.
  * todo:1 writing a negative number to a wad removes the indicated child
  * todo:1 writing a positive number to a wad increase its size to that value.
@@ -46,8 +44,8 @@ class Storable : public ChangeMonitored, SIGCTRACKABLE {
   friend class StoredLabel; //ditto
   friend class StoredEnum;
 public:
-//  /** number of storables in existence.  For debug of memory leaks. */
-//  static unsigned instances;
+  /** allow value sets to a wad create and delete children */
+  static bool AllowRemoteWadOperations=false;
 
   enum Type {  //referring to the type of data in the node
     NotKnown,   //construction error, parse error
@@ -308,6 +306,7 @@ public:
 
   /** @returns rootnode of this node, this if this is a root node.*/
   Storable &getRoot();
+  int setSize(unsigned qty);
 private:
   Storable &finishCreatingChild(Storable &noob);
 }; // class Storable
