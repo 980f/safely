@@ -43,3 +43,27 @@ double toDouble(TextKey rawText, bool *impure){
     return Nan;
   }
 }
+
+#ifndef BadIndex
+#define BadIndex (~0U)
+#endif
+
+unsigned toIndex(TextKey rawText, bool *impure){
+  if(nonTrivial(rawText)){
+    char *end(nullptr);
+    /*todo:1 set locale to one that doesn't have triplet separators */
+    unsigned long d = strtoul(rawText, &end,10);
+    if(impure) {
+      *impure = nonTrivial(end);
+    }
+    if(rawText==end){
+      return BadIndex;
+    }
+    return d>BadIndex?BadIndex:d;
+  } else {
+    if(impure) {
+      *impure = false;
+    }
+    return BadIndex;
+  }
+}

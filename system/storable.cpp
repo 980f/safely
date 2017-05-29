@@ -15,6 +15,19 @@ using namespace sigc;
 #define ForKidsConstly(list) for(ConstChainScanner<Storable> list(wad); list.hasNext(); )
 #define ForKids(list) for(ChainScanner<Storable> list(wad); list.hasNext(); )
 
+/** @returns either a number  or the key value BadIndex (way larger than we allow a wad to be) */
+static unsigned numericalName(TextKey name){
+  if(name[0]=='#'){
+    bool impure(true);
+    unsigned which=toDouble(&name[1], &impure);
+    if(impure){
+      return BadIndex;
+    }
+    return which;
+  }
+  return BadIndex;
+}
+
 Storable::Storable(TextKey name, bool isVolatile) :
   isVolatile(isVolatile),
   type(NotKnown),
@@ -518,8 +531,23 @@ Storable *Storable::findChild(TextKey path, bool autocreate){
       }
       continue;//look for next child in path
     }
+
+    //pick node by number.
     if(lname.startsWith('#')){
-      int which=
+      unsigned which=atoi(lname.raw()+1);
+      if(wad.has(which)){
+        searcher=wad[which];
+        continue;
+      }
+      if(autocreate){
+        setSize(which+1);
+        searcher=wad[which];
+        while(progeny.hasNext()) {
+          searcher = &(searcher->addChild(progeny.next()));
+        }
+        return searcher;
+      }
+      return nullptr;
     }
 
     if(Storable * found = searcher->existingChild(lname)) {
@@ -531,7 +559,7 @@ Storable *Storable::findChild(TextKey path, bool autocreate){
       while(progeny.hasNext()) {
         searcher = &(searcher->addChild(progeny.next()));
       }
-      break;//created the child (and possibly a few parents as well)
+      return searcher;//created the child (and possibly a few parents as well)
     } else {
       return nullptr;
     }
