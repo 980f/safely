@@ -12,8 +12,8 @@
 /** for multple references into the item: const Groupie &item(list.next()); */
 #define ForGroupConstly(group) for(auto list((group).all()); list.hasNext(); )
 
-#define ForCount(group) for(int i = (group).quantity(); i-- > 0; )
-#define ForCountInOrder(group) for(int i = 0, ForCountInOrder_end = (group).quantity(); i < ForCountInOrder_end; ++i)
+#define ForCount(group) for(unsigned i = (group).quantity(); i-- > 0; )
+#define ForCountInOrder(group) for(unsigned i = 0, ForCountInOrder_end = (group).quantity(); i < ForCountInOrder_end; ++i)
 /////////////////////////////////////
 
 //this is  probably gratuitous since we don't seem to be able to get away from sigc, which has greater functionality:
@@ -116,12 +116,12 @@ public:
     if(node.setType(Storable::Wad)) { //needed in case group is presently empty, so that proper change watching is set up.
       dbg("Empty group?");
     }
-    for(int ni = 0; ni < node.numChildren(); ++ni) { //#must be in order
+    for(unsigned ni = 0; ni < node.numChildren(); ++ni) { //#must be in order
       wrapNode(node[ni]);
     }
   }
 
-  /** every new must have a delete*/
+  /** every new must have a delete ;) */
   virtual ~StoredGroup(){
     pod.clear();
     //don't do this, we don't signal when the whole group is being ditched: removeAll();

@@ -1,13 +1,16 @@
 #include "logger.h"
+
+#include "textkey.h" //toDouble
 #include "storable.h"
 #include "charformatter.h"
 
 #include "segmentedname.h" //for debug reports
 #include "dottedname.h"
-//#include "pathparser.h" //for finding a child by a pathname
 
 //this is not a class member so that we don't force pathparser.h on all users:
 static const PathParser::Rules slasher('/',false,true);// '.' gives java property naming, '/' would allow use of filename classes. '|' was used for gtkwrappers access
+/** allow value sets to a wad create and delete children */
+bool Storable::AllowRemoteWadOperations=false;
 
 using namespace sigc;
 
@@ -390,7 +393,7 @@ void Storable::setImageFrom(TextKey value, Storable::Quality quality){
       }
       if(type==Wad && AllowRemoteWadOperations){
         Storable &child=addChild(value);
-        dbg("Created child %s, parent %s",child.name,parent?parent->name:"root");
+        dbg("Created child %s, parent %s",child.name.c_str(),parent?parent->name.c_str():"root");
       }
     }
     notifeye = changed(text, value);  //todo:00 don't use changed template, do inline to avoid casting
@@ -409,7 +412,7 @@ void Storable::setImage(const TextKey &value, Quality quality){
 
 Cstr Storable::image(void){
   switch(type) {
-  default:
+  default://ignore warning, if we remove it we get a different warning.
   case Uncertain:
     resolve(false);
     //  JOIN;
@@ -532,9 +535,9 @@ Storable *Storable::findChild(TextKey path, bool autocreate){
       continue;//look for next child in path
     }
 
+    unsigned which=numericalName(lname.c_str());
     //pick node by number.
-    if(lname.startsWith('#')){
-      unsigned which=atoi(lname.raw()+1);
+    if(which!=BadIndex){
       if(wad.has(which)){
         searcher=wad[which];
         continue;
@@ -542,7 +545,7 @@ Storable *Storable::findChild(TextKey path, bool autocreate){
       if(autocreate){
         setSize(which+1);
         searcher=wad[which];
-        while(progeny.hasNext()) {
+        while(progeny.hasNext()) {//expedite creating rest of path.
           searcher = &(searcher->addChild(progeny.next()));
         }
         return searcher;
@@ -581,7 +584,7 @@ Storable&Storable::operator ()(TextKey name){
   return child(name);
 }
 
-Storable&Storable::operator [](int ordinal){
+Storable&Storable::operator [](unsigned ordinal){
   if(!has(ordinal)) {
     wtf("nonexisting child of %s referenced by ordinal %d (out of %d).",fullName().c_str(), ordinal, numChildren());
     dbg.dumpStack("nth child doesn't exist");
@@ -591,7 +594,7 @@ Storable&Storable::operator [](int ordinal){
   return *wad[ordinal];
 }
 
-const Storable&Storable::nth(int ordinal) const {
+const Storable&Storable::nth(unsigned ordinal) const {
   if(!has(ordinal)) {
     wtf("nonexisting child referenced by ordinal %d (out of %d).", ordinal, numChildren());
   }
@@ -621,21 +624,23 @@ Storable&Storable::finishCreatingChild(Storable&noob){
   return noob;
 }
 
-Storable&Storable::addWad(int qty, Storable::Type type, TextKey name){
+Storable&Storable::addWad(unsigned qty, Storable::Type type, TextKey name){
   Storable&noob(precreate(name));
 
   noob.presize(qty, type);
   return finishCreatingChild(noob);
 }
 
-void Storable::presize(int qty, Storable::Type type){
-  int i = qty - numChildren();
+void Storable::presize(unsigned qty, Storable::Type type){
+  if(qty>numChildren()){
+    unsigned i = qty - numChildren();
 
-  while(i-- > 0) {
-    Storable&kid = addChild("");
-    kid.setType(type);
-    //and allow constructed default values to persist
-    setQuality(Defaulted); //not using Empty as that often masks the type being set.
+    while(i-- > 0) {
+      Storable&kid = addChild("");
+      kid.setType(type);
+      //and allow constructed default values to persist
+      setQuality(Defaulted); //not using Empty as that often masks the type being set.
+    }
   }
 }
 
@@ -713,11 +718,11 @@ Storable&StoredListReuser::next(){
   }
 } // next
 
-int StoredListReuser::done(){
+unsigned StoredListReuser::done(){
   //pointer is quantity that have been done
   //killer is init to number that exist
   //if they are equal then all is well.
-  for(int killer = node.numChildren(); killer-- > pointer; ) { //#efficient order, no shuffling of ones that will then also be whacked.
+  for(unsigned killer = node.numChildren(); killer-- > pointer; ) { //#efficient order, no shuffling of ones that will then also be whacked.
     node.remove(killer);
   }
   return pointer;

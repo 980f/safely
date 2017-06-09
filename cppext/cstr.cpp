@@ -107,6 +107,10 @@ bool Cstr::startsWith(TextKey other) const noexcept {
     }
   }
   return true;
+}
+
+bool Cstr::startsWith(char ch) const noexcept{
+  return ptr&&*ptr==ch;
 } // Cstr::startsWith
 
 Index Cstr::index(char ch) const noexcept {
