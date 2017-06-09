@@ -76,6 +76,8 @@ public:
   /** @returns whether this' content matches @param other for all of the chars of other */
   bool startsWith(TextKey other) const noexcept;
 
+  bool startsWith(char ch) const noexcept;
+
   /** @returns position of first character in this string which matches ch. */
   Index index(char ch) const noexcept;
 

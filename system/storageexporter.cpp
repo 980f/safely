@@ -46,12 +46,12 @@ DelimitingOutputStream &StorageExporter::exportSettable(Settable &wrapped){
 
 DelimitingOutputStream &StorageExporter::exportGroup(Storable &node, const char *title){
   if(title) {//title blocks include the number of rows in the block
-    int num = node.numChildren();
+    unsigned num = node.numChildren();
     dos.put(num).put(title).endl();
   }
 
   if(node.has(0)) {
-    exportNode(node[0], true, node[0].name);//names of 0th child are headers
+    exportNode(node[0], true, node[0].name.c_str());//names of 0th child are headers
     dos.endl();
   }
   ForKinder( node){

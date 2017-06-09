@@ -43,6 +43,12 @@ DelimitingOutputStream &DelimitingOutputStream::put(int val){
   return *this;
 }
 
+DelimitingOutputStream &DelimitingOutputStream::put(unsigned val){
+  separator();
+  os << val;
+  return *this;
+}
+
 DelimitingOutputStream &DelimitingOutputStream::put(float val, int sigfig){
   separator();
   os << setprecision(sigfig);

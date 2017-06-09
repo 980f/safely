@@ -45,7 +45,7 @@ class Storable : public ChangeMonitored, SIGCTRACKABLE {
   friend class StoredEnum;
 public:
   /** allow value sets to a wad create and delete children */
-  static bool AllowRemoteWadOperations=false;
+  static bool AllowRemoteWadOperations;
 
   enum Type {  //referring to the type of data in the node
     NotKnown,   //construction error, parse error
@@ -230,7 +230,7 @@ public:
   bool operator ==(TextKey zs);
 
   /** @returns number of child nodes. using int rather than size_t to reduce number of casts required */
-  int numChildren() const { //useful with array-like nodes.
+  unsigned numChildren() const { //useful with array-like nodes.
     return wad.quantity();
   }
 
@@ -240,8 +240,8 @@ public:
   /** @returns an iterator over the children, in ascending order*/
   ConstChainScanner<Storable> kinder() const;
 
-  bool has(int ordinal) const {
-    return ordinal >= 0 && ordinal < numChildren();
+  bool has(unsigned ordinal) const {
+    return ordinal < numChildren();
   }
 
   /** @returns null pointer if no child by given name exists, else pointer to the child*/
@@ -271,11 +271,11 @@ public:
   /** syntactic sugar for @see child(NodeName) */
   Storable &operator ()(TextKey name);
   //these give nth child
-  Storable &operator [](int ordinal);
+  Storable &operator [](unsigned ordinal);
 
-  const Storable &operator [](int ordinal) const;
+  const Storable &operator [](unsigned ordinal) const;
   /** named version of operator [] const */
-  const Storable &nth(int ordinal) const;
+  const Storable &nth(unsigned ordinal) const;
 private:
   /** find the index of a child node. @returns BadIndex if not a wad or not found in the wad.*/
   unsigned indexOf(const Storable &node) const;
@@ -287,9 +287,9 @@ public:
   Storable &createChild(const Storable &other);
 
   //combined presize and addChild to stifle trivial debug spew when adding a row to a table.
-  Storable &addWad(int qty, Storable::Type type = NotKnown, TextKey name = "");
+  Storable &addWad(unsigned qty, Storable::Type type = NotKnown, TextKey name = "");
   /** add a bunch of null-named children of the given type to this node. Probably not good to use outside of this class cloning an object.*/
-  void presize(int qty, Storable::Type type = NotKnown);
+  void presize(unsigned qty, Storable::Type type = NotKnown);
 
   /** remove a child of the wad, only makes sense for use with StoredGroup (or legacy cleanup) */
   bool remove(unsigned which);
@@ -321,12 +321,12 @@ private:
  * todo:2 construction option to invoked done() in destructor. Handy for for loops, but not not always desired..*/
 class StoredListReuser {
   Storable &node;
-  int wadding;
-  int pointer;
+  unsigned wadding;
+  unsigned pointer;
 public:
   StoredListReuser(Storable &node, int wadding = 0);
   Storable &next();
-  int done();
+  unsigned done();
 };
 
 #endif // STORABLE_H
