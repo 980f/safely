@@ -3,6 +3,7 @@
 
 #include "socketeer.h"
 #include "chain.h"
+#include "hook.h"
 
 /** derives from socket that is the listener. has list of active clients */
 class TelnetServer: public Socketeer {
@@ -10,7 +11,13 @@ class TelnetServer: public Socketeer {
   bool enroll(int newfd,SockAddress &sadr);
 
 public:
-  TelnetServer();
+
+  using Factory = Socketeer *(int newfd, SockAddress &sadr);
+  Hooker<Socketeer *,int /*newfd*/, SockAddress &/*sadr*/> factory;
+
+  static Socketeer *simpleFactory(int newfd,SockAddress &sadr);
+
+  TelnetServer(Factory aFactory=simpleFactory);
   void start();
   bool isStarted();
 
