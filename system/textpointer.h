@@ -58,11 +58,12 @@ public:
   /** take ownership of a buffer, i.e. deleting this Text object will free @param other. Other will be a null poiner after this call, you should not reference it again. */
   void take(TextKey &other);
 
-  /** take ownership of a buffer, i.e. deleting this Text object will free @param other */
-  void take(const TextKey &other);
+  /** take ownership of a buffer, i.e. deleting this Text object will free @param other.
+ when this method was called 'take' the compiler preferred it to take(Text &other), contrary to documents which state that no-conversion is better than any conversion. That might have been due to rvalue considerations. */
+  void setto(const TextKey &other);
 
   /** take ownership of a buffer, i.e. deleting this Text object will free @param other */
-  void take(Text& other);
+  void take(Text&& other);
 
   /** make a copy of @param other. If other points to the same memory as this ... we might screw up */
   void copy(TextKey other);

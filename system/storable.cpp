@@ -316,7 +316,7 @@ void Storable::clone(const Storable&other){ //todo:2 try to not trigger false ch
     text.copy(other.text);//want independent copy
     break;
   case Wad: //copy preserving order
-    for(ConstChainScanner<Storable> list(other.wad); list.hasNext(); ) {
+    ForKidsConstly(list) {
       createChild(list.next());
     }
     break;
@@ -444,6 +444,18 @@ void Storable::setDefault(TextKey value){
 
 bool Storable::operator ==(TextKey zs){
   return type == Textual && text == zs;
+}
+
+unsigned Storable::numLeaves() const {
+  if(type==Wad){
+    unsigned count(0);
+    ForKidsConstly(list){
+      count+=list.next().numLeaves();
+    }
+    return count;
+  } else {
+    return 1;
+  }
 }
 
 ChainScanner<Storable> Storable::kinder(){

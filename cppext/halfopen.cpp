@@ -4,10 +4,8 @@ Span::Span(Index low, Index high):HalfOpen(low,high){}
 
 Span::Span():HalfOpen(BadIndex,BadIndex){}
 
-Span::~Span(){}
-
 bool Span::ordered() const {
-  if(lowest.isValid()&&isValid(highest)){
+  if(lowest.isValid()&&highest.isValid()){
     return HalfOpen::ordered();
   } else {
     return false;
@@ -32,4 +30,8 @@ void Span::shift(unsigned offset){
 void Span::take(Span &other){
   *this=other;
   other.clear();
+}
+
+bool Span::started() const noexcept{
+  return lowest.isValid()&& ! highest.isValid();
 }

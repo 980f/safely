@@ -234,6 +234,9 @@ public:
     return wad.quantity();
   }
 
+  /** just for fun- count the number of actual values in this node and its children. */
+  unsigned numLeaves() const;
+
   /** @returns an iterator over the children, in ascending order*/
   ChainScanner<Storable> kinder();
 
