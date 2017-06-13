@@ -309,7 +309,10 @@ public:
 
   /** @returns rootnode of this node, this if this is a root node.*/
   Storable &getRoot();
+  /** force size of wad. */
   int setSize(unsigned qty);
+  /** find/create from an already parsed path. Honors '#3' notation for child [3]*/
+  Storable *getChild(ChainScanner<Text> &progeny, bool autocreate);
 private:
   Storable &finishCreatingChild(Storable &noob);
 }; // class Storable

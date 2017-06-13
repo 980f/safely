@@ -523,44 +523,37 @@ int Storable::setSize(unsigned qty){
   return changes;
 }
 
-Storable *Storable::findChild(TextKey path, bool autocreate){
+
+Storable *Storable::getChild(ChainScanner<Text> &progeny,bool autocreate){
   if(this==nullptr){
-    return nullptr;
-  }
-  DottedName genealogy(slasher.slash,path);
-  Storable *searcher = (genealogy.bracket.before)?&getRoot():this;
-
-  if(genealogy.bracket.after) {
-    wtf("Storable findChild is ignoring trailing separator: [%s]",path);
+    return nullptr;//detect recursion gone bad
   }
 
-  auto progeny(genealogy.indexer());
+  Storable *searcher = this;
+
   while(progeny.hasNext()) {
     Text &lname=progeny.next();
     if(lname.cmp("..")==0){  //if progeny.next is .. then found=parent, continue loop
       searcher=searcher->parent;
       if(!searcher){
         //we can't autocreate a root, it would leak if we tried.
-        wtf("Storable::findChild asked to look above root [%s]",path);
+        wtf("Storable::findChild asked to look above root [%s]",searcher->name.c_str());
         return nullptr;//we do NOT autocreate in this case.
       }
       continue;//look for next child in path
     }
 
-    unsigned which=numericalName(lname.c_str());
+    Index which=numericalName(lname.c_str());
     //pick node by number.
-    if(which!=BadIndex){
-      if(wad.has(which)){
-        searcher=wad[which];
+    if(which.isValid()){
+      if(searcher->wad.has(which)){
+        searcher=searcher->wad[which];
         continue;
       }
       if(autocreate){
-        setSize(which+1);
-        searcher=wad[which];
-        while(progeny.hasNext()) {//expedite creating rest of path.
-          searcher = &(searcher->addChild(progeny.next()));
-        }
-        return searcher;
+        searcher->setSize(which+1);
+        searcher=searcher->wad[which];
+        return searcher->getChild(progeny,true);//must recurse to not copy all the 'is it a number' logic
       }
       return nullptr;
     }
@@ -569,12 +562,14 @@ Storable *Storable::findChild(TextKey path, bool autocreate){
       searcher = found;
       continue;//look for next child in path
     } else if(autocreate) {
+      searcher->addChild(lname);
+      return searcher->getChild(progeny,true);
       //build children expeditiously, could create one via lname and recurse, but that would entail repeat parsing of the path.
-      progeny.rewind(1);//undo the next so we don't have to duplicate code using lname.
-      while(progeny.hasNext()) {
-        searcher = &(searcher->addChild(progeny.next()));
-      }
-      return searcher;//created the child (and possibly a few parents as well)
+//      progeny.rewind(1);//undo the next so we don't have to duplicate code using lname.
+//      while(progeny.hasNext()) {
+//        searcher = &(searcher->addChild(progeny.next()));
+//      }
+//      return searcher;//created the child (and possibly a few parents as well)
     } else {
       return nullptr;
     }
@@ -582,6 +577,21 @@ Storable *Storable::findChild(TextKey path, bool autocreate){
 
   //path exhausted without an abnormal exit, so we must have found the child:
   return searcher;
+}
+
+Storable *Storable::findChild(TextKey path, bool autocreate){
+  if(this==nullptr){
+    return nullptr;
+  }
+  DottedName genealogy(slasher.slash,path);
+  ChainScanner<Text> progeny(genealogy.indexer());
+
+  if(genealogy.bracket.after) {
+    wtf("Storable findChild is ignoring trailing separator: [%s]",path);
+  }
+
+  Storable *searcher = (genealogy.bracket.before)?&getRoot():this;
+  return searcher->getChild(progeny,autocreate);
 } // findChild
 
 /** creates node if not present.*/
