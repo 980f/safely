@@ -235,7 +235,8 @@ public:
       Storable::Freezer autothaw(node, true, true); //#must NOT allow change watchers to execute on node add until we create the
                                                     // object that they may come looking for. Without this the change actions would
                                                     // execute before the new object exists instead of after.
-      wrapNode(node.child(prename));//old code presumed that the node didn't exist unless created here. ParamSet in DP5 violated that.
+      //wrapNode(node.child(prename));//old code presumed that the node didn't exist unless created here. ParamSet in DP5 violated that.
+      node.child(prename);//just making a node now makes Groupies via backdoor.
     }
     return last();
   }
@@ -279,10 +280,10 @@ public:
                      // bad. And now preremoval depends on this check.
       if(preremoval(operator [](which))) {//if not vetoed
         //We actually delete the objects before we signal removal so iterations show it already gone
-        pod.removeNth(which); //deletes Stored entity
-        node.remove(which); //deletes underlying node, which may have its own watchers
-        onremoval(which);   //high priority notifications
-        dependents(true, which);//lower priority notifications
+//        pod.removeNth(which); //deletes Stored entity
+        node.remove(which); //deletes underlying node, which may have its own watchers, and which deletes the Groupie via backdoor();
+//        onremoval(which);   //high priority notifications
+//        dependents(true, which);//lower priority notifications
         return true;
       }
     }
