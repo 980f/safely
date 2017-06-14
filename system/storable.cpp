@@ -10,7 +10,7 @@
 //this is not a class member so that we don't force pathparser.h on all users:
 static const PathParser::Rules slasher('/',false,true);// '.' gives java property naming, '/' would allow use of filename classes. '|' was used for gtkwrappers access
 /** allow value sets to a wad create and delete children */
-bool Storable::AllowRemoteWadOperations=false;
+//bool Storable::AllowRemoteWadOperations=false;
 
 using namespace sigc;
 
@@ -391,10 +391,10 @@ void Storable::setImageFrom(TextKey value, Storable::Quality quality){
         setValue(toDouble(text.c_str(), &impure),quality);
         return;//already invoked change in setValue
       }
-      if(type==Wad && AllowRemoteWadOperations){
-        Storable &child=addChild(value);
-        dbg("Created child %s, parent %s",child.name.c_str(),parent?parent->name.c_str():"root");
-      }
+//      if(type==Wad && AllowRemoteWadOperations){
+//        Storable &child=addChild(value);
+//        dbg("Created child %s, parent %s",child.name.c_str(),parent?parent->name.c_str():"root");
+//      }
     }
     notifeye = changed(text, value);  //todo:00 don't use changed template, do inline to avoid casting
     notifeye |= setQuality(quality);
@@ -563,8 +563,7 @@ Storable *Storable::getChild(ChainScanner<Text> &progeny,bool autocreate){
       searcher = found;
       continue;//look for next child in path
     } else if(autocreate) {
-      searcher->addChild(lname);
-      return searcher->getChild(progeny,true);
+      return searcher->addChild(lname).getChild(progeny,true);
       //build children expeditiously, could create one via lname and recurse, but that would entail repeat parsing of the path.
 //      progeny.rewind(1);//undo the next so we don't have to duplicate code using lname.
 //      while(progeny.hasNext()) {

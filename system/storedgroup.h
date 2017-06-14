@@ -16,8 +16,10 @@
 #define ForCountInOrder(group) for(unsigned i = 0, ForCountInOrder_end = (group).quantity(); i < ForCountInOrder_end; ++i)
 /////////////////////////////////////
 
-//this is  probably gratuitous since we don't seem to be able to get away from sigc, which has greater functionality:
-#include <functional>
+//this is probably gratuitous since we don't seem to be able to get away from sigc, which has greater functionality:
+#include <functional>  //for lambdas
+
+void callme(bool removed,unsigned which);
 
 
 /**
@@ -120,10 +122,11 @@ public:
       wrapNode(node[ni]);
     }
     node.wadWatchers.connect(MyHandler(StoredGroup::backdoored));
+    node.wadWatchers.connect(&callme);
   }
 
   /** someone has just deleted the node one of our members is connected to, it must die quickly or there will be use-after-free faults.*/
-  void backdoored(bool removed,int which){
+  void backdoored(bool removed,unsigned which){
     if(removed){
       //we can't use remove(which) as it asks for permission and it is too late to stop the process.
       pod.removeNth(which); //deletes Stored entity
@@ -141,7 +144,7 @@ public:
     //we don't touch the Storable nodes, they will go away when their root is destructed.
   }
 
-  int quantity() const {
+  unsigned quantity() const {
     return pod.quantity();
   }
 
@@ -232,7 +235,7 @@ public:
       Storable::Freezer autothaw(node, true, true); //#must NOT allow change watchers to execute on node add until we create the
                                                     // object that they may come looking for. Without this the change actions would
                                                     // execute before the new object exists instead of after.
-      wrapNode(node.addChild(prename));
+      wrapNode(node.child(prename));//old code presumed that the node didn't exist unless created here. ParamSet in DP5 violated that.
     }
     return last();
   }
@@ -256,7 +259,7 @@ public:
 
   /** create enough records that quantity() == size
    * @returns the number of additions (if positive) or removals (if negative), 0 on no change.*/
-  int setSize(int size){
+  int setSize(unsigned size){
     int changes(0);
 
     while(quantity() < size) {
@@ -449,7 +452,7 @@ private:
 
   /** @param addee can not be const as the Groupie constructor often adds members (such as for version upgrades). */
   void wrapNode(Storable &addee){ //formerly was called 'instantiate'
-    int which = addee.ownIndex();
+    unsigned which = addee.ownIndex();
 
     if(quantity() != which) {
       wtf("Expected new node to be at end of list");

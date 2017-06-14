@@ -47,7 +47,7 @@ class Storable : public ChangeMonitored, SIGCTRACKABLE {
   template<typename> friend class StoredGroup;
 public:
   /** allow value sets to a wad create and delete children */
-  static bool AllowRemoteWadOperations;
+//  static bool AllowRemoteWadOperations;
 
   enum Type {  //referring to the type of data in the node
     NotKnown,   //construction error, parse error
@@ -85,7 +85,7 @@ public: //needed only by StoredGroup, but that being a template made friending i
    * called when an item is added or removed.
    * This only matters to StoredGroup and was first needed by socket access for remote editing of StoredGroups.
    */
-  mutable  sigc::signal<void, bool, int> wadWatchers;
+  mutable  sigc::signal<void, bool, unsigned> wadWatchers;
 
 protected:
   /** stored value is like a union, although we didn't actually use a union so that a text image of the value can be maintained for debug of parsing and such. */
