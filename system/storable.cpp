@@ -514,6 +514,7 @@ int Storable::setSize(unsigned qty){
   int changes=0;
   while(qty<wad.quantity()){
     wad.removeLast();
+    wadWatchers.emit(true,wad.quantity());
     --changes;
   }
   while(qty>wad.quantity()){
@@ -623,6 +624,13 @@ const Storable&Storable::nth(unsigned ordinal) const {
   return *wad[ordinal];
 }
 
+Storable &Storable::nth(unsigned ordinal){
+  if(!has(ordinal)) {
+    wtf("nonexisting child referenced by ordinal %d (out of %d).", ordinal, numChildren());
+  }
+  return *wad[ordinal];
+}
+
 unsigned Storable::indexOf(const Storable&node) const {
   return wad.indexOf(&node);
 }
@@ -642,7 +650,8 @@ Storable&Storable::createChild(const Storable&other){
 
 Storable&Storable::finishCreatingChild(Storable&noob){
   noob.index = wad.quantity();
-  wad.append(&noob); //todo:sorted insert
+  wad.append(&noob);
+  wadWatchers.emit(false,noob.index);
   return noob;
 }
 
@@ -668,7 +677,8 @@ void Storable::presize(unsigned qty, Storable::Type type){
 
 bool Storable::remove(unsigned which){
   if(wad.removeNth(which)) {//if something was actually removed
-    //renumber children, follow the removal makes it easy:
+     wadWatchers.emit(true,wad.quantity());
+    //renumber children, following the removal makes it easy:
     for(unsigned ci = wad.quantity(); ci-- > which; ) { //from last downto item newly dropped into 'which' slot
       --(wad[ci]->index);
     }

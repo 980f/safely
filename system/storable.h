@@ -43,6 +43,8 @@ class Storable : public ChangeMonitored, SIGCTRACKABLE {
   friend class Stored; //access to q and the like.
   friend class StoredLabel; //ditto
   friend class StoredEnum;
+  //needed to be a template, not worth figuring out the syntax friend class StoredGroup;
+  template<typename> friend class StoredGroup;
 public:
   /** allow value sets to a wad create and delete children */
   static bool AllowRemoteWadOperations;
@@ -74,10 +76,16 @@ public:
   SimpleSignal preSave;
 
 private: //#the watchers must be mutable because sigc needs to be able to cull dead slots from its internal lists.
-  /** sent when value changes, or quantity of wad changes*/
+  /** sent when value changes */
   mutable GatedSignal watchers; //# mutable so that we can freeze and thaw
-  /** sent when any child changes, allows setting a watch on children that may not exist. */
+  /** sent when any child's value changes, allows setting a watch on children that may not exist at the time of registration of the watcher. */
   mutable GatedSignal childwatchers; //# mutable, see @watchers.
+public: //needed only by StoredGroup, but that being a template made friending it difficult.
+  /** bool remove (else add at end) , int which
+   * called when an item is added or removed.
+   * This only matters to StoredGroup and was first needed by socket access for remote editing of StoredGroups.
+   */
+  mutable  sigc::signal<void, bool, int> wadWatchers;
 
 protected:
   /** stored value is like a union, although we didn't actually use a union so that a text image of the value can be maintained for debug of parsing and such. */
@@ -279,6 +287,8 @@ public:
   const Storable &operator [](unsigned ordinal) const;
   /** named version of operator [] const */
   const Storable &nth(unsigned ordinal) const;
+  Storable &nth(unsigned ordinal);
+
 private:
   /** find the index of a child node. @returns BadIndex if not a wad or not found in the wad.*/
   unsigned indexOf(const Storable &node) const;

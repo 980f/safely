@@ -46,7 +46,7 @@ template<class Groupie> class StoredGroup : public Stored {
   sigc::signal1<bool, Groupie &, AndUntilFalse> preremoval;
 
   /** for removal we want to have already destroyed object before calling some of the change watchers.
-   * so this tells you the number of the one that has already been removed. The object is already deleted.
+   * so this tells you the number of the one that has already been removed. The object is already deleted and ordinals adjusted.
    */
   sigc::signal<void, int> onremoval;
 
@@ -118,6 +118,19 @@ public:
     }
     for(unsigned ni = 0; ni < node.numChildren(); ++ni) { //#must be in order
       wrapNode(node[ni]);
+    }
+    node.wadWatchers.connect(MyHandler(StoredGroup::backdoored));
+  }
+
+  /** someone has just deleted the node one of our members is connected to, it must die quickly or there will be use-after-free faults.*/
+  void backdoored(bool removed,int which){
+    if(removed){
+      //we can't use remove(which) as it asks for permission and it is too late to stop the process.
+      pod.removeNth(which); //deletes Stored entity
+      onremoval(which);   //high priority notifications
+      dependents(true, which);//lower priority notifications
+    } else {
+      wrapNode(node.nth(which));
     }
   }
 
@@ -395,9 +408,7 @@ public:
   /** for when all you need is the item: */
   void forEachItem(const sigc::slot<void, Groupie &> &action){
     ForValues(list){
-      Groupie &item(list.next());
-
-      action( item);
+      action( list.next());
     }
   }
 
@@ -413,7 +424,6 @@ public:
   /** faster than using slot's when the method is simple enough:*/
   void forEach(void (Groupie::*method)(void)){
     ForValues(list){
-//      Groupie &item();
       (list.next().*method)();
     }
   }
@@ -421,7 +431,6 @@ public:
   /** experimental, to see if syntax is tolerable: */
   void forall(std::function<void(Groupie &)> action){
     ForValues(list){
-//      Groupie &item();
       action(list.next());
     }
   }
@@ -451,15 +460,8 @@ private:
     dependents(false, which);
   } // wrapNode
 
-//Glib
-//  /** when called via the dependents signal schedule an action:*/
-//  static void doLater(bool removal, int arg, Watcher watcher){
-//    doSoon(sigc::bind(watcher, removal, arg), 0, 1);
-//  }
-
 }; // class StoredGroup
 
 #define INDEXER(group) *group.basecast()
-
 
 #endif // STOREDGROUP_H
