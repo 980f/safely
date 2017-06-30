@@ -67,8 +67,9 @@ void TextFormatter::substitute(TextKey stringy){
 }
 
 bool TextFormatter::openSpace(){
-  if(body.move(width - substWidth)) {//2: dollar and digit
-    termloc += width - substWidth;
+  int delta=width - substWidth;
+  if(body.move(delta)) {//2: dollar and digit
+    termloc += delta;
     //point to '$'
     body.rewind(width);
     return true;
@@ -126,6 +127,11 @@ void TextFormatter::substitute(u8 value){
   substitute(u64(value));//need this to distinguish char * from implied char &
 } // TextFormatter::substitute
 
+void TextFormatter::substitute(bool value){
+  substitute(u64(value));//need this to distinguish char * from implied char &
+} // TextFormatter::substitute
+
+
 void TextFormatter::substitute(const NumberFormat &item){
   //this should not actually get called. we migth still use it to relocate some code from header to here should this ever become more than an assignment.
   nf = item;//copies fields, the original doesn't need to linger.
@@ -137,10 +143,10 @@ bool TextFormatter::onSizingCompleted(){
   body.wrap(reinterpret_cast<char*>(malloc(sizer)),sizer);  //wrap new allocation
   if(body.isUseful()) {  //if malloc worked
     body.cat(c_str(),length());  //copy in present stuff
-    body.clearUnused();  //emphatic nulling
-//      this->operator =(body.internalBuffer());//release original (copy of) format and hold on to new
+    termloc=body.used();
+    body.clearUnused();  //prophylactic nulling
     clear();
-    this->ptr = body.internalBuffer();
+    ptr = body.internalBuffer();//needed for the eventual 'free'
     return true;
   }
 
