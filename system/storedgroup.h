@@ -122,7 +122,7 @@ public:
       wrapNode(node[ni]);
     }
     node.wadWatchers.connect(MyHandler(StoredGroup::backdoored));
-    node.wadWatchers.connect(&callme);
+//debug stuff:    node.wadWatchers.connect(&callme);
   }
 
   /** someone has just deleted the node one of our members is connected to, it must die quickly or there will be use-after-free faults.*/

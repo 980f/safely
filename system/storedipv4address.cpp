@@ -12,7 +12,7 @@ StoredIPV4Address::StoredIPV4Address(Storable &node) : Stored(node),
 
 Text StoredIPV4Address::dotstring(u32 ipv4){
   u8 *bytes=reinterpret_cast<u8*>(&ipv4);
-  return TextFormatter::compose("$0.$1.$2.$3",bytes[3],bytes[2],bytes[1],bytes[0]);
+  return TextFormatter::compose("$0.$1.$2.$3",u64(bytes[3]),u64(bytes[2]),u64(bytes[1]),u64(bytes[0]));
 }
 
 void StoredIPV4Address::makeText(){

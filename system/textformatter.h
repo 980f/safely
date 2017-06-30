@@ -43,10 +43,10 @@ private:
   void substitute(CharFormatter buf);
   void substitute(Cstr stringy);
   void substitute(TextKey stringy);
-  //at the moment int's get rolled in with doubles.
   void substitute(double value);
   void substitute(u64 value);
   void substitute(u8 value);
+  void substitute(bool value);
 
 
   /** compiler insists we have this, needed in case the format string references this non-printable item.*/

@@ -63,7 +63,7 @@ private:
   /** copy @param qty from start of source to end of this. This is a raw copy, no new objects are created */
   void catFrom(Indexer<Content> &source, unsigned qty){
     if(stillHas(qty) && qty <= source.used()) {
-      movem(source.pointer, pointer, qty);
+      copyObject(source.internalBuffer(), this->internalBuffer(), qty* sizeof(Content));
       source.skip(qty);
       skip(qty);
     }
