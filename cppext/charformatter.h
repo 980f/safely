@@ -39,6 +39,8 @@ public:
  @returns whether a move took place, it won't if delta would move pointer out of bounds. */
   bool move(int delta);
 
+  bool move(int delta,int keep);
+
   /** all of the print... functions make sure that the number doesn't get truncated,
    *  and return false if it would have been.*/
   bool printChar(char ch);

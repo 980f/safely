@@ -22,8 +22,9 @@ public://4diagnostics
   /** stateful number formatting, an inline NF item applies to all higher indexed values */
   NumberFormat nf;
 protected:
-  /** where a terminator should be */
+  /** where a terminator should be after formatting */
   unsigned termloc=BadIndex;
+  unsigned dataend=BadIndex;
   /** whether we are computing size of final string or assembling it */
   bool sizing=true;
   /** tag of next argument to format+insert */
@@ -80,7 +81,7 @@ private:
         if(d - '0' == which) { //splice in ref
           substWidth=2;//dollar and digit
           width=BadLength;//for debug
-          substitute(item);
+          substitute(item);          
           //by not returning here we allow for multiple substitutions of one argument.
         }
       }
@@ -111,14 +112,11 @@ private:
 public:
   TextFormatter(TextKey mf);
 
-//  /** apply destroys the memory of the format. To reuse this object (?why bother?) */
-//  void setFormat(TextKey another);
-
   /** applys args, @returns whether it actually did so. This object *is* Text so it has c_str() etc. if needed. */
   template<typename ... Args> bool apply(const Args ... args){
     which=0;
     sizing=true;
-    termloc=sizer=body.allocated();//instead of adding one for each simple char we will subtract for the substititution tags.
+    termloc=sizer=body.allocated();
     compose_item(args ...);
     if(onSizingCompleted()){
       which=0;

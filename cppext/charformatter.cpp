@@ -11,18 +11,18 @@
 #include "safely.h" //ascii framing characters
 #include "cstr.h"
 
-struct NumberParser:public PushedNumberParser  {
+struct NumberParser : public PushedNumberParser  {
 
   /** @param buf points after last char, prev() is terminator */
   bool parseNumber(CharFormatter &buf){
-    while(buf.hasNext() && next(buf.next())){
+    while(buf.hasNext() && next(buf.next())) {
       //#nada
     }
     return seemsOk();
   }
 
-  double getValue(CharFormatter &buf, double backup=0.0){
-    if(parseNumber(buf)){
+  double getValue(CharFormatter &buf, double backup = 0.0){
+    if(parseNumber(buf)) {
       buf.unget();
       return packed();
     } else {
@@ -43,21 +43,19 @@ CharFormatter::CharFormatter(char * content, unsigned size) : CharScanner(conten
 
 //this should clone or wrap the remaining part of 'other'
 CharFormatter::CharFormatter(const Indexer<char> &other) : CharScanner(other,0){
-    //nada
+  //nada
 }
 
-CharFormatter::CharFormatter(const Indexer<unsigned char> &other): CharScanner( reinterpret_cast<char *>(other.internalBuffer()),other.used()){
-    //nada
+CharFormatter::CharFormatter(const Indexer<unsigned char> &other) : CharScanner( reinterpret_cast<char *>(other.internalBuffer()),other.used()){
+  //nada
 }
-
 
 //this should clone or wrap the remaining part of 'other'
 CharFormatter::CharFormatter(ByteScanner &other) : CharScanner(other,0){
-    //nada
+  //nada
 }
 
-CharFormatter::CharFormatter()
-{
+CharFormatter::CharFormatter(){
 
 }
 
@@ -82,31 +80,46 @@ int CharFormatter::parseInt(int def){
   }
 }
 
-
 bool CharFormatter::move(int delta){
-  if(delta==0){
+  if(delta==0) {
     return true;//successfully did nothing, as was requested.
   }
-  unsigned target=pointer+delta;//data at pointer should move to target
-  if(canContain(target)){
-    unsigned amount=freespace();//max that will move
-    if(delta>0){
-      amount-=delta;//don't push data past end of allocation.
+  unsigned target = pointer + delta;//data at pointer should move to target
+  if(canContain(target)) {
+    unsigned amount = freespace();//max that will move
+    if(delta>0) {
+      amount -= delta;//don't push data past end of allocation.
     }
-    copyObject(buffer+pointer,buffer+target,amount);//promises to deal with overlap sanely
-    pointer=target;
+    copyObject(buffer + pointer,buffer + target,amount);//promises to deal with overlap sanely
+    pointer = target;
     return true;
   } else {
     return false;
   }
-}
+} // CharFormatter::move
+
+bool CharFormatter::move(int delta, int keep){
+  if(keep<=0) {
+    return true;
+  }
+  if((delta + int(pointer))<0) {
+    return false;
+  }
+  if(delta + pointer + keep>allocated()) {
+    return false;
+  }
+  //move pointer through pointer+keep delta to the right (if positive)
+  memmove(buffer + pointer + delta,buffer + pointer,keep);
+  return true;
+
+} // CharFormatter::move
 
 s64 CharFormatter::parse64(s64 def){
   NumberParser n;
 
   if(n.parseNumber(*this)) {
     if(n.hasEterm) {//trying to tolerate some values, may produce nonsense.
-      int logProduct = ilog10(n.predecimal)+n.pow10 + n.exponent;
+      int logProduct = ilog10(n.predecimal) + n.pow10 + n.exponent;
       if(logProduct<=18) {
         n.predecimal = 0x7FFFFFFFFFFFFFFFLL;
       } else {
@@ -129,7 +142,7 @@ bool CharFormatter::printChar(char ch){
 }
 
 bool CharFormatter::printChar(char ch, unsigned howMany){
-  if(stillHas(howMany)){
+  if(stillHas(howMany)) {
     while(howMany--> 0 && hasNext()) {
       next() = ch;
     }
@@ -169,14 +182,14 @@ bool CharFormatter::printUnsigned(unsigned int value){
   int numDigits = ilog10(value) + 1;
   if(stillHas(numDigits)) {//this doesn't include checking for room for a separator
     while(numDigits--> 0) {
-      unsigned digit = revolutions(value ,i32pow10(numDigits));
+      unsigned digit = revolutions(value,i32pow10(numDigits));
       printDigit(digit);
     }
     return true;
   } else {
     return false;
   }
-}
+} // CharFormatter::printUnsigned
 
 bool CharFormatter::printUnsigned(u64 value){
   if(value == 0) {
@@ -185,14 +198,15 @@ bool CharFormatter::printUnsigned(u64 value){
   int numDigits = ilog10(value) + 1;
   if(stillHas(numDigits)) {
     while(numDigits--> 0) {
-      unsigned digit = revolutions(value ,i64pow10(numDigits));
+      unsigned digit = revolutions(value,i64pow10(numDigits));
       printDigit(digit);
     }
     return true;
   } else {
     return false;
   }
-}
+} // CharFormatter::printUnsigned
+
 //alh made return compatible with other methods of this class.
 bool CharFormatter::printHex(unsigned value, unsigned width){
   if(stillHas(width)) {
@@ -212,7 +226,7 @@ bool CharFormatter::printSigned(int value){
   }
 }
 
-const double _2gig=2147483648.0;
+const double _2gig = 2147483648.0;
 //todo:1 const double _u63=
 
 bool CharFormatter::printNumber(double d, int sigfig){
@@ -287,13 +301,13 @@ bool CharFormatter::printNumber(double d, int sigfig){
     }
   }
   return checker.commit();
-}
+} // CharFormatter::printNumber
 
 bool CharFormatter::printNumber(double d, const NumberFormat &nf, bool addone){
   //first: round!
-  if(d!=0.0){
-      u64 lsd= i64pow10(nf.decimals);
-      d+=0.5/lsd;
+  if(d!=0.0) {
+    u64 lsd = i64pow10(nf.decimals);
+    d += 0.5 / lsd;
     //and now we can truncate later on
   }
   TransactionalBuffer<char > checker(*this);
@@ -301,43 +315,43 @@ bool CharFormatter::printNumber(double d, const NumberFormat &nf, bool addone){
   if(np.isZero) { //to avert taking the log of 0. and frequent value.
     checker &= printChar('0');
   } else if(np.isNan) {
-    checker &= printString(nf.showsign?"+NaN":"NaN");
+    checker &= printString(nf.showsign ? "+NaN" : "NaN");
   } else if(np.isInf) {
-    return checker &= printString(np.negative?"-Inf":nf.showsign?"+Inf":"Inf");
+    return checker &= printString(np.negative ? "-Inf" : nf.showsign ? "+Inf" : "Inf");
   } else {
-    if(nf.scientific){
-      checker&=printNumber(d,nf.decimals+addone);
+    if(nf.scientific) {
+      checker &= printNumber(d,nf.decimals + addone);
     } else {
-      if(nf.showsign && !np.negative){
+      if(nf.showsign && !np.negative) {
         checker &= printChar('+');
       }
-      if(np.negative){
+      if(np.negative) {
         checker &= printChar('-');
       }
 
-      checker&= printUnsigned(np.predecimal);
-      if(nf.decimals>0 &&np.postdecimal>0){
-        checker&=printChar('.');//not doing locale's herein.
-        int stillwant=nf.decimals+addone;
-        if(np.postdecimal==0){//frequent case, when number was actually an integer
-          checker&=printChar('0',stillwant);
+      checker &= printUnsigned(np.predecimal);
+      if(nf.decimals>0 &&np.postdecimal>0) {
+        checker &= printChar('.');//not doing locale's herein.
+        int stillwant = nf.decimals + addone;
+        if(np.postdecimal==0) {//frequent case, when number was actually an integer
+          checker &= printChar('0',stillwant);
         } else {
-          if(np.div10>0){
+          if(np.div10>0) {
             //the number we have has been boosted by that many digits
-            if(np.div10>=stillwant){
-              checker &=printChar('0',take(stillwant));
+            if(np.div10>=stillwant) {
+              checker &= printChar('0',take(stillwant));
             } else {
-              checker &=printChar('0',np.div10);
-              stillwant-=np.div10;
+              checker &= printChar('0',np.div10);
+              stillwant -= np.div10;
             }
           }
-          if(stillwant>0){
-            u64 postdec=truncateDecimals(np.postdecimal,stillwant);
-            int stillhave=1+ilog10(postdec);//double checking
-            if(stillhave<stillwant){
-              checker &=printChar('0',stillwant-stillhave);
+          if(stillwant>0) {
+            u64 postdec = truncateDecimals(np.postdecimal,stillwant);
+            int stillhave = 1 + ilog10(postdec);//double checking
+            if(stillhave<stillwant) {
+              checker &= printChar('0',stillwant - stillhave);
             }
-            checker &=printUnsigned(postdec);
+            checker &= printUnsigned(postdec);
           }
         }
       }

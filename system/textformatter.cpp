@@ -5,7 +5,7 @@
 /*
  *  The algorithm:
  *  scan the format string processing FormatControls and computing the length of each item referenced.
- *  sum that all up and allocate once a buffer big enough to hold all.
+ *  sum that all up and allocate once a buffer big enough to hold all. (needs to handle temporary max).
  *  scan the format string again inserting processed strings.
  *
  *  Data lifetimes:
@@ -24,6 +24,7 @@
 TextFormatter::TextFormatter(TextKey mf) :
   Text(mf){//strdup argument, so that it may evaporate
   body.wrap(violated(),length());
+//  content.clone(body);
 }
 
 Indexer<u8> TextFormatter::asBytes(){
@@ -36,7 +37,9 @@ TextFormatter::~TextFormatter(){
 
 bool TextFormatter::processing(){
   if(sizing) {
-    sizer += width - substWidth;
+    int delta=width - substWidth;
+    sizer += delta>0?delta:0;//max temporary size
+    termloc +=delta; //actual final size
     return false;
   } else {
     return true;
@@ -68,8 +71,9 @@ void TextFormatter::substitute(TextKey stringy){
 
 bool TextFormatter::openSpace(){
   int delta=width - substWidth;
-  if(body.move(delta)) {//2: dollar and digit
-    termloc += delta;
+  int section=dataend-body.used();
+  if(body.move(delta,section)) {
+    dataend += delta;
     //point to '$'
     body.rewind(width);
     return true;
@@ -82,7 +86,7 @@ void TextFormatter::reclaimWaste(const CharFormatter &workspace){
   body.skip(workspace.used());
   //pull data back down over unused stuff
   unsigned excess = workspace.freespace();
-  termloc -= excess;
+  dataend -= excess;
   body.removeNext(excess);
 }
 
@@ -111,8 +115,9 @@ void TextFormatter::substitute(double value){
   nf.onUse();
 } // TextFormatter::substitute
 
+
 void TextFormatter::substitute(u64 value){
-  //not using double, we don't want its formatting rules applied to actual integers
+  //not punting to double, we don't want its formatting rules applied to actual integers
   width = Zguard(1 + ilog10(value));
   CharFormatter workspace = makeWorkspace();
   if(workspace.isUseful()) {
@@ -120,7 +125,7 @@ void TextFormatter::substitute(u64 value){
       onFailure(workspace);
     }
     reclaimWaste(workspace);
-  } 
+  }
 }
 
 void TextFormatter::substitute(u8 value){
@@ -141,11 +146,12 @@ bool TextFormatter::onSizingCompleted(){
   sizing = false;
   sizer = Zguard(sizer);//because we dropped the null on our format string.
   body.wrap(reinterpret_cast<char*>(malloc(sizer)),sizer);  //wrap new allocation
+  body.zguard();
   if(body.isUseful()) {  //if malloc worked
     body.cat(c_str(),length());  //copy in present stuff
-    termloc=body.used();
+    dataend=body.used();
     body.clearUnused();  //prophylactic nulling
-    clear();
+    clear(); //release original arg.
     ptr = body.internalBuffer();//needed for the eventual 'free'
     return true;
   }
