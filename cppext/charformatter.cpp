@@ -111,7 +111,6 @@ bool CharFormatter::move(int delta, int keep){
   //move pointer through pointer+keep delta to the right (if positive)
   memmove(buffer + pointer + delta,buffer + pointer,keep);
   return true;
-
 } // CharFormatter::move
 
 s64 CharFormatter::parse64(s64 def){
