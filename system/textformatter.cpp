@@ -72,10 +72,9 @@ void TextFormatter::substitute(TextKey stringy){
 bool TextFormatter::openSpace(){
   int delta=width - substWidth;
   int section=dataend-body.used();
-  if(body.move(delta,section)) {
-    dataend += delta;
+  if(body.move(delta,section)) {//just moves data needing preservation to after workspace we are about to create.
     //point to '$'
-    body.rewind(width);
+    body.rewind(substWidth);
     return true;
   } else {
     return false;
@@ -84,9 +83,10 @@ bool TextFormatter::openSpace(){
 
 void TextFormatter::reclaimWaste(const CharFormatter &workspace){
   body.skip(workspace.used());
+  dataend+=workspace.used();
+  dataend-=substWidth;
   //pull data back down over unused stuff
   unsigned excess = workspace.freespace();
-  dataend -= excess;
   body.removeNext(excess);
 }
 

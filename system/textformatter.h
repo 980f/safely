@@ -61,8 +61,6 @@ private:
    *  for arguments that have a substitute method that will get called.
    *  Each substitute method eventually inserts a string.
    */
-
-
   template<typename NextArg, typename ... Args> void compose_item( NextArg&item, const Args& ... args){
     body.rewind();
     bool slashed=false;
@@ -81,7 +79,7 @@ private:
         if(d - '0' == which) { //splice in ref
           substWidth=2;//dollar and digit
           width=BadLength;//for debug
-          substitute(item);          
+          substitute(item);
           //by not returning here we allow for multiple substitutions of one argument.
         }
       }
