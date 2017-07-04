@@ -189,6 +189,10 @@ public:
     }
   }
 
+  /** @returns an indexer which covers the leading part of this one. */
+  Indexer<Content> getHead(){
+    return view(0,pointer);
+  }
 
   /** reworks this to move start of buffer to be @param howmany past present start.
    * does sensible things if you trim past the current pointer, wipes the whole thing if you trim all of it.

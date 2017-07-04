@@ -25,6 +25,9 @@ public:
 
 
   Indexer<u8> asBytes();
+  //good idea, but name conflicted.
+//  /** a type casting confounded constructor-of-sorts */
+//  static CharFormatter wrap(Indexer<u8> raw);
 
   /** parse a double from current pointer */
   double parseDouble(void);
