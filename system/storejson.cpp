@@ -20,7 +20,17 @@ Text StoreJsonConstructor::extract(Span &span) {
 }
 
 Storable *StoreJsonConstructor::insertNewChild(Storable *parent, Text &name, bool haveValue, Text &value, bool valueQuoted) {
-  Storable *nova=parent? &parent->child(name): (root = new Storable(name));//maydo: access Stored::Groot
+  Storable *nova=nullptr;
+  if(parent){
+    if(name.empty()){
+      nova=&parent->addChild("");//array element, do NOT make all nameless entities the same entity.
+    } else {
+      nova=&parent->child(name);
+    }
+  } else {
+    root = new Storable(name);//maydo: access Stored::Groot
+    nova=root;
+  }
   if(nova){
     if(haveValue){//todo: if node already initialized change value according to type. i.e. preserve node.type
       nova->setImage(value,Storable::Parsed);
