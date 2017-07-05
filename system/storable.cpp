@@ -596,10 +596,15 @@ Storable *Storable::findChild(TextKey path, bool autocreate){
 
 /** creates node if not present.*/
 Storable&Storable::child(TextKey childName){
-  if(Storable *child = existingChild(childName)) {
-    return *child;
+  if(nonTrivial(childName)){
+    if(Storable *child = existingChild(childName)) {
+      return *child;
+    } else {
+      return addChild(childName);
+    }
+  } else {//#duplicated code for debug.
+    return addChild(childName);
   }
-  return addChild(childName);
 }
 
 Storable&Storable::operator ()(TextKey name){
