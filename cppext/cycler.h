@@ -16,7 +16,8 @@ public:
   operator unsigned(void)const;
 
   /** @returns true once per cycle, and not until the end of the first cycle if used in a typical fashion*/
-  operator bool(void);
+//compiler preferred opertor bool over opertor unsigned, should have complained:--  operator bool(void);
+  bool next();
   /** modulo */
   unsigned operator +(int offset)const;
   unsigned operator +=(int offset);

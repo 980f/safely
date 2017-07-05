@@ -41,7 +41,7 @@ Cycler::operator unsigned(void)const {
 }
 
 /** @returns true once per cycle, and not until the end of the first cycle if used in a typical fashion*/
-Cycler::operator bool(void) {
+bool Cycler::next(void) {
   return increment() == 0;
 }
 
