@@ -23,7 +23,6 @@ public:
   CharFormatter(ByteScanner &other);
   CharFormatter();
 
-
   Indexer<u8> asBytes();
   //good idea, but name conflicted.
 //  /** a type casting confounded constructor-of-sorts */
@@ -79,5 +78,17 @@ public:
 
 }; // class CharFormatter
 
+/** a class that wraps a raw buffer, and on destruction updates the raw buffer with the changes done via the wrapper.
+ Typically only create as a local and don't mix using this wrapper with direct access to the raw buffer wrapped. */
+class Caster: public CharFormatter {
+  Indexer<u8>&rawref;
+public:
+  Caster(Indexer<u8>&raw):CharFormatter(reinterpret_cast<char *>(&raw.peek()),raw.freespace()),
+    rawref(raw){
+  }
+  ~Caster(){
+    rawref.skip(this->used());
+  }
+};
 
 #endif // CHARFORMATTER_H

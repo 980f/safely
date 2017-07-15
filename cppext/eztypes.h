@@ -19,7 +19,7 @@ typedef int16_t s16;
 typedef int32_t s32;
 typedef int64_t s64;
 
-//legacy macro, don't use this for new code.
+//type conversion for when the compiler just won't do it for you.
 #define pun(type, lvalue) (*reinterpret_cast<type *>(&(lvalue)))
 
 //lord it would be nice if C would make a standard operator for this:
