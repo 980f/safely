@@ -366,10 +366,9 @@ public:
  This method does NOT alter the allocation. This only makes sense for a receive buffer as you peel items off the front. */
   Indexer &removeFirst(unsigned amount){
     if(amount>=pointer){//remove all
-      pointer=0;
+      pointer=0;//simple ignore what we had
     } else {
-      movem(amount,0,amount);
-      pointer -=amount;
+      movem(amount,0,pointer-=amount);
     }
     return *this;
   }

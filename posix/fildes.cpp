@@ -126,47 +126,51 @@ int Fildes::read(Indexer<u8> &p){
   if(isOpen()) {
     if(okValue(lastRead ,::read(fd, &p.peek(), p.freespace()))) {
       p.skip(lastRead);
-    }    
+    }
     return isWaiting()?0:lastRead;
   } else {
     return lastRead = -1;//todo:2 ensure errno is 'file not open'
   }
 } // Fildes::read
 
-int Fildes::write(Indexer<u8>&p){
-  if(isOpen()) {
-    if(okValue(lastWrote, ::write(fd, &p.peek(), p.freespace()))) {
-      p.skip(lastWrote);
-    }
-    return lastWrote;
-  } else {
-    return lastWrote = -1; //todo:2 error code
+
+bool Fildes::write(Indexer<u8> &p){
+  if(write(&p.peek(),p.freespace())){
+    p.skip(lastWrote);
+    return true;
   }
+  return false;
 }
 
-int Fildes::write(Indexer<u8> &&p){
-  if(isOpen()) {
-    if(okValue(lastWrote, ::write(fd, &p.peek(), p.freespace()))) {
-      p.skip(lastWrote);
-    }
-    return lastWrote;
-  } else {
-    return lastWrote = -1; //todo:2 error code
+bool Fildes::write(Indexer<u8> &&p){
+  if(write(&p.peek(),p.freespace())){
+    p.skip(lastWrote);
+    return true;
   }
+  return false;
 }
 
-int Fildes::write(const u8 *buf, unsigned len){
+bool Fildes::write(Indexer<char> &&p){
+  if(write(reinterpret_cast<const u8 *>(&p.peek()),p.freespace())){
+    p.skip(lastWrote);
+    return true;
+  }
+  return false;
+}
+
+bool Fildes::write(const u8 *buf, unsigned len){
   if(isOpen()) {
     if(okValue(lastWrote, ::write(fd,buf, len))) {
-//      p.skip(lastWrote);
+      return true;
     }
-    return lastWrote;
+    return false;
   } else {
-    return lastWrote = -1; //todo:2 error code
+    lastWrote = -1; //todo:2 error code
+    return false;
   }
 }
 
-int Fildes::write(char c, unsigned repeats){
+int Fildes::writeChars(char c, unsigned repeats){
   if(repeats<=4096){
     u8 reps[repeats];
     fillObject(reps,sizeof(reps),c);
