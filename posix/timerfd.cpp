@@ -6,12 +6,6 @@
 TimerFD::TimerFD():PosixWrapper ("TimerFD"),fd("TimerFD"){
   int tfd=timerfd_create(CLOCK_MONOTONIC,TFD_NONBLOCK);
   fd.preopened(tfd,true);
-//  itimerspec u;
-//  parseTime(u.it_interval,0);
-//  parseTime(u.it_value,0);
-
-//  timerfd_settime(fd.asInt(),0,&u,nullptr);
-
 }
 
 double TimerFD::setPeriod(double seconds){
@@ -28,9 +22,10 @@ double TimerFD::setPeriod(double seconds){
 }
 
 bool TimerFD::ack(){
-  u8 value[8];
-  ByteScanner discard(value,sizeof(value));
-  if(8==fd.read(discard)){
+  u64 expirations=~0;
+  ByteScanner discard(reinterpret_cast<u8*>(&expirations),sizeof(u64));
+  fd.read(discard);
+  if(8==fd.lastRead){//todo:1 why does fd.read return 0 even when it read 8 bytes?
     return true;
   } else {
     //then we shouldn't have been called.

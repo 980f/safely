@@ -24,7 +24,7 @@ protected:
   virtual bool keepAlive();
 
   //until epoll works sanely on both platforms run() will just run a timer.
-  bool justTime;
+  bool justTime=true;
 
 public:
   /** doesn't do much, but someday we may mate this to gnu getargs */
