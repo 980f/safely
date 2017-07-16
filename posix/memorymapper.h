@@ -26,17 +26,25 @@ public:
 template <typename Any> class Mapped {
   Any *ptr;
   unsigned quantity;
+  bool simulated;
 public:
   Mapped(unsigned physical,unsigned quantity):ptr(nullptr),quantity(quantity){
     if(MemoryMapper::init()){
       ptr= reinterpret_cast<Any *>(MemoryMapper::Mmap->map(physical,quantity*sizeof (Any)));
+      simulated=false;
+    } else {
+      ptr=new Any[quantity];
+      simulated=true;
     }
-    //else pointer will be null and we will get sigsegv's
-    //you are expected to call MemoryMapper::init yourself and not create Mapped blocks if that fails.
   }
 
   ~Mapped(){
-    MemoryMapper::Mmap->free(ptr,quantity*sizeof (Any));
+    if(simulated){
+      delete [] ptr;
+    } else {
+      MemoryMapper::Mmap->free(ptr,quantity*sizeof (Any));
+    }
+    ptr=nullptr;
   }
 
 private:
