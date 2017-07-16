@@ -7,7 +7,7 @@ MemoryMapper *MemoryMapper::Mmap=nullptr;
 
 //rather than have a compiler control create a regular file for simulation and link to /dev/gpiomem for rpi real operation.
 MemoryMapper::MemoryMapper():fd("MemoryMapper"){
-  fd.open("safe-memory", O_RDWR | O_SYNC);
+  fd.open("/dev/gpiomem", O_RDWR | O_SYNC);
 }
 
 void *MemoryMapper::map(unsigned addr, unsigned len){//initMapMem
@@ -24,7 +24,6 @@ void *MemoryMapper::map(unsigned addr, unsigned len){//initMapMem
 }
 
 bool MemoryMapper::free(void *addr, unsigned size){
-  // * 0 okay, -1 fail */
   return fd.ok(munmap(addr, size));
 }
 
@@ -46,7 +45,7 @@ bool MemoryMapper::init(bool refresh){
     Mmap=nullptr;
   }
   Mmap=new MemoryMapper();
-  return Mmap!=nullptr && Mmap->fd.isOpen();
+  return isOperational();
 }
 
 bool MemoryMapper::isOperational(){
