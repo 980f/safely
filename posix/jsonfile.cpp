@@ -24,8 +24,8 @@ int JsonFile::loadFile(Cstr thename){
   }
   //free up options file for external editing (in case we ever open_exclusive)
   optionFile.close();//this does not lose the data already read.
-  ByteScanner optsText(optionFile.contents());
-  Indexer<u8> arg(optsText.internalBuffer(),optsText.allocated());//type casting
+  CharScanner optsText(optionFile.contents());
+  Indexer<char> arg(optsText.internalBuffer(),optsText.allocated());//type casting
 
   StoreJsonParser parser(arg);
   parser.core.root=&root;

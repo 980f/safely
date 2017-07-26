@@ -4,15 +4,25 @@
 #include "cheaptricks.h"
 
 
-StoreJsonParser::StoreJsonParser(Indexer<u8> &data):AbstractJSONparser(core),core(data){
-  //default inits of members NOT happening!
+//StoreJsonParser::StoreJsonParser(Indexer<u8> &data):AbstractJSONparser(core),core(data){
+//  //default inits of members NOT happening!
+//  stats.reset();
+//  parser.reset(true);
+//}
+
+StoreJsonParser::StoreJsonParser(Indexer<char> &data):AbstractJSONparser(core),core(data)
+{
   stats.reset();
   parser.reset(true);
 }
 
-StoreJsonConstructor::StoreJsonConstructor(Indexer<u8> &data):
-  data(data){
-  //#nada
+//StoreJsonConstructor::StoreJsonConstructor(Indexer<u8> &data):
+//  data(data){
+//  //#nada
+//}
+
+StoreJsonConstructor::StoreJsonConstructor(Indexer< char> &data):data(data){//might want to getHead or Tail vs copy construct.
+
 }
 
 Text StoreJsonConstructor::extract(Span &span) {

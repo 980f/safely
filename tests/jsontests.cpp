@@ -104,7 +104,7 @@ void testJ(unsigned which){
     auto block=test.c_str();
     auto size=test.length();
 
-    Indexer<const char> loaded(block,size);
+    Indexer<char> loaded(test.violated(),size);
     dbg("StoreJSON: testing: %s",block);
 
     StoreJsonParser parser(loaded);

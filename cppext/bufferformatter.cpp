@@ -4,10 +4,11 @@
 BufferFormatter::BufferFormatter(const Indexer<u8> &other, TextKey format):
   body(reinterpret_cast<char *>(other.peek()),other.freespace())
 {
-  //body.getTail(other);
-  body.cat(format);
-  body.next()=0;//cat doesn't include the null, we do so here to stop the parsing of the format
-  body.clearUnused();//for debug
+  setFormat(format);
+}
+
+BufferFormatter::BufferFormatter(CharFormatter &buffer, TextKey format):body(buffer){
+  setFormat(format);
 }
 
 BufferFormatter::BufferFormatter(char *raw, unsigned sizeofraw, TextKey format):body(raw,sizeofraw){

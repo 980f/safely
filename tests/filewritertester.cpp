@@ -36,7 +36,7 @@ void FileWriterTester::run(unsigned which){
     return;
   }
 
-  Filer testdata;
+  Filer testdata("FileWriterTester");
   testdata.openFile(testfile[which],O_RDONLY);
   if(testdata.readall(1000000)){
     ByteScanner data(testdata.contents());

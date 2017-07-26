@@ -21,6 +21,7 @@ class BufferFormatter {
   Span spec;
 public:
   BufferFormatter(const Indexer<u8> &other, TextKey format);
+  BufferFormatter(CharFormatter &buffer,TextKey format);
   BufferFormatter(char *raw, unsigned sizeofraw,TextKey format);
   BufferFormatter(unsigned char *raw, unsigned sizeofraw,TextKey format);
 

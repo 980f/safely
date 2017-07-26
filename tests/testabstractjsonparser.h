@@ -13,9 +13,9 @@
 class TestAbstractJsonConstructor: public JsonConstructor<Storable,Text>
 {
 public:
-  Indexer<const char> data;
+  Indexer<char> data;
 
-  TestAbstractJsonConstructor(Indexer<const char> &data);
+  TestAbstractJsonConstructor(Indexer<char> &data);
   virtual ~TestAbstractJsonConstructor()=default;
 
   /** must supply and track source data, and be able to recover it from values of ordinal */
@@ -42,7 +42,7 @@ class TAJParser: public AbstractJSONparser<Storable, Text> {
 public: //accessing root when done, should also set it for some usages.
   TestAbstractJsonConstructor core;
 public:
-  TAJParser(Indexer<const char> &data);
+  TAJParser(Indexer<char> &data);
 } ;
 
 #endif // TESTABSTRACTJSONPARSER_H
