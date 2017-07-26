@@ -1,13 +1,14 @@
 #include "testabstractjsonparser.h"
 
 
-TAJParser::TAJParser(Indexer<const char> &data):AbstractJSONparser(core),core(data){
+TAJParser::TAJParser(Indexer<char> &data):AbstractJSONparser(core),core(data){
   //default inits of members NOT happening!
   stats.reset();
   parser.reset(true);
 }
 
-TestAbstractJsonConstructor::TestAbstractJsonConstructor(Indexer<const char> &data):data(data){
+TestAbstractJsonConstructor::TestAbstractJsonConstructor(Indexer<char> &data):data(data)
+{
 
 }
 

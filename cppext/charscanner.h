@@ -52,6 +52,19 @@ public:
   /** @return a null terminated subset of this, modifying this to omit the returned part and the separator */
   CharScanner split(char separator); // split
 
+  /** added this modality instead of dusting off yet another variant of this class (Bigendianer) */
+  bool bigendian=false;
+  bool putBytes(unsigned value, unsigned numBytes);
+  u32 getU(unsigned numBytes, u32 def);
+  /**for embedded binary data */
+  u16 getU16(u16 def = 0);
+  u32 getU24(u32 def = 0);
+  u32 getU32(u32 def = 0);
+
+  /**for embedding binary data */
+  bool putU16(unsigned value);
+  bool putU24(unsigned value);
+  bool putU32(unsigned value);
 };
 
 /** concrete class wrapped around a template, for added functions*/

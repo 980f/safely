@@ -74,8 +74,8 @@ public:
 
 #include "extremer.h"
 void extremely(){
-  MaxDouble maxish;
-  MinDouble minish;
+  MaxDoubleFinder maxish;
+  MinDoubleFinder minish;
   Extremer<double,true,true> lastish;
 
   int which = 0;
@@ -96,7 +96,17 @@ void extremely(){
 void testBufferFormatter(){
   char bigenough[200];
 
-  CharFormatter buffer(bigenough);
+  CharFormatter buffer(bigenough,sizeof (bigenough));
+  //nonzero number less than 400 with sigfic 0 printed all 000's
+  buffer.clearUnused();//the printers don't presume to know where the end of the string is.
+  for(int ipow=4;ipow-->-4;){
+    buffer.rewind();
+    double d=pow10(ipow);
+    auto ok=buffer.printNumber(d,0);
+    buffer.next()=0;
+    dbg("CF[10^%d]->%d:%s",ipow,ok,bigenough);
+  }
+  buffer.rewind();
   BufferFormatter::composeInto(buffer,"One $1",1984);
   dbg("\nShould be <One 1984>:<%s>",bigenough);
 }

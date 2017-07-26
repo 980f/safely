@@ -275,6 +275,67 @@ bool CharScanner::isBlank(){
   return true;
 } // CharScanner::isBlank
 
+bool CharScanner ::putBytes(unsigned value, unsigned numBytes){
+  if(stillHas(numBytes)) {
+    const u8 *p = reinterpret_cast<const u8 *>(&value);
+    if(bigendian){
+      p+=numBytes;//past the msb of interest
+      while(numBytes-->0){
+        next()=*--p;
+      }
+    } else {
+      while(numBytes-- > 0) {
+        next() = *p++;
+      }
+    }
+    return true;
+  } else {
+    return false;
+  }
+} /* putBytes */
+
+u32 CharScanner ::getU(unsigned numBytes, u32 def){
+  //using a pointer to a local precludes compiler optimizing for register use.
+  if(stillHas(numBytes)) {
+    u32 acc = 0;
+    if(bigendian){
+      u8 *pun=reinterpret_cast<u8 *>(&acc)+numBytes;
+      while(numBytes-->0){
+        *--pun=next();
+      }
+    } else {
+      copyObject(&peek(),&acc,numBytes);
+      skip(numBytes);
+    }
+    return acc;
+  } else {
+    return def;
+  }
+} // ByteScanner::getU
+
+u16 CharScanner ::getU16(u16 def){
+  return getU(2, def);
+}
+
+u32 CharScanner ::getU24(u32 def){
+  return getU(3, def);
+}
+
+u32 CharScanner ::getU32(u32 def){
+  return getU(4, def);
+}
+
+bool CharScanner ::putU16(unsigned value){
+  return putBytes(value, 2);
+}
+
+bool CharScanner ::putU24(unsigned value){
+  return putBytes(value, 3);
+}
+
+bool CharScanner ::putU32(unsigned value){
+  return putBytes(value, 4);
+}
 ///////////////////
 ByteLooker::ByteLooker(const u8  *content, unsigned size ) : Indexer<const u8 >(content, size){
   //#nada

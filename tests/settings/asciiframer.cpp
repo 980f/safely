@@ -57,7 +57,7 @@ static const char escapee[] = "\\rntc";
 
 bool AsciiFramer:: getLine(CharScanner&p, bool deslash){
   if(eols > 0) {
-    u8 ch = 0; //4debug
+    char ch = 0; //4debug
     while(p.hasNext() && fifo.hasNext()) {//NB: it is pathological to exit loop by this condition
       ch = fifo.next();
       if(ch == 8 || ch == 127) { //backspace and delete both treated like backspace
@@ -83,7 +83,7 @@ bool AsciiFramer:: getLine(CharScanner&p, bool deslash){
       if(ch == EOL) { //end of line gets converted to a null for end-of-string indication
         p.next() = 0;
         --eols;
-        p.snap(p);
+        p.getHead(p);
         return true;
       }
       p.next() = ch;
