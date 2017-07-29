@@ -2,7 +2,7 @@ include ("consoleapp.pro")
 
 #build into the deployment source directory, presently the same as the project file's directory
 TARGET = pialyzer
-DESTDIR = $$PWD
+DESTDIR = $$PWD/5onpi/
 
 #sigc stuff may be in the lib functions used.
 include("sigc.pro")
