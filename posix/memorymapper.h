@@ -1,5 +1,5 @@
 #ifndef MEMORYMAPPER_H
-#define MEMORYMAPPER_H
+#define MEMORYMAPPER_H "(C) Andrew L. Heilveil, 2017"
 
 ////////////////////
 #include "fildes.h"

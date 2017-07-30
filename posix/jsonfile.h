@@ -1,9 +1,11 @@
 #ifndef JSONFILE_H
-#define JSONFILE_H
+#define JSONFILE_H "(C) Andrew L. Heilveil, 2017"
 
 #include "storable.h"
 #include "textpointer.h"
 #include "fildes.h"
+
+/** read and write json file to/from Storable. */
 class JsonFile {
   Storable &root;
 public:

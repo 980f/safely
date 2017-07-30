@@ -1,5 +1,5 @@
 #ifndef FileAsyncAccess_H
-#define FileAsyncAccess_H
+#define FileAsyncAccess_H  "(C) Andrew L. Heilveil, 2017"
 
 #include "incrementalfiletransfer.h"
 #include "aio.h"

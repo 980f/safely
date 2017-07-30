@@ -1,5 +1,5 @@
 #ifndef FILEWRITER_H
-#define FILEWRITER_H
+#define FILEWRITER_H "(C) Andrew L. Heilveil, 2017"
 
 #include "fileasynchio.h"
 

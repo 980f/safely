@@ -1,5 +1,5 @@
 #ifndef MICROSECONDS_H
-#define MICROSECONDS_H
+#define MICROSECONDS_H "(C) Andrew L. Heilveil, 2017"
 
 #include "time.h"
 

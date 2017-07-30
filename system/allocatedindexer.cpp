@@ -1,3 +1,3 @@
 #include "allocatedindexer.h"
 
-//#fool IDE into checking header for typo's
+//# exists to get IDE to check header for typo's

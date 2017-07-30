@@ -1,3 +1,4 @@
+//"(C) Andrew L. Heilveil, 2017"
 #include "textformatter.h"
 #include "textpointer.h"
 #include "stdlib.h"
@@ -22,9 +23,8 @@
 
 
 TextFormatter::TextFormatter(TextKey mf) :
-  Text(mf){//strdup argument, so that it may evaporate
+  Text(mf){//strdup's argument, so that it may evaporate
   body.wrap(violated(),length());
-//  content.clone(body);
 }
 
 Indexer<u8> TextFormatter::asBytes(){
@@ -48,7 +48,6 @@ bool TextFormatter::processing(){
 
 void TextFormatter::substitute(CharFormatter buf){
   width = buf.allocated();
-
   CharFormatter workspace = makeWorkspace();
   if(workspace.isUseful()) {
     if(!workspace.appendAll(buf)) {
@@ -58,7 +57,6 @@ void TextFormatter::substitute(CharFormatter buf){
     }
     reclaimWaste(workspace);
   }
-
 } // TextFormatter::substitute
 
 void TextFormatter::substitute(Cstr stringy){
@@ -155,6 +153,5 @@ bool TextFormatter::onSizingCompleted(){
     ptr = body.internalBuffer();//needed for the eventual 'free'
     return true;
   }
-
   return false;
 } // TextFormatter::onSizingCompleted

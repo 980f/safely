@@ -1,5 +1,5 @@
 #ifndef BLOCK_H
-#define BLOCK_H
+#define BLOCK_H "(C) Andrew L. Heilveil, 2017"
 
 #include <utility>
 

@@ -1,3 +1,4 @@
+//"(C) Andrew L. Heilveil, 2017"
 #include "jsonfile.h"
 
 #include "filer.h"
@@ -6,9 +7,8 @@
 
 #include "stdio.h" //for printing until we apply our textFormatter
 
-JsonFile::JsonFile(Storable &node):root(node)
-{
-
+JsonFile::JsonFile(Storable &node):root(node){
+  //#nada
 }
 
 int JsonFile::loadFile(Cstr thename){
@@ -112,5 +112,4 @@ Cstr JsonFile::originalFile(){
 
 void JsonFile::printOn(Fildes &alreadyOpened, unsigned indent){
   printNode(indent,root,alreadyOpened.getfp("w"));
-
 }

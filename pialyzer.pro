@@ -116,47 +116,21 @@ DEPENDPATH += cppext
 INCLUDEPATH += cppext
 
 DEFINES += LoggerManagement=0
-##permalloc needs a define: this is only non-zero in microcontrollers (heapless systems)
-#DEFINES += PermAllocPool=0
 
 SOURCES += \
     cppext/argset.cpp \
-    #bigendianer.cpp \
-    #centeredslice.cpp \
     cppext/charformatter.cpp \
     cppext/charscanner.cpp \
     cppext/cheaptricks.cpp \
-    #core-atomic.cpp \
-    #crc16m.cpp \
     cppext/cycler.cpp \
-    #determinator.cpp \
-    #enumerated.cpp \
     cppext/enumerizer.cpp \
-    #fitstat.cpp \
-    #interval.cpp \
-    #linear.cpp \
-    #linearfit.cpp \
-    #cppext/linearmapping.cpp \
     cppext/minimath.cpp \
-    #multilock.cpp \
     cppext/numberparser.cpp \
-    #permalloc.cpp \
     cppext/platform.cpp \
-    #polynomial.cpp \
-    #quadraticfilter.cpp \
-    cppext/quantizer.cpp \
     cppext/ranged.cpp \
-    #realstatistic.cpp \
-    #roundrobiner.cpp \
-    #safestr.cpp \
-    #settable.cpp \
     cppext/transactionalbuffer.cpp \
-    #twiddler.cpp \
     cppext/utf8.cpp \
     cppext/textkey.cpp \
-    #polyfilter.cpp \
-    #hassettings.cpp \
-    #pathname.cpp \
     cppext/bitwise.cpp \
     cppext/cstr.cpp \
     cppext/pushedjsonparser.cpp \
@@ -165,8 +139,6 @@ SOURCES += \
     cppext/block.cpp \
     cppext/converter.cpp \
     cppext/abstractjsonparser.cpp \
-    #poissonfeeder.cpp \
-    #settablegroup.cpp \
     cppext/pushedparser.cpp \
     cppext/localonexit.cpp \
     cppext/bufferformatter.cpp \
@@ -181,60 +153,24 @@ SOURCES += \
 
 
 HEADERS += safely.h \
-    #argset.h \
-    #bigendianer.h \
     cppext/buffer.h \
-    #centeredslice.h \
     cppext/chained.h \
     cppext/changemonitored.h \
     cppext/charformatter.h \
     cppext/charscanner.h \
     cppext/cheaptricks.h \
-    #circularbuffer.h \
-    #circularindexer.h \
-    #core-atomic.h \
-    #crc16m.h \
     cppext/cycler.h \
-    #debuggable.h \
-    #determinator.h \
-    #enumerated.h \
     cppext/enumerizer.h \
-    #eventFlag.h \
     cppext/extremer.h \
     cppext/eztypes.h \
-    #fitstat.h \
-    #interval.h \
-    #iterate.h \
-    #linear.h \
-    #linearfit.h \
-    #linearmapping.h \
-    #linearsmoother.h \
-    #linearstatistic.h \
     cppext/lock.h \
     cppext/minimath.h \
     cppext/multilock.h \
     cppext/numberparser.h \
     cppext/ordinator.h \
-    #permalloc.h \
-    #polynomial.h \
-    #quadraticfilter.h \
-    #quantizer.h \
-    cppext/range.h \
-    cppext/ranged.h \
-    #realstatistic.h \
-    #roundrobiner.h \
-    #safestr.h \
-    #scaler.h \
     cppext/sequence.h \
-    #settable.h \
-    #syncretic.h \
     cppext/transactionalbuffer.h \
-    #twiddler.h \
-    #utf8.h \
     cppext/textkey.h \
-    #polyfilter.h \
-    #zstring.h \
-    #hassettings.h \
     cppext/pathname.h \
     cppext/bitwise.h \
     cppext/segmentedname.h \
@@ -246,8 +182,6 @@ HEADERS += safely.h \
     cppext/block.h \
     cppext/converter.h \
     cppext/abstractjsonparser.h \
-    #poissonfeeder.h \
-    #settablegroup.h \
     cppext/pushedparser.h \
     cppext/localonexit.h \
     cppext/bufferformatter.h \
@@ -321,8 +255,6 @@ SOURCES += \
     5onpi/minix.cpp \
     5onpi/dp5/paramset.cpp \
     5onpi/dp5/dp5.cpp \
-    5onpi/dp5/dppvariant.cpp \
-    5onpi/dp5/mcafile.cpp \
     5onpi/analysis.cpp \
     5onpi/dp5/stats.cpp \
     5onpi/dp5/spectrum.cpp \
@@ -333,7 +265,6 @@ SOURCES += \
 
 HEADERS += \
     5onpi/gpio.h \
-    5onpi/piinfo.h \
     5onpi/amptekanalyzer.h \
     5onpi/serialdevice.h \
     5onpi/command.h \
@@ -342,7 +273,6 @@ HEADERS += \
     5onpi/dp5/paramset.h \
     5onpi/dp5/dp5.h \
     5onpi/dp5/dppvariant.h \
-    5onpi/dp5/mcafile.h \
     5onpi/analysis.h \
     5onpi/dp5/stats.h \
     5onpi/dp5/spectrum.h \

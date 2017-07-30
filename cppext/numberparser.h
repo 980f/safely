@@ -1,12 +1,10 @@
 #ifndef NUMBERPARSER_H
-#define NUMBERPARSER_H
+#define NUMBERPARSER_H "(C) Andrew L. Heilveil, 2017"
 
 #include "eztypes.h"
 
 /** number parser (think atoi/atod/atol) receiver style */
 #include "numberpieces.h"
-
-
 
 /** a parser that is fed characters sequentially */
 class PushedNumberParser : public NumberPieces {
@@ -44,8 +42,6 @@ private:
   bool fail();
 
 }; // class PushedNumberParser
-
-
 
 
 #endif // NUMBERPARSER_H

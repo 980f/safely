@@ -1,5 +1,5 @@
 #ifndef ALLOCATEDINDEXER_H
-#define ALLOCATEDINDEXER_H
+#define ALLOCATEDINDEXER_H "(C) Andrew L. Heilveil, 2017"
 
 #include "buffer.h"
 #include "stdlib.h"

@@ -1,3 +1,4 @@
+//"(C) Andrew L. Heilveil, 2017"
 #include "bufferformatter.h"
 #include "string.h" //memmove
 

@@ -1,3 +1,4 @@
+//"(C) Andrew L. Heilveil, 2017"
 #include "fileinfo.h"
 #include "logger.h"
 #include "string.h"

@@ -1,9 +1,7 @@
 #ifndef NUMBERFORMATTER_H
-#define NUMBERFORMATTER_H
+#define NUMBERFORMATTER_H "(C) Andrew L. Heilveil, 2017"
 
-//#include "safely.h"
 #include "textpointer.h"
-//#include "cheaptricks.h"
 #include "numberformat.h"
 
 struct NumberFormatter {

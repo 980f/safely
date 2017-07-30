@@ -1,5 +1,5 @@
 #ifndef BUFFERFORMATTER_H
-#define BUFFERFORMATTER_H
+#define BUFFERFORMATTER_H "(C) Andrew L. Heilveil, 2017"
 
 #include "charformatter.h"
 #include "numberformat.h"
@@ -74,8 +74,7 @@ private:
             //by not returning here we allow for multiple substitutions of one argument.
           }
         }
-        //todo: parseInt so that we can have more than 10 args
-
+        //todo:1 parseInt so that we can have more than 10 args
       }
     }
     next(args ...);

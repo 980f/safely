@@ -1,7 +1,7 @@
 #ifndef ABSTRACTPIN_H
-#define ABSTRACTPIN_H
+#define ABSTRACTPIN_H "(C) Andrew L. Heilveil, 2017"
 
-
+/** indirect access to things like hardware pins */
 class AbstractPin {
 public:
   /* write bit */

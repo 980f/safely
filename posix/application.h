@@ -1,5 +1,5 @@
 #ifndef APPLICATION_H
-#define APPLICATION_H
+#define APPLICATION_H "(C) Andrew L. Heilveil, 2017"
 
 /** startup and eventloop */
 #include "buffer.h"
@@ -17,13 +17,13 @@ protected:
 private:
   unsigned quickCheck=0;
 protected:
+  /** set quickCheck if @param soonish is sooner than a prior setting */
   bool setQuickCheck(unsigned soonish);
   /** clear this to try to get app to exit gracefully */
   bool beRunning;
   /** called with each event, especially when period is up. Not harmonic */
   virtual bool keepAlive();
-
-  //until epoll works sanely on both platforms run() will just run a timer.
+  /** until epoll works sanely on both platforms run() will just run a timer. */
   bool justTime=true;
 
 public:
@@ -41,8 +41,9 @@ public:
   }
 
 public: //utilities
-  Text hostname();//not static as we record errors
-  /** write pid to file. best practice if for that file to be in /tmp so that it evaporates on a crash of the system. */
+  /** @returns a copy of the hostname, not a static function as it records errors from the attempt */
+  Text hostname();
+  /** write pid to file. best practice is for that file to be in /tmp so that it evaporates on a crash of the system. */
   static bool writepid(TextKey pidname);
 };
 

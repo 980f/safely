@@ -1,5 +1,5 @@
 #ifndef HOOK_H
-#define HOOK_H
+#define HOOK_H "(C) Andrew L. Heilveil, 2017"
 
 #include <functional>
 /** hook with a return value.

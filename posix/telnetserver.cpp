@@ -1,3 +1,4 @@
+//"(C) Andrew L. Heilveil, 2017"
 #include "telnetserver.h"
 
 //called from socketeer accept
@@ -23,9 +24,8 @@ Socketeer *TelnetServer::simpleFactory(int newfd, SockAddress &sadr){
 }
 
 TelnetServer::TelnetServer(Factory aFactory):
-factory(nullptr,aFactory)
-{
-
+factory(nullptr,aFactory){
+  //#nada
 }
 
 bool TelnetServer::isStarted(){

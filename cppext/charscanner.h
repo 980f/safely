@@ -50,7 +50,7 @@ public:
   bool isBlank();
 
   /** @return a null terminated subset of this, modifying this to omit the returned part and the separator */
-  CharScanner split(char separator); // split
+  CharScanner cut(char separator); // split
 
   /** added this modality instead of dusting off yet another variant of this class (Bigendianer) */
   bool bigendian=false;
