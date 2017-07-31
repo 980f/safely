@@ -62,7 +62,7 @@ private:
   template<typename NextArg, typename ... Args> void compose_item( NextArg&item, const Args& ... args){
     body.rewind();
     bool slashed=false;
-    while(body.hasNext()&&body.ordinal()<termloc) {
+    while(body.hasNext()&&body.ordinal()<dataend) {
       char c = body.next();
       if(flagged(slashed)){
         continue;
@@ -117,7 +117,9 @@ public:
     if(onSizingCompleted()){
       which=0;
       compose_item(args ...);
-      body[termloc]=0;//clip trash from overallocating workspace for numbers.
+      if(body.canContain(termloc)){//if we did a perfect job then the buffer is perfect as is.
+        body[termloc]=0;//clip trash from overallocating workspace for numbers.
+      }
       return true;
     } else {
       //couldn't allocate a buffer or the string to build is empty.
