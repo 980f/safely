@@ -403,7 +403,7 @@ public:
    * pointer is not moved, typically you will skip in some fashion.
 @deprecated untested */
   unsigned findNext(const Content &item){
-    for(int peek=pointer;peek<allocated();++peek){
+    for(unsigned peek=pointer;peek<allocated();++peek){
       if(item==buffer[peek]){
         return peek;
       }

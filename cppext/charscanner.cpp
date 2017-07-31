@@ -1,6 +1,7 @@
 #include "charscanner.h"
 #include "cstr.h"
 #include "char.h"
+#include "onexit.h"
 
 //this one is sharable, with care! You should never be calling wrap or clone on a reference.
 CharScanner CharScanner::Null;
@@ -278,10 +279,10 @@ bool CharScanner::isBlank(){
 CharScanner CharScanner::cut(char separator){
   Index termlocation(findNext(separator));
   if(termlocation.isValid()){//return from pointer to termlocation
+    AssignOnExit<unsigned> aoe(pointer,termlocation+1);//move past terminator, but not until we've grabbed our reference
     buffer[termlocation]=0;
     unsigned pallocated=termlocation-pointer;
-    pointer=termlocation+1;
-    return CharScanner(peek(),pallocated);
+    return CharScanner(&peek(),pallocated);
   } else {
     return CharScanner();
   }

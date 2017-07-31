@@ -121,12 +121,16 @@ public:
 
 /** the ConnectChid macro is the main usablity feature of this class ensemble.
  * In any derived class of Stored one must have a constructor that takes a Storable.
- *  If you label that argument 'node' then for each Stored-derived member of your Stored-derived class that constructor must have an explicit constructor (since in turn those need a Storable param) and the ConnectChild macro will find a node named the same as the variable within the enclosing class's node and use that to init it. This uses var-args for additional construction arguments which are usually default values. */
+ * If you label that argument 'node' then for each Stored-derived member of your Stored-derived class the ConnectChild macro will find a node named the same as the variable within the enclosing class's node and use that to init it. This uses var-args for additional construction arguments which are usually default values. */
 #define ConnectChild(varname, ...) varname(node.child( # varname ), ## __VA_ARGS__)
+
+//This seems to be a legacy thing, if you find a good reason to use it please document that here.
 #define ConnectSibling(varname, ...) varname(node.parent->child( # varname ), ## __VA_ARGS__)
+
+//use this to construct an object which is not a member of a Stored:
 #define ConnectGroot(varname,...)  varname(Stored::Groot( # varname ), ## __VA_ARGS__)
 
-/** usage as filter: sigc::bind(&byName, sigc::ref(name)) */
+/** for usage as filter: sigc::bind(&byName, sigc::ref(name)) */
 template<class Groupie> bool byName(const TextKey &name, const Groupie & /*child*/, const TextValue &seeking){
   return seeking == name;
 }
