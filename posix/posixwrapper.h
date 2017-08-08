@@ -61,4 +61,13 @@ public:
   bool setFailed(bool passthrough);
 }; // class PosixWrapper
 
+
+/** free data and clear the pointer so that an attempted double-free doesn't occur. */
+template <typename ObjType> void Free(ObjType **pointer){
+  if(pointer){
+    delete *pointer;
+    *pointer=nullptr;
+  }
+}
+
 #endif // POSIXWRAPPER_H
