@@ -1,5 +1,5 @@
 #ifndef PUSHEDJSONPARSER_H
-#define PUSHEDJSONPARSER_H
+#define PUSHEDJSONPARSER_H "(C) Andrew L. Heilveil, 2017"
 
 /** this class maintains parser state and renders an opinion on characters received.
  * See StoredJSONParser for a user.

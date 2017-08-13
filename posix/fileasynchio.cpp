@@ -1,3 +1,4 @@
+//"(C) Andrew L. Heilveil, 2017"
 #include "fileasynchio.h"
 #include "nanoseconds.h"
 #include "logger.h"

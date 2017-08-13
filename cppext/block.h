@@ -1,5 +1,5 @@
 #ifndef BLOCK_H
-#define BLOCK_H
+#define BLOCK_H "(C) Andrew L. Heilveil, 2017"
 
 #include <utility>
 
@@ -26,7 +26,7 @@ Note: the Cstr class in this library does sane things with a returned null point
   }
 
   /** only a good idea if the class has a move constructor. */
-  Content operator ()(unsigned index,const Content &defawlt)const noexcept{
+  Content operator ()(unsigned index,const Content &&defawlt)const noexcept{
     if(contains(index)){
       return  buffer[length];
     }

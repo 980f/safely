@@ -1,3 +1,4 @@
+//"(C) Andrew L. Heilveil, 2017"
 #include "filewriter.h"
 
 #include "fcntlflags.h"
@@ -7,8 +8,7 @@ static Logger bug("FileWriter",true);
 
 FileWriter::FileWriter():
   fd("FileWriter"),
-  fmover(false/*write*/,fd,buf)
-{
+  fmover(false/*write*/,fd,buf){
   //#nada
 }
 

@@ -388,7 +388,7 @@ public:
     return false;
   }
 
-  /** seeks in used portion of buffer for something that operator=='s @param item.
+  /** seeks in head of buffer for something that operator=='s @param item.
 @deprecated untested */
   unsigned findFirst(const Content &item){
     for(int peek=0;peek<pointer;++peek){
@@ -398,6 +398,19 @@ public:
     }
     return BadIndex;
   }
+
+  /** seeks in tail of buffer for something that operator=='s @param item.
+   * pointer is not moved, typically you will skip in some fashion.
+@deprecated untested */
+  unsigned findNext(const Content &item){
+    for(unsigned peek=pointer;peek<allocated();++peek){
+      if(item==buffer[peek]){
+        return peek;
+      }
+    }
+    return BadIndex;
+  }
+
 
   /** if next() has been called at least once then replace the item that next() returned with the given one.
    * this is only safe to call with Content that tolerates 'operator='

@@ -1,3 +1,4 @@
+//"(C) Andrew L. Heilveil, 2017"
 #include "incrementalfiletransfer.h"
 #include "logger.h"
 

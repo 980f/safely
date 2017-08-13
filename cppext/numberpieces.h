@@ -1,5 +1,5 @@
 #ifndef NUMBERPIECES_H
-#define NUMBERPIECES_H
+#define NUMBERPIECES_H "(C) Andrew L. Heilveil, 2017"
 
 #include "eztypes.h"
 

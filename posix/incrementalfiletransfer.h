@@ -1,5 +1,5 @@
 #ifndef INCREMENTALFILETRANSFER_H
-#define INCREMENTALFILETRANSFER_H
+#define INCREMENTALFILETRANSFER_H "(C) Andrew L. Heilveil, 2017"
 
 #include "fildes.h" //our file <-> safe buffer routines
 #include "posixwrapper.h"

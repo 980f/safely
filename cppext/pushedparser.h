@@ -1,5 +1,5 @@
 #ifndef PUSHEDPARSER_H
-#define PUSHEDPARSER_H
+#define PUSHEDPARSER_H "(C) Andrew L. Heilveil, 2017"
 
 #include "halfopen.h" //Span
 #include "countdown.h" //ignore trailing chars of a utf8 sequence

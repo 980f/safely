@@ -363,6 +363,12 @@ bool CharFormatter::printNumber(double d, const NumberFormat &nf, bool addone){
   return checker.commit();
 } /* printNumber */
 
+bool CharFormatter::printDecimals(double d, int decimals){
+  NumberFormat nf;
+  nf.decimals=decimals;
+  return printNumber(d,nf,false);
+} /* printNumber */
+
 bool CharFormatter::printString(TextKey s){
   TransactionalBuffer<char > checker(*this);
   if(s) {

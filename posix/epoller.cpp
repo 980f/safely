@@ -1,3 +1,4 @@
+//"(C) Andrew L. Heilveil, 2017"
 #include "epoller.h"
 
 #include "sys/epoll.h"
@@ -17,8 +18,7 @@ Epoller::Epoller(unsigned maxreport):PosixWrapper ("Epoller"),
   BuildIndexer(epoll_event,waitlist,maxreport),
   numEvents(BadLength),//init for debug
   eventTime(true,true),//use real time, process may sleep
-  elapsed(0)
-{
+  elapsed(0){
   epfd=epoll_create1(0);
 }
 

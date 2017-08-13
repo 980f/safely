@@ -1,5 +1,5 @@
 #ifndef FILEREADER_H
-#define FILEREADER_H
+#define FILEREADER_H "(C) Andrew L. Heilveil, 2017"
 
 #include "fileasynchio.h"
 
@@ -8,11 +8,6 @@ class FileReader{
   Fildes fd;
 protected:
   ByteScanner buf;
-//  ssize_t expected;
-//  ssize_t received;
-//  unsigned blocksin;
-//  unsigned blocksexpected;
-
   FileAsyncAccess freader;
 
 protected://starting with overloads, will replace with delegates once it is tested.
@@ -25,9 +20,6 @@ public:
   /** hang around until transfer seems complete.
    * implemented for module testing.  */
   void loiter();
-private:
-  /* on incremental read complete */
-//  bool onRead(__ssize_t ret);
 };
 
 #endif // FILEREADERTESTER_H

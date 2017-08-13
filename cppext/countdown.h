@@ -1,5 +1,5 @@
 #ifndef COUNTDOWN_H
-#define COUNTDOWN_H
+#define COUNTDOWN_H "(C) Andrew L. Heilveil, 2017"
 
 /** if non-zero then decrement else leave alone */
 class CountDown {

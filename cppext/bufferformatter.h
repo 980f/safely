@@ -1,5 +1,5 @@
 #ifndef BUFFERFORMATTER_H
-#define BUFFERFORMATTER_H
+#define BUFFERFORMATTER_H "(C) Andrew L. Heilveil, 2017"
 
 #include "charformatter.h"
 #include "numberformat.h"

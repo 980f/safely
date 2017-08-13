@@ -1,5 +1,5 @@
 #ifndef ABSTRACTPIN_H
-#define ABSTRACTPIN_H
+#define ABSTRACTPIN_H "(C) Andrew L. Heilveil, 2017"
 
 
 class AbstractPin {

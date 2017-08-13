@@ -1,5 +1,5 @@
 #ifndef NUMBERPARSER_H
-#define NUMBERPARSER_H
+#define NUMBERPARSER_H "(C) Andrew L. Heilveil, 2017"
 
 #include "eztypes.h"
 

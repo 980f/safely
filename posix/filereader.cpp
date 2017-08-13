@@ -1,3 +1,4 @@
+//"(C) Andrew L. Heilveil, 2017"
 #include "filereader.h"
 
 #include "fcntlflags.h"
@@ -7,26 +8,6 @@
 #include "logger.h"
 
 static Logger bug("FileReader",false);
-
-//bool FileReader::onRead(__ssize_t ret){
-//  if(ret>=0){//then it is # of bytes transferred
-//    ++blocksin;
-//    received+=ret;
-//    buf.skip(ret);
-//    action();
-
-//    if(expected>received){
-//      if(buf.freespace()==0){
-//        buf.rewind();
-//      }
-//      return true;
-//    } else {
-//      onCompletion();
-//      return false;
-//    }
-//  }
-//  return false;
-//}
 
 bool FileReader::action(){
   bug("Received: %ld of %ld, \tBlocks: %d of %d",freader.transferred,freader.expected,freader.blockstransferred,freader.blocksexpected);
@@ -40,8 +21,7 @@ void FileReader::onCompletion(){
 FileReader::FileReader():
   fd("FileReader"),
   buf(buffer,sizeof(buffer)),
-  freader(true/*read*/,fd,buf)
-{
+  freader(true/*read*/,fd,buf){
 //#nada
 }
 
@@ -66,5 +46,4 @@ bool FileReader::process(TextKey fname){
   }
   return false;
 }
-
 
