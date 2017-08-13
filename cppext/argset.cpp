@@ -62,6 +62,9 @@ ArgSet::~ArgSet(){
  //#nada, we wrap data, we don't own it.
 }
 
+double ArgStack::theStack[Blocksize*numEntries];
+unsigned ArgStack::sp=0;
+
 ConstArgSet::ConstArgSet(const double* d, int sizeofd) : Indexer<const double>(d, sizeofd){
 }
 

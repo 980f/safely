@@ -36,7 +36,7 @@ class ArgStack : public ArgSet {
 public:
   ArgStack():ArgSet(&theStack[Blocksize*sp],sp>=numEntries?0:sizeof(double)*Blocksize){
     if(++sp>numEntries){
-      wtf(1942);
+//      wtf(1942);
     }
     clearUnused();//for debug, and to mimic past use
   }
@@ -48,8 +48,7 @@ public:
   }
 
 };
-//move to argset.cpp:
-unsigned ArgStack::sp=0;
+
 
 #define MessageArgs ArgStack args()
 //for those rare occasions where two guys are in play at the same time.

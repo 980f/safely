@@ -33,7 +33,8 @@ SOURCES += \
     posix/microseconds.cpp \
     posix/telnetserver.cpp \
     posix/socketeer.cpp \
-    posix/jsonfile.cpp
+    posix/jsonfile.cpp \
+    cppext/unionizer.cpp
 
 
 HEADERS += \
@@ -55,7 +56,8 @@ HEADERS += \
     posix/application.h \
     posix/incrementalfiletransfer.h \
     posix/memorymapper.h \
-    posix/microseconds.h 
+    posix/microseconds.h \ 
+    cppext/unionizer.h
 
 
 ##get posix linked many times: names is relative to build directory, not project
