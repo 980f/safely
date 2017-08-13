@@ -34,7 +34,7 @@ SOURCES += \
     posix/telnetserver.cpp \
     posix/socketeer.cpp \
     posix/jsonfile.cpp \
-    cppext/unionizer.cpp
+    cppext/numericalvalue.cpp
 
 
 HEADERS += \

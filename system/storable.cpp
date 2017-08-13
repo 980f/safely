@@ -35,7 +35,7 @@ Storable::Storable(TextKey name, bool isVolatile) :
   isVolatile(isVolatile),
   type(NotKnown),
   q(Empty),
-  number(0),
+  number(),
   parent(nullptr),
   index(BadIndex),
   enumerated(nullptr),

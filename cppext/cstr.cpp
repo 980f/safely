@@ -172,37 +172,3 @@ void Cstr::rawcvt(double &val, char **units) const noexcept{
 void Cstr::clear() noexcept{
   ptr = nullptr;
 }
-
-//template<> long Cstr::cvt(long onNull, Cstr *units) const noexcept {
-//  if(nonTrivial(ptr)){
-//    return strtol(ptr, units? const_cast<char **>(&units->ptr) : nullptr,10);
-//  } else {
-//    return onNull;
-//  }
-//}
-
-//template<> unsigned Cstr::cvt(unsigned onNull, Cstr *units) const noexcept {
-//  if(nonTrivial(ptr)){
-//    return strtoul(ptr, units? const_cast<char **>(&units->ptr) : nullptr,10);
-//  } else {
-//    return onNull;
-//  }
-//}
-
-//template<> int Cstr::cvt(int onNull, Cstr *units) const noexcept {
-//  if(nonTrivial(ptr)){
-//    return strtol(ptr, units? const_cast<char **>(&units->ptr) : nullptr,10);
-//  } else {
-//    return onNull;
-//  }
-//}
-
-
-
-//template<> double Cstr::cvt(double onNull, Cstr *units) const noexcept {
-//  if(nonTrivial(ptr)){
-//    return strtod(ptr, units? const_cast<char **>(&units->ptr) : nullptr);
-//  } else {
-//    return onNull;
-//  }
-//}

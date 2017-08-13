@@ -17,6 +17,7 @@
 #include "gatedsignal.h"
 
 #include "textpointer.h"
+#include "numericalvalue.h"
 
 //class used for communicating keys, once was also for the actual storage.
 typedef TextKey NodeName;
@@ -93,7 +94,7 @@ protected:
   /** for debug of file read and write stuff, not used in application logic (as far as we know) */
   Quality q;
   /** value if type is numeric or enum */
-  double number;
+  NumericalValue number;
   /** value if type is textual or enum, also used for class diagnostics */
   TextValue text;
 public:   //made public for sibling access, could hide it with some explicit sibling methods.
