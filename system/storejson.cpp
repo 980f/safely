@@ -1,28 +1,18 @@
+//"(C) Andrew L. Heilveil, 2017"
 #include "safely.h"
 #include "storejson.h"
 #include "textpointer.h"
 #include "cheaptricks.h"
 
 
-//StoreJsonParser::StoreJsonParser(Indexer<u8> &data):AbstractJSONparser(core),core(data){
-//  //default inits of members NOT happening!
-//  stats.reset();
-//  parser.reset(true);
-//}
-
-StoreJsonParser::StoreJsonParser(Indexer<char> &data):AbstractJSONparser(core),core(data)
-{
+StoreJsonParser::StoreJsonParser(Indexer<char> &data):AbstractJSONparser(core),core(data){
   stats.reset();
   parser.reset(true);
 }
 
-//StoreJsonConstructor::StoreJsonConstructor(Indexer<u8> &data):
-//  data(data){
-//  //#nada
-//}
 
 StoreJsonConstructor::StoreJsonConstructor(Indexer< char> &data):data(data){//might want to getHead or Tail vs copy construct.
-
+  //#nada
 }
 
 Text StoreJsonConstructor::extract(Span &span) {
@@ -33,7 +23,7 @@ Storable *StoreJsonConstructor::insertNewChild(Storable *parent, Text &name, boo
   Storable *nova=nullptr;
   if(parent){
     if(name.empty()){
-      nova=&parent->addChild("");//array element, do NOT make all nameless entities the same entity.
+      nova=&parent->addChild("");//typically an array element, do NOT make all nameless entities the same entity.
     } else {
       nova=&parent->child(name);
     }

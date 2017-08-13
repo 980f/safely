@@ -1,5 +1,5 @@
 #ifndef CONVERTER_H
-#define CONVERTER_H
+#define CONVERTER_H "(C) Andrew L. Heilveil, 2017"
 
 #include "buffer.h"
 

@@ -1,5 +1,5 @@
 #ifndef TIMERFD_H
-#define TIMERFD_H
+#define TIMERFD_H "(C) Andrew L. Heilveil, 2017"
 /** timer service via file descriptor */
 #include "posixwrapper.h"
 #include "fildes.h"

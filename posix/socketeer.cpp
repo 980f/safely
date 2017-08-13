@@ -1,3 +1,4 @@
+//"(C) Andrew L. Heilveil, 2017"
 #include "socketeer.h"
 
 #include <sys/socket.h>  //struct sockaddr, gethostbyname_r
@@ -19,7 +20,7 @@ bool Socketeer::makeSocket(){
     return false;//couldn't resolve host
   }
 
-  int fnum;
+  int fnum=~0;
   if(okValue(fnum,::socket(connectArgs.res->ai_family, connectArgs.res->ai_socktype |SOCK_NONBLOCK, connectArgs.res->ai_protocol))){
     return preopened(fnum,true);
   } else {
@@ -45,7 +46,7 @@ bool Socketeer::isConnected(){
 }
 
 bool Socketeer::isDead(){
-  //todo: how do we detect a client is dead? Probably by last read error.
+  //todo:1 how do we detect a client is dead? Probably by last read error.
   if(lastRead==EPIPE){
     disconnect();
     lastRead=0;
@@ -85,8 +86,7 @@ const char * Socketeer::connect(){
   } else {
     connected=1;
     connectArgs.keep(one);
-    //maydo: connectArgs.free();
-//maydo:    connectArgs.clip();//todo: integrate this with keep, i.e. keep (what we need from) the given one and free the rest.
+    //maydo: free the unused ones here, instead of later.
     bug("Connected OK");
     errornumber=0;//forget any lingering error indication.
     return nullptr;//success
@@ -171,10 +171,13 @@ bool Socketeer::accept(const Spawner &spawner, bool blocking){
   }
 }
 
+unsigned Socketeer::atPort(){
+  return isConnected()? portnumber : BadIndex;
+}
+
 Socketeer::Socketeer ():Fildes("SOCK"),
   portnumber(BadIndex),
-  connected(-1)
-{
+  connected(-1){
   //#nada
 }
 
@@ -270,8 +273,7 @@ void HostInfo::clip(){
 HostInfo::HostInfo():
   gotten(false),
   getError(0),
-  res(nullptr)
-{
+  res(nullptr){
   hint();
 }
 
@@ -283,7 +285,7 @@ void HostInfo::hint(bool tcp){
   hints.ai_family= AF_UNSPEC ;//   AF_INET and AF_INET6.
   hints.ai_socktype=tcp?SOCK_STREAM:SOCK_DGRAM;// SOCK_STREAM , someday: SOCK_DGRAM, 0 for any
   hints.ai_protocol =tcp?6:17;  //6 to limit to TCP, 17 for UDP else see https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml
-  hints.ai_flags =0; //todo: systematize for numeric name
+  hints.ai_flags =0; //todo:1 systematize for numeric name
 
   //the rest are zeroed for safety.
   hints.ai_addrlen=0;
@@ -306,6 +308,6 @@ unsigned SockAddress::getIpv4(){
     sockaddr_in &sin(*reinterpret_cast<sockaddr_in*>(&address));
     return ntohl(sin.sin_addr.s_addr);
   } else {
-    return BadIndex;//todo:0 this is NOT a bad ip address, need to get that from some RFC.
+    return BadIndex;//todo:1 this is NOT a bad ip address (it is a broadcast), need to get that from some RFC.
   }
 }

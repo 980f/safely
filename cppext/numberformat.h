@@ -1,5 +1,5 @@
 #ifndef NUMBERFORMAT_H
-#define NUMBERFORMAT_H
+#define NUMBERFORMAT_H "(C) Andrew L. Heilveil, 2017"
 
 #include "countdown.h"
 #include "numberpieces.h"

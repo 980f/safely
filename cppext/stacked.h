@@ -1,5 +1,5 @@
 #ifndef STACKED_H
-#define STACKED_H
+#define STACKED_H "(C) Andrew L. Heilveil, 2017"
 
 /** when an object has some state that needs to be stacked, such as in a recursive descent parser,
 this class uses destruction to ensure a pop occurs when it should.

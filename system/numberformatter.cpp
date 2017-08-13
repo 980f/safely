@@ -1,7 +1,7 @@
+//"(C) Andrew L. Heilveil, 2017"
 #include "numberformatter.h"
 
 #include "charformatter.h"
-
 
 NumberFormatter::NumberFormatter(int precision, TextKey postfix) :
   postfix(postfix){

@@ -1,5 +1,5 @@
 #ifndef EPOLLER_H
-#define EPOLLER_H
+#define EPOLLER_H "(C) Andrew L. Heilveil, 2017"
 
 #include "posixwrapper.h"
 #include "sys/epoll.h" //for event type

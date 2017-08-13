@@ -1,5 +1,5 @@
 #ifndef HALFOPEN_H
-#define HALFOPEN_H
+#define HALFOPEN_H "(C) Andrew L. Heilveil, 2017"
 
 #include "safely.h"
 /** a simple range class, simpler than Range and optimized for first use of HalfOpen(arrayIndex) */

@@ -1,3 +1,4 @@
+//"(C) Andrew L. Heilveil, 2017"
 #include "numberpieces.h"
 
 #include "math.h"  //must precede minimath for intbin to have access to modf

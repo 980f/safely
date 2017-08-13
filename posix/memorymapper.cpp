@@ -1,3 +1,4 @@
+//"(C) Andrew L. Heilveil, 2017"
 #include "memorymapper.h"
 #include "fcntlflags.h"
 #include <sys/mman.h>

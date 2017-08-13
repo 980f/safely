@@ -1,5 +1,5 @@
 #ifndef STOREJSON_H
-#define STOREJSON_H
+#define STOREJSON_H "(C) Andrew L. Heilveil, 2017"
 
 #include "storable.h"
 #include "buffer.h"
@@ -12,7 +12,6 @@ class StoreJsonConstructor: public JsonConstructor<Storable,Text> {
 public:
   /** pointer to data source, exposed for module testing convenience */
   Indexer<char> data;
-//  StoreJsonConstructor(Indexer<u8> &data);
   StoreJsonConstructor(Indexer<char> &data);
 
   virtual ~StoreJsonConstructor()=default;
@@ -37,11 +36,8 @@ public:
 
 };
 
-class StoreJsonParser: public AbstractJSONparser<Storable, Text> {
-public: //accessing root when done, should also set it for some usages.
+struct StoreJsonParser: public AbstractJSONparser<Storable, Text> {
   StoreJsonConstructor core;
-public:
-//  StoreJsonParser(Indexer<u8> &data);
   StoreJsonParser(Indexer<char>&data);
 } ;
 

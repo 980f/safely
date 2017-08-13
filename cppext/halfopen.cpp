@@ -1,3 +1,4 @@
+//"(C) Andrew L. Heilveil, 2017"
 #include "halfopen.h"
 
 Span::Span(Index low, Index high):HalfOpen(low,high){}

@@ -1,3 +1,4 @@
+//"(C) Andrew L. Heilveil, 2017"
 #include "application.h"
 #include "errno.h"
 
@@ -14,7 +15,7 @@
 #include "cheaptricks.h" //take()
 
 bool Application::setQuickCheck(unsigned soonish){
-  if(soonish<quickCheck){
+  if(quickCheck==0 || soonish<quickCheck){
     quickCheck=soonish;
     return true;
   } else {
@@ -43,7 +44,6 @@ void Application::logArgs(){
     const char *arg=listlist.next();
     dbg("arg[%d]=%s",listlist.ordinal()-1,arg);
   }
-
 }
 
 void Application::logCwd(){
@@ -55,8 +55,8 @@ void Application::logCwd(){
 int Application::run(){
   beRunning=true;
   while(beRunning){
-    //todo: libusb sometimes wants us to get back to it perhaps sooner than our period is set for.
     int nextPeriod=period;
+    //use case: libusb sometimes wants us to get back to it perhaps sooner than our period is set for.
     if(quickCheck>0){
       if(quickCheck<period){
         nextPeriod=take(quickCheck);
@@ -65,7 +65,6 @@ int Application::run(){
       }
     }
     if(justTime){
-
       NanoSeconds sleeper;
       NanoSeconds dregs;
       dregs.setMillis(nextPeriod);

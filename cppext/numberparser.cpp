@@ -1,3 +1,4 @@
+//"(C) Andrew L. Heilveil, 2017"
 #include "numberparser.h"
 
 #include "minimath.h"

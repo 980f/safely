@@ -1,5 +1,5 @@
 #ifndef ABSTRACTJSONPARSER_H
-#define ABSTRACTJSONPARSER_H
+#define ABSTRACTJSONPARSER_H "(C) Andrew L. Heilveil, 2017"
 
 /** an abstract json parser.
  *  @see StoredJSONparser.

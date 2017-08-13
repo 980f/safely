@@ -1,6 +1,5 @@
 #ifndef CHAR_H
-#define CHAR_H
-
+#define CHAR_H "(C) Andrew L. Heilveil, 2017"
 
 /** like strchr but with idiot checks on the parameters */
 bool isPresent(const char *flags, char flag);
