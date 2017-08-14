@@ -137,15 +137,18 @@ const Enumerated *Storable::getEnumerizer() const {
 }
 
 //return whether node was altered
-bool Storable::convertToNumber(bool ifPure){
+bool Storable::convertToNumber(bool ifPure,NumericalValue::Detail subtype){
   if(is(Storable::Numerical)) {
-    return false;//already a number
+    return number.changeInto(subtype);
+//    return false;//already a number
   } else {//convert image to number,
+    //todo:0 refine detection
     bool impure(true);
     double ifNumber(toDouble(text.c_str(), &impure));
 
     if(!ifPure || !impure) {//if we don't care if it is a pure number, or if it is pure
       setType(Storable::Numerical);
+      number.changeInto(subtype);
       setNumber(ifNumber, q);
       return true;
     } else {
@@ -228,9 +231,9 @@ bool Storable::wasModified(){
     }
     return changes > 0 || thiswas;
   }
-    //  JOIN;
+    //#JOIN;
   case Numerical:
-    //JOIN;
+    //#JOIN;
   case Textual:
     return thiswas;
   } // switch
@@ -370,7 +373,7 @@ double Storable::setValue(double value, Storable::Quality quality){
     //if enumerized then leave the type as is and update text
     text = enumerated->token(value);
   } else {
-    notifeye |= setType(Numerical);
+    notifeye |= setType(Numerical);//todo:0 refine subtype of number
   }
   also(notifeye); //record changed, but only trigger on fresh change
   if(notifeye) {
@@ -391,7 +394,7 @@ void Storable::setImageFrom(TextKey value, Storable::Quality quality){
       if(type==Numerical){
         text=value; //#bypass change detect here
         bool impure(true);//4 debug
-        setValue(toDouble(text.c_str(), &impure),quality);
+        setValue(toDouble(text.c_str(), &impure),quality);//todo:0 refine subtype of number
         return;//already invoked change in setValue
       }
 //      if(type==Wad && AllowRemoteWadOperations){
@@ -428,7 +431,6 @@ Cstr Storable::image(void){
     } else {
       char buffer[64+1];//enough for 64 bit boolean image
       CharFormatter formatter(buffer,sizeof(buffer));
-
       switch(number.is){
       case NumericalValue::Truthy:
         text.copy(number.as<bool>()?"1":"0");
@@ -530,8 +532,8 @@ Storable &Storable::getRoot() {
   return *searcher;
 }
 
-int Storable::setSize(unsigned qty){
-  int changes=0;
+unsigned Storable::setSize(unsigned qty){
+  unsigned changes=0;
   while(qty<wad.quantity()){
     wad.removeLast();
     wadWatchers.emit(true,wad.quantity());
