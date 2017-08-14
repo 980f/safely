@@ -114,6 +114,7 @@ bool Storable::setQuality(Quality quality){
 void Storable::setEnumerizer(const Enumerated *enumerated){
   if(changed(Storable::enumerated, enumerated)) {
     if(enumerated) {
+      number.changeInto(NumericalValue::Detail::Counting);
       if((q >= Parsed) && is(Storable::Textual)) { //if already has a text value
         number = enumerated->valueOf(text.c_str()); //reconcile numeric value
       } else {
@@ -124,6 +125,7 @@ void Storable::setEnumerizer(const Enumerated *enumerated){
         text = enumerated->token(number);
       }
     } else {
+      number.changeInto(NumericalValue::Detail::Counting);
       //todo:1 should we do anything when the text is removed?
       setType(Storable::Numerical); //so booleans which were labeled solely for a gui are saved as canonical false/true
     }
@@ -193,8 +195,9 @@ bool Storable::isModified() const {
         return true;
       }
     }
-    //  JOIN
+    //#JOIN
   case Numerical:
+    //#JOIN
   case Textual:
     return ChangeMonitored::isModified();
   default:
@@ -360,7 +363,7 @@ void Storable::assignFrom(Storable&other){
 } // assignFrom
 
 double Storable::setValue(double value, Storable::Quality quality){
-  bool notifeye = changed(number, value);
+  bool notifeye = number.setto(value);
 
   notifeye |= setQuality(quality);
   if(enumerated) {
@@ -412,19 +415,36 @@ void Storable::setImage(const TextKey &value, Quality quality){
 
 Cstr Storable::image(void){
   switch(type) {
-  default://ignore warning, if we remove it we get a different warning.
+  default://#ignore warning, if we remove it we get a different warning.
   case Uncertain:
     resolve(false);
     //  JOIN;
-  case Textual:
+  case Textual://#ignore warning, if we remove it we get a different warning.
     return text;
 
   case Numerical:
     if(enumerated) {
-      return enumerated->token(int(number));//don't update text, this is much more efficient since enumerated is effectively static.
+      return enumerated->token(number.as<int>());//don't update text, this is much more efficient since enumerated is effectively static.
     } else {
-      //set the internal image without triggering change detect
-      text.copy(NumberFormatter::makeNumber(number));
+      char buffer[64+1];//enough for 64 bit boolean image
+      CharFormatter formatter(buffer,sizeof(buffer));
+
+      switch(number.is){
+      case NumericalValue::Truthy:
+        text.copy(number.as<bool>()?"1":"0");
+        break;
+      case NumericalValue::Whole:
+        formatter.printSigned(number.as<int>());
+        text.copy(buffer);
+        break;
+      case NumericalValue::Counting:
+        formatter.printUnsigned(number.as<unsigned>());
+        break;
+      case NumericalValue::Floating:
+        //set the internal image without triggering change detect
+        text.copy(NumberFormatter::makeNumber(number));
+        break;
+      }
       return text;
     }
   case Wad:

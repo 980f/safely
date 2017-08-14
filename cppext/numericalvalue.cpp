@@ -1,7 +1,8 @@
 #include "numericalvalue.h"
 #include "logger.h"
 #include "eztypes.h"
-#include "minimath.h"
+#include "minimath.h" //nan
+#include "cheaptricks.h" //changed
 
 NumericalValue::NumericalValue(){
  storage.dee=0;//one way to get it to be all zeroes.
@@ -97,6 +98,20 @@ double NumericalValue::value() const noexcept {
     return storage.dee;
   }
   return Nan;
+}
+
+bool NumericalValue::setto(double d){
+  switch (is) {
+  case Truthy:
+    return changed(storage.bee,d!=0.0);
+  case Whole:
+    return changed(storage.eye,int(d));
+  case Counting:
+    return changed(storage.ewe,unsigned(d));
+  case Floating:
+    return changed(storage.dee,d);
+  }
+  return false;
 }
 
 void NumericalValue::operator =(double d){
