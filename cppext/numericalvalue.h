@@ -50,6 +50,8 @@ public:
   }
 
   /** assign value from @param d converting if needed. */
+  bool setto(double d);
+  /** assign value from @param d converting if needed. */
   void operator =(double d);
 
   /** demo of essential syntax*/

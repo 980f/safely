@@ -3,7 +3,7 @@
 
 #include "textpointer.h"
 #include "numberformat.h"
-
+/** print number into string. */
 struct NumberFormatter {
   /** meaning of @see precision field */
   NumberFormat nf;

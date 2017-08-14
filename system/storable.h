@@ -198,11 +198,15 @@ public:
    * numerical with gay disregard for its previous type. */
   template<typename Numeric> Numeric setNumber(Numeric value, Quality quality = Edited){
     setValue(static_cast<double>(value), quality);
-    return static_cast<Numeric>(number);
+    return number;
+  }
+
+  void setNumber(NumericalValue other){
+    number=other;
   }
 
   template<typename Numeric> Numeric getNumber() const {
-    return static_cast<Numeric>(number);
+    return number;
   }
 
   /** if no value has been set from parsing a file or program execution then set a value on the node. Defaults are normally set via ConnectChild macro. */
