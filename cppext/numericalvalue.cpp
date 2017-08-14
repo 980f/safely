@@ -132,6 +132,13 @@ void NumericalValue::operator =(double d){
 
 }
 
+template <> NumericalValue::Detail detail<double>(){ return NumericalValue::Detail::Floating;}
+template <> NumericalValue::Detail detail<int>(){ return NumericalValue::Detail::Whole;}
+template <> NumericalValue::Detail detail<unsigned>(){ return NumericalValue::Detail::Counting;}
+template <> NumericalValue::Detail detail<unsigned short>(){ return NumericalValue::Detail::Counting;}
+template <> NumericalValue::Detail detail<bool>(){ return NumericalValue::Detail::Truthy;}
+
+
 #include <cinttypes>
 void NumericalValue::testUsage(){
   NumericalValue u;

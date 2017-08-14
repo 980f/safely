@@ -58,4 +58,7 @@ public:
   static void testUsage();
 };
 
+//explicit instantiations are made in numericalvalue.cpp, add for each type that gives you a linker error.
+template <typename Numeric> NumericalValue::Detail detail();
+
 #endif // UNIONIZER_H

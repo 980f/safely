@@ -108,7 +108,6 @@ protected:
   /** set by StoredEnum when one is created, maintains parallel text.*/
   const Enumerated *enumerated; //expected to be a globally shared one
 
-
   /** calls watchers */
   void notify() const;
   void recursiveNotify() const;
@@ -141,7 +140,7 @@ public:
 
   /** @returns whether the text value was converted to a number. @param ifPure is whether to restrict the conversion to strings that are just a number, or whether
    * trailing text is to be ignored. */
-  bool convertToNumber(bool ifPure);
+  bool convertToNumber(bool ifPure,NumericalValue::Detail numtype=NumericalValue::Detail::Floating);
 /** convert an Unknown to either Numerical or Text depending upon purity, for other types @returns false */
   bool resolve(bool recursively);
 
@@ -155,7 +154,7 @@ public:
 
 #if StorableDebugStringy
   /** @return number of changes */
-  int listModified(sigc::slot<void, Ustring> textViewer) const;
+  unsigned listModified(sigc::slot<void, Ustring> textViewer) const;
 #endif
   Text fullName() const;
 
@@ -242,7 +241,7 @@ public:
   /** @return whether text value of node textually equals @param zs (at one time a null terminated string) */
   bool operator ==(TextKey zs);
 
-  /** @returns number of child nodes. using int rather than size_t to reduce number of casts required */
+  /** @returns number of child nodes. using unsigned rather than size_t to reduce number of casts required */
   unsigned numChildren() const { //useful with array-like nodes.
     return wad.quantity();
   }
@@ -325,7 +324,7 @@ public:
   /** @returns rootnode of this node, this if this is a root node.*/
   Storable &getRoot();
   /** force size of wad. */
-  int setSize(unsigned qty);
+  unsigned setSize(unsigned qty);
   /** find/create from an already parsed path. Honors '#3' notation for child [3]*/
   Storable *getChild(ChainScanner<Text> &progeny, bool autocreate);
 private:
@@ -335,7 +334,6 @@ private:
 /** iterate over the children of given node (kinder is german  plural for child, like kindergarten) */
 #define ForKinder(node) for(auto list(node.kinder()); list.hasNext(); )
 #define ForKinderConstly(node) for(auto list(node.kinder()); list.hasNext(); )
-
 
 
 /** auto creating iterator that provides for deleting the unscanned items.
