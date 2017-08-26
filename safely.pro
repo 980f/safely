@@ -15,3 +15,9 @@ QMAKE_CFLAGS += -funsigned-char
 
 #safely projects put their application specific library altering includes above the module src path.
 INCLUDEPATH += ..
+
+HEADERS += \
+    system/managedblock.h
+
+SOURCES += \
+    system/managedblock.cpp
