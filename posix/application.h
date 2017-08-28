@@ -23,8 +23,7 @@ protected:
   bool beRunning;
   /** called with each event, especially when period is up. Not harmonic */
   virtual bool keepAlive();
-
-  //until epoll works sanely on both platforms run() will just run a timer.
+  /** until epoll works sanely on both platforms run() will just run a timer. */
   bool justTime=true;
 
 public:
@@ -44,7 +43,7 @@ public:
 public: //utilities
   /** @returns a copy of the hostname, not a static function as it records errors from the attempt */
   Text hostname();//not static as we record errors
-  /** write pid to file. best practice if for that file to be in /tmp so that it evaporates on a crash of the system. */
+  /** write pid to file. best practice is for that file to be in /tmp so that it evaporates on a crash of the system. */
   static bool writepid(TextKey pidname);
 };
 

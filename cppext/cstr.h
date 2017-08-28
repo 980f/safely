@@ -94,20 +94,7 @@ public:
   /** strtod */
   double asNumber(Cstr *tail=nullptr)const noexcept;
 
-private: //fodder for cvt():
-  void rawcvt(long &val,char **units)const noexcept;
-  void rawcvt(unsigned &val,char **units)const noexcept;
-  void rawcvt(int &val,char **units)const noexcept;
-  void rawcvt(double &val,char **units)const noexcept;
-public:
-
-  template <typename Numeric> Numeric cvt(Numeric onNull, Cstr *units=nullptr)const noexcept{
-    if(nonTrivial(ptr)){
-      rawcvt(onNull, units? const_cast<char **>(&units->ptr) : nullptr);
-    }
-    return onNull;
-  }
-
+  template <typename Numeric> Numeric cvt(Numeric onNull, Cstr *units=nullptr)const noexcept;
   /** forget the target */
   virtual void clear() noexcept;
 

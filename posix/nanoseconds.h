@@ -1,5 +1,5 @@
 #ifndef NANOSECONDS_H
-#define NANOSECONDS_H
+#define NANOSECONDS_H "(C) Andrew L. Heilveil, 2017"
 
 #include <time.h>
 /**

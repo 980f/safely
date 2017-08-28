@@ -8,7 +8,7 @@ IncrementalFileTransfer::IncrementalFileTransfer(bool reader, Fildes &fd, ByteSc
   amReader(reader),
   fd(fd),
   buf(buf){
-
+  //#nada
 }
 
 

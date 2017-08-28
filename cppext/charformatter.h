@@ -55,6 +55,7 @@ public:
 
   bool printSigned(int value);
   bool printNumber(double d, int sigfig = 9);//9: 200 million is biggest number that we won't lose a bit of.
+
   bool printNumber(double d, const NumberFormat &nf, bool addone=false);
   /** printNUmber(double,int) prints significant figures, this prints fixedpoint*/
   bool printDecimals(double d, int decimals);

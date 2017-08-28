@@ -41,6 +41,7 @@ public:
   ConstArgSet(const double *d, int sizeofd);
   ConstArgSet(const ArgSet &other);
   ConstArgSet(const ConstArgSet &other);
+  ~ConstArgSet()=default;
 };
 
 

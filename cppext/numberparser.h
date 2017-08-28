@@ -6,8 +6,6 @@
 /** number parser (think atoi/atod/atol) receiver style */
 #include "numberpieces.h"
 
-
-
 /** a parser that is fed characters sequentially */
 class PushedNumberParser : public NumberPieces {
   enum Phase {
@@ -44,8 +42,6 @@ private:
   bool fail();
 
 }; // class PushedNumberParser
-
-
 
 
 #endif // NUMBERPARSER_H

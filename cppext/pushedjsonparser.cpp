@@ -1,5 +1,5 @@
 //"(C) Andrew L. Heilveil, 2017"
-#include "safely.h"  
+#include "safely.h"
 #include "pushedjsonparser.h"
 #include "utf8.h"
 #include "localonexit.h"
