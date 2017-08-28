@@ -1,7 +1,7 @@
 #ifndef BLOCK_H
 #define BLOCK_H "(C) Andrew L. Heilveil, 2017"
 
-#include <utility>
+//#include <utility>
 
 /** basic block manager  */
 template <typename Content> class Block {
@@ -9,7 +9,7 @@ template <typename Content> class Block {
   Content *buffer;
   bool owner;
 public:
-  /** dangerous constructor, trusting caller knows the length of the buffer */
+  /** dangerous constructor, trusts that caller knows the length of the buffer */
   Block(unsigned length,Content *buffer,bool ownit=false):
     length(length),
     buffer(buffer),

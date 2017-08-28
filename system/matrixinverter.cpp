@@ -6,7 +6,7 @@
 //@deprecated: use modern for loop constructs
 #define forSize(si) for(int si=size;si-->0;)
 
-#ifdef MATRIX_INIVERT_NO_LOGGING
+#ifdef MATRIX_INVERT_NO_LOGGING
 #define mdbg(...)
 void MatrixInverter::dump(bool please) {
   if(showDump&&please) {
