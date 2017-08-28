@@ -1,3 +1,4 @@
+//"(C) Andrew L. Heilveil, 2017"
 #include "microseconds.h"
 
 #include "minimath.h"

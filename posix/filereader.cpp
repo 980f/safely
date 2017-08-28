@@ -22,7 +22,7 @@ FileReader::FileReader():
   fd("FileReader"),
   buf(buffer,sizeof(buffer)),
   freader(true/*read*/,fd,buf){
-//#nada
+  //#nada
 }
 
 FileReader::~FileReader(){

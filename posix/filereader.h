@@ -4,7 +4,7 @@
 #include "fileasynchio.h"
 
 class FileReader{
-  u8 buffer[2049];//how shall we make this user programmable?-> malloc the buffer based in input block size from FileInfo (via caller)
+  u8 buffer[2049];//how shall we make this user programmable?-> malloc the buffer based on input block size from FileInfo (via caller)
   Fildes fd;
 protected:
   ByteScanner buf;

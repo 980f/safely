@@ -56,7 +56,7 @@ int Application::run(){
   beRunning=true;
   while(beRunning){
     int nextPeriod=period;
-    //use case: libusb sometimes wants us to get back to it perhaps sooner than our period is set for.
+    //first use: libusb sometimes wants us to get back to it perhaps sooner than our period is set for.
     if(quickCheck>0){
       if(quickCheck<period){
         nextPeriod=take(quickCheck);
@@ -64,7 +64,7 @@ int Application::run(){
         quickCheck-=period;
       }
     }
-    if(justTime){
+    if(justTime){ //added to deal with corruption of callbacks on raspberry pi, ignore callbacks.
       NanoSeconds sleeper;
       NanoSeconds dregs;
       dregs.setMillis(nextPeriod);

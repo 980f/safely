@@ -3,7 +3,6 @@
 
 #include "minimath.h"
 #include "cheaptricks.h"
-
 #include "ctype.h"
 
 void PushedNumberParser::reset(){
@@ -13,7 +12,7 @@ void PushedNumberParser::reset(){
 }
 
 bool PushedNumberParser::applydigit(u64 &accum,char ch){
-  //todo: check for accumulator overflow. If so then we don't shift in digits, just inc pow10 as relevent.
+  //check for accumulator overflow. If so then we don't shift in digits, just inc pow10 as relevent.
   if(accum > DecimalCutoff){
     return false;
   }

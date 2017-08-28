@@ -1,14 +1,34 @@
 #ifndef BLOCK_H
 #define BLOCK_H "(C) Andrew L. Heilveil, 2017"
 
-#include <utility>
+//#include <utility>
 
-template <typename Content> struct Block {
+/** basic block manager  */
+template <typename Content> class Block {
   unsigned length;
   Content *buffer;
+  bool owner;
+public:
+  /** dangerous constructor, trusts that caller knows the length of the buffer */
+  Block(unsigned length,Content *buffer,bool ownit=false):
+    length(length),
+    buffer(buffer),
+    owner(ownit){
+    //#nada
+  }
+  /** creates one*/
+  Block(unsigned length):Block(length,new Content[length],true){
+   //#nada
+  }
 
-  Block(unsigned length,Content *buffer):length(length),buffer(buffer){}
-  ~Block(){}
+  ~Block(){
+    if(owner){
+      delete []buffer;
+      buffer=nullptr;//reduce use-after-free damage, should NPE instead of random trashing.
+      length=0;
+      owner=0;
+    }
+  }
   //implicit copy and move operations work fine.
 
   /** index validator */
@@ -26,7 +46,7 @@ Note: the Cstr class in this library does sane things with a returned null point
   }
 
   /** only a good idea if the class has a move constructor. */
-  Content operator ()(unsigned index,const Content &&defawlt)const noexcept{
+  Content& operator ()(unsigned index,const Content &defawlt) const noexcept{
     if(contains(index)){
       return  buffer[length];
     }
