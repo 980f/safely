@@ -14,10 +14,5 @@ QMAKE_CFLAGS += -funsigned-char
 #perhaps: QMAKE_CFLAGS += -Wno-pointer-sign
 
 #safely projects put their application specific library altering includes above the module src path.
-INCLUDEPATH += ..
+INCLUDEPATH += $$PWD
 
-HEADERS += \
-    system/managedblock.h
-
-SOURCES += \
-    system/managedblock.cpp

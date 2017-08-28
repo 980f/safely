@@ -25,6 +25,12 @@ public:
     return node.setNumber< Numeric >(newnum);
   }
 
+  /** try to make sense of @param value as a number and if it seems to be one set this to that value, else no change.
+ @returns the actual value of the node, which may not be the value passed in. */
+  Numeric setFromText(Cstr value){
+    return assign(value.cvt<Numeric>(native()));
+  }
+
   Numeric operator = (Numeric newnum) {
     return assign(newnum);
   }

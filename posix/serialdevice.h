@@ -35,7 +35,6 @@ public:
 //  };
 //  bool updateDigitalOutputs(const DigitalOutputs &bits);
 
-  //will extract a base class common to GPIO bits for this.
   class Pin {
   public:
     enum Which {
