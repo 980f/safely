@@ -6,6 +6,8 @@
 class TimerFD:public PosixWrapper {
 public://handy for debug
   Fildes fd;
+private:
+  double period;
 public:
   TimerFD();
   /** set period and initial delay to same value */
@@ -17,6 +19,10 @@ public:
   int asInt()const{
     return fd.asInt();
   }
+
+  double getPeriod()const noexcept;
+
+  unsigned chunks(double hz);
 
 };
 

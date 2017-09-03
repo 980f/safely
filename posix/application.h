@@ -11,7 +11,7 @@ class Application: public PosixWrapper {
 protected:
   Indexer<TextKey> arglist;
   Epoller looper;
-  /** sampling period in millseconds*/
+  /** ticks in logic driver period */
   unsigned period;
   /** if greater than zero and less than period it replaces period for one cycle */
 private:

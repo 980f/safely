@@ -23,9 +23,12 @@ bool FileWriter::process(TextKey fname, const ByteScanner &source,unsigned block
     fmover.prepare(blocksize);
     if(fmover.go()){
       return true;
+    } else {
+      return false;
     }
+  } else {
+    return false;
   }
-  return false;
 }
 
 unsigned FileWriter::remaining() const {
