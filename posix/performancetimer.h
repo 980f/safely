@@ -4,7 +4,7 @@
 #include "logger.h"
 #include "stopwatch.h"
 #include "textpointer.h"
-/** on creation stars timer, on destruction reports elapsed time */
+/** on creation starts timer, on destruction reports elapsed time */
 class PerformanceTimer{
 public:
   Text prefix;
