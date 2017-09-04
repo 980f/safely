@@ -78,7 +78,8 @@ public:
   bool isConnected();
 
   bool isDead();
-
+  /** @returns whether socket might be in blocking mode, not the same as willBlock, this checks the mode setting not the state. */
+  bool isBlocking();
   /** connect using stored host parameters, @returns nullptr on success else it is an error message. */
   const char * connect();
   /** forcefully close, release resources */
