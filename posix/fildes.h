@@ -53,6 +53,9 @@ public:
 @returns a FILE pointer for the same file */
   FILE * getfp(const char *fargs=nullptr);
 
+  /** @returns the number of bytes available for reading. Not all types of fd will return something useful here. */
+  unsigned available() const;
+
   /** read into freespace of buffer */
   int read(Indexer<u8>&p);
   int read(u8* buf,unsigned len);//placeholder

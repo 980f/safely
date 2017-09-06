@@ -16,6 +16,7 @@ public:
   void printOn(Fildes &alreadyOpened,unsigned indent=0);
   void printOn(Cstr somefile,unsigned indent=0);
   Cstr originalFile();
+  int reload();
 };
 
 #endif // JSONFILE_H
