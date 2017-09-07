@@ -4,17 +4,17 @@
 /** a bit map for use in round-robin prioritization of a set of actions
   * maydo: reform using Indexer, or create templated size wrapper.
   */
-
+#include "bitbanger.h" //to pass back reference to bit.
 class RoundRobiner {
-  bool *Scoreboard;
+  unsigned bits;
   unsigned quantity;
   unsigned last;
 public:
-  RoundRobiner(bool * Scoreboard, unsigned quantity);
-  /** one parent dynamically allocated the scoreboard. */
-  bool *deallocate();
+  RoundRobiner(unsigned quantity);
+
   /** for cached access to a postable bit, write a 1 to "post"*/
-  bool &bit(unsigned id)const;
+  BitReference bit(unsigned id);
+  bool bit(unsigned id) const;
   static const unsigned ALL=~0U;
   /** set bit and @return whether was already posted */
   bool post(unsigned id);

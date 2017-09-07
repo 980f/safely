@@ -24,7 +24,7 @@ void HasSettings::suppressField(ID fieldID){
     pMap.queue.markAll(false);
     return;
   }
-  bool &bit = reportFor(fieldID);
+  BitReference bit = reportFor(fieldID);
   bit = 0;
 }
 
@@ -181,17 +181,17 @@ void SettingsGrouper::init(){
 //  }
 } // SettingsGrouper::init
 
-bool &SettingsGrouper::reportFor(const ParamKey &ID){
-  static bool trashme;
+BitReference SettingsGrouper::reportFor(const ParamKey &ID){
+
   HasSettings *unit = unit4(ID.unit);
   if(unit) {
     return unit->reportFor(ID.field);
   }
-  return trashme;
+  return BitReference(0U,0);//null pointer, should blow emphatically rather than vaguely
 }
 
 /** @return scoreboard index for given field's report*/
-bool &SettingsGrouper::bitFor(const char *twochar){
+BitReference SettingsGrouper::bitFor(const char *twochar){
   return reportFor(ParamKey(twochar));
 }
 
@@ -280,12 +280,12 @@ OLM &OLM::locate(ID code){
 OLM::OLM(MnemonicSet unitMap) :
   unitMap(unitMap), //
   quantity(strlen(unitMap)),//
-  queue(StaticBuffer(bool, quantity)){
+  queue(quantity){
   prefix = 0;
 }
 
 OLM::~OLM(){
-  StaticFree(&queue);
+//  StaticFree(&queue);
 }
 
 unsigned OLM::lookup(char ch, unsigned nemo) const {

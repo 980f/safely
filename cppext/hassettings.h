@@ -108,7 +108,7 @@ public:
 
   /** fieldID for next pending report, 0 for none*/
   ParamKey nextReport();
-  bool &reportFor(ID fieldID) const {
+  BitReference reportFor(ID fieldID) {
     return queue.bit(lookup(fieldID));
   }
 
@@ -163,7 +163,7 @@ public:
   }
 
   /** point to flag for deferred read*/
-  bool &reportFor(ID fieldID) const {
+  BitReference reportFor(ID fieldID) {
     return pMap.reportFor(fieldID);
   }
 
@@ -220,9 +220,9 @@ public:
   bool imLinkMaster;
   virtual HasSettings *unit4(ID asciiId,bool forRead = false) = 0;
   /** @return scoreboard index for given field's report*/
-  bool &reportFor(const ParamKey &ID);
+  BitReference reportFor(const ParamKey &ID);
   /** @return scoreboard index for given field's report*/
-  bool &bitFor(const char*twochar);
+  BitReference bitFor(const char*twochar);
   /** request for deferred report*/
   bool postKey(const ParamKey &parm);
 
