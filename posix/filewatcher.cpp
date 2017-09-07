@@ -1,5 +1,5 @@
 #include "filewatcher.h"
- #include <sys/inotify.h>
+#include <sys/inotify.h>
 #include <limits.h>
 
 FileWatcher::FileWatcher(bool blocking):
