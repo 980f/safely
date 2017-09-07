@@ -15,4 +15,3 @@ QMAKE_CFLAGS += -funsigned-char
 
 #safely projects put their application specific library altering includes above the module src path.
 INCLUDEPATH += $$PWD
-

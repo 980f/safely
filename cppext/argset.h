@@ -29,30 +29,11 @@ public:
 
 #define makeArgs(qty) double argv[qty]; fillObject(argv, sizeof(argv), 0); ArgSet args(argv, sizeof(argv))
 
-class ArgStack : public ArgSet {
-  enum { numEntries=4,Blocksize=ArgsPerMessage};
-  static double theStack[Blocksize*numEntries];
-  static unsigned sp;//=0;
-public:
-  ArgStack():ArgSet(&theStack[Blocksize*sp],sp>=numEntries?0:sizeof(double)*Blocksize){
-    if(++sp>numEntries){
-//      wtf(1942);
-    }
-    clearUnused();//for debug, and to mimic past use
-  }
-
-  ~ArgStack(){
-    if(sp){
-      --sp;
-    }
-  }
-
-};
-
-
-#define MessageArgs ArgStack args()
+//the following macros expect you to have #defined ArgsPerMessage, which is usually done in art.h
+#define MessageArgs makeArgs(ArgsPerMessage)
 //for those rare occasions where two guys are in play at the same time.
-#define MessageArgs2 ArgStack args2()
+#define MessageArgs2 double argv2[ArgsPerMessage]; ArgSet args2(argv2, sizeof(argv2))
+
 
 /** appears to be incomplete, need to look for usages */
 class ConstArgSet : public Indexer<const double> {

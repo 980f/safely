@@ -2,10 +2,9 @@
 #include "logger.h"
 #include "string.h"
 
-
-bool PerfTimer::all = true;
-//# only available via debugger:
-bool showStarts = false;
+//defaults set for production.
+bool PerfTimer::all = false;
+bool PerfTimer::showStarts = false;
 
 PerfTimer::PerfTimer(TextKey note, bool enabled) :
   swatch(true),

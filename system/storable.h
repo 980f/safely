@@ -17,6 +17,7 @@
 #include "gatedsignal.h"
 
 #include "textpointer.h"
+#include "numericalvalue.h"
 
 //class used for communicating keys, once was also for the actual storage.
 typedef TextKey NodeName;
@@ -93,7 +94,7 @@ protected:
   /** for debug of file read and write stuff, not used in application logic (as far as we know) */
   Quality q;
   /** value if type is numeric or enum */
-  double number;
+  NumericalValue number;
   /** value if type is textual or enum, also used for class diagnostics */
   TextValue text;
 public:   //made public for sibling access, could hide it with some explicit sibling methods.
@@ -106,7 +107,6 @@ protected:
   Chain<Storable> wad;
   /** set by StoredEnum when one is created, maintains parallel text.*/
   const Enumerated *enumerated; //expected to be a globally shared one
-
 
   /** calls watchers */
   void notify() const;
@@ -140,7 +140,7 @@ public:
 
   /** @returns whether the text value was converted to a number. @param ifPure is whether to restrict the conversion to strings that are just a number, or whether
    * trailing text is to be ignored. */
-  bool convertToNumber(bool ifPure);
+  bool convertToNumber(bool ifPure,NumericalValue::Detail numtype=NumericalValue::Detail::Floating);
 /** convert an Unknown to either Numerical or Text depending upon purity, for other types @returns false */
   bool resolve(bool recursively);
 
@@ -154,7 +154,7 @@ public:
 
 #if StorableDebugStringy
   /** @return number of changes */
-  int listModified(sigc::slot<void, Ustring> textViewer) const;
+  unsigned listModified(sigc::slot<void, Ustring> textViewer) const;
 #endif
   Text fullName() const;
 
@@ -197,11 +197,15 @@ public:
    * numerical with gay disregard for its previous type. */
   template<typename Numeric> Numeric setNumber(Numeric value, Quality quality = Edited){
     setValue(static_cast<double>(value), quality);
-    return static_cast<Numeric>(number);
+    return number;
+  }
+
+  void setNumber(NumericalValue other){
+    number=other;
   }
 
   template<typename Numeric> Numeric getNumber() const {
-    return static_cast<Numeric>(number);
+    return number;
   }
 
   /** if no value has been set from parsing a file or program execution then set a value on the node. Defaults are normally set via ConnectChild macro. */
@@ -237,7 +241,7 @@ public:
   /** @return whether text value of node textually equals @param zs (at one time a null terminated string) */
   bool operator ==(TextKey zs);
 
-  /** @returns number of child nodes. using int rather than size_t to reduce number of casts required */
+  /** @returns number of child nodes. using unsigned rather than size_t to reduce number of casts required */
   unsigned numChildren() const { //useful with array-like nodes.
     return wad.quantity();
   }
@@ -320,7 +324,7 @@ public:
   /** @returns rootnode of this node, this if this is a root node.*/
   Storable &getRoot();
   /** force size of wad. */
-  int setSize(unsigned qty);
+  unsigned setSize(unsigned qty);
   /** find/create from an already parsed path. Honors '#3' notation for child [3]*/
   Storable *getChild(ChainScanner<Text> &progeny, bool autocreate);
 private:
@@ -330,7 +334,6 @@ private:
 /** iterate over the children of given node (kinder is german  plural for child, like kindergarten) */
 #define ForKinder(node) for(auto list(node.kinder()); list.hasNext(); )
 #define ForKinderConstly(node) for(auto list(node.kinder()); list.hasNext(); )
-
 
 
 /** auto creating iterator that provides for deleting the unscanned items.

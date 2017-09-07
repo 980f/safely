@@ -39,6 +39,6 @@ public:
 struct StoreJsonParser: public AbstractJSONparser<Storable, Text> {
   StoreJsonConstructor core;
   StoreJsonParser(Indexer<char>&data);
-} ;
+};
 
 #endif // STOREJSON_H

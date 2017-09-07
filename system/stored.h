@@ -46,13 +46,13 @@ public:
   TextKey rawText() const;
   /** @param generation 0 is self, same as plain index()
    *  @returns ordinal within parent wad of this item. Useful for parallel array stuff */
-  int parentIndex(int generation = 1) const;
+  unsigned parentIndex(int generation = 1) const;
   /** @returns ordinal of the wrapped node.  */
-  int index() const;
+  unsigned index() const;
   /** @returns whether this node's ordinal is @param index */
-  bool indexIs(int index) const;
+  bool indexIs(unsigned index) const;
   /** @returns a functor that when called returns the present index of this item.*/
-  sigc::slot<int> liveindex() const;
+  sigc::slot<unsigned> liveindex() const;
 
   /** The next stuff is used by stored group refresh operations, to track no-longer relevent items */
 protected:

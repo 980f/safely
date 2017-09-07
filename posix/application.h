@@ -11,7 +11,7 @@ class Application: public PosixWrapper {
 protected:
   Indexer<TextKey> arglist;
   Epoller looper;
-  /** sampling period in millseconds*/
+  /** ticks in logic driver period */
   unsigned period;
   /** if greater than zero and less than period it replaces period for one cycle */
 private:
@@ -42,7 +42,7 @@ public:
 
 public: //utilities
   /** @returns a copy of the hostname, not a static function as it records errors from the attempt */
-  Text hostname();
+  Text hostname();//not static as we record errors
   /** write pid to file. best practice is for that file to be in /tmp so that it evaporates on a crash of the system. */
   static bool writepid(TextKey pidname);
 };

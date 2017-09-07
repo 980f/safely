@@ -51,4 +51,3 @@ bool PosixWrapper::isWaiting(){
   return errornumber==EAGAIN || errornumber== EWOULDBLOCK;
 }
 
-

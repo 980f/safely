@@ -11,9 +11,13 @@ JsonFile::JsonFile(Storable &node):root(node){
   //#nada
 }
 
+int JsonFile::reload(){
+  return loadFile(loadedFrom);
+}
+
 int JsonFile::loadFile(Cstr thename){
-  Filer optionFile("LoadJSON");
   root.child("#loadedFromFile").setImage(thename);//record where we try to load from.
+  Filer optionFile("LoadJSON");
   if(! optionFile.openFile(thename)){
     dbg("Couldn't open \"%s\", error:[%d]%s",thename.c_str(),optionFile.errornumber,optionFile.errorText());
     return optionFile.errornumber;
@@ -35,7 +39,7 @@ int JsonFile::loadFile(Cstr thename){
   parser.parser.lookFor(StandardJSONFraming ";=");
 
   parser.parse();
-  root.resolve(true);//until we patch the loader to not create uncertainty
+  root.resolve(false);//false: accessors set the type, not the appearance of the content
   loadedFrom=thename;//record after success
   //todo: stats?
   dbg("loaded %d nodes, %d levels, from %s",parser.stats.totalNodes,parser.stats.maxDepth.extremum,thename.c_str());

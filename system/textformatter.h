@@ -12,6 +12,8 @@
  * compared to other string class implemenations this takes pain to realloc only when absolutely necessary. It does not do fancy memory management like copy-on-write,,
  * the fanciest thing it does is predict what a bunch of concatenation will require before attempting that concatenation, allocating just what is needed.
 (first pass it overallocates numbers, until we are sure we can perfectly predict the size of numbers we overallocate, still allocating just once, and have some extra leftover bytes).
+
+
 */
 class TextFormatter : public Text {
 public://4diagnostics
