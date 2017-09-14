@@ -1,6 +1,12 @@
+//(C) 2017 Andrew Heilveil
+
+
+
 #include <iostream>
 #include <random>
 #include "minimath.h"
+
+/** simulation of deatime tracking amptek DP5 SCA signals on a tiny3.0 class controller */
 
 class CounterIsr {
 public:
