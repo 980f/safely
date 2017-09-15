@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 //(C) 2011 Applied Rigaku Technologies. Proprietary and Confidential.
+=======
+//(C) 2017 Andrew Heilveil
+>>>>>>> b27e13e1fccf933383f8040a4bb26678014a5fd7
 #ifndef FILENAME_H
 #define FILENAME_H
 

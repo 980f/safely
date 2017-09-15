@@ -1,5 +1,5 @@
 #ifndef LOGGER_H
-#define LOGGER_H
+#define LOGGER_H  "(C) 2017 Andrew Heilveil"
 
 #include "stdarg.h" //for relaying arg packs through layers
 

@@ -1,11 +1,8 @@
 #ifndef FILENAME_H
-#define FILENAME_H
-
+#define FILENAME_H "(C) 2017 Andrew Heilveil"
 
 #include "dottedname.h"  //dotted with '/'
-
 #include "filenameconverter.h"
-
 #include "pathparser.h"
 
 /**

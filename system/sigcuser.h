@@ -146,11 +146,6 @@ public:
   operator bool();
 };
 
-//these required Glib stuff --
-//void doSoon(SimpleSlot slot,int howSoon = 0,int howurgently = 1);
-///** @return a slot that when invoked will schedule execution of the @param given slot.
-// *  deleting objects referenced by the toDefer slot should be interesting ;) */
-//SimpleSlot eventually(SimpleSlot toDefer);
 
 /** a signal accumulator that invokes all slots, anding the result */
 struct AndAll {

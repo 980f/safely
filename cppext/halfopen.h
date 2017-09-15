@@ -54,6 +54,10 @@ struct Span: public HalfOpen<Index> {
   void take(Span &other);
   /** @returns whether span lowest is reasonable but highest inValid, started but not compeleted */
   bool started() const noexcept;
+
+  bool nonTrivial() const noexcept;
+  /** intersection */
+  static Span overlap(const Span &one,const Span&other);
 };
 
 #endif // HALFOPEN_H

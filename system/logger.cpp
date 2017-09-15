@@ -1,3 +1,4 @@
+//(C) 2017 Andrew Heilveil
 #include "logger.h"
 #include "eztypes.h"
 #include "textkey.h"

@@ -3,7 +3,9 @@
 #include "cheaptricks.h"
 #include "minimath.h" //fill's clear's
 
+
 RoundRobiner::RoundRobiner(unsigned quantity) :  quantity(quantity){
+
   markAll(0);
   last = BadLength;
 }
@@ -28,13 +30,6 @@ unsigned RoundRobiner::next(void){
   return last = BadLength; //magic value for 'none'
 } /* next */
 
-//bool &RoundRobiner::bit(unsigned id) const {
-//  static bool trashme;
-//  if(id >= quantity) {
-//    return bits[31];
-//  }
-//  return Scoreboard[id];
-//}
 
 bool RoundRobiner::post(unsigned id){
   if(id==ALL) {//hack for occasional "reportAll" functionality.
@@ -44,7 +39,9 @@ bool RoundRobiner::post(unsigned id){
   if(id >= quantity) {
     return false;
   }
+
   setBit(bits,id);
+
   return true;
 } // RoundRobiner::post
 

@@ -1,8 +1,8 @@
 #ifndef ROUNDROBINER_H
 #define ROUNDROBINER_H
 
-/** a bit map for use in round-robin prioritization of a set of actions
-  * maydo: reform using Indexer, or create templated size wrapper.
+/** a bit map for use in round-robin prioritization of a set of actions. Limited to the number of bit in an unsigned.
+ * one could use 'largest native integral type' as that appears to now be a standard token, somewhere in some std library.
   */
 #include "bitbanger.h" //to pass back reference to bit.
 class RoundRobiner {
@@ -15,6 +15,7 @@ public:
   /** for cached access to a postable bit, write a 1 to "post"*/
   BitReference bit(unsigned id);
   bool bit(unsigned id) const;
+
   static const unsigned ALL=~0U;
   /** set bit and @return whether was already posted */
   bool post(unsigned id);

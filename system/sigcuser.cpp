@@ -1,10 +1,5 @@
-/**************************************************************************
-** Copyright (C) 2012 Rigaku (Applied Rigaku Technologies)
-** created: 1/24/2012
-**************************************************************************/
-
+//(C) 2017 Andrew Heilveil
 #include "sigcuser.h"
-//#include <gtkmm.h> //signal timeout
 
 using namespace sigc;
 
@@ -33,15 +28,6 @@ void onEdge(slot<bool> source,bool edge,SimpleSlot action){
   }
 }
 
-//void doSoon(SimpleSlot slot, int howSoon, int howurgently){
-//  Glib::signal_timeout().connect_once(slot, howSoon,Glib::PRIORITY_DEFAULT_IDLE - howurgently);
-//}
-
-//SimpleSlot eventually(SimpleSlot toDefer){
-//  return bind(&doSoon,toDefer,0,1);
-//}
-
-/////////////////////////////////////
 
 //RunOnceSlot::RunOnceSlot(SimpleSlot action) : action(action){
 //  //#nada
@@ -56,6 +42,7 @@ void onEdge(slot<bool> source,bool edge,SimpleSlot action){
 //  DeleteOnReturn<RunOnceSlot> dor(this);//in case of survivable exceptions
 //  action();
 //}
+
 
 ///////////////////////////////////
 Finally::Finally(const SimpleSlot &action) : action(action){

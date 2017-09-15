@@ -1,8 +1,14 @@
+<<<<<<< HEAD
 //(C) 2011 Applied Rigaku Technologies. Proprietary and Confidential.
 #include <glibmm/regex.h>
 #include "filename.h"
 //maydo: restore use of SafeStr to unhook this from Glib,
 //limits.h PATH_MAX+1 is the size of the safestr.
+=======
+//(C) 2017 Andrew Heilveil
+#include <glibmm/regex.h>
+#include "filename.h"
+>>>>>>> b27e13e1fccf933383f8040a4bb26678014a5fd7
 
 using namespace Glib;
 

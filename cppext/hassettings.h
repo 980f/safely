@@ -92,7 +92,7 @@ public: //todo:2 make read-only
 public:
   OLM(MnemonicSet unitMap);
   OLM &locate(ID code);
-  ~OLM();//uses permalloc
+
   /** report offset for given char*/
   unsigned lookup(ID ch,unsigned nemo = ~0) const;
   /** @see lookup*/
@@ -108,6 +108,7 @@ public:
 
   /** fieldID for next pending report, 0 for none*/
   ParamKey nextReport();
+
   BitReference reportFor(ID fieldID) {
     return queue.bit(lookup(fieldID));
   }
@@ -223,6 +224,7 @@ public:
   BitReference reportFor(const ParamKey &ID);
   /** @return scoreboard index for given field's report*/
   BitReference bitFor(const char*twochar);
+
   /** request for deferred report*/
   bool postKey(const ParamKey &parm);
 

@@ -181,8 +181,8 @@ void SettingsGrouper::init(){
 //  }
 } // SettingsGrouper::init
 
-BitReference SettingsGrouper::reportFor(const ParamKey &ID){
 
+BitReference SettingsGrouper::reportFor(const ParamKey &ID){
   HasSettings *unit = unit4(ID.unit);
   if(unit) {
     return unit->reportFor(ID.field);
@@ -284,9 +284,6 @@ OLM::OLM(MnemonicSet unitMap) :
   prefix = 0;
 }
 
-OLM::~OLM(){
-//  StaticFree(&queue);
-}
 
 unsigned OLM::lookup(char ch, unsigned nemo) const {
   const char *p = strchr(unitMap, ch);

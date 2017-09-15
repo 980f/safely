@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /**************************************************************************
 ** Copyright (C) 2011 Rigaku (Applied Rigaku Technologies)
 ** created: 1/6/2012 2012
@@ -5,6 +6,10 @@
 
 #ifndef SHELL_H
 #define SHELL_H
+=======
+#ifndef SHELL_H
+#define SHELL_H "(C) 2017 Andrew Heilveil"
+>>>>>>> b27e13e1fccf933383f8040a4bb26678014a5fd7
 
 #include <vector>
 #include <string>

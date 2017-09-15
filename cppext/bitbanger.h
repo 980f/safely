@@ -69,7 +69,6 @@ inline bool assignBit(unsigned &pattern, unsigned bitnumber,bool one){
   return one;
 }
 
-
 struct BitReference {
   unsigned &word;
   unsigned mask;
@@ -87,6 +86,7 @@ struct BitReference {
     mask(1<<(31& ((memoryAddress<<3)|bitnumber))){//try to make bit pointer point at correct thing.
     //now it is an aligned 32 bit entity
   }
+
 
   bool operator =(bool set)const{
     if(set){
