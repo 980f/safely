@@ -9,7 +9,7 @@
  */
 template<typename Content> class Sequence {
 public:
-  virtual bool hasNext(void) const = 0;
+  virtual bool hasNext(void) = 0;
   virtual Content&next(void) = 0;
 
   virtual void skip(unsigned int qty = 1){

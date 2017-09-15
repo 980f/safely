@@ -33,7 +33,7 @@ class TextChunk {
 public:
   TextBlock &block;
   Span span;
-  TextChunk(TextBlock &block);
+  TextChunk(const TextBlock &block);
   operator TextBlock() const noexcept;
 
   void next(char comma);
