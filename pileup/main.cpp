@@ -1,19 +1,12 @@
-<<<<<<< HEAD
-=======
 //(C) 2017 Andrew Heilveil
 
 
-
->>>>>>> b27e13e1fccf933383f8040a4bb26678014a5fd7
 #include <iostream>
 #include <random>
 #include "minimath.h"
 
-<<<<<<< HEAD
-=======
-/** simulation of deatime tracking amptek DP5 SCA signals on a tiny3.0 class controller */
 
->>>>>>> b27e13e1fccf933383f8040a4bb26678014a5fd7
+/** simulation of deatime tracking amptek DP5 SCA signals on a tiny3.0 class controller */
 class CounterIsr {
 public:
   double quantum;//processor clock rate,  1 / Hz

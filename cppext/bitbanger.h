@@ -87,7 +87,6 @@ struct BitReference {
     //now it is an aligned 32 bit entity
   }
 
-
   bool operator =(bool set)const{
     if(set){
       word|=mask;

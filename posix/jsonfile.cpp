@@ -46,7 +46,6 @@ int JsonFile::loadFile(Cstr thename){
   return 0;
 }
 
-
 bool indent(FILE *fp, unsigned tab){
   if(Index(tab).isValid()){
     fputc('\n',fp);
