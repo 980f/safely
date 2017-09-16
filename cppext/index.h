@@ -78,6 +78,27 @@ struct Index {
     return ++raw;
   }
 
+  /** set this to the lesser of this and other depending upon validity */
+  void depress(Index other){
+    if(isValid()){
+      if(other.isValid() && raw>other.raw) {
+        raw=other.raw;
+      }
+    } else {
+      raw=other.raw;
+    }
+  }
+   /** set this to the greater of this and other depending upon validity */
+  void elevate(Index other){
+    if(isValid()){
+      if(other.isValid() && raw<other.raw) {
+        raw=other.raw;
+      }
+    } else {
+      raw=other.raw;
+    }
+  }
+
   /** @returns present value, then sets it to zero. */
   unsigned take() noexcept {
     return take(raw);

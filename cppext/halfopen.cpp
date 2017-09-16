@@ -36,3 +36,14 @@ void Span::take(Span &other){
 bool Span::started() const noexcept{
   return lowest.isValid()&& ! highest.isValid();
 }
+
+bool Span::nonTrivial() const noexcept {
+  return lowest!=highest;
+}
+
+Span Span::overlap(const Span &one, const Span &other){
+  Span joint(one);
+  joint.lowest.elevate(other.lowest);
+  joint.highest.depress(other.highest);
+  return joint;
+}

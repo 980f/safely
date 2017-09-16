@@ -286,7 +286,7 @@ CharScanner CharScanner::cut(char separator){
   } else {
     return CharScanner();
   }
-} // CharScanner::isBlank
+} 
 
 bool CharScanner ::putBytes(unsigned value, unsigned numBytes){
   if(stillHas(numBytes)) {
