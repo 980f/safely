@@ -1,5 +1,4 @@
 //"(C) Andrew L. Heilveil, 2017"
-#include "safely.h"
 #include "storejson.h"
 #include "textpointer.h"
 #include "cheaptricks.h"
@@ -19,16 +18,16 @@ Text StoreJsonConstructor::extract(Span &span) {
   return Text(reinterpret_cast<const char*>(data.internalBuffer()),span);
 }
 
-Storable *StoreJsonConstructor::insertNewChild(Storable *parent, Text &name, bool haveValue, Text &value, bool valueQuoted) {
+Storable *StoreJsonConstructor::applyToChild(Storable *parent, Text &name, bool haveValue, Text &value, bool valueQuoted) {
   Storable *nova=nullptr;
   if(parent){
     if(name.empty()){
       nova=&parent->addChild("");//typically an array element, do NOT make all nameless entities the same entity.
     } else {
-      nova=&parent->child(name);
+      nova=parent->findChild(name,true);
     }
   } else {
-    root = new Storable(name);//maydo: access Stored::Groot
+    root = new Storable(name);
     nova=root;
   }
   if(nova){

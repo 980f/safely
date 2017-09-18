@@ -58,6 +58,13 @@ TextChunk::operator TextBlock() const noexcept{
 
 }
 
+TextChunk::TextChunk(const TextBlock &block):
+  block(block),
+  span()
+{
+
+}
+
 void TextChunk::next(char comma){
 //"1" is sizeof(char):
   span.leapfrog(1);//points after previous find, or to start of block

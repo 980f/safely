@@ -198,7 +198,7 @@ public:
   ChainScanner(Chain<T> &list) : list(list),steps(0){
   }
 
-  bool hasNext() const {
+  bool hasNext() {
     return steps<list.quantity();
   }
 
@@ -254,7 +254,7 @@ public:
     steps(0){
   }
 
-  bool hasNext() const {
+  bool hasNext() {
     return steps<list.quantity();
   }
 

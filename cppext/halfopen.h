@@ -58,6 +58,8 @@ struct Span: public HalfOpen<Index> {
   bool nonTrivial() const noexcept;
   /** intersection */
   static Span overlap(const Span &one,const Span&other);
+  /** make it @param more bigger. @returns if this makes span become semi-valid */
+  bool stretchUp(unsigned more=1);
 };
 
 #endif // HALFOPEN_H

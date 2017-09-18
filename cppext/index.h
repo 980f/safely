@@ -55,15 +55,15 @@ struct Index {
     return raw>other.raw;
   }
 
-  /** maydo: convert negatives to canonical ~0*/
+  /** if valid add to it, else no change */
   unsigned operator += (unsigned other) noexcept {
-    return raw+=other;
+    return isValid()? raw+=other: BadIndex;
   }
 
-  /** decrement IF valid */
+  /** decrement IF valid and can take the whole decrement */
   unsigned operator -= (unsigned other) noexcept {
     if(isValid()){
-      return raw-=other;
+      return raw>=other?raw-=other:raw=BadIndex;
     } else {
       return BadIndex;
     }
@@ -76,6 +76,11 @@ struct Index {
   /** maydo: convert negatives to canonical ~0*/
   unsigned operator ++ () noexcept {
     return ++raw;
+  }
+
+  /** liken += but sets if was invalid instead of ignoring the argument */
+  unsigned up(unsigned more=1){
+    return isValid()? raw+=more: raw=more;
   }
 
   /** set this to the lesser of this and other depending upon validity */

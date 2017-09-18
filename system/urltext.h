@@ -21,7 +21,7 @@ class Expander: Indexer<const char>{
   /** if hidget is not zero then this is char being %encoded */
   char hidgets[3];
 public:
-  bool hasNext() const override {
+  bool hasNext() override {
     return hidgetting>0 || Indexer::hasNext();
   }
   const char &next() override;
@@ -36,7 +36,7 @@ class Decoder: Indexer<char>{
   /** if hidget is not zero then this is char being %encoded */
   char packer;
 public:
-  bool hasRoom() const {
+  bool hasRoom() {
     return !hidgetting.done() || Indexer::hasNext();
   }
   bool push(char next) ;

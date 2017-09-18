@@ -29,7 +29,7 @@ public:
 
   /** name and value are here, make a new node.
    * if parent is null then create node out of the blue and record it in root, else add as child to the parent */
-  Storable *insertNewChild(Storable *parent,Text &name,bool haveValue,Text &value,bool valueQuoted) override;
+  Storable *applyToChild(Storable *parent,Text &name,bool haveValue,Text &value,bool valueQuoted) override;
 
   /** Illegal character encountered */
   void exclaim(PushedJSON::Parser::Diag &d) override;
