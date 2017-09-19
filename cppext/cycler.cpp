@@ -7,7 +7,7 @@ void Cycler::unwrap(){
   }
 }
 
-Cycler::Cycler(int length):value(0) {
+Cycler::Cycler(unsigned length):value(0) {
   setLength(length);//invoke constraint logic
 }
 

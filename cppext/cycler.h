@@ -8,15 +8,15 @@ class Cycler {
   /** fixup c's inconvenient definition of modulo*/
   void unwrap();
 public:
-  Cycler(int length);
+  Cycler(unsigned length);
   void setLength(unsigned length);
-  /** @returns teh cycle length */
+  /** @returns the cycle length */
   unsigned cycle()const;
   /** @returns present phase in the cycle */
   operator unsigned(void)const;
 
   /** @returns true once per cycle, and not until the end of the first cycle if used in a typical fashion*/
-//compiler preferred opertor bool over opertor unsigned, should have complained:--  operator bool(void);
+//compiler preferred opertor bool over operator unsigned, should have complained:--  operator bool(void);
   bool next();
   /** modulo */
   unsigned operator +(int offset)const;
