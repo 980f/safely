@@ -5,7 +5,7 @@
 #include "cstr.h"   //for escaping
 
 bool isPresent(const char *flags, char flag){
-  int badStringLimiter = 26; //in case string pointer is garbage we don't want to read all of ram
+  unsigned badStringLimiter = 26; //in case string pointer is garbage we don't want to read all of ram
 
   if(flags) {
     char probe;
