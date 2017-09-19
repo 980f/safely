@@ -10,8 +10,8 @@ public:
   /** half width of filter, using int rather than unsigned to get rid of warnings */
   const int hwidth;
 public:
-  CenteredSlice(int *data,unsigned hwidth);
-  unsigned width()const ;
+  CenteredSlice(int *data,int hwidth);
+  int width()const ;
   int operator [](int i) const;
   /** @returns datum at lowest address */
   int lowest()const;
@@ -21,14 +21,13 @@ public:
   Indexer<const int> iterator()const;
 
   CenteredSlice &step(bool up);
-  CenteredSlice offset(unsigned delta)const;
-  /** @returns object (not this) centered at offset @param delta from center of this */
-  CenteredSlice subslice(int delta, unsigned hwidth)const;
+  CenteredSlice offset(int delta)const;
+  CenteredSlice subslice(int delta, int hwidth)const;
 private:
-  void constrainClip(unsigned &clip)const ;
+  void constrainClip(int &clip)const ;
 public:
   CenteredSlice Half(bool upper)const;
-  CenteredSlice Endpoint(bool upper,unsigned newwidth)const;
+  CenteredSlice Endpoint(bool upper,int newwidth)const;
 };
 
 #endif // CENTEREDSLICE_H

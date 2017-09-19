@@ -63,6 +63,7 @@ private:
   /** copy @param qty from start of source to end of this. This is a raw copy, no new objects are created */
   void catFrom(Indexer<Content> &source, unsigned qty){
     if(stillHas(qty) && qty <= source.used()) {
+      //older: copyObject(&source.peek(), &peek(), qty * sizeof(Content));
       copyObject(source.internalBuffer(), this->internalBuffer(), qty* sizeof(Content));
       source.skip(qty);
       skip(qty);
@@ -225,7 +226,7 @@ public:
     if(high<length){
       length=high;
     }
-    skip(low);//todo: alter buffer address
+    skip(low);//todo: alter buffer address so that rewind is clipped
   }
 
   /** reworks this one to be a byte accessor of the filled portion of another one,
@@ -288,7 +289,6 @@ public:
   virtual Content next(Content onEmpty){
     return pointer < length ? buffer[pointer++] : onEmpty;
   }
-
 
   /** @returns indexth element, <b>modulo length<b> for invalid indexes. */
   Content &operator [](unsigned int index) const {
@@ -525,5 +525,9 @@ public:
 
 //raw (bytewise) access to object
 #define IndexBytesOf(indexer, thingy) Indexer<u8> indexer(reinterpret_cast<u8 *>(&thingy), sizeof(thingy))
+
+#define BytesOf(thingy) IndexBytesOf(, thingy)
+
+#define ForIndexed(classname, indexer) for(Indexer<classname> list(indexer); list.hasNext(); )
 
 #endif // bufferH

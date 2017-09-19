@@ -1,17 +1,17 @@
 #include "centeredslice.h"
-#include "ignoresignwarnings.h"
+#include "../safely/ignoresignwarnings.h"
 
-CenteredSlice::CenteredSlice(int *data, unsigned hwidth):data(data),hwidth(hwidth){}
+CenteredSlice::CenteredSlice(int *data,unsigned hwidth):data(data),hwidth(hwidth){}
 
 unsigned CenteredSlice::width()const {
   return 1+2*hwidth;
 }
 
 int CenteredSlice::operator [](int i) const{
-  if(i<-int(hwidth)){
+  if(i<-hwidth){
     return 0;
   }
-  if(i>int(hwidth)){
+  if(i>hwidth){
     return 0;
   }
   return data[i];
@@ -38,16 +38,16 @@ CenteredSlice &CenteredSlice::step(bool up){
   return *this;
 }
 
-CenteredSlice CenteredSlice::offset(unsigned delta)const{
+CenteredSlice CenteredSlice::offset(int delta)const{
   return CenteredSlice(data+delta,hwidth);
 }
 
-CenteredSlice CenteredSlice::subslice(int delta, unsigned hwidth)const{
+CenteredSlice CenteredSlice::subslice(int delta, int hwidth)const{
   //todo:1 ensure subslice is inside original one!
   return CenteredSlice(data+delta,hwidth);
 }
 
-void CenteredSlice::constrainClip(unsigned &clip)const {
+void CenteredSlice::constrainClip(int &clip)const {
   if(clip==BadLength){//signal value
     clip=hwidth;
   }
@@ -59,11 +59,11 @@ void CenteredSlice::constrainClip(unsigned &clip)const {
 
 CenteredSlice CenteredSlice::Half(bool upper)const{
   //    constrainClip(clip);
-  unsigned newwidth=half(hwidth);
+  int newwidth=half(hwidth);
   return subslice((upper?newwidth:-newwidth),newwidth);
 }
 
-CenteredSlice CenteredSlice::Endpoint(bool upper, unsigned newwidth)const{
+CenteredSlice CenteredSlice::Endpoint(bool upper,int newwidth)const{
   constrainClip(newwidth);
-  return subslice(int(upper?hwidth:-hwidth),newwidth);
+  return subslice((upper?hwidth:-hwidth),newwidth);
 }
