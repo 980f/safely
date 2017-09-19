@@ -9,7 +9,7 @@ CharScanner CharScanner::Null;
 //note: we check for null termination here, so if the length is too long, we bail
 int ourStrncmp(const char *one, const char *two, unsigned length){
   for(unsigned i = 0; i<length; ++i) {
-    if(one[i] == '\0' || two[i] == '\0') {
+    if(one[i] == '\0' || two[i] == '\0') {//todo:00 ??is ignoring extra chars
       return 0; //???? the function encountered a null and assumes it's a terminator.
     }
     if(one[i] > two[i]) {
@@ -89,7 +89,7 @@ ByteScanner::ByteScanner(const CharScanner&other ) : //choices herein are for fi
   //#nada
 }
 
-ByteScanner::~ByteScanner(){
+ByteScanner::~ByteScanner(){//todo:00 default
 }
 
 u16 ByteScanner ::getU16(u16 def){
@@ -257,7 +257,7 @@ void CharScanner::trimNulls(void){
   }
 }
 
-#include "cheaptricks.h"
+#include "char.h"
 #include "cstr.h"
 bool CharScanner::isBlank(){
   if(length==0) {
