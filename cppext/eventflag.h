@@ -25,6 +25,12 @@ public:
   }
 
   /** set if @param andterm is true, if already set it stays set. */
+  bool setIf(bool andterm){
+    flag |= andterm;
+    return flag;
+  }
+
+  /** set if @param andterm is true, if already set it stays set. */
   bool operator |=(bool andterm){
     return flag |= andterm;
   }
