@@ -37,9 +37,8 @@ template<typename Scalar> Scalar postAssign(Scalar&varb, Scalar value){
   return was;
 }
 
-
 /** atomisable test-and-clear take a value, @returns @param varb's value then clears it.*/
-template<typename Scalar> Scalar take(Scalar&varb){
+template<typename Scalar> Scalar take(Scalar&varb){//replaces all but boolean use of flagged.
   return postAssign(varb,Scalar(0));
 }
 
