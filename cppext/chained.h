@@ -25,6 +25,10 @@ protected:
 public:
   /** @returns @param newbie after appending it to chain.*/
   T* append(T* newbie){
+//optimization:
+//    if(peer==0){//often is the first as pairs as the  most common list
+//      return peer=newbie;//it is a violation of contract for newbie's peer to not be null.
+//    }
     Chained<T>* scan = this;
     while(scan!=newbie && scan->peer!=0) {
       scan = scan->peer;
@@ -89,7 +93,7 @@ public:
   }
 
   //this guy's return requires that Chained<t>'s destructor be virtual
-  T* remove(T* moriturus) /*override*/{ //at one time override worked, I guess that was a gcc oops?
+  T* remove(T* moriturus) override{ //at one time override worked, I guess that was a gcc oops?
     if( root->Chained<T>::remove(moriturus)){
       if(isOwner){
         delete moriturus;
@@ -114,8 +118,7 @@ public:
   Chainer(Chained<T> *obj){
     cursor = obj;
   }
-
-  bool hasNext() const{
+  bool hasNext()/*const*/ {
     return cursor!=0;
   }
 
