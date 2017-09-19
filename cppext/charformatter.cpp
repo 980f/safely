@@ -56,7 +56,7 @@ CharFormatter::CharFormatter(ByteScanner &other) : CharScanner(other,0){
 }
 
 CharFormatter::CharFormatter(){
-
+//#nada
 }
 
 Indexer<u8> CharFormatter::asBytes(){
@@ -122,7 +122,7 @@ s64 CharFormatter::parse64(s64 def){
 
   if(n.parseNumber(*this)) {
     if(n.hasEterm) {//trying to tolerate some values, may produce nonsense.
-      int logProduct = ilog10(n.predecimal) + n.pow10 + n.exponent;
+      int logProduct = ilog10(n.predecimal) + n.pow10 + n.exponent;//??
       if(logProduct<=18) {
         n.predecimal = 0x7FFFFFFFFFFFFFFFLL;
       } else {
@@ -145,7 +145,7 @@ bool CharFormatter::printChar(char ch){
 }
 
 bool CharFormatter::printChar(char ch, unsigned howMany){
-  if(stillHas(howMany)) {
+  if(stillHas(howMany)) {//todo:0 if BadIndex fill to end
     while(howMany--> 0 && hasNext()) {
       next() = ch;
     }
@@ -199,7 +199,7 @@ bool CharFormatter::printUnsigned(u64 value){
     return printChar('0');
   }
   int numDigits = ilog10(value) + 1;
-  if(stillHas(numDigits)) {
+  if(stillHas(numDigits)){//this doesn't include checking for room for a separator
     while(numDigits--> 0) {
       unsigned digit = revolutions(value,i64pow10(numDigits));
       printDigit(digit);
