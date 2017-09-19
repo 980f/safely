@@ -5,12 +5,10 @@
   */
 struct FitStat {
   int num; //number of independent samples, negative if insufficient data for fit.
-  /** degrees of freedom */	
-  unsigned df;
-  /** something like the unscaled amount of variance */
+  int df;
   double chiSquare;
   FitStat();
-  void init(unsigned df = 0);
+  void init(int df = 0);
   void apply(double deviation);
   FitStat&operator = (FitStat & other);
 };
