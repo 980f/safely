@@ -40,6 +40,7 @@ public:
 
 }; // class ClearOnExit
 
+#ifndef SETGUARD
 /** Clears a flag when destroyed */
 class AutoFlag : public ClearOnExit<bool> {
 public:
@@ -47,6 +48,7 @@ public:
 };
 
 #define SETGUARD(boolvarb) AutoFlag coe_ ## boolvarb(boolvarb)
+#endif
 
 template<typename Scalar> class IncrementOnExit:public ModifyOnExit<Scalar> {
 public:

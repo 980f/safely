@@ -1,7 +1,7 @@
 #ifndef ORDINATOR_H
 #define ORDINATOR_H
 
-#include "safely.h"
+//#include "safely.h"
 /** utility class for generator a sequence of integers up to a limit.
  * This is built for the needs of the Indexer<> class, which explains the comments and some curious design choices.
  */

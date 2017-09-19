@@ -1,7 +1,7 @@
 #ifndef INDEX_H
-#define INDEX_H
+#define INDEX_H  "(C) 2017 Andrew Heilveil"
 
-#include "cheaptricks.h"
+//#include "cheaptricks.h"
 /** unsigned is used for all index operations.
  * For prior uses of int typically the only negative index value is a marker, -1.
  * It happens that if you view -1 as an unsigned it is the maximum possible value. That has the advantage of replacing the signed integer dance:
