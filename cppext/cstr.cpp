@@ -1,5 +1,4 @@
 #include "cstr.h"
-#include "safely.h"
 #include "string.h"
 #include "stdlib.h" //strtod
 
