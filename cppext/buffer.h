@@ -91,16 +91,18 @@ public:
     //#nada
   }
 
-  /* if @param rewind is negative then the new indexer covers just the data before the old one's pointer minus the ~rewind value, i.e. data already visited excluding
-   * the most recent. NB that a clip of ~0 gets everything beneath the pointer (same values as getHead), ~1 ends the new Indexer one shy of the oldone's pointer (such as removing a comma).
-   * a rewind of 0 gets you the equivalent of rewind(all) then clone() i.e. it ignores the other's pointer and gives you the construction time view of the other.
+  /* if @param clip is negative then the new indexer covers just the data before the old one's pointer minus the ~clip value, i.e. data already visited excluding the most recent. NB that a clip of ~0 gets everything beneath the pointer (same values as getHead), ~1 ends the new Indexer one shy of the oldone's pointer (such as removing a comma).
+   * a rewind of 0 gets you the equivalent of getTail
    * a rewind>0 gets you the unvisited part of the other, with the given number of already visited elements.
    * e.g. a value of 1 after reading a comma will get you a buffer starting with that comma */
-  Indexer(const Indexer &other, int rewind = 0) : //default value is clone of created state of other.
+  Indexer(const Indexer &other, int clip) : //default value is clone of created state of other.
     Ordinator(other, rewind),
     //if 0 or ~clipsome start is same as start of other, else start offset from this one's current location
-    buffer(rewind<=0 ? other.buffer : other.buffer + (other.pointer - rewind)){
+    buffer(clip<=0 ? other.buffer : (other.buffer + (other.pointer + clip))){
   }
+
+  /** simple copy constructor */
+  Indexer(const Indexer &other)=default;
 
   /** @returns whether this seems to be a useful object. Note that it might have no freespace(), but it will have content.
  It was created to detect buffers that were created around a malloc or the like return.*/

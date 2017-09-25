@@ -74,8 +74,8 @@ struct BitReference {
   unsigned mask;
 
   /** naive constructor, code will work if @param bits isn't aligned, but will be inefficient.*/
-  BitReference(unsigned &bits,unsigned bitnumber):
-    word(bits),  //drop 2 lsbs, i.e. point at xxx00
+  BitReference(unsigned *bits,unsigned bitnumber):
+    word(*bits),  //drop 2 lsbs, i.e. point at xxx00
     mask(1<<(31& bitnumber)){//try to make bit pointer point at correct thing.
     //now it is an aligned 32 bit entity
   }

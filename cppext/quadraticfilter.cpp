@@ -25,7 +25,11 @@ int QuadraticFilter::curvish() const {
 }
 
 double QuadraticFilter::slope() const {//same as linear
-  return ratio(double(Y[1]),S2);
+  return slope(Y[1]);
+}
+
+double QuadraticFilter::slope(int extremum) const{
+  return ratio(double(extremum),S2);
 }
 
 int QuadraticFilter::signA1() const {//same as linear
@@ -33,15 +37,36 @@ int QuadraticFilter::signA1() const {//same as linear
 }
 
 double QuadraticFilter::amplitude() const {
-  return ratio((S4 * Y[0] - S2 * Y[2]),D4);
+  return amplitude(Y[0]);
 }
+
+double QuadraticFilter::amplitude(int datum) const {
+  return ratio(double(S4 * datum - S2 * Y[2]),D4);
+}
+
 
 int QuadraticFilter::ampEstimate() const {
   return R2 * Y[0] - 5 * Y[2];
 }
 
-void QuadraticFilter::recordInflection(Inflection &flect) const {
-  flect.estimate = est[2];
+//  if(low.maxrmin>0){//cheaper than a nan detect
+//    peak.low=low.absolute(offset);
+//    peak.riser=ratio(low.maxrmin,S2);
+//  }
+//  if(high.maxrmin<0){//cheaper than a nan detect
+//    peak.high=high.absolute(offset);
+//    peak.faller=-ratio(double(high.maxrmin),double(S2));//#inserted the minus sign for the sake of the gui
+//  }
+//  if(top.maxrmin>0){
+//    peak.center=top.absolute(offset);
+//    peak.amplitude=ratio(double(top.maxrmin),double(S0));
+//    return true;
+//  } else {
+//    return false;
+//  }
+
+void QuadraticFilter::recordInflection(PolyFilter::Interpolation &flect) const {
+  flect.slope = est[2];
   flect.delta = 3 * delta[2] - R0 * delta[0];
 }
 
@@ -62,10 +87,11 @@ void QuadraticFilter::init(const CenteredSlice &slice){
 } // QuadraticFilter::init
 
 void QuadraticFilter::step(CenteredSlice &slice){
-#if 0 //optimal
-  int low = slice.lowest();
+
+  int low = slice.lowest();//amplitude of point leaving view
   slice.step(true);
-  int high = slice.highest();
+  int high = slice.highest();//amplitude of point entering view
+  //common sub-expressions
   int subavg = (Y[0] - low);
   int sum = (high + low);
   int diff = (high - low);
@@ -74,23 +100,16 @@ void QuadraticFilter::step(CenteredSlice &slice){
   Y[2] += delta[2] = hw2 * diff - 2 * (Y[1] + hw * low) + subavg;
   Y[1] += delta[1] = hw * sum - subavg;//same as linear
   Y[0] += delta[0] = diff;//same as linear
-#else //non optimal
-  copyObject(Y,delta,sizeof(delta));
-  slice.step(true);
-  init(slice);
-  delta[2] = Y[2] - delta[2];
-  delta[1] = Y[1] - delta[1];
-  delta[0] = Y[0] - delta[0];
-#endif
+
   est[0] = ampEstimate();
   est[1] = Y[1];//Y1 is the slope estimate.
   est[2] = curvish();
 } // QuadraticFilter::step
 
 /** @param slice is search window, presumed to have a filter's worth of channels outside on each side,
- *   @param peak records the most interesting points in the range
- *   @param offset is the absolute index of the center of the slice, added to each slice-relative coordinate found */
-void QuadraticFilter::scan(const CenteredSlice &slice, ScanReport &report){
+    @param peak records the most interesting points in the range
+    @param offset is the absolute index of the center of the slice, added to each slice-relative coordinate found */
+bool QuadraticFilter::scan(const CenteredSlice &slice, ScanReport &report){
   CenteredSlice slider = slice.Endpoint(0,hw);
 
   init(slider);
@@ -103,23 +122,25 @@ void QuadraticFilter::scan(const CenteredSlice &slice, ScanReport &report){
 // Y[0],Y[1],Y[2],delta[0],delta[1],delta[2],est[0],est[1],est[2],amplitude(),slope(),curvature());
     if (y2waspos) {
       if(est[2]<0) {
-        if(report.low.morePositive(est[1],location)) {
-          recordInflection(report.low);
+        if(report.low.inspect(est[1],location)) {
+          recordInflection(report.low.tweaker);
         }
       }
     } else {
       if(est[2]>0) {
-        if(report.high.moreNegative(est[1],location)) {
-          recordInflection(report.high);
+        if(report.high.inspect(est[1],location)) {
+          recordInflection(report.high.tweaker);
         }
       }
     }
 
     if(y1waspos && est[1]<0 ) {//slope at peak
-      if(report.top.morePositive(est[0],location)) {
-        report.top.delta = delta[1];
-        report.top.estimate = est[1];
+      if(report.top.inspect(est[0],location)) {
+        report.top.tweaker.delta = delta[1];
+        report.top.tweaker.slope = est[1];
       }
     }
   }
-} // QuadraticFilter::scan
+
+  return report.top.started;
+}

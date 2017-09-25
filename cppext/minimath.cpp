@@ -387,3 +387,13 @@ int splitter(double &d){
 //template <> int intbin<int,double>(double &d);
 //template <> long intbin<long,double>(double &d);
 //template <> u64 intbin<u64,double>(double &d);
+
+unsigned digitsAbove(unsigned int value, unsigned numDigits){
+  unsigned digit = value/i32pow10(numDigits);
+  value -= digit * i32pow10(numDigits);
+  return digit;
+}
+
+int ilog10(double value){
+  return ilog10(u64(fabs(value)));
+}

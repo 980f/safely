@@ -166,24 +166,43 @@ bool CharFormatter::printChar(char ch, unsigned howMany){
   }
 }
 
-bool CharFormatter::printAtWidth(unsigned int value, unsigned width){
-  unsigned numDigits = value ? ilog10(value) + 1 : 1; //ilog10 gives -1 for zero, we lumpt that in with 1..9
-  if(numDigits > width) {
+//bool CharFormatter::printAtWidth(unsigned int value, unsigned width){
+//  unsigned numDigits = value ? ilog10(value) + 1 : 1; //ilog10 gives -1 for zero, we lumpt that in with 1..9
+//  if(numDigits > width) {
+//    printChar('*', width);
+//    return false;
+//  }
+
+//  if(stillHas(width)) {
+//    printChar(' ', width - numDigits);
+//    while(numDigits--> 0) {
+//       printDigit(digitsAbove(value,numDigits));
+//    }
+//    return true;
+//  }
+//  return false;
+//} // CharFormatter::printAtWidth
+
+bool CharFormatter::printAtWidth(unsigned int value, unsigned width, char padding){
+  unsigned numDigits = value? ilog10(value)+1 : 1; //ilog10 gives -1 for zero, here we lump zero in with 1..9
+  if(numDigits > width) {//if you cant fit the whole thing don't put any digits into the field.
     printChar('*', width);
     return false;
   }
-
-  if(stillHas(width)) {
-    printChar(' ', width - numDigits);
-    while(numDigits--> 0) {
-      unsigned digit = value / i32pow10(numDigits);
-      value -= digit * i32pow10(numDigits);
-      printDigit(digit);
+//  //the following useless code truncated trailing digits, something that would never ever make any sense
+//  while(numDigits > width){
+//    value /= 10; //todo:0 this truncating of trailing digits seems like a horrible idea. just don't print anythign and return false!
+//    --numDigits;
+//  }
+  if(stillHas(width)){
+    printChar(padding, width-numDigits);
+    while(numDigits --> 0){
+      printDigit(digitsAbove(value,numDigits));
     }
     return true;
   }
   return false;
-} // CharFormatter::printAtWidth
+}
 
 bool CharFormatter::printDigit(unsigned digit){
   return printChar(digit + ((digit < 10) ? '0' : 'A' - 10)); //'A' - 10 so we can get a letter beginning with 'A' at 10, for hex

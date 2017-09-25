@@ -193,8 +193,13 @@ template <typename floating> bool nearly(floating value, floating other, int bit
 int ilog10(u32 value);
 int ilog10(u64 value);
 
+int ilog10(double value);
+
+
 /** an integer power of 10. out of bounds arg gets you nothing but trouble ... */
 u32 i32pow10(unsigned power);
+
+unsigned digitsAbove(unsigned int value, unsigned numDigits);
 
 /** an integer power of 10. out of bounds arg gets you nothing but trouble ... */
 u64 i64pow10(unsigned power);

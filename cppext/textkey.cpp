@@ -11,6 +11,11 @@ bool nonTrivial(TextKey t){
   return t != nullptr && *t != 0;
 }
 
+void denull(TextKey &t){
+  if(t == 0) {
+    t = ""; //hopefully compiler creates a shared one of these empty strings.
+  }
+}
 bool same(TextKey a, TextKey b){
   if(a == b) {//same object
     return true;

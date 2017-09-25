@@ -2,17 +2,16 @@
 #include "roundrobiner.h"
 #include "cheaptricks.h"
 #include "minimath.h" //fill's clear's
-
-using namespace Safely;
+#include "index.h"  //badIndex
 
 RoundRobiner::RoundRobiner(unsigned quantity) :  quantity(quantity){
 
   markAll(0);
-  last = BadLength;
+  last = BadIndex;
 }
 
 BitReference RoundRobiner::bit(unsigned id){
-  return BitReference(reinterpret_cast<u64>(&bits),id);
+  return BitReference(reinterpret_cast<unsigned*>(&bits),id);
 }
 
 bool RoundRobiner::bit(unsigned id) const {
@@ -28,7 +27,7 @@ unsigned RoundRobiner::next(void){
       return last = n; //#assign and return
     }
   }
-  return last = BadLength; //magic value for 'none'
+  return last = BadIndex; //magic value for 'none'
 } /* next */
 
 

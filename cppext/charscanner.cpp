@@ -60,17 +60,9 @@ u32 ByteScanner ::getU(unsigned numBytes, u32 def){
   }
 } // ByteScanner::getU
 
-void ByteScanner::getTail(CharScanner &other){
-  //#invalid cast:    grab(reinterpret_cast<ByteScanner>(other));
-  buffer = reinterpret_cast<u8*>(other.buffer);
-  if(other.ordinal()>0) {//want front end.
-    length = other.pointer;
-    pointer = 0;
-  } else { //was already rewound and truncated
-    length = other.length;
-    pointer = other.pointer;
-  }
-} // ByteScanner::grab
+//void ByteScanner::getTail(CharScanner &other){
+
+//} // ByteScanner::grab
 
 ByteScanner::ByteScanner(void) : Indexer<u8 >(){
   //#nada
@@ -286,7 +278,7 @@ CharScanner CharScanner::cut(char separator){
   } else {
     return CharScanner();
   }
-} 
+}
 
 bool CharScanner ::putBytes(unsigned value, unsigned numBytes){
   if(stillHas(numBytes)) {

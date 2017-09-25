@@ -77,15 +77,13 @@ public:
   /** useful for collation sequence, -1: this before other, +1: this after other, 0: this same as other*/
   int cmp(const CharScanner&other) const;
 
-  /** Prints decimal representation of @param value, prepending it with spaces until the total length == @param width.
-   *@returns false if there wasn't enough space. or if the number of digits is larger than the specified width in which latter case this function will fill the field
-   * with asterisks */
-  bool printAtWidth(unsigned int value, unsigned width);
+  /** Prints decimal representation of @param value, prepending it with @param padding (default spaces) until the total length == @param width.
+   * @returns false if there wasn't enough space. or if the number of digits is larger than the specified width in which latter case this function will fill the field with asterisks */
+//  bool printAtWidth(unsigned int value, unsigned width);
+  bool printAtWidth(unsigned int value, unsigned width, char padding=' ');
   /** print @param width least significant hex digits of @param value, @returns whether there were width positions available, if not then nothing is written */
   bool printHex(unsigned value, unsigned width);
 
-//debris from a particular format, should move to an extension class.
-//  bool addDigest();
   bool addTerminator();
   bool removeTerminator();
 
