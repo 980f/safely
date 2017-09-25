@@ -14,7 +14,7 @@ public:
 
   /** create a range of sorts */
   Ordinator(unsigned length, unsigned pointer = 0 ) : pointer(pointer),length(length){
-    if(static_cast<unsigned>(pointer)>length) {//bad value: will normalize to 'consumed'. The cast to unsigned makes negative numbers HUGE.
+    if(pointer>length) {//bad value: will normalize to 'consumed'. The cast to unsigned makes negative numbers HUGE.
       this->pointer = length;
     }
   }
@@ -45,7 +45,7 @@ public:
   }
 
   /** @returns whether pointer is not past the last */
-  bool hasNext(void) const {
+  bool hasNext(void) {
     return length > 0 && pointer < length;
   }
 
@@ -109,7 +109,7 @@ public:
       amount = pointer;
     }
     pointer -= amount;
-    length -= amount;
+    length -= amount;//todo:2 this is probably a bug for SOME uses, the buffer doesn't change size just cause we discard an entry.
   }
 
   /** if other isn't at its start then we get the part past, else we get a copy */

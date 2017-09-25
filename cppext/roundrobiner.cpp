@@ -3,6 +3,7 @@
 #include "cheaptricks.h"
 #include "minimath.h" //fill's clear's
 
+using namespace Safely;
 
 RoundRobiner::RoundRobiner(unsigned quantity) :  quantity(quantity){
 

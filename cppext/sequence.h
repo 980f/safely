@@ -42,7 +42,7 @@ public:
 /** differs from plain Sequence in the next() returns object via copying, not reference */
 template<typename Content> class ReadonlySequence {
 public:
-  virtual bool hasNext(void) const = 0;
+  virtual bool hasNext() = 0;//const removed so that hasNext's can do caching lookaheads
   virtual Content next() = 0;
 
   virtual void skip(unsigned int qty = 1){
@@ -56,7 +56,7 @@ public:
 
 template<typename Content> class PeekableSequence : public Sequence<Content> {
 public:
-  virtual Content&peek(void) const = 0; //const'ed, preview with caching wasn't worth the loss of being able to work on const references.
+  virtual Content&peek(void) const = 0;
   virtual void unget(void) = 0;
 };
 

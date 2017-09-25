@@ -2,7 +2,7 @@
 #define UTF8_H
 
 #include "eztypes.h"  //~stdint
-#include "ignoresignwarnings.h"  //much type mangling is done herein, so you don't have to in your code :)
+//#include "ignoresignwarnings.h"  //much type mangling is done herein, so you don't have to in your code :)
 
 /** an int that can hold a UTF32 character
  * replace Glib gunichar usages */

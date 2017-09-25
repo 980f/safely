@@ -99,6 +99,15 @@ struct BitReference {
   operator bool()const{
     return (word&mask)!=0;
   }
+
+  bool flagged(){
+    if(operator bool()){
+      *this=0;
+      return true;
+    } else {
+      return false;
+    }
+  }
 };
 
 

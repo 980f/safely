@@ -11,7 +11,7 @@
  * when one of these is an arg... list we just store its attributes to another one, so copy-assign must be cheap. */
 struct NumberFormat {
   /** number of digits after radix */
-  int decimals;
+  unsigned decimals;
   /** minimum width, pad with spaces */
   unsigned fieldWidth;
   /** if true always show sign, else no room is taken for positives */

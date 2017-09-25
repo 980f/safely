@@ -34,11 +34,13 @@ public:
   s64 parse64(s64 def = 0);
 
   int parseInt(int def = -1);
+  /** parse for an unsigned value. If out of range return @param def */
+  unsigned parseUnsigned(unsigned def = BadIndex);
 
   /** make or remove space, move pointer to stay pointing at same char it did before the move.
    * for a positive delta the new space is below the current point, often you will want to follow this with a rewind(delta) to point after the last
    * item returned by next().
- @returns whether a move took place, it won't if delta would move pointer out of bounds. */
+   *  @returns whether a move took place, it won't if delta would move pointer out of bounds. */
   bool move(int delta);
 
   bool move(int delta,int keep);
@@ -49,14 +51,23 @@ public:
   bool printChar(char ch, unsigned howMany);
   /** sensible results for digit 0 through 15, potentially garbage if digit>15.*/
   bool printDigit(unsigned digit);
-  bool printUnsigned(unsigned int value);
+
+  bool printUnsigned32(unsigned int value);
   /** our parser handles these, our printer should too. Just beware that u64's might not be atomic. */
-  bool printUnsigned(u64 value);
+  bool printUnsigned64(u64 value);
+  //todo:1 template to disambiguate printUnsigned(u8,u16,u32,u64)
+  bool printUnsigned(unsigned int value){
+    return printUnsigned32(value);
+  }
+//  template <typename signless> bool printUnsigned(signless thing){
+//    return printUnsigned32(thing);
+//  }
+//  template<> bool printUnsigned(u64 thing);
 
   bool printSigned(int value);
   bool printNumber(double d, int sigfig = 9);//9: 200 million is biggest number that we won't lose a bit of.
 
-  bool printNumber(double d, const NumberFormat &nf, bool addone=false);
+  bool printNumber(double d, const NumberFormat &nf, bool addone = false);
   /** printNUmber(double,int) prints significant figures, this prints fixedpoint*/
   bool printDecimals(double d, int decimals);
 
@@ -82,16 +93,18 @@ public:
 }; // class CharFormatter
 
 /** a class that wraps a raw buffer, and on destruction updates the raw buffer with the changes done via the wrapper.
- Typically only create as a local and don't mix using this wrapper with direct access to the raw buffer wrapped. */
-class Caster: public CharFormatter {
+ *  Typically only create as a local and don't mix using this wrapper with direct access to the raw buffer wrapped. */
+class Caster : public CharFormatter {
   Indexer<u8>&rawref;
 public:
-  Caster(Indexer<u8>&raw):CharFormatter(reinterpret_cast<char *>(&raw.peek()),raw.freespace()),
+  Caster(Indexer<u8>&raw) : CharFormatter(reinterpret_cast<char *>(&raw.peek()),raw.freespace()),
     rawref(raw){
   }
+
   ~Caster(){
     rawref.skip(this->used());
   }
-};
+
+}; // class Caster
 
 #endif // CHARFORMATTER_H

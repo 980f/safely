@@ -17,6 +17,7 @@ bool isNan(double d);
 inline bool isNan(int){
   return false;
 }
+
 inline bool isNan(unsigned){
   return false;
 }
@@ -59,10 +60,15 @@ template< typename mathy > int signof(mathy x) {
   if(x < 0) {
     return -1;
   }
-  if(x != 0) {
+  if(x != 0) {//using != instead of > makes NaN's positive instead of 0
     return +1;
   }
   return 0;
+}
+
+/** legacy */
+inline int signum(int anint) {
+  return signof(anint);
 }
 
 /** @returns positivity as a multiplier */
@@ -114,7 +120,7 @@ inline double ratio(double num, double denom) {
   return num / denom;
 }
 
-/** protect against garbage in (divide by zero) note: 0/0 is 1*/
+/** protect against garbage in (divide by zero) note: 0/0 is 0, at one tim ethis returned 1 for that.*/
 inline float ratio(float num, float denom) {
   if(denom == 0) { //pathological case
     return num;// == 0 ? 1 : 0; //may someday return signed inf.

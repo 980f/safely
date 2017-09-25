@@ -5,7 +5,7 @@
 #include "minimath.h"
 #include "sequence.h"
 #include "ordinator.h"
-
+#include "index.h"
 
 /**
  *  This class is used to prevent buffer overflows.
@@ -34,7 +34,7 @@
  *   Thing &fill= index.next();
  *   fill.load(newestuff);
  * }
- *
+ *high
  * Indexer<Thing> scanner(index,~0); //~ for filled part of buffer, ~1 to omit last char ~2 for last two...
  * while(scanner.hasNext();){
  *   Thing &it= scanner.next(); //creating a local reference isn't always needed ...
@@ -272,16 +272,16 @@ public:
   }
 
   //publish parts of ordinator, without these derived classes are deemed abstract.
-  virtual bool hasNext(void) {//const removed to allow derived classes to lookahead and cache
+  virtual bool hasNext(void) override {//const removed to allow derived classes to lookahead and cache
     return Ordinator::hasNext();
   }
 
-  bool hasPrevious(void) const {
+  bool hasPrevious(void) const override {
     return Ordinator::hasPrevious();
   }
 
   /** on overrun of buffer returns last valid entry*/
-  virtual Content &next(void){
+  virtual Content &next(void) override{
     CppExtBufferFailureGuard
     return buffer[pointer < length ? pointer++ : length - 1];
   }
@@ -312,7 +312,7 @@ public:
   }
 
   /** @return current object ('s reference), rigged for sensible behavior when buffer is used circularly*/
-  Content &peek(void) const {
+  Content &peek(void) const override {
     CppExtBufferFailureGuard
     return buffer[pointer < length ? pointer : 0];
   }
@@ -513,6 +513,8 @@ public:
   }
 
 }; // class Indexer
+
+
 #undef CppExtBufferFailureGuard
 
 //the following probably doesn't work, or only works for simple types:

@@ -1,7 +1,4 @@
-#ifndef LOCALONEXIT_H
-#define LOCALONEXIT_H
-
-
+#pragma once
 /** helpers to make sure something gets done regardless of how the enclosing block exits.
  * This is C++'s answer to Java's "try with resources" and similar features in other languages.
 */
@@ -139,6 +136,8 @@ public:
  * You can DeleteOnExit <X> shortliveditem( new X()) and when that item goes out of scope it will be deleted.
  * That is almost the same as X shortliveditem(), but allocates on the heap rather than the stack.
  */
+//legacy name was at odds with other similar functionality class' names
+#define DeleteOnReturn DeleteOnExit
 template<typename Deletable> class DeleteOnExit {
   Deletable*something;
 public:
@@ -189,5 +188,3 @@ public:
   LocalOnExit(const SimpleFunction &deffered);
   ~LocalOnExit();
 };
-
-#endif // LOCALONEXIT_H

@@ -1,33 +1,33 @@
 //(C) 2017 Andrew Heilveil
-#include "filename.h"
+#include "filenamer.h"
 
-FileName::FileName(){
+FileNamer::FileNamer(){
   //#nada
 }
 
-FileName::FileName(TextKey simple){
+FileNamer::FileNamer(TextKey simple){
   parse(simple);
 }
 
-FileName::FileName(const Text  &simple){
+FileNamer::FileNamer(const Text  &simple){
   parse(simple);
 }
 
-FileName &FileName::dirname(void){
+FileNamer &FileNamer::dirname(void){
   removeLast();
   return *this;
 }
 
-//FileName &FileName::folder(const Text  &s){
+//FileNamer &FileNamer::folder(const Text  &s){
 //  if(s.empty()) {
 //    return *this;
 //  }
 
 
 //  return *this;
-//} // FileName::folder
+//} // FileNamer::folder
 
-FileName &FileName::ext(const Text  &s){
+FileNamer &FileNamer::ext(const Text  &s){
   if(empty()){//becomes totality
     auto fname=new DottedName('.',s);
     fname->bracket.before=true;
@@ -39,12 +39,12 @@ FileName &FileName::ext(const Text  &s){
   return *this;
 }
 
-FileName &FileName::erase(){
+FileNamer &FileNamer::erase(){
   clear();
   return *this;
 }
 
-FileName &FileName::parse(const char *rawpath){
+FileNamer &FileNamer::parse(const char *rawpath){
   Cstr s(rawpath);
   if(!s.empty()){
     Indexer<const char> buffer(s.c_str(),s.length());
@@ -63,7 +63,7 @@ FileName &FileName::parse(const char *rawpath){
   return *this;
 }
 
-unsigned FileName::length(Converter &&cvt) const {
+unsigned FileNamer::length(Converter &&cvt) const {
   unsigned pieces=quantity();
   if(pieces==0){
     return 0;
@@ -78,7 +78,7 @@ unsigned FileName::length(Converter &&cvt) const {
 }
 
 
-Text FileName::pack(Converter &&cvt,unsigned bytesNeeded){
+Text FileNamer::pack(Converter &&cvt,unsigned bytesNeeded){
   if(!Index(bytesNeeded).isValid()){
     bytesNeeded=length(cvt.forward());
   }
@@ -101,12 +101,12 @@ Text FileName::pack(Converter &&cvt,unsigned bytesNeeded){
 
 ////////////////
 
-NameStacker::NameStacker(FileName &namer) :
+NameStacker::NameStacker(FileNamer &namer) :
   path(namer),
   mark(namer.quantity()){
 }
 
-NameStacker::NameStacker(FileName &namer, const Text &pushsome) :
+NameStacker::NameStacker(FileNamer &namer, const Text &pushsome) :
   path(namer),
   mark(namer.quantity()){
   path.parse(pushsome);

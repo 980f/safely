@@ -6,7 +6,7 @@
 
 /** fifo wrapper around data allocated elsewise*/
 
-template <typename Content> class CircularBuffer : public CircularIndexer <Content>, public PeekableSequence <Content> {
+template <typename Content> class CircularBuffer : public CircularIndexer <Content>/*, public PeekableSequence <Content>*/ {
 private:
   bool full;
   bool empty;
@@ -73,9 +73,9 @@ public:
     return *this;
   }
 
-  virtual bool hasPrevious(void) const {
-    return false; //todo:2 try to implement this
-  }
+//  virtual bool hasPrevious(void) const {
+//    return false; //todo:2 try to implement this
+//  }
 
 //  Content&peek(void){ //QT+mingw had no problem with a ';' here, gcc arm however wouldn't create the function.
 //    return CircularIndexer <Content>::peek();

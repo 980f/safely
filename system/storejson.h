@@ -1,9 +1,11 @@
 #ifndef STOREJSON_H
 #define STOREJSON_H "(C) Andrew L. Heilveil, 2017"
 
-#include "storable.h"
 #include "buffer.h"
+
 #include "textpointer.h"
+
+#include "storable.h"
 
 #include "abstractjsonparser.h"
 

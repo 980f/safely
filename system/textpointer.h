@@ -87,5 +87,6 @@ public:
 
 
 }; // class TextPointer
-
+//pre-safely name:
+typedef Text TextPointer;
 #endif // TEXTPOINTER_H

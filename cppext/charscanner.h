@@ -95,7 +95,7 @@ struct ByteScanner : public Indexer<u8> {
   /**had to copy from the base class, couldn't figure out how to cast one template into another.*/
   void getTail(CharScanner&other);
 
-  void getTail(ByteScanner&other){
+  void getTail(const ByteScanner&other){
     Indexer<u8>::getTail(other);
   }
 

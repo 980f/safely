@@ -8,7 +8,7 @@
 //#include <cstdio> //snprintf
 #include "string.h"
 #include "numberparser.h"
-#include "safely.h" //ascii framing characters
+//#include "safely.h" //ascii framing characters
 #include "cstr.h"
 
 struct NumberParser : public PushedNumberParser  {
@@ -81,6 +81,17 @@ int CharFormatter::parseInt(int def){
     return INT_MIN;
   } else {
     return int(dry);
+  }
+}
+
+unsigned CharFormatter::parseUnsigned(unsigned def){
+  s64 dry = parse64(def);
+  if(dry> UINT_MAX) {
+    return def;
+  } else if (dry< 0) {
+    return def;
+  } else {
+    return unsigned(dry);
   }
 }
 
@@ -178,7 +189,7 @@ bool CharFormatter::printDigit(unsigned digit){
   return printChar(digit + ((digit < 10) ? '0' : 'A' - 10)); //'A' - 10 so we can get a letter beginning with 'A' at 10, for hex
 }
 
-bool CharFormatter::printUnsigned(unsigned int value){
+bool CharFormatter::printUnsigned32(unsigned int value){
   if(value == 0) {//frequent case
     return printChar('0'); // simpler than dicking with the suppression of leading zeroes.
   }
@@ -194,7 +205,7 @@ bool CharFormatter::printUnsigned(unsigned int value){
   }
 } // CharFormatter::printUnsigned
 
-bool CharFormatter::printUnsigned(u64 value){
+bool CharFormatter::printUnsigned64(u64 value){
   if(value == 0) {
     return printChar('0');
   }
@@ -323,7 +334,7 @@ bool CharFormatter::printNumber(double d, const NumberFormat &nf, bool addone){
     return checker &= printString(np.negative ? "-Inf" : nf.showsign ? "+Inf" : "Inf");
   } else {
     if(nf.scientific) {
-      checker &= printNumber(d,nf.decimals + addone);
+      checker &= printDecimals(d,nf.decimals + addone);
     } else {
       if(nf.showsign && !np.negative) {
         checker &= printChar('+');
@@ -335,7 +346,7 @@ bool CharFormatter::printNumber(double d, const NumberFormat &nf, bool addone){
       checker &= printUnsigned(np.predecimal);
       if(nf.decimals>0 &&np.postdecimal>0) {
         checker &= printChar('.');//not doing locale's herein.
-        int stillwant = nf.decimals + addone;
+        unsigned stillwant = nf.decimals + addone;
         if(np.postdecimal==0) {//frequent case, when number was actually an integer
           checker &= printChar('0',stillwant);
         } else {
@@ -363,7 +374,7 @@ bool CharFormatter::printNumber(double d, const NumberFormat &nf, bool addone){
   return checker.commit();
 } /* printNumber */
 
-bool CharFormatter::printDecimals(double d, int decimals){
+bool CharFormatter::printDecimals(double d, unsigned decimals){
   NumberFormat nf;
   nf.decimals=decimals;
   return printNumber(d,nf,false);
@@ -432,4 +443,9 @@ bool CharFormatter::removeTerminator(){
 CharFormatter CharFormatter::infer(char *content){
   Cstr wrap(content);
   return CharFormatter(wrap.violated(),wrap.length());//#does not include the null.
+}
+
+template<>
+bool CharFormatter::printUnsigned(u64 thing){
+  return printUnsigned64(thing);
 }

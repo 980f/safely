@@ -5,7 +5,7 @@
 #include "argset.h"
 
 
-/** persistance manager class for clumps of numbers, but without the actual persistance mechanism. 
+/** persistance manager class for clumps of numbers, but without the actual persistance mechanism.
 This does some of the packing and unpacking of numerical objects but doesn't actually transport them.*/
 class Settable :public ChangeMonitored {
 private:
@@ -17,7 +17,7 @@ protected:
     copy(other);
   }
 public:
-  virtual int numParams()const=0;
+  virtual unsigned numParams()const=0;
   virtual bool setParams(ArgSet&args)=0;
   virtual void getParams(ArgSet&args)const =0 ;
 
@@ -30,6 +30,11 @@ public:
   void copy(Settable const &other);
   /**assign, report if assignment caused something to change.*/
   bool changed(Settable const &other);
+  //legacy name
+  bool differed(Settable const &other){
+    return changed(other);
+  }
+
   //formally required to allow use in heaped systems:
   virtual ~Settable();
 };
@@ -48,15 +53,15 @@ public:
     return other;
   }
 
-  int numParams()const {
+  unsigned numParams()const override {
     return 1;
   }
 
-  bool setParams(ArgSet&args){
+  bool setParams(ArgSet&args)override {
     return also(::changed(value,args.next(0)));
   }
 
-  void getParams(ArgSet&args)const {
+  void getParams(ArgSet&args)const override {
     args.next()=value;
   }
 
