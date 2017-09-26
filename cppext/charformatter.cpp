@@ -10,7 +10,7 @@
 #include "numberparser.h"
 //#include "safely.h" //ascii framing characters
 #include "cstr.h"
-
+#include "cheaptricks.h" //take()
 struct NumberParser : public PushedNumberParser  {
 
   /** @param buf points after last char, prev() is terminator */
@@ -337,12 +337,6 @@ bool CharFormatter::printNumber(double d, int sigfig){
 } // CharFormatter::printNumber
 
 
-//todo:00 find why this wasn't in scope
-unsigned take(unsigned &qty){
-  unsigned value=qty;
-  qty=0;
-  return value;
-}
 
 bool CharFormatter::printNumber(double d, const NumberFormat &nf, bool addone){
   //first: round!
