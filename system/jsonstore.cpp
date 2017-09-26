@@ -1,6 +1,7 @@
 #include "jsonstore.h"
 #include "logger.h"
-
+#include <charscanner.h>
+#include "bitwise.h"
 
 const char *JsonStore::Lexer::separator(":,{}[]"); //maydo: bare newline is a comma.const char
 #define CEscape(ch) replace(pointer - 1, 2, 1, ch )  //may be off by one
@@ -174,9 +175,10 @@ JsonStore::Parser::Parser(Storable&rootNode) : notStarted(true), node(&rootNode)
 
 void JsonStore::Parser::addNode(std::string&tokenImage){
   processEscapes(tokenImage);
-  Storable& child(node->addChild(name));
-  child.setImage(tokenImage, Storable::Parsed);
-  child.convertToNumber(true);
+  Storable* child(node->findChild(name,true/*create*/));
+  if(child){
+    child->setImage(tokenImage.c_str(), Storable::Parsed);
+  }
 }
 
 bool JsonStore::Parser::acceptToken(std::string&tokenImage, UTF8 term){
@@ -187,39 +189,32 @@ bool JsonStore::Parser::acceptToken(std::string&tokenImage, UTF8 term){
   switch(term.raw) {
   case ':':
     name = tokenImage.c_str();
-    break;
-  case ',':
+    return true;
+  case ','://assign value
     if(tokenImage.length() != 0) {
       addNode(tokenImage);
     }
-    name.clear();
     break;
-  case '{':
+  case '{'://'[' has been replaced with '{' when we get here.
     if(flagged(notStarted)) {
       if(!name.empty()) {
-        node->setName(name);
+//todo:1 why did we think we could rename the present node?        node->setName(name);
       }
     } else {
-      node = &(node->addChild(name)); //push the "node stack"
-      node->setQuality(Storable::Parsed);
+      node = node->findChild(name,true); //push the "node stack"
+      node->setType(Storable::Wad);
+//      node->setQuality(Storable::Parsed);//this should be intrinsic in the addChild
     }
-    name.clear();
     break;
-  case '}':
+  case '}'://assign and pop
     if(tokenImage.length() != 0) { //final value of a wad
       addNode(tokenImage);
     }
     node = node->parent;  //pop the "node stack"
-    name.clear();
     break;
   } // switch
+  name.clear();//don't leak the name from a defective node to a following nameless one.
   return true;
-
-  //if value (comma or end brace) then NOW we process \ escapes.
-  //and then create a child with the name ...
-  // ... and processed value.
-  //maydo: recognize the the text is that of a number and make the node a number here. If not then Storable itself will need to do the conversion when someone access a
-  // Text number with a number accessor. Legacy says we should do it here.
 } // acceptToken
 
 ///////////////////////

@@ -2,9 +2,10 @@
 #define JSONSTORE_H
 
 #include "storable.h"
-//#include "textinputstream.h"
+
 #include "utf8.h"
-#include "string"
+#include <string>
+class ByteScanner;//forward ref to speed build
 
 /**
   * parse and print Storable to json-like file.
@@ -26,7 +27,7 @@ class JsonStore {
     Note:  if node->parent == null and node->numChildren() == 0, this is the root and we should not create a wad  child upon seeing an open brace.*/
     Storable *node;
     /** stores the name of the current node */
-    TextPointer name;
+    Text name;
     /** Adds child by current name and sets value */
     void addNode(std::string &tokenImage);
   public:
@@ -84,13 +85,12 @@ public:
     Storable *node;
     /** @returns whether a 'name:' was emitted == name is not empty.*/
     bool printName();
-
+    /** print children */
     void printWad();
 
   public:
     bool printValue();
     Printer(Storable&node, std::ostream&os);
-
   };
 
 };
