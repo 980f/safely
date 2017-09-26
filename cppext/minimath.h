@@ -284,7 +284,8 @@ template< typename S1, typename S2 > S1 greater(S1 a, S2 b) {
   }
 }
 
-template< typename Scalar > void swap(Scalar &a, Scalar &b) {
+//as 'swap' texteditor.cpp failed somewhere inscrutable
+template< typename Scalar > void myswap(Scalar &a, Scalar &b) {
   Scalar noxor;//don't trust that xor is non corrupting for all scalars.
   noxor = a;
   a = b;

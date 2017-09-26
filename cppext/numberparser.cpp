@@ -1,6 +1,5 @@
 //"(C) Andrew L. Heilveil, 2017"
 #include "numberparser.h"
-using namespace Safely;
 
 #include "minimath.h"
 #include "cheaptricks.h"

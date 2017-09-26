@@ -79,11 +79,11 @@ bool Char::isHexDigit() const noexcept {
   return isxdigit(raw);
 }
 
-#include "ignoresignwarnings.h"
+//todo:00 where is this? #include "ignoresignwarnings.h"
 unsigned Char::hexDigit() const noexcept {
-  unsigned trusting=(raw|0x20) - '0';//tolowerthen subtract char for zero.
+  unsigned trusting=(raw|0x20) - '0';//tolower then subtract char for zero.
   if((trusting>9)){
-    trusting-=39;
+    trusting-=39;// ~ 'a' -'0' + 10
   }
   return trusting; //'A'-'0' = 17, want 10 for that
 }

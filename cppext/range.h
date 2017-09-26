@@ -65,7 +65,7 @@ public:
 
   bool canonicize(){
     if(flagged(reversed)) {
-      swap(lowest,highest);
+      myswap(lowest,highest);
       return true;
     } else {
       return false;

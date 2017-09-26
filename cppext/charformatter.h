@@ -1,7 +1,7 @@
 #ifndef CHARFORMATTER_H
 #define CHARFORMATTER_H
 #include "charscanner.h"
-#include "argset.h" //todo:1 remove this legacy, extend this class with another if needed.
+//#include "argset.h" //todo:1 remove this legacy, extend this class with another if needed.
 
 /** print human readable stuff into a checked buffer.
  *  next layer down tries to preserve a terminating null, but you have to ask it to do so.
@@ -69,11 +69,11 @@ public:
 
   bool printNumber(double d, const NumberFormat &nf, bool addone = false);
   /** printNUmber(double,int) prints significant figures, this prints fixedpoint*/
-  bool printDecimals(double d, int decimals);
+  bool printDecimals(double d, unsigned decimals);
 
   bool printString(TextKey s);
 
-  void printArgs(ArgSet&args,bool master);
+//  void printArgs(ArgSet&args,bool master);
   /** useful for collation sequence, -1: this before other, +1: this after other, 0: this same as other*/
   int cmp(const CharScanner&other) const;
 
@@ -84,8 +84,6 @@ public:
   /** print @param width least significant hex digits of @param value, @returns whether there were width positions available, if not then nothing is written */
   bool printHex(unsigned value, unsigned width);
 
-  bool addTerminator();
-  bool removeTerminator();
 
 
 }; // class CharFormatter

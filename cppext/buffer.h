@@ -96,9 +96,14 @@ public:
    * a rewind>0 gets you the unvisited part of the other, with the given number of already visited elements.
    * e.g. a value of 1 after reading a comma will get you a buffer starting with that comma */
   Indexer(const Indexer &other, int clip) : //default value is clone of created state of other.
-    Ordinator(other, rewind),
+    Ordinator(other, clip),
     //if 0 or ~clipsome start is same as start of other, else start offset from this one's current location
-    buffer(clip<=0 ? other.buffer : (other.buffer + (other.pointer + clip))){
+    buffer(0){
+    if(clip<=0){
+     buffer= other.buffer ;
+    } else {
+      buffer= (other.buffer + (other.pointer + clip));
+    }
   }
 
   /** simple copy constructor */

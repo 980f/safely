@@ -118,7 +118,7 @@ struct ByteScanner : public Indexer<u8> {
 };
 
 struct ByteLooker : public Indexer<const u8> {
-  ~ByteLooker();
+  virtual ~ByteLooker()=default;
   ByteLooker(const u8 * content, unsigned size);
   ByteLooker(const ByteLooker &other, int clip = 0);
   //casting constructor, pointer to existing content like a snap().

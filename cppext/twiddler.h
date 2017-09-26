@@ -35,7 +35,7 @@ public:
 /** add some convenient rate setting/getting functions, factored out of prior implementation to ge ta no-floating point base class */
 class Twiddler:public IntegerTwiddler {
 public:
-  using IntegerTwiddler::IntegerTwiddler;
+  using IntegerTwiddler::IntegerTwiddler::setRatio;//this was supposed to give access to setRatio(unsigned,unsigned,..._) but that quit working.
   void setRatio(double ratio);
   /**@return amount of time that twiddler is 'true' */
   double getRatio(void);

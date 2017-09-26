@@ -336,6 +336,14 @@ bool CharFormatter::printNumber(double d, int sigfig){
   return checker.commit();
 } // CharFormatter::printNumber
 
+
+//todo:00 find why this wasn't in scope
+unsigned take(unsigned &qty){
+  unsigned value=qty;
+  qty=0;
+  return value;
+}
+
 bool CharFormatter::printNumber(double d, const NumberFormat &nf, bool addone){
   //first: round!
   if(d!=0.0) {
@@ -380,7 +388,7 @@ bool CharFormatter::printNumber(double d, const NumberFormat &nf, bool addone){
           }
           if(stillwant>0) {
             u64 postdec = truncateDecimals(np.postdecimal,stillwant);
-            int stillhave = 1 + ilog10(postdec);//double checking
+            unsigned stillhave = 1 + ilog10(postdec);//double checking, unlike to left of radix we want 0 here to result in -1.
             if(stillhave<stillwant) {
               checker &= printChar('0',stillwant - stillhave);
             }
@@ -409,17 +417,6 @@ bool CharFormatter::printString(TextKey s){
   return checker.commit();
 }
 
-void CharFormatter::printArgs(ArgSet&args,bool master){
-  printChar(master ? '=' : FS); //#chose comma (frame separator) for spread sheet import.
-  ArgSet clipped(args);
-  while(clipped.hasNext()) {
-    double arg = clipped.next(); //4 debug
-    printNumber(arg);
-    if(clipped.hasNext()) {
-      printChar(FS);
-    }
-  }
-} /* printArgs */
 
 int CharFormatter::cmp(const CharScanner&other) const {
   CharScanner me(*this); //this constructor gives us a pointer to the used part of the argument
@@ -444,27 +441,22 @@ int CharFormatter::cmp(const CharScanner&other) const {
   }
 } /* cmp */
 
-bool CharFormatter::addTerminator(){
-  return printChar(EOL)&&printChar(0);
-}
+//bool CharFormatter::addTerminator(){
+//  return printChar(EOL)&&printChar(0);
+//}
 
-bool CharFormatter::removeTerminator(){
-  if(hasPrevious()&&previous()==0) {
-    rewind(1);
-    if(hasPrevious()&&previous()==EOL) {
-      rewind(1);
-      return true;
-    }
-  }
-  return false;
-}
+//bool CharFormatter::removeTerminator(){
+//  if(hasPrevious()&&previous()==0) {
+//    rewind(1);
+//    if(hasPrevious()&&previous()==EOL) {
+//      rewind(1);
+//      return true;
+//    }
+//  }
+//  return false;
+//}
 
 CharFormatter CharFormatter::infer(char *content){
   Cstr wrap(content);
   return CharFormatter(wrap.violated(),wrap.length());//#does not include the null.
-}
-
-template<>
-bool CharFormatter::printUnsigned(u64 thing){
-  return printUnsigned64(thing);
 }

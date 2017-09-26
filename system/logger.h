@@ -34,6 +34,7 @@ public:
   void dumpStack(const char *prefix);
 }; // class Logger
 
+
 /** you must instantiate these two objects somewhere in your project */
 
 /** a globally shared logger, for when you are too lazy to create one for your context */
@@ -41,4 +42,6 @@ extern Logger dbg;
 /** a globally shared logger, for really egregious problems */
 extern Logger wtf;
 
+
+#define IgnoreGlib(err) dbg("%s ignoring %s",__PRETTY_FUNCTION__, err.what().c_str())
 #endif // LOGGER_H

@@ -10,8 +10,9 @@ public:
   /** half width of filter, using int rather than unsigned to get rid of warnings */
   const int hwidth;
 public:
-  CenteredSlice(int *data,int hwidth);
-  int width()const ;
+  CenteredSlice(int *data,unsigned hwidth);
+  unsigned width()const ;
+  /** @param i is int, not unsigned as 0 is in the middle of the slice allocation*/
   int operator [](int i) const;
   /** @returns datum at lowest address */
   int lowest()const;

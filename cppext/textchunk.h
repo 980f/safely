@@ -39,7 +39,7 @@ protected:
 
 class TextChunk {
 public:
-  TextBlock &block;
+  const TextBlock &block;
   Span span;
   TextChunk(const TextBlock &block);
   /** @returns a  TextBlock which covers the span */
