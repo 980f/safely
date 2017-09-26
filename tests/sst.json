@@ -1,0 +1,88 @@
+
+"pialyzer" : {
+  "options" : {
+    "watchdog" : {
+      "whichPin" : 18 ,
+      "onStart" : 0 ,
+      "onExit" : 0 ,
+      "msLow" : 1000 ,
+      "msHigh" : 2000 
+    },
+    "runLamp" : {
+      "whichPin" : 21 ,
+      "onPolarity" : 0 
+    },
+    "console" : {
+      "port" : 38927 ,
+      "allowed" : 2 
+    },
+    "hostport" : {
+      "device" : "/dev/serial0" ,
+      "baud" : 19200 ,
+    },
+    "acqOpts" : {
+      "acquisitionTime" : 303 ,
+      "cycleTime" : 0 ,
+      "acqConfile" : "acqconf.json" 
+    },
+    "logicHz" : 100 
+  },
+
+  "dp5" : {
+    "usb" : {
+      "vid" : 4292 ,
+      "pid" : 33834 ,
+      "serialNumber" : 0 
+    },
+    "shaping" : {
+    },
+    "acq" : {
+      "MCAC" : 4096 ,
+      "PRET" : 313 
+    },
+    "updateRate" : 1.07 ,
+ 
+  },
+  "tube" : {
+    "usbId" : {
+      "vid" : 1027 ,
+      "pid" : 53336 ,
+      "serialNumber" : 0 
+    },
+    "updateHz" : 100 ,
+    "gaugeHz" : 10 ,
+    "voltage" : {
+      "units" : "kV" ,
+      "range" : {
+        "min" : 5 ,
+        "max" : 50.00001
+      },
+      "fullScale" : 50 
+    },
+    "current" : {
+      "units" : "uA" ,
+      "range" : {
+        "min" : 5 ,
+        "max" : 200.00001 
+      },
+      "fullScale" : 200 
+    },
+    "temperature" : {
+      "units" : "'C" ,
+      "range" : {
+        "min" : 35 ,
+        "max" : 60 
+      },
+      "fullScale" : 100 
+    },
+    "power" : {
+      "bounceTime" : 9.5 ,
+      "max" : 4 
+    },
+    "startup" : {
+      "hvOn" : 0 ,
+      "voltagekV" : 7.5 ,
+      "currentuA" : 30 
+    }
+  }
+}
