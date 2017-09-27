@@ -1,7 +1,7 @@
 #ifndef STORABLE_H
 #define STORABLE_H
 
-#include "safely.h"
+//#include "safely.h"
 
 #include "argset.h" //for arrays to mate to hardware structs
 
@@ -106,7 +106,7 @@ protected:
   /** children of this node */
   Chain<Storable> wad;
   /** set by StoredEnum when one is created, maintains parallel text.*/
-  const Enumerated *enumerated; //expected to be a globally shared one
+  const Safely::Enumerated *enumerated; //expected to be a globally shared one
 
   /** calls watchers */
   void notify() const;
@@ -135,8 +135,8 @@ public:
   Type getType() const;
   bool setQuality(Quality q);
   /** sets a labeling for a numeric value. NB: the pointer is cached in this class, the enumerizer better not be deletable! */
-  void setEnumerizer(const Enumerated *enumerated);
-  const Enumerated *getEnumerizer() const;
+  void setEnumerizer(const Safely::Enumerated *enumerated);
+  const Safely::Enumerated *getEnumerizer() const;
 
   /** @returns whether the text value was converted to a number. @param ifPure is whether to restrict the conversion to strings that are just a number, or whether
    * trailing text is to be ignored. */

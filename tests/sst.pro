@@ -1,13 +1,12 @@
 #project specific relative paths
 #directory for generally useful code, relative to this file:
-safelydir=../safely
-#directory for libusb and friends, relative to this file:
-usbdir=$$safelydir/usb
+safelydir=../
+
 #directory of project specific code, relative to this file:
 prjdir=.
 
 #build into the deployment source directory, presently the same as the project file's directory
-TARGET = pialyzer
+TARGET = sst
 DESTDIR = $$PWD
 
 #qt settings for a commandline application:
@@ -219,58 +218,7 @@ HEADERS += safely.h \
     $$cppextdir/numericalvalue.cpp
 
 
-pidir = $$safelydir/rasbpi
-DEPENDPATH += $$pidir
-INCLUDEPATH += $$pidir
-SOURCES += \
-    $$pidir/gpio.cpp \
-    $$pidir/dout.cpp
-
-HEADERS += \
-    $$pidir/gpio.h \
-    $$pidir/dout.h
-
-#linux usb user-space access and common devices
-
-DEPENDPATH += $$usbdir
-INCLUDEPATH += $$usbdir
-SOURCES += \
-    $$usbdir/ftdlib.cpp \
-    $$usbdir/libusber.cpp \
-    $$usbdir/ftdi.c \
-    $$usbdir/mpsse.cpp \
-    $$usbdir/usbid.cpp
-
-HEADERS += \
-    $$usbdir/ftdi_i.h \
-    $$usbdir/ftdi.h \
-    $$usbdir/mpsse.cpp \
-    $$usbdir/ftdlib.h \
-    $$usbdir/libusber.h \
-    $$usbdir/usbid.h
-
-#libftdi stuff needs this:
-QMAKE_CFLAGS +=-std=c11
-
-usblibdir = $$usbdir/libusb
-
-DEPENDPATH += $$usblibdir
-INCLUDEPATH += $$usblibdir
-
-SOURCES += \
-  $$usblibdir/core.c \
-  $$usblibdir/descriptor.c  \
-  $$usblibdir/hotplug.c  \
-  $$usblibdir/io.c  \
-  $$usblibdir/strerror.c  \
-  $$usblibdir/sync.c  \
-  $$usblibdir/os/poll_posix.c  \
-  $$usblibdir/os/threads_posix.c  \
-  $$usblibdir/os/linux_usbfs.c  \
-  $$usblibdir/os/linux_netlink.c  \
-  $$usblibdir/os/linux_udev.c
-
-LIBS += -lpthread -ludev
+QMAKE_CFLAGS +=-std=c14
 
 
 #project specific code
@@ -278,37 +226,12 @@ DEPENDPATH += $$prjdir
 INCLUDEPATH += $$prjdir
 
 SOURCES += \
-    $$prjdir/main.cpp \
-    $$prjdir/amptekanalyzer.cpp \
-    $$prjdir/commander.cpp \
-    $$prjdir/analysis.cpp \
-    $$prjdir/command.cpp \
-    $$prjdir/minix.cpp \
-    $$prjdir/dp5/paramset.cpp \
-    $$prjdir/dp5/dp5.cpp \
-    $$prjdir/dp5/stats.cpp \
-    $$prjdir/dp5/spectrum.cpp \
-    $$prjdir/dp5/packet.cpp \
-    $$prjdir/dp5/spectrumfile.cpp
+    $$prjdir/sst.cpp
 
-HEADERS += \
-    $$prjdir/amptekanalyzer.h \
-    $$prjdir/commander.h \
-    $$prjdir/analysis.h \
-    $$prjdir/command.h \
-    $$prjdir/minix.h \
-    $$prjdir/dp5/paramset.h \
-    $$prjdir/dp5/dp5.h \
-    $$prjdir/dp5/dppvariant.h \
-    $$prjdir/dp5/stats.h \
-    $$prjdir/dp5/spectrum.h \
-    $$prjdir/dp5/packet.h \
-    $$prjdir/dp5/spectrumfile.h
+#HEADERS += \
+
+
 
 # distfiles group doesn't matter to our build or deploy, but it is handy for rapid access to non-code files.
 DISTFILES += \
-    $$prjdir/pialyzer.json \
-    $$prjdir/mycraft3.json \
-    $$prjdir/andyh-T420.json \
-    $$prjdir/farmer.json
-
+    $$prjdir/sst.json

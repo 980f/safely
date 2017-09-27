@@ -13,6 +13,7 @@ static const PathParser::Rules slasher('/',false,true);// '.' gives java propert
 //bool Storable::AllowRemoteWadOperations=false;
 
 using namespace sigc;
+using namespace Safely;
 
 //the following are only usable within Storable
 #define ForKidsConstly(list) for(ConstChainScanner<Storable> list(wad); list.hasNext(); )
@@ -481,7 +482,7 @@ unsigned Storable::numLeaves() const {
 }
 
 ChainScanner<Storable> Storable::kinder(){
-  return ChainScanner<Storable>(wad);
+  return {wad};
 }
 
 ConstChainScanner<Storable> Storable::kinder() const {

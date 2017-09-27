@@ -13,8 +13,8 @@ protected:
   Epoller looper;
   /** ticks in logic driver period */
   unsigned period;
-  /** if greater than zero and less than period it replaces period for one cycle */
 private:
+  /** if greater than zero and less than period it replaces period for one cycle */
   unsigned quickCheck=0;
 protected:
   /** set quickCheck if @param soonish is sooner than a prior setting */
