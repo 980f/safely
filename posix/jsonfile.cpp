@@ -2,7 +2,7 @@
 #include "jsonfile.h"
 
 #include "filer.h"
-#include "storejson.h"
+#include "../safely/system/storejson.h"
 #include "charscanner.h"
 
 #include "stdio.h" //for printing until we apply our textFormatter
@@ -16,7 +16,7 @@ int JsonFile::reload(){
 }
 
 int JsonFile::loadFile(Cstr thename){
-  root.child("#loadedFromFile").setImage(thename);//record where we try to load from.
+  root.child("#loadedFromFile").setImage(thename.c_str());//record where we try to load from.
   Filer optionFile("LoadJSON");
   if(! optionFile.openFile(thename)){
     dbg("Couldn't open \"%s\", error:[%d]%s",thename.c_str(),optionFile.errornumber,optionFile.errorText());
@@ -39,7 +39,7 @@ int JsonFile::loadFile(Cstr thename){
   parser.parser.lookFor(StandardJSONFraming ";=");
 
   parser.parse();
-  root.resolve(false);//false: accessors set the type, not the appearance of the content
+  //todo: import this functionality: root.resolve(false);//false: accessors set the type, not the appearance of the content
   loadedFrom=thename;//record after success
   //todo: stats?
   dbg("loaded %d nodes, %d levels, from %s",parser.stats.totalNodes,parser.stats.maxDepth.extremum,thename.c_str());
@@ -110,7 +110,7 @@ void JsonFile::printOn(Cstr somefile, unsigned indent){
 }
 
 Cstr JsonFile::originalFile(){
-  return root.child("#loadedFromFile").image();
+  return root.child("#loadedFromFile").image().c_str();
 }
 
 

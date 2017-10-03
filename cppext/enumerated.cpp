@@ -1,7 +1,7 @@
 #include "enumerated.h"
 #include "index.h"
 
-using namespace Safely;
+//using namespace Safely;
 
 const TextKey Enumerated::InvalidToken = "Undefined";
 

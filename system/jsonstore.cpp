@@ -3,18 +3,20 @@
 #include <charscanner.h>
 #include "bitwise.h"
 
+#include <ostream>
+
 const char *JsonStore::Lexer::separator(":,{}[]"); //maydo: bare newline is a comma.const char
 #define CEscape(ch) replace(pointer - 1, 2, 1, ch )  //may be off by one
 
 /** consumes bytes from string to get a hex constant. Bytes are NOT removed.
  * *@param pointer points to first char after last hex char. read code for failure cases.
  */
-u32 parseHex(unsigned pointer, const std::string&image, int numDigits){
+u32 parseHex(unsigned pointer, const std::string&image, unsigned numDigits){
   if(pointer + numDigits <= image.length()) {
     u32 packed(0);
-    for(int n = numDigits; n-- > 0; ) {
+    for(unsigned n = numDigits; n-- > 0; ) {
       packed <<= 4;
-      char c = image.at(pointer++);
+      unsigned char c = static_cast<unsigned char> (image.at(pointer++));
       if(c >= '0' && c <= '9') {
         packed |= c - '0';
       } else if(c >= 'A' && c <= 'F') {
@@ -31,14 +33,14 @@ u32 parseHex(unsigned pointer, const std::string&image, int numDigits){
 } // parseHex
 
 /** in=place conversion of escape sequences to utf8 sequences */
-void replaceUEscape(std::string&tokenImage, unsigned&pointer, int numDigits){
+void replaceUEscape(std::string&tokenImage, unsigned&pointer, unsigned numDigits){
   u32 packed(parseHex(pointer, tokenImage, numDigits));
 
   if(packed != u32(-1)) { //now expand packed to utf8:
     pointer -= 2;
     tokenImage.erase(pointer, numDigits + 2); //erase sequence
 
-    int more = UTF8::numFollowers(packed);
+    unsigned more = UTF8::numFollowers(packed);
     if(more > 0) {
       //todo:M can be made slicker with a local char array filled then inserted.
       tokenImage.insert(pointer++, 1, UTF8::firstByte(packed, more));
@@ -54,8 +56,7 @@ void replaceUEscape(std::string&tokenImage, unsigned&pointer, int numDigits){
 } // replaceUEscape
 
 void processEscapes(std::string&tokenImage){
-  unsigned pointer(0); //using int as std::strin::iterators are painful and incomplete.
-
+  unsigned pointer(0);
   while(pointer < tokenImage.length()) { //NB: length will somtimes change inside loop
     UTF8 utf8(tokenImage.at(pointer++)); //increment here for safety, to avert infinite loop on coding error.
     if(utf8 == '\\') {
@@ -224,7 +225,7 @@ JsonStore::Printer::Printer(Storable&node, std::ostream&os) : tablevel(0), os(os
 }
 
 void JsonStore::Printer::indent(){
-  for(int tabs = tablevel; tabs-- > 0; ) {
+  for(unsigned tabs = tablevel; tabs-- > 0; ) {
     os << '\t'; //or we could use spaces
   }
 }
@@ -237,7 +238,7 @@ void JsonStore::Printer::printText(const char *p, bool forceQuote){
     os << '"';
   }
   UTF8 c;
-  while(c = *p++) {
+  while((c = *p++)) {
     switch(char(c)) {
     case '\t': os << "\\t"; continue;
     case '\r': os << "\\r"; continue;

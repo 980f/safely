@@ -2,11 +2,8 @@
 #define STOREJSON_H "(C) Andrew L. Heilveil, 2017"
 
 #include "buffer.h"
-
 #include "textpointer.h"
-
 #include "storable.h"
-
 #include "abstractjsonparser.h"
 
 /** must supply and track source data, and be able to extract data via ordinals */
@@ -40,6 +37,7 @@ public:
 
 struct StoreJsonParser: public AbstractJSONparser<Storable, Text> {
   StoreJsonConstructor core;
+  /** @param data links to buffer of content to parse. */
   StoreJsonParser(Indexer<char>&data);
 };
 

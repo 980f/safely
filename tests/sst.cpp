@@ -1,5 +1,22 @@
 //"(C) Andrew L. Heilveil, 2017"
 
+/*
+test harness for Stored/Json socket protocol.
+
+As a master:
+It will create a data structure and send that to the remote.
+It will edit the local data structure with incoming chunks.
+It will not execute the commands such as "delete node", at least not until it shares the same code base.
+
+When that remote is the old desktop gui we should get information as it is edited on that gui.
+
+
+Special functions of the remote:
+delete node by name.
+"please send" by name.
+
+*/
+
 #include <polledtimer.h>
 #include <dottedname.h>
 #include "application.h" //base class for non-demon programs
@@ -50,8 +67,6 @@ class SST : public Application {
   u8 outgoing[32 * 1024];
   Indexer<u8> xmitter;
 
-
-  //console input is used to simulate host input, but drops requirement for checksum and etx.
   TelnetServer console;
   /** commands to host port have their human readable version sent here: (default wraps stdout)*/
   Fildes status;
@@ -96,7 +111,7 @@ public:
   void getParam(ReadonlySequence<TextKey> &it, Fildes &replyto);
 
   bool quitProgram(ReadonlySequence<TextKey> &it, Fildes &replyto);
-  void loadOptionsFile(ReadonlySequence<TextKey> &it, Fildes &replyto);
+
   void poll(ReadonlySequence<TextKey> &it, Fildes &replyto);
   unsigned ticksForInterval(double seconds);
 private: //commands

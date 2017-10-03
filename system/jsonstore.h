@@ -74,7 +74,7 @@ public:
   bool parse(ByteScanner&is);
 
   class Printer {
-    int tablevel;
+    unsigned tablevel;
     std::ostream&os;
     void indent();
 

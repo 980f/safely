@@ -3,7 +3,7 @@
 
 #include "textkey.h"
 
-namespace Safely {
+//namespace Safely {
 /** base class is abstract access to a labeling mechanism */
   class Enumerated {
   protected:
@@ -52,6 +52,8 @@ namespace Safely {
 
 #define END_ENUM(name) }; \
   SequentialEnumeration name(name ## _Tokens, countof(name ## _Tokens))
-}//end namespace
+
+//}//end namespace
+//using Safely::SequentialEnumeration;
 
 #endif // _ENUMERATED_H_
