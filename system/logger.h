@@ -29,7 +29,7 @@ public:
   ~Logger();
   /** makes usage look like a function */
   void operator() (const char *msg, ...);
-
+  //used for legacy in PosixWrapper
   void varg(const char *fmt, va_list &args);
   void dumpStack(const char *prefix);
 }; // class Logger

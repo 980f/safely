@@ -9,8 +9,48 @@
 
 //this is not a class member so that we don't force pathparser.h on all users:
 static const PathParser::Rules slasher('/',false,true);// '.' gives java property naming, '/' would allow use of filename classes. '|' was used for gtkwrappers access
-/** allow value sets to a wad create and delete children */
-//bool Storable::AllowRemoteWadOperations=false;
+
+static const char PathSep = '/';
+/** global/shared root, the 'slash' node for findChild */
+Storable Storable::Slash("/");
+/** access for JsonSocket */
+Storable::Mirror *Storable::remote = nullptr;
+
+Storable &Storable::Groot(TextKey pathname){
+  if(Cstr(pathname).empty()) {
+    return Slash;
+  }
+  Storable *node = Slash.findChild(pathname,true);
+  if(node) {
+    return *node;
+  } else
+  //else a relative path that looked back past groot (or an independent tree's root)
+  return Slash.child(pathname);//which most likely will be non-functional, but at least not null.
+} // Storable::Groot
+
+bool Storable::Delete(TextKey pathname){
+  if(Cstr(pathname).empty()) {
+    return false;
+  }
+  Storable *node = FindChild(pathname,false);
+  if(node) {
+    if(node->parent) {
+      node->parent->removeChild(*node);
+      return true;
+    } else {
+      //root or floating node, can't delete those. Should also not create them! There is no need for floating nodes except as local temps.
+      return false;
+    }
+  } else {
+    return false;
+  }
+}
+
+Storable *Storable::FindChild(TextKey pathname, bool autocreate){
+  return Slash.findChild(pathname,autocreate);
+} // Storable::Delete
+
+////////////
 
 using namespace sigc;
 using namespace Safely;
@@ -58,9 +98,19 @@ Storable::~Storable(){
 }
 
 void Storable::notify() const {
+  static recursionCounter=0;//4debug of notify.
+  if(remote) {
+    remote->alter(*this);
+  }
+  if(++recursionCounter>1) {
+    wtf("recursing %d in %s",recursionCounter,fullName().c_str());
+  }
+  //todo:Omni send change
   //#we don't check isvolatile here as volatile nodes are often of singular interest, they just aren't of general interest (should not trigger group watch).
   watchers.send();
   recursiveNotify();
+  --recursionCounter;
+} // Storable::notify
 }
 
 void Storable::recursiveNotify() const {
@@ -73,7 +123,7 @@ void Storable::recursiveNotify() const {
   }
 }
 
-Storable&Storable::precreate(TextKey name){
+Storable &Storable::precreate(NodeName name){
   setType(Wad); //if we are adding a child we must be a wad.
   if(q == Empty) {
     q = Defaulted;
@@ -120,9 +170,9 @@ void Storable::setEnumerizer(const Enumerated *enumerated){
         number = enumerated->valueOf(text.c_str()); //reconcile numeric value
       } else {
         if(type == NotKnown) {
-          setType(Storable::Textual); //todo:1 probably should be numeric and numeric should check for presence of enumerated, or add a specific Storable::Enumerated to
+          setType(Storable::Textual); //todo:1 probably should be numeric and numeric should check for presence of enumerated, or add a specific Storable::Enumerated to reduce redundant checks.
         }
-        // reduce redundant checks.
+        
         text = enumerated->token(number);
       }
     } else {
@@ -205,6 +255,7 @@ bool Storable::isModified() const {
   case Textual:
     return ChangeMonitored::isModified();
   default:
+  case NotKnown:
     return false;
   } // switch
 
@@ -223,7 +274,7 @@ bool Storable::wasModified(){
     return false;
 
   case Wad: { //investigate all children:  //need bracing to keep 'changes' local.
-    int changes = 0;   //only count node's own changed if no child is changed
+    unsigned changes = 0;   //only count node's own changed if no child is changed
     ForKids(list){
       if(list.next().wasModified()) {
         ++changes;
@@ -251,7 +302,7 @@ int Storable::listModified(sigc::slot<void, Ustring> textViewer) const {
     return 0;
 
   case Wad: {
-    int changes = 0;
+    unsigned changes = 0;
     ForKidsConstly(list){
       const Storable&child(list.next());
 
@@ -335,7 +386,9 @@ void Storable::assignFrom(Storable&other){
     return;                     //breakpoint, probably a pathological case.
   }
   switch(type) {
+//  default:
   case Uncertain:
+  //#join
   case NotKnown:
     if(other.is(Numerical)) {
       setNumber(other.number);
@@ -384,13 +437,15 @@ double Storable::setValue(double value, Storable::Quality quality){
 } // setValue
 
 void Storable::setImageFrom(TextKey value, Storable::Quality quality){
-  bool notifeye = false;
 
   if(isTrivial()) { //don't notify or detect change, no one is allowed to watch an uninitialized node
     text = value;
-    setType(Textual);
+//interfered with determining keyword vs text:        setType(Textual);
     setQuality(quality);
+    return;
   } else {
+  bool notifeye = false;
+
     if(quality==Parsed){//then retain type if it is known and set according to type
       if(type==Numerical){
         text=value; //#bypass change detect here
@@ -398,19 +453,16 @@ void Storable::setImageFrom(TextKey value, Storable::Quality quality){
         setValue(toDouble(text.c_str(), &impure),quality);//todo:0 refine subtype of number
         return;//already invoked change in setValue
       }
-//      if(type==Wad && AllowRemoteWadOperations){
-//        Storable &child=addChild(value);
-//        dbg("Created child %s, parent %s",child.name.c_str(),parent?parent->name.c_str():"root");
-//      }
     }
     notifeye = changed(text, value);  //todo:00 don't use changed template, do inline to avoid casting
     notifeye |= setQuality(quality);
-  }
   notifeye |= setType(Textual);
   also(notifeye); //record changed, but only trigger on fresh change
   if(notifeye) {
     notify();
-  }
+  }  
+}
+
 } // setImageFrom
 
 void Storable::setImage(const TextKey &value, Quality quality){
@@ -428,7 +480,7 @@ Cstr Storable::image(void){
 
   case Numerical:
     if(enumerated) {
-      return enumerated->token(number.as<int>());//don't update text, this is much more efficient since enumerated is effectively static.
+      return enumerated->token(number.as<unsigned>());//don't update text, this is much more efficient since enumerated is effectively static.
     } else {
       char buffer[64+1];//enough for 64 bit boolean image
       CharFormatter formatter(buffer,sizeof(buffer));
@@ -602,7 +654,7 @@ Storable *Storable::getChild(ChainScanner<Text> &progeny,bool autocreate){
   return searcher;
 }
 
-Storable *Storable::findChild(TextKey path, bool autocreate){
+Storable *Storable::findChild(NodeName path, bool autocreate){
   if(this==nullptr){
     return nullptr;
   }
@@ -618,7 +670,7 @@ Storable *Storable::findChild(TextKey path, bool autocreate){
 } // findChild
 
 /** creates node if not present.*/
-Storable&Storable::child(TextKey childName){
+Storable&Storable::child(NodeName childName){
   if(nonTrivial(childName)){
     if(Storable *child = existingChild(childName)) {
       return *child;
@@ -630,7 +682,7 @@ Storable&Storable::child(TextKey childName){
   }
 }
 
-Storable&Storable::operator ()(TextKey name){
+Storable&Storable::operator ()(NodeName name){
   return child(name);
 }
 
@@ -662,7 +714,7 @@ unsigned Storable::indexOf(const Storable&node) const {
   return wad.indexOf(&node);
 }
 
-Storable&Storable::addChild(TextKey childName){
+Storable&Storable::addChild(NodeName childName){
   Storable&noob(precreate(childName));
 
   return finishCreatingChild(noob);
@@ -678,11 +730,14 @@ Storable&Storable::createChild(const Storable&other){
 Storable&Storable::finishCreatingChild(Storable&noob){
   noob.index = wad.quantity();
   wad.append(&noob);
-  wadWatchers.emit(false,noob.index);
+  wadWatchers(false,noob.index);//especially used by stored group to create when remote posts into this node.
+  if(remote) {
+    remote->add(noob);
+  }
   return noob;
 }
 
-Storable&Storable::addWad(unsigned qty, Storable::Type type, TextKey name){
+Storable&Storable::addWad(unsigned qty, Storable::Type type, NodeName name){
   Storable&noob(precreate(name));
 
   noob.presize(qty, type);
@@ -697,15 +752,18 @@ void Storable::presize(unsigned qty, Storable::Type type){
       Storable&kid = addChild("");
       kid.setType(type);
       //and allow constructed default values to persist
-      setQuality(Defaulted); //not using Empty as that often masks the type being set.
+      kid.setQuality(Defaulted); //not using Empty as that often masks the type being set.
     }
   }
 }
 
 bool Storable::remove(unsigned which){
-  if(wad.removeNth(which)) {//if something was actually removed
-     wadWatchers.emit(true,wad.quantity());
-    //renumber children, following the removal makes it easy:
+  if(has(which)) {
+    if(remote) {//#done here instead of destructor so that we don't send program shutdown deletions.
+      remote->remove(wad[which]);        //remote can figure out how to deal with a floating node.
+    }
+    wad.removeNth(which);//delete's object here
+    //renumber children, must follow removal to make for-loop cute
     for(unsigned ci = wad.quantity(); ci-- > which; ) { //from last downto item newly dropped into 'which' slot
       --(wad[ci]->index);
     }
@@ -750,7 +808,7 @@ void Storable::getArgs(ArgSet&args, bool purify){
 
 void Storable::setArgs(ArgSet&args){
   while(args.hasNext()) {
-    int which = args.ordinal();
+    unsigned which = args.ordinal();
     if(has(which)) {
       wad[which]->setNumber(args.next());
     }
@@ -758,7 +816,7 @@ void Storable::setArgs(ArgSet&args){
 }
 
 ///////////////////////
-StoredListReuser::StoredListReuser(Storable&node, int wadding) : node(node), wadding(wadding), pointer(0){
+StoredListReuser::StoredListReuser(Storable&node, unsigned wadding) : node(node), wadding(wadding), pointer(0){
   //#nada
 }
 

@@ -45,6 +45,8 @@ Text::Text(TextKey other, const Span &span):Cstr(TextKey(nullptr)){
       this->ptr=ptr;
       tbg("construct by span %p:%p",this,ptr);
     }
+  } else {
+      tbg("construct by span is null");
   }
 
 }

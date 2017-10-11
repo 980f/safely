@@ -105,6 +105,8 @@ protected:
   unsigned index;
   /** children of this node */
   Chain<Storable> wad;
+  /** watches change of quantity, so that StoredGroup can instantiate remotely created nodes.*/
+  WadWatcher wadWatcher;
   /** set by StoredEnum when one is created, maintains parallel text.*/
   const Enumerated *enumerated; //expected to be a globally shared one
 
@@ -116,12 +118,12 @@ private:
   Storable(const Storable &noncopyable)=delete; // non construction-copyable
   Storable &operator =(const Storable &noncopyable)=delete; // non copyable
   /**a piece of constructor. @param name is node name */
-  Storable &precreate(TextKey name);
+  Storable &precreate(NodeName name);
 public:
   const TextValue name;
 public:
   /** @param isVolatile was added here to get it set earlier for debug convenience */
-  Storable(TextKey name, bool isVolatile = false);
+  Storable(NodeName name, bool isVolatile = false);
   Storable(bool isVolatile = false);
 
   //todo: why is this virtual? does sigc need that? we shouldn't derive from Storable, we wrap it.
@@ -195,7 +197,7 @@ public:
   double setValue(double value, Quality quality = Edited);
   /** sets numerical value, if node has an enumerated then the text is set to match, if no enumerated then node type is set to
    * numerical with gay disregard for its previous type. */
-  template<typename Numeric> Numeric setNumber(Numeric value, Quality quality = Edited){
+  template<typename Numeric=double> Numeric setNumber(Numeric value, Quality quality = Edited){
     setValue(static_cast<double>(value), quality);
     return number;
   }
@@ -204,7 +206,7 @@ public:
     number=other;
   }
 
-  template<typename Numeric> Numeric getNumber() const {
+  template<typename Numeric=double> Numeric getNumber() const {
     return number;
   }
 
@@ -236,10 +238,10 @@ public:
   /** this method is not const as we lazily reuse text for image of non-text instances */
   Cstr image(void);
 
-  void setDefault(TextKey value);
+  void setDefault(NodeName value);
 
   /** @return whether text value of node textually equals @param zs (at one time a null terminated string) */
-  bool operator ==(TextKey zs);
+  bool operator ==(NodeName zs);
 
   /** @returns number of child nodes. using unsigned rather than size_t to reduce number of casts required */
   unsigned numChildren() const { //useful with array-like nodes.
@@ -260,10 +262,10 @@ public:
   }
 
   /** @returns null pointer if no child by given name exists, else pointer to the child*/
-  Storable *existingChild(TextKey childName);
+  Storable *existingChild(NodeName childName);
 
   /** @see existingChild() non const version */
-  const Storable *existingChild(TextKey childName) const;
+  const Storable *existingChild(NodeName childName) const;
 
   /** find nameless nodes, starting at &param l  astFound. Pass BadIndex for 'beginning`.
    * To walk the list:
@@ -278,13 +280,13 @@ public:
    * While ".." is specially treated as the parent of where you are in the path, "." is not implemented which means a child named "." will be looked for.
    * The ".." is honored anywhere in the path, although that is usually not sensible.
    * */
-  Storable *findChild(TextKey path, bool autocreate = true); //# true as the default is legacy from the method this replaced.*/
+  Storable *findChild(NodeName path, bool autocreate = true); //# true as the default is legacy from the method this replaced.*/
 
   /** creates node if not present.*/
-  Storable &child(TextKey childName);
+  Storable &child(NodeName childName);
 
   /** syntactic sugar for @see child(NodeName) */
-  Storable &operator ()(TextKey name);
+  Storable &operator ()(NodeName name);
   //these give nth child
   Storable &operator [](unsigned ordinal);
 
@@ -298,13 +300,13 @@ private:
   unsigned indexOf(const Storable &node) const;
 public:
   /** add a new empty node */
-  Storable &addChild(TextKey childName);//removed default, nameless nodes are rare, make them stand out.
+  Storable &addChild(NodeName childName);//removed default, nameless nodes are rare, make them stand out.
 
   /** add a new node with content copied from existing one, created to clean up storedGroup entity copy*/
   Storable &createChild(const Storable &other);
 
   //combined presize and addChild to stifle trivial debug spew when adding a row to a table.
-  Storable &addWad(unsigned qty, Storable::Type type = NotKnown, TextKey name = "");
+  Storable &addWad(unsigned qty, Storable::Type type = NotKnown, NodeName name = "");
   /** add a bunch of null-named children of the given type to this node. Probably not good to use outside of this class cloning an object.*/
   void presize(unsigned qty, Storable::Type type = NotKnown);
 
@@ -321,7 +323,7 @@ public:
   /** overwrite child nodes setting them to the given values, adding nodes as necessary to store all of the args.*/
   void setArgs(ArgSet &args);
 
-  /** @returns rootnode of this node, this if this is a root node.*/
+  /** @returns rootnode of this node, 'this' if 'this' is a root node.*/
   Storable &getRoot();
   /** force size of wad. */
   unsigned setSize(unsigned qty);
@@ -329,6 +331,28 @@ public:
   Storable *getChild(ChainScanner<Text> &progeny, bool autocreate);
 private:
   Storable &finishCreatingChild(Storable &noob);
+///////////////////////////////////
+/** global/shared root, the 'slash' node for findChild */
+  static Storable Slash;
+public:
+  /** access to @see Slash , the global/shared root*/
+  static Storable &Groot(TextKey pathname);
+  /** delete a node given an absolute pathname. @returns whether node was found and deleted */
+  static bool Delete(TextKey pathname);
+  /** find child given an absolute pathname. */
+  static Storable *FindChild(TextKey pathname,bool autocreate);
+  struct Mirror {
+    virtual ~Mirror() = default;
+    /** noob will have a parent */
+    virtual void add(const Storable &noob) = 0;
+    /** value changed */
+    virtual void alter(const Storable &noob) = 0;
+    /** impementor must copy over any members, noob will shortly be destructed. */
+    virtual void remove(const Storable &noob) = 0;
+  };
+  static Mirror *remote;
+  unsigned numLeaves() const;
+  ArtString fullName() const;
 }; // class Storable
 
 /** iterate over the children of given node (kinder is german  plural for child, like kindergarten) */
@@ -343,7 +367,7 @@ class StoredListReuser {
   unsigned wadding;
   unsigned pointer;
 public:
-  StoredListReuser(Storable &node, int wadding = 0);
+  StoredListReuser(Storable &node, unsigned wadding = 0);
   Storable &next();
   unsigned done();
 };

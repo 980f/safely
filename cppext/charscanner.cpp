@@ -269,13 +269,18 @@ bool CharScanner::isBlank(){
 }
 
 CharScanner CharScanner::cut(char separator){
-  Index termlocation(findNext(separator));
-  if(termlocation.isValid()){//return from pointer to termlocation
-    AssignOnExit<unsigned> aoe(pointer,termlocation+1);//move past terminator, but not until we've grabbed our reference
-    buffer[termlocation]=0;
-    unsigned pallocated=termlocation-pointer;
-    return CharScanner(&peek(),pallocated);
-  } else {
+  if(hasNext()){
+    Index termlocation(findNext(separator));
+    if(termlocation.isValid()){//return from pointer to termlocation
+      AssignOnExit<unsigned> aoe(pointer,termlocation+1);//move past terminator, but not until we've grabbed our reference
+      buffer[termlocation]=0;
+      unsigned pallocated=termlocation-pointer;
+      return CharScanner(&peek(),pallocated);
+    } else {
+      AssignOnExit<unsigned> aoe(pointer,allocated());//consume remainder
+      return CharScanner(&peek(),freespace());
+    }
+  }  else {
     return CharScanner();
   }
 }

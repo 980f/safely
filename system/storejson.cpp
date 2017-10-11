@@ -32,7 +32,7 @@ Storable *StoreJsonConstructor::applyToChild(Storable *parent, Text &name, bool 
   }
   if(nova){
     if(haveValue){//todo: if node already initialized change value according to type. i.e. preserve node.type
-      nova->setImage(value,Storable::Parsed);
+      nova->setImageFrom(value.c_str(),Storable::Parsed);
       if(valueQuoted){
         //keep the text type set by setImage.
       } else {//mark for further inspection by datum user.
