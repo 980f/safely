@@ -8,7 +8,8 @@
  * Safe(r) and convenient wrapper around a vector of pointers.
  * It is very suited for container managed persistence, i.e. all objects of a class can be tracked herein and removal from here results in deletion of object.
  *
- * Since all references to the content class are pointer-like this container handles polymorphic sets of classes with ease. All such usages should have virtual destructors.
+ * Since all references to the content class are pointer-like this container handles polymorphic sets of classes with ease. All such usages should have virtual
+ *destructors.
  *
  * a const Chain is one that cannot have additions and deletions, a Chain of const items is a different thing.
  * const Chain<T> &things is a set of T's that cannot be added to or removed from
@@ -76,7 +77,6 @@ public:
     return nth(n);
   }
 
-
   /** @returns number of items in this chain. using type int rather than size_t to allow for -1 as a signalling value in other functions.*/
   unsigned quantity() const {
     return v.size();
@@ -124,18 +124,27 @@ public:
     return true;
   }
 
+  /** removes @param n th item, 0 removes first in chain. @returns the item. Compared to removeNth this never deletes the object even if this wad claims ownership */
+  T* takeNth(unsigned n){
+    T* adoptee = nth(n);
+    if(adoptee) {
+      v.erase(v.begin() + n);//things like this is sufficient reason to hate the stl.
+    }
+    return adoptee;
+  }
+
   bool removeLast(){
-    return removeNth(quantity()-1);
+    return removeNth(quantity() - 1);
   }
 
   /** removes trailing entities until only @param mark remain. If mark is past end then nothing happens. */
   void clipto(unsigned mark){
     if(isOwner) {
-      for(unsigned which=quantity();which-->mark;){
+      for(unsigned which = quantity(); which-->mark; ) {
         delete v[which];
       }
     }
-    v.erase(v.begin()+mark,v.end() );
+    v.erase(v.begin() + mark,v.end() );
   }
 
   /** removes item @param thing if present. @returns whether something was actually removed*/
@@ -198,7 +207,7 @@ public:
   ChainScanner(Chain<T> &list) : list(list),steps(0){
   }
 
-  bool hasNext() {
+  bool hasNext(){
     return steps<list.quantity();
   }
 
@@ -254,7 +263,7 @@ public:
     steps(0){
   }
 
-  bool hasNext() {
+  bool hasNext(){
     return steps<list.quantity();
   }
 

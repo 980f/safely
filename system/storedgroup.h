@@ -312,7 +312,7 @@ public:
     for(unsigned which = quantity(); which-- > 0; ) { //#keep reverse iteration, can do remove's with it.
       Groupie &victim(*pod[which]);
       if(killit( victim)) {
-        deaths+=remove(which); //#works well because we reverse iterate.
+        deaths+=remove(which); //#works well because we reverse iterate.(see bug #369)
       }
     }
     return deaths;

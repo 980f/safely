@@ -1,8 +1,8 @@
-#ifndef NUMBERFORMATTER_H
-#define NUMBERFORMATTER_H "(C) Andrew L. Heilveil, 2017"
+#pragma once // "(C) Andrew L. Heilveil, 2017"
 
 #include "textpointer.h"
 #include "numberformat.h"
+namespace Safely {
 /** print number into string. */
 struct NumberFormatter {
   /** meaning of @see precision field */
@@ -26,5 +26,4 @@ public: //some utilities
   static Text makeNumber(double value);
 };
 
-
-#endif // NUMBERFORMATTER_H
+}

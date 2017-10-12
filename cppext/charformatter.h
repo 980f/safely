@@ -1,12 +1,12 @@
-#ifndef CHARFORMATTER_H
-#define CHARFORMATTER_H
+#pragma once  //(C) 2017 Andrew Heilveil
+
 #include "charscanner.h"
-//#include "argset.h" //todo:1 remove this legacy, extend this class with another if needed.
 
 /** print human readable stuff into a checked buffer.
  *  next layer down tries to preserve a terminating null, but you have to ask it to do so.
  */
 #include "numberformat.h"
+namespace Safely {
 class CharFormatter : public CharScanner {
 public:
   /** unsafe version, uses strlen */
@@ -102,5 +102,4 @@ public:
   }
 
 }; // class Caster
-
-#endif // CHARFORMATTER_H
+}

@@ -78,9 +78,9 @@ public:
 
 private: //#the watchers must be mutable because sigc needs to be able to cull dead slots from its internal lists.
   /** sent when value changes */
-  mutable GatedSignal watchers; //# mutable so that we can freeze and thaw
+  mutable Safely::GatedSignal watchers; //# mutable so that we can freeze and thaw
   /** sent when any child's value changes, allows setting a watch on children that may not exist at the time of registration of the watcher. */
-  mutable GatedSignal childwatchers; //# mutable, see @watchers.
+  mutable Safely::GatedSignal childwatchers; //# mutable, see @watchers.
 public: //needed only by StoredGroup, but that being a template made friending it difficult.
   /** bool remove (else add at end) , int which
    * called when an item is added or removed.
@@ -184,10 +184,13 @@ public:
   };
 
 
-private:
+public:
   /** @deprecated, need use case.
-   * make this node have same structure as givennode, but leave name and present children intact*/
+   * make this node have same structure as givennode, but leave name and such alone */
   void clone(const Storable &other);
+public://users of clone:
+  /** replaces 'clone and remove'*/
+  void reparent(Storable &newparent);
 public:
   /** like an operator =
    *  rhs is not constable due to image() mutating the text when not Textual */

@@ -1,8 +1,6 @@
-#ifndef GATEDSIGNAL_H_
-#define GATEDSIGNAL_H_
+#pragma once
 
 #include "sigcuser.h"
-
 /** Provides for invoking an operation once even though multiple rules might invoke it. Create a Freezer at the beginning of a block of code that might trigger the signal multiple times. It will only run at most once when the Freezer is deleted.
  *
  *  Wraps a SimpleSignal and provides for multiple entities to defer triggering of the signal.
@@ -13,6 +11,8 @@
  *
  * The slot cannot have any arguments as the send only sends when not gated, which argument would it use?
  */
+namespace Safely {
+
 class GatedSignal {
 public:
   GatedSignal();
@@ -73,5 +73,4 @@ public:
   }
 
 };
-
-#endif // _GATEDSIGNAL_H_
+}

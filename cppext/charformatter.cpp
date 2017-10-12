@@ -11,6 +11,9 @@
 //#include "safely.h" //ascii framing characters
 #include "cstr.h"
 #include "cheaptricks.h" //take()
+
+using namespace Safely;
+
 struct NumberParser : public PushedNumberParser  {
 
   /** @param buf points after last char, prev() is terminator */
