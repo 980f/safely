@@ -71,6 +71,10 @@ char Cstr::operator [](const Index &index) const noexcept {
   return (nonTrivial(ptr)&&isValid(index)) ? ptr[index]:0;
 }
 
+char Cstr::at(const Index &index) const noexcept {
+  return (nonTrivial(ptr)&&isValid(index)) ? ptr[index]:0;
+}
+
 /** attempt to match the reasoning of the @see same() function with respect to comparing null strings and empty strings */
 int Cstr::cmp(TextKey rhs) const noexcept {
   if(ptr) {

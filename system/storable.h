@@ -106,7 +106,7 @@ protected:
   /** children of this node */
   Chain<Storable> wad;
   /** watches change of quantity, so that StoredGroup can instantiate remotely created nodes.*/
-  WadWatcher wadWatcher;
+  //WadWatcher wadWatcher;
   /** set by StoredEnum when one is created, maintains parallel text.*/
   const Enumerated *enumerated; //expected to be a globally shared one
 
@@ -351,8 +351,7 @@ public:
     virtual void remove(const Storable &noob) = 0;
   };
   static Mirror *remote;
-  unsigned numLeaves() const;
-  ArtString fullName() const;
+//  ArtString fullName() const;
 }; // class Storable
 
 /** iterate over the children of given node (kinder is german  plural for child, like kindergarten) */

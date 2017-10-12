@@ -148,8 +148,8 @@ public:
     return pod.quantity();
   }
 
-  bool has(int ordinal) const {
-    return unsigned(ordinal) < unsigned(quantity()); //#cute trick, comparing unsigned makes negative be really big
+  bool has(unsigned ordinal) const {
+    return ordinal < quantity();
   }
 
   /** first created for sake of 'created' notification handlers*/
@@ -168,7 +168,7 @@ public:
     return *pod.last();
   }
 
-  Groupie &operator [](int ordinal){
+  Groupie &operator [](unsigned ordinal){
     if(has(ordinal)) {
       return *pod[ordinal];
     }
@@ -185,7 +185,7 @@ public:
     }
   } // []
 
-  const Groupie &operator [](int ordinal) const {
+  const Groupie &operator [](unsigned ordinal) const {
     if(has(ordinal)) {
       return *pod[ordinal];
     }

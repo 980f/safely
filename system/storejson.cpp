@@ -41,7 +41,7 @@ Storable *StoreJsonConstructor::applyToChild(Storable *parent, Text &name, bool 
       }
     } else {//either a trivial value (a formal json defect) or a parent
       if(valueQuoted){
-        nova->setType(Storable::Textual);
+        nova->setType(Storable::Textual);//#_# all we really want to signal here is 'not a keyword'
       } else {      //inferring wad node
         nova->setType(Storable::Wad);
       }

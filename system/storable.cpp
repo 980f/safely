@@ -53,7 +53,6 @@ Storable *Storable::FindChild(TextKey pathname, bool autocreate){
 ////////////
 
 using namespace sigc;
-using namespace Safely;
 
 //the following are only usable within Storable
 #define ForKidsConstly(list) for(ConstChainScanner<Storable> list(wad); list.hasNext(); )
@@ -98,7 +97,7 @@ Storable::~Storable(){
 }
 
 void Storable::notify() const {
-  static recursionCounter=0;//4debug of notify.
+  static int recursionCounter=0;//4debug of notify.
   if(remote) {
     remote->alter(*this);
   }
@@ -111,7 +110,7 @@ void Storable::notify() const {
   recursiveNotify();
   --recursionCounter;
 } // Storable::notify
-}
+
 
 void Storable::recursiveNotify() const {
   if(isVolatile) {//this check is one of the main reasons for existence of isVolatile, to indicate gratuitous or redundant nodes
@@ -172,7 +171,7 @@ void Storable::setEnumerizer(const Enumerated *enumerated){
         if(type == NotKnown) {
           setType(Storable::Textual); //todo:1 probably should be numeric and numeric should check for presence of enumerated, or add a specific Storable::Enumerated to reduce redundant checks.
         }
-        
+
         text = enumerated->token(number);
       }
     } else {
@@ -460,7 +459,7 @@ void Storable::setImageFrom(TextKey value, Storable::Quality quality){
   also(notifeye); //record changed, but only trigger on fresh change
   if(notifeye) {
     notify();
-  }  
+  }
 }
 
 } // setImageFrom

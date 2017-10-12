@@ -1,13 +1,11 @@
-#ifndef STOREDLABEL_H
-#define STOREDLABEL_H
-
+#pragma once
 #include "stored.h"
 
 /** a Stored piece of text.
 */
-class StoredLabel : public Stored {
+class StoredText : public Stored {
 public:
-  StoredLabel(Storable &node, const TextValue  &fallback = TextValue());
+  StoredText(Storable &node, const TextValue  &fallback = TextValue());
   void setDefault(const TextValue  &deftext);
   /**pointer to storage, not safe to use to manipulate it,*/
   TextKey c_str() const;
@@ -22,14 +20,14 @@ public:
   bool isTrivial() const;
 
   /** copy value from ... */
-  void operator =(const StoredLabel &other);
+  void operator =(const StoredText &other);
   void operator =(const TextValue  &zs);
   void operator =(TextKey zs);
   /** convert integer to text and set this to that image */
   void operator =(int value);
 
   /** compare values, ignore names */
-  bool operator ==(const StoredLabel &other) const;
+  bool operator ==(const StoredText &other) const;
   bool operator ==(const TextValue  &zs) const;
   bool operator ==(TextKey zs) const;
 
@@ -39,6 +37,4 @@ public:
   sigc::connection onChange(sigc::slot<void, TextKey> slotty);
   /** a slot that will set the value of this */
   sigc::slot<void, TextKey> setter();
-}; // class StoredLabel
-
-#endif // STOREDLABEL_H
+};
