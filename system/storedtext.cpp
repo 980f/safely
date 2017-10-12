@@ -1,72 +1,73 @@
 #include "storedlabel.h"
 
+#include "numbertextifier.h"
 
-StoredLabel::StoredLabel(Storable&node, const TextValue &fallback) : Stored(node){
+StoredText::StoredText(Storable&node, const TextValue &fallback) : Stored(node){
   if(node.setType(Storable::Textual)) {
     if(node.is(Storable::Parsed)) {
-      dbg("Attaching StoredLabel to non-textual Storable, node %s", node.fullName().c_str());
+      dbg("Attaching StoredText to non-textual Storable, node %s", node.fullName().c_str());
     }
   }
   setDefault(fallback);
 }
 
-void StoredLabel::setDefault(const TextValue &deftext){
+void StoredText::setDefault(const TextValue &deftext){
   node.setDefault(deftext.c_str());
 }
 
-TextKey StoredLabel::c_str() const {
+TextKey StoredText::c_str() const {
   return node.image();
 }
 
-Text StoredLabel::toString() const {
+Text StoredText::toString() const {
   return Text(node.image());
 }
 
-bool StoredLabel::isTrivial() const {
+bool StoredText::isTrivial() const {
   return isEmpty() || node.image().empty();
 }
 
-void StoredLabel::operator =(const StoredLabel&other){
+void StoredText::operator =(const StoredText&other){
   if(&other) {//yes, we can get null references.
     node.setImage(other.node.image());
   } else {
-    wtf("null rhs in StoredLabel operator =");
+    wtf("null rhs in StoredText operator =");
   }
 }
 
-void StoredLabel::operator =(const TextValue &zs){
+void StoredText::operator =(const TextValue &zs){
   node.setImage(zs);
 }
 
-bool StoredLabel::operator ==(const TextValue &zs) const {
+bool StoredText::operator ==(const TextValue &zs) const {
   return node.image() == zs;
 }
 
-void StoredLabel::operator =(int value){
-  Text image=NumberFormatter::makeNumber(value);
+void StoredText::operator =(int value){
+  Text image=NumberTextifier::makeNumber(value);
   node.setImage(image.c_str());
 }
 
-void StoredLabel::operator =(const char *zs){
+void StoredText::operator =(const char *zs){
   node.setImage(zs);
 }
 
-bool StoredLabel::operator ==(const char *zs) const {
+bool StoredText::operator ==(const char *zs) const {
   return node.image() == zs;
 }
 
-bool StoredLabel::operator ==(const StoredLabel&other) const {
+bool StoredText::operator ==(const StoredText&other) const {
   return node.image() == other.node.image();
 }
 
-void StoredLabel::applyTo(sigc::slot<void, TextKey> slotty){
+void StoredText::applyTo(sigc::slot<void, TextKey> slotty){
   slotty(c_str());
 }
 
-sigc::connection StoredLabel::onChange(sigc::slot<void, TextKey> slotty){
-  return node.addChangeWatcher(bind(MyHandler(StoredLabel::applyTo), slotty));
+sigc::connection StoredText::onChange(sigc::slot<void, TextKey> slotty){
+  return node.addChangeWatcher(bind(MyHandler(StoredText::applyTo), slotty));
 }
 
-sigc::slot<void, TextKey> StoredLabel::setter(){
+sigc::slot<void, TextKey> StoredText::setter(){
   return bind(mem_fun(node, &Storable::setImageFrom), Storable::Edited);
 }
