@@ -271,7 +271,7 @@ public:
   }
 
   //publish parts of ordinator, without these derived classes are deemed abstract.
-  virtual bool hasNext(void) const {
+  virtual bool hasNext(void) {
     return Ordinator::hasNext();
   }
 
