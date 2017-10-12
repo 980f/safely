@@ -133,7 +133,16 @@ Storable &Storable::precreate(NodeName name){
   Storable&noob(*new Storable(name, false)); //only parent needs volatile flag as that stops recursive looking at the children.
   noob.parent = this;
   return noob;
-} // precreate
+}
+
+void Storable::Rename(TextKey newname){
+  unsigned last=numChildren();
+  Storable &noob=createChild(*this,newname);
+  wad.swap(noob.ownIndex(),this->ownIndex());
+  noob.index=ownIndex();
+  this->index=last;//in case remover looks at it.
+  parent->remove(last);//which is this so we should skedaddle
+}
 
 void *Storable::raw(){
   return static_cast<void *>(this);
@@ -292,42 +301,6 @@ bool Storable::wasModified(){
     return thiswas;
   } // switch
 } // wasModified
-
-#if StorableDebugStringy
-int Storable::listModified(sigc::slot<void, Ustring> textViewer) const {
-  if(isVolatile) {
-    return 0;
-  }
-  switch(type) {
-  default:
-  case NotKnown:
-    return 0;
-
-  case Wad: {
-    unsigned changes = 0;
-    ForKidsConstly(list){
-      const Storable&child(list.next());
-
-      changes += child.listModified(textViewer);   //recurse
-    }
-    if(!changes && ChangeMonitored::isModified()) {   //try not to report propagated changes already reported by loop above.
-      textViewer(fullName() + ":reorganized");
-      ++changes;
-    }
-    return changes;
-  }
-  case Numerical:
-  case Uncertain:
-  case Textual:
-    if(ChangeMonitored::isModified()) {
-      textViewer(Ustring::compose("%1:%2", fullName(), image()));
-      return 1;
-    }
-    return 0;
-  } // switch
-} // Storable::listModified
-
-#endif // if StorableDebugStringy
 
 Text Storable::fullName() const {
   //non-recursive,
@@ -490,7 +463,7 @@ Cstr Storable::image(void){
   default://#ignore warning, if we remove it we get a different warning.
   case Uncertain:
     resolve(false);
-  //  JOIN;
+  //#JOIN;
   case Textual://#ignore warning, if we remove it we get a different warning.
     return text;
 
@@ -525,6 +498,10 @@ Cstr Storable::image(void){
   case NotKnown:
     return "(unknown)";
   } // switch
+}
+
+Cstr Storable::getText() const{
+  return text.c_str();
 } // image
 
 void Storable::setDefault(TextKey value){
@@ -708,21 +685,21 @@ Storable&Storable::operator [](unsigned ordinal){
     addChild(""); //better than an NPE so deep in the hierarchy that we don't know where it comes from.
     return *wad.last();
   }
-  return *wad[ordinal];
+  return *wad.nth(ordinal);
 }
 
 const Storable&Storable::nth(unsigned ordinal) const {
   if(!has(ordinal)) {
     wtf("nonexisting child referenced by ordinal %d (out of %d).", ordinal, numChildren());
   }
-  return *wad[ordinal];
+  return *wad.nth(ordinal);
 }
 
 Storable &Storable::nth(unsigned ordinal){
   if(!has(ordinal)) {
     wtf("nonexisting child referenced by ordinal %d (out of %d).", ordinal, numChildren());
   }
-  return *wad[ordinal];
+  return *wad.nth(ordinal);
 }
 
 unsigned Storable::indexOf(const Storable&node) const {
@@ -735,8 +712,8 @@ Storable&Storable::addChild(NodeName childName){
   return finishCreatingChild(noob);
 }
 
-Storable&Storable::createChild(const Storable&other){
-  Storable&noob(precreate(other.name));
+Storable&Storable::createChild(const Storable&other,TextKey altname){
+  Storable&noob(precreate(altname?altname:other.name.c_str()));
 
   noob.clone(other);
   return finishCreatingChild(noob);

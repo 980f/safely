@@ -152,6 +152,18 @@ public:
     return removeNth(indexOf(thing));
   }
 
+  /** change positions of a pair of elements. @returns whether elements existed. */
+  bool swap(unsigned from, unsigned to){
+    if(has(from)&&has(to)) {
+      T* thing = v[from];
+      v[from]=v[to];
+      v[to]=thing;
+      return true;
+    } else {
+      return false;
+    }
+  }
+
   /** move item at @param from location to @param to location, shifting the items inbetween.
    * @returns whether the operation was performed, which only happens if both indexes are in the chain.
    * This is faster than remove/insert and more importantly does not delete the item as remove does.
@@ -305,7 +317,7 @@ public:
     rewind();
   }
 
-  bool hasNext() const {
+  bool hasNext() {
     return steps>0;
   }
 

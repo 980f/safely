@@ -2,6 +2,7 @@
 #include "stdlib.h"
 #include "string.h"
 #include "minimath.h" //nan
+#include "index.h"
 
 bool isTrivial(const char *string){
   return string==nullptr || *string==0;
@@ -49,10 +50,6 @@ double toDouble(TextKey rawText, bool *impure){
   }
 }
 
-#ifndef BadIndex
-#define BadIndex (~0U)
-#endif
-
 unsigned toIndex(TextKey rawText, bool *impure){
   if(nonTrivial(rawText)){
     char *end(nullptr);
@@ -64,7 +61,7 @@ unsigned toIndex(TextKey rawText, bool *impure){
     if(rawText==end){
       return BadIndex;
     }
-    return d>BadIndex?BadIndex:d;
+    return d>BadIndex?BadIndex:unsigned(d);
   } else {
     if(impure) {
       *impure = false;

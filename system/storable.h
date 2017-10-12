@@ -121,6 +121,8 @@ private:
   Storable &precreate(NodeName name);
 public:
   const TextValue name;
+  /** somehow rename the node, perhaps by clone and replace */
+  void Rename(TextKey newname);
 public:
   /** @param isVolatile was added here to get it set earlier for debug convenience */
   Storable(NodeName name, bool isVolatile = false);
@@ -241,6 +243,10 @@ public:
   /** this method is not const as we lazily reuse text for image of non-text instances */
   Cstr image(void);
 
+  /** this uses whatever the text presently is, if stale then you will have to find out why. */
+  Cstr getText(void)const;
+
+
   void setDefault(NodeName value);
 
   /** @return whether text value of node textually equals @param zs (at one time a null terminated string) */
@@ -305,8 +311,8 @@ public:
   /** add a new empty node */
   Storable &addChild(NodeName childName);//removed default, nameless nodes are rare, make them stand out.
 
-  /** add a new node with content copied from existing one, created to clean up storedGroup entity copy*/
-  Storable &createChild(const Storable &other);
+  /** add a new node with content copied from existing one, created to clean up storedGroup entity copy, added altname to rename child since names are now const and sometimes must be unique (roles).*/
+  Storable &createChild(const Storable &other, TextKey altname=nullptr);
 
   //combined presize and addChild to stifle trivial debug spew when adding a row to a table.
   Storable &addWad(unsigned qty, Storable::Type type = NotKnown, NodeName name = "");
