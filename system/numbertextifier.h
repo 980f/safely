@@ -2,15 +2,15 @@
 
 #include "textpointer.h"
 #include "numberformat.h"
-namespace Safely {
+
 /** print number into string. */
-struct NumberFormatter {
+struct NumberTextifier {
   /** meaning of @see precision field */
-  NumberFormat nf;
+  Safely::NumberFormat nf;
   /** commonly used for unit-of-measure or SI multiplier. Note: this does not automatically add a space between the digits and this text, do that yourself. */
   Text postfix;
 
-  NumberFormatter(int precision, TextKey postfix = nullptr);
+  NumberTextifier(int precision, TextKey postfix = nullptr);
 
   unsigned needs(double value) const;
 
@@ -26,4 +26,3 @@ public: //some utilities
   static Text makeNumber(double value);
 };
 
-}

@@ -11,12 +11,11 @@
  *
  * The slot cannot have any arguments as the send only sends when not gated, which argument would it use?
  */
-namespace Safely {
 
 class GatedSignal {
 public:
   GatedSignal();
-  /** regiseters */
+  /** registers */
   SimpleSignal::iterator connect(const SimpleSlot &slot);
   /** emits signal if not gated off else arranges for signal to emit when gated back on.*/
   void send();
@@ -73,4 +72,3 @@ public:
   }
 
 };
-}

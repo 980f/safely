@@ -78,9 +78,9 @@ public:
 
 private: //#the watchers must be mutable because sigc needs to be able to cull dead slots from its internal lists.
   /** sent when value changes */
-  mutable Safely::GatedSignal watchers; //# mutable so that we can freeze and thaw
+  mutable GatedSignal watchers; //# mutable so that we can freeze and thaw
   /** sent when any child's value changes, allows setting a watch on children that may not exist at the time of registration of the watcher. */
-  mutable Safely::GatedSignal childwatchers; //# mutable, see @watchers.
+  mutable GatedSignal childwatchers; //# mutable, see @watchers.
 public: //needed only by StoredGroup, but that being a template made friending it difficult.
   /** bool remove (else add at end) , int which
    * called when an item is added or removed.

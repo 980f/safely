@@ -6,7 +6,7 @@
 
 #include "segmentedname.h" //for debug reports
 #include "dottedname.h"
-
+#include "numbertextifier.h"
 using namespace Safely;
 
 //this is not a class member so that we don't force pathparser.h on all users:
@@ -486,13 +486,13 @@ Cstr Storable::image(void){
         break;
       case NumericalValue::Floating:
         //set the internal image without triggering change detect
-        text.copy(NumberFormatter::makeNumber(number));
+        text.copy(NumberTextifier::makeNumber(number));
         break;
       } // switch
       return text;
     }
   case Wad:
-    text.take(NumberFormatter::makeNumber(numChildren()));
+    text.take(NumberTextifier::makeNumber(numChildren()));
     return text;
 
   case NotKnown:

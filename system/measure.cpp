@@ -1,5 +1,6 @@
 #include "measure.h"
 #include "numberformatter.h"
+#include "uicore.h"
 
 Measure::Measure(Storable &node) :
   Stored(node),
@@ -15,7 +16,7 @@ Ustring Measure::format(double number, bool addone) const {
   if(isNan(precision)) {
     return Ustring::format(number, " ", uom.toString());
   }
-  NumberFormatter nf(false, precision, uom);
+  NumberTextifier nf(false, precision, uom);
   return nf.format(number, addone);
 }
 

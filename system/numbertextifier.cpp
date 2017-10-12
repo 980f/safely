@@ -1,18 +1,20 @@
 //"(C) Andrew L. Heilveil, 2017"
-#include "numberformatter.h"
+#include "numbertextifier.h"
 
 #include "charformatter.h"
 
-NumberFormatter::NumberFormatter(int precision, TextKey postfix) :
+using namespace Safely;
+
+NumberTextifier::NumberTextifier(int precision, TextKey postfix) :
   postfix(postfix){
   nf.decimals = precision;
 }
 
-unsigned NumberFormatter::needs(double value) const {
+unsigned NumberTextifier::needs(double value) const {
   return nf.needs(value) + postfix.length();
 }
 
-Text NumberFormatter::format(double value,bool addone) const {
+Text NumberTextifier::format(double value,bool addone) const {
   char widest[50];//Zguard(needs(value)+addone)];
   CharFormatter workspace(widest,sizeof(widest));
   workspace.zguard();//protect our null
@@ -23,11 +25,11 @@ Text NumberFormatter::format(double value,bool addone) const {
   return Text(workspace.internalBuffer());//the constructor invoked here copies the content.
 }
 
-Text NumberFormatter::operator ()(double value, bool addone) const {
+Text NumberTextifier::operator ()(double value, bool addone) const {
   return format(value,addone);
 }
 
-Text NumberFormatter::makeNumber(double value){
-  NumberFormatter formatter(17);
+Text NumberTextifier::makeNumber(double value){
+  NumberTextifier formatter(17);
   return formatter(value,false);
 }
