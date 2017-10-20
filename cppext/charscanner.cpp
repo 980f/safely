@@ -279,14 +279,13 @@ bool CharScanner::isBlank(){
 CharScanner CharScanner::cut(char separator){
   Index termlocation(findNext(separator));
   if(termlocation.isValid()){//return from pointer to termlocation
-    AssignOnExit<unsigned> aoe(pointer,termlocation+1);//move past terminator, but not until we've grabbed our reference
     buffer[termlocation]=0;
-    unsigned pallocated=termlocation-pointer;
-    return CharScanner(&peek(),pallocated);
   } else {
-    return CharScanner();
+    termlocation=allocated();//and creator better have used zguard()
   }
-} 
+  AssignOnExit<unsigned> aoe(pointer,termlocation+1);//move past terminator, but not until we've grabbed our reference
+  return CharScanner(&peek(),termlocation-pointer);
+}
 
 bool CharScanner ::putBytes(unsigned value, unsigned numBytes){
   if(stillHas(numBytes)) {

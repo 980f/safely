@@ -38,6 +38,7 @@ public:
 
 struct StoreJsonParser: public AbstractJSONparser<Storable, Text> {
   StoreJsonConstructor core;
+  /** @param data links to buffer of content to parse. */
   StoreJsonParser(Indexer<char>&data);
 };
 
