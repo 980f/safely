@@ -51,7 +51,7 @@ public:
   bool printChar(char ch, unsigned howMany);
   /** sensible results for digit 0 through 15, potentially garbage if digit>15.*/
   bool printDigit(unsigned digit);
-  bool printUnsigned32(unsigned int value);
+  bool printUnsigned(unsigned int value);
   /** our parser handles these, our printer should too. Just beware that u64's might not be atomic. */
   bool printUnsigned64(u64 value);
 

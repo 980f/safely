@@ -188,7 +188,7 @@ bool CharFormatter::printDigit(unsigned digit){
   return printChar(digit + ((digit < 10) ? '0' : 'A' - 10)); //'A' - 10 so we can get a letter beginning with 'A' at 10, for hex
 }
 
-bool CharFormatter::printUnsigned32(unsigned int value){
+bool CharFormatter::printUnsigned(unsigned int value){
   if(value == 0) {//frequent case
     return printChar('0'); // simpler than dicking with the suppression of leading zeroes.
   }

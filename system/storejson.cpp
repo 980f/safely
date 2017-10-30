@@ -28,7 +28,7 @@ Storable *StoreJsonConstructor::applyToChild(Storable *parent, Text &name, bool 
       nova=parent->findChild(name,true);
     }
   } else {
-    root = Storable.Groot(name);
+    root = &Storable::Groot(name);
     nova=root;
   }
   if(nova){

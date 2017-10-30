@@ -11,7 +11,7 @@ RoundRobiner::RoundRobiner(unsigned quantity) :  quantity(quantity){
 }
 
 BitReference RoundRobiner::bit(unsigned id){
-  return BitReference(reinterpret_cast<u64>(&bits),id);
+  return BitReference(&bits,id);
 }
 
 bool RoundRobiner::bit(unsigned id) const {

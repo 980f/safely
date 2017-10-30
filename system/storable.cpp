@@ -473,19 +473,14 @@ void Storable::setImageFrom(TextKey value, Storable::Quality quality){
         setValue(toDouble(text.c_str(), &impure),quality);//todo:0 refine subtype of number
         return;//already invoked change in setValue
       }
-//      if(type==Wad && AllowRemoteWadOperations){
-//        Storable &child=addChild(value);
-//        dbg("Created child %s, parent %s",child.name.c_str(),parent?parent->name.c_str():"root");
-//      }
     }
-    notifeye = changed(text, value);  //todo:00 don't use changed template, do inline to avoid casting
+    notifeye = changed(text, value);
     notifeye |= setQuality(quality);
-  }
-  notifeye |= setType(Textual);
-  also(notifeye); //record changed, but only trigger on fresh change
-  if(notifeye) {
-    notify();
-  }
+    notifeye |= setType(Textual);
+    also(notifeye); //record changed, but only trigger on fresh change
+    if(notifeye) {
+      notify();
+    }
   }
 } // setImageFrom
 
@@ -495,7 +490,6 @@ void Storable::setImage(const TextKey &value, Quality quality){
 
 Cstr Storable::image(void){
   switch(type) {
-  default://#ignore warning, if we remove it we get a different warning.
   case Uncertain:
     resolve(false);
   //#JOIN;
@@ -521,13 +515,13 @@ Cstr Storable::image(void){
         break;
       case NumericalValue::Floating:
         //set the internal image without triggering change detect
-        text.copy(NumberTextifier::makeNumber(number));
+        text.copy(NumberFormatter::makeNumber(number));
         break;
       } // switch
       return text;
     }
   case Wad:
-    text.take(NumberTextifier::makeNumber(numChildren()));
+    text.take(NumberFormatter::makeNumber(numChildren()));
     return text;
 
   case NotKnown:
