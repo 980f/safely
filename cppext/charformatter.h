@@ -6,7 +6,7 @@
  *  next layer down tries to preserve a terminating null, but you have to ask it to do so.
  */
 #include "numberformat.h"
-namespace Safely {
+
 class CharFormatter : public CharScanner {
 public:
   /** unsafe version, uses strlen */

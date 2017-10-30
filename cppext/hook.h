@@ -3,7 +3,6 @@
 
 #include <functional>
 /** hook with a return value.
-1st attempt used simple typedef'd pointer, but that didn't mate easily to member functions, so <functional> is used.
 */
 template<typename RetType, typename ... Args> class Hooker {
 public://expose function's type for use in arguments to be passed to this guy
@@ -12,6 +11,7 @@ private:
   Pointer pointer;
   RetType defaultReturn;
  public:
+  /** can set function to call, must set what to return if no function is set. */
   Hooker(RetType nullAction,Pointer fn=nullptr):pointer(fn),defaultReturn(nullAction){}
   /** set the function pointer.
    * Note that the default value remains unchanged. This makes sense as the default is what the owner of the hook chooses, not the individual hoping to use the hook.

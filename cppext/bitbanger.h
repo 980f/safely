@@ -2,12 +2,8 @@
 #define BITBANGER_H
 
 /** bit and bitfield setting and getting.*/
-#define URGENTLY __attribute__((always_inline))
-/** @returns byte address argument as a pointer to that byte */
-//URGENTLY //irritating to step through during debug.
-constexpr unsigned* atAddress(unsigned address){
-  return reinterpret_cast<unsigned *>(address);
-}
+
+#include "eztypes.h"
 
 constexpr bool bit(unsigned patter, unsigned bitnumber){
   return (patter & (1 << bitnumber)) != 0;
@@ -30,9 +26,7 @@ inline bool setBit(volatile unsigned *patter, unsigned bitnumber){
   return *patter |= (1 << bitnumber);
 }
 
-inline bool setBitAt(unsigned addr, unsigned bitnumber){
-  return setBit(*atAddress(addr),bitnumber);
-}
+
 
 inline bool clearBit(volatile unsigned &patter, unsigned bitnumber){
   return patter &= ~(1 << bitnumber);
@@ -42,10 +36,20 @@ inline bool clearBit(volatile unsigned *patter, unsigned bitnumber){
   return *patter &= ~(1 << bitnumber);
 }
 
+#if 0 //these only make sense for microcontrollers.
+/** @returns byte address argument as a pointer to that byte */
+constexpr unsigned* atAddress(unsigned address){
+  return static_cast<unsigned *>(address);
+}
+
+inline bool setBitAt(unsigned addr, unsigned bitnumber){
+  return setBit(*atAddress(addr),bitnumber);
+}
+
 inline bool clearBitAt(unsigned addr, unsigned bitnumber){
   return clearBit(*atAddress(addr),bitnumber);
 }
-
+#endif
 
 /** ensure a 0:1 transition occurs on given bit. */
 inline void raiseBit(volatile unsigned &address, unsigned  bit){
@@ -70,8 +74,8 @@ inline bool assignBit(unsigned &pattern, unsigned bitnumber,bool one){
 }
 
 struct BitReference {
-  unsigned &word;
-  unsigned mask;
+  u32 &word;
+  u32 mask;
 
   /** naive constructor, code will work if @param bits isn't aligned, but will be inefficient.*/
   BitReference(unsigned *bits,unsigned bitnumber):
@@ -80,12 +84,14 @@ struct BitReference {
     //now it is an aligned 32 bit entity
   }
 
+#if 0 //mcu
   /** initialize from a memory address and bit therein. If address isn't aligned then evil things may happen.  */
   BitReference(unsigned memoryAddress,unsigned bitnumber):
     word(*atAddress(memoryAddress&~3)),  //drop 2 lsbs, i.e. point at xxx00
     mask(1<<(31& ((memoryAddress<<3)|bitnumber))){//try to make bit pointer point at correct thing.
     //now it is an aligned 32 bit entity
   }
+#endif
 
   bool operator =(bool set)const{
     if(set){
@@ -231,7 +237,7 @@ public:
   }
 };
 
-
+#if 0 //MCU
 /** for hard coded absolute (known at compile time) address and bit number */
 template <unsigned memoryAddress,unsigned bitnumber> struct KnownBit {
   enum {
@@ -253,7 +259,7 @@ template <unsigned memoryAddress,unsigned bitnumber> struct KnownBit {
   }
 };
 
-
+#endif
 ///////////////////////////////////////////
 /// a group of discontiguous bits, used for bitmasking
 

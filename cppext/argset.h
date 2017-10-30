@@ -27,13 +27,22 @@ public:
   virtual ~ArgSet();
 }; // class ArgSet
 
-#define makeArgs(qty) double argv[qty]; fillObject(argv, sizeof(argv), 0); ArgSet args(argv, sizeof(argv))
 
-//the following macros expect you to have #defined ArgsPerMessage, which is usually done in art.h
-#define MessageArgs makeArgs(ArgsPerMessage)
-//for those rare occasions where two guys are in play at the same time.
-#define MessageArgs2 double argv2[ArgsPerMessage]; ArgSet args2(argv2, sizeof(argv2))
+/** replacing macro with real class */
+template <unsigned qty> class ArgBlock:public ArgSet {
+  double argv[qty];
 
+public:
+  ArgBlock():ArgSet(argv,sizeof(argv)){}
+  /** @returns a reference to a value, the first if arg is bad. */
+  double &operator [](unsigned which){
+    return argv[which<qty?which:0];
+  }
+
+  void reset(){
+    wrap(argv,sizeof(argv));
+  }
+};
 
 /** appears to be incomplete, need to look for usages */
 class ConstArgSet : public Indexer<const double> {

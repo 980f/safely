@@ -51,7 +51,7 @@ bool HasSettings::blockCheck(HasSettings &desired, ID fieldID){
 
 //overload if you can't print args, such as for spectra.
 bool HasSettings::printField(ID fieldID, CharFormatter &response, bool master){
-  MessageArgs;
+   ArgBlock<MAXARGS> args;
   response.printChar(fieldID);
   if(getParam(fieldID, args)) {
     response.printArgs(args, master);
@@ -70,8 +70,8 @@ bool HasSettings::post(char fieldID){
 bool HasSettings::differs(const HasSettings &other) const {
   for(Indexer<const char> fields(pMap.unitMap, pMap.quantity); fields.hasNext(); ) {
     ID fieldID = fields.next();
-    MessageArgs;
-    MessageArgs2;
+    ArgBlock<MAXARGS> args;
+    ArgBlock<MAXARGS> args2;
     other.getParam(fieldID, args);
     this->getParam(fieldID, args2);
     if(!args2.equals(args)) {
@@ -84,7 +84,7 @@ bool HasSettings::differs(const HasSettings &other) const {
 void HasSettings::copy(const HasSettings &other){
   for(Indexer<const char> fields(pMap.unitMap, pMap.quantity); fields.hasNext(); ) {
     ID fieldID = fields.next();
-    MessageArgs;
+    ArgBlock<MAXARGS> args;
     other.getParam(fieldID, args);
     args.freeze();//this freeze is why we reallocate the array on each loop.
     this->setParam(fieldID, args);
@@ -237,7 +237,7 @@ void SettingsGrouper::sendAll(/*todo: const char*except*/){
 const char * SettingsGrouper::stuff(const ParamKey &param, CharFormatter p){
   HasSettings *unit = unit4(param.unit,false);
   if(unit) {
-    MessageArgs;
+    ArgBlock<MAXARGS> args;
     if(HasSettings::parseArgstring(args,p)) { //execute
       ArgSet clipped(args);
       if(unit->setParam(param.field, clipped)) {

@@ -214,9 +214,7 @@ public:
       pointer = 0;//make it valid
       length -= howmany;
     } else {//kill the whole thing
-      buffer = nullptr;
-      pointer = 0;
-      length = 0;
+     forget();
     }
   } // trimLeading
 
@@ -493,15 +491,20 @@ public:
     }
   }
 
+  /** */
+  void forget(){
+    length=0;
+    pointer=0;
+    buffer=nullptr;
+  }
+
   //free contents and forget them. Only safe todo if you know this buffer is created from a malloc.
   void destroy(){
     if(length){//# testing for debug, delete[] can handle a zero.
       delete []buffer;
     }
     //and now forget we ever saw those
-    length=0;
-    pointer=0;
-    buffer=nullptr;
+    forget();
   }
 
   /** YOU must arrange to delete the contents of what this function returns. The @see destroy() method is handy for that.

@@ -7,16 +7,8 @@
  */
 
 //compiler specific way to make 'missing break' warnings go away.
-//#define JOIN
-#define JOIN  [[clang::fallthrough]];
-
-/// maximum number of values that 'Settings' protocol can handle.
-#define MAXARGS 15
-#define ArgsPerMessage 15
-
-///was 'asciiframing.h'
-#define FS  ','
-#define EOL 10
+#define JOIN
+//#define JOIN  [[clang::fallthrough]];
 
 // controls whether json escaping rules are applied to data before being passed to Storable.
 #define STORJSON_DOESCAPES 0

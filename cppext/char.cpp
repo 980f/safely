@@ -40,9 +40,6 @@ char Char::slashee() const noexcept {
   }
 }
 
-char Char::asUpper() const noexcept {
-  return  toupper(raw);
-}
 
 
 ////////////////////////////////////
@@ -55,8 +52,24 @@ bool Char::startsName() const noexcept {
   return isalpha(raw);
 }
 
-bool Char::isDigit() const noexcept{
+bool Char::isDigit() const noexcept {
   return isdigit(raw);
+}
+
+bool Char::isLower() const noexcept {
+  return islower(raw);
+}
+
+char Char::asLower() const noexcept {
+  return tolower(raw);
+}
+
+bool Char::isUpper()const noexcept {
+  return isupper(raw);
+}
+
+char Char::asUpper() const noexcept {
+  return toupper(raw);
 }
 
 bool Char::isControl() const noexcept{

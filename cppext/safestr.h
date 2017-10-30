@@ -5,7 +5,7 @@
 
 #include "eztypes.h"
 #include "charformatter.h"
-namespace Safely {
+
 template<int Size> class SafeStr : public CharFormatter {
   char content[Size];
 public:
@@ -42,4 +42,3 @@ public:
 
 }; // class SafeStr
 
-}

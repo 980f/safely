@@ -6,22 +6,19 @@
 //this one is sharable, with care! You should never be calling wrap or clone on a reference.
 CharScanner CharScanner::Null;
 
-xxx
 int ourStrncmp(const char *one, const char *two, unsigned length){
-  for(unsigned i = 0; i<length; ++i) {
+  for(unsigned i = 0; i<length; ++i) {//# in order
+    //formerly returned 'equal' when either was equal to the start of the other, now returns the approprite mismatch where longer string is > shorter.
     if(one[i] > two[i]) {
       return 1;
     }
     if(one[i] < two[i]) {
       return -1;
     }
-    if(one[i] == '\0') {            
-      return -(two[i]!=0); //-1 of two is longer than one
+    //char are equal to get here. If they are null then we return equal, if not then we already returned.
+    if(one[i] == 0){//only need to test one here.
+      return 0;
     }
-
-    if(two[i] == '\0'){
-      return (one[i]!=0); //1 if one is longer than two
-    }   
   }
   return 0;
 } // ourStrncmp
@@ -220,7 +217,7 @@ bool CharScanner::operator == (const char *literal) const {
   if(0==ourStrncmp(internalBuffer(),literal,used())) {//then we MIGHT have a match
     //strncmp stops at first null in either string, or after 'used' items
     if(buffer[pointer - 1]) {//no null terminator
-      return literal[pointer]==0;
+      return literal[pointer]==0;//
     } else {
       return literal[pointer - 1]==0;
     }
@@ -289,7 +286,7 @@ CharScanner CharScanner::cut(char separator){
   } else {
     return CharScanner();
   }
-} 
+}
 
 bool CharScanner ::putBytes(unsigned value, unsigned numBytes){
   if(stillHas(numBytes)) {

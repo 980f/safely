@@ -5,7 +5,7 @@
 #include "argset.h"
 
 
-/** persistance manager class for clumps of numbers, but without the actual persistance mechanism. 
+/** persistance manager class for clumps of numbers, but without the actual persistance mechanism.
 This does some of the packing and unpacking of numerical objects but doesn't actually transport them.*/
 class Settable :public ChangeMonitored {
 private:
