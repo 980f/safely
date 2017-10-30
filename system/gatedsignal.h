@@ -1,5 +1,4 @@
-#ifndef GATEDSIGNAL_H_
-#define GATEDSIGNAL_H_
+#pragma once
 
 #include "sigcuser.h"
 
@@ -16,7 +15,7 @@
 class GatedSignal {
 public:
   GatedSignal();
-  /** regiseters */
+  /** registers */
   SimpleSignal::iterator connect(const SimpleSlot &slot);
   /** emits signal if not gated off else arranges for signal to emit when gated back on.*/
   void send();
@@ -74,4 +73,3 @@ public:
 
 };
 
-#endif // _GATEDSIGNAL_H_

@@ -42,7 +42,7 @@ unsigned NumberFormat::needs(double value, NumberPieces *preprint) const {
     necessary+=10;//todo:00 finish this!
   } else {
     //leading zero if number <0, else add room
-    necessary+=decimals+(decimals>0);
+    necessary+=decimals+(decimals>0);//todo:00 suspicious for negative decimals.
     if(preprint->negativeExponent){
       ++necessary;
     } else {

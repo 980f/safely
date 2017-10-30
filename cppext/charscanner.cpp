@@ -6,18 +6,22 @@
 //this one is sharable, with care! You should never be calling wrap or clone on a reference.
 CharScanner CharScanner::Null;
 
-//note: we check for null termination here, so if the length is too long, we bail
+xxx
 int ourStrncmp(const char *one, const char *two, unsigned length){
   for(unsigned i = 0; i<length; ++i) {
-    if(one[i] == '\0' || two[i] == '\0') {
-      return 0; //???? the function encountered a null and assumes it's a terminator.
-    }
     if(one[i] > two[i]) {
       return 1;
     }
     if(one[i] < two[i]) {
       return -1;
     }
+    if(one[i] == '\0') {            
+      return -(two[i]!=0); //-1 of two is longer than one
+    }
+
+    if(two[i] == '\0'){
+      return (one[i]!=0); //1 if one is longer than two
+    }   
   }
   return 0;
 } // ourStrncmp
@@ -89,8 +93,6 @@ ByteScanner::ByteScanner(const CharScanner&other ) : //choices herein are for fi
   //#nada
 }
 
-ByteScanner::~ByteScanner(){
-}
 
 u16 ByteScanner ::getU16(u16 def){
   return getU(2, def);
@@ -143,10 +145,6 @@ CharScanner CharScanner::infer(TextKey content){
 
 CharScanner::CharScanner(char  *content, unsigned size ) : Indexer<char >(content, size){
   //#nada
-}
-
-CharScanner::~CharScanner(){
-
 }
 
 CharScanner::CharScanner(const CharScanner&other, int clip ) : Indexer<char >(other, clip){
@@ -277,12 +275,17 @@ bool CharScanner::isBlank(){
 }
 
 CharScanner CharScanner::cut(char separator){
+  if(hasNext()){
   Index termlocation(findNext(separator));
   if(termlocation.isValid()){//return from pointer to termlocation
     AssignOnExit<unsigned> aoe(pointer,termlocation+1);//move past terminator, but not until we've grabbed our reference
     buffer[termlocation]=0;
     unsigned pallocated=termlocation-pointer;
     return CharScanner(&peek(),pallocated);
+    } else {
+      AssignOnExit<unsigned> aoe(pointer,allocated());//consume remainder
+      return CharScanner(&peek(),freespace());
+    }
   } else {
     return CharScanner();
   }

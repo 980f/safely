@@ -8,6 +8,8 @@
  * index>=0 && index < quantity with a simple index<quantity, less runtime code.
  *
  * The only risk here is that someone might use -1 as a quantity value indicating that there is not even a container to have a quantity of items in. Just don't do that, return a quantity of 0 for 'not a valid question', that will almost always yield the expected behavior.
+
+todo: need to check for overflow on additi9ve operations and set to badIndex if that occurs.
 */
 /** the magic value, it is all ones */
 constexpr unsigned BadIndex=~0U;
@@ -55,15 +57,15 @@ struct Index {
     return raw>other.raw;
   }
 
-  /** maydo: convert negatives to canonical ~0*/
+  /** if valid add to it, else no change */
   unsigned operator += (unsigned other) noexcept {
-    return raw+=other;
+    return isValid()? raw+=other: BadIndex;
   }
 
-  /** decrement IF valid */
+  /** decrement IF valid, if decrement is of greater magnitude then set to Invalid */
   unsigned operator -= (unsigned other) noexcept {
     if(isValid()){
-      return raw-=other;
+      return raw>=other?raw-=other:raw=BadIndex;
     } else {
       return BadIndex;
     }
@@ -78,6 +80,11 @@ struct Index {
     return ++raw;
   }
 
+  /** like += but sets if was invalid instead of ignoring the argument */
+  unsigned up(unsigned more=1){
+    return isValid()? raw+=more: raw=more;
+  }
+
   /** set this to the lesser of this and other depending upon validity */
   void depress(Index other){
     if(isValid()){
@@ -87,6 +94,13 @@ struct Index {
     } else {
       raw=other.raw;
     }
+  }
+/** set this to the max of itself and other */
+  void elevate(unsigned other){
+    if(isValid()&&other<=raw){
+      return;
+    }
+    raw=other;
   }
    /** set this to the greater of this and other depending upon validity */
   void elevate(Index other){

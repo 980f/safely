@@ -16,7 +16,7 @@ int JsonFile::reload(){
 }
 
 int JsonFile::loadFile(Cstr thename){
-  root.child("#loadedFromFile").setImage(thename);//record where we try to load from.
+  root.child("#loadedFromFile").setImage(thename.c_str());//record where we try to load from.
   Filer optionFile("LoadJSON");
   if(! optionFile.openFile(thename)){
     dbg("Couldn't open \"%s\", error:[%d]%s",thename.c_str(),optionFile.errornumber,optionFile.errorText());
@@ -58,7 +58,10 @@ bool indent(FILE *fp, unsigned tab){
   }
 }
 
-void printNode(unsigned tab, Storable &node, FILE *fp){
+void printNode(unsigned tab, Storable &node, FILE *fp,bool showVolatiles){
+  if(!showVolatiles && node.isVolatile){
+    return;
+  }
   if(fp==nullptr){
     fp=stderr;
   }
@@ -73,7 +76,7 @@ void printNode(unsigned tab, Storable &node, FILE *fp){
     fprintf(fp,"{");
     for(ChainScanner<Storable> list(node.kinder()); list.hasNext(); ) {
       Storable & it(list.next());
-      printNode((pretty?  tab + 1 : tab),it,fp);
+      printNode((pretty?  tab + 1 : tab),it,fp,showVolatiles);
       if(list.hasNext()) {
         fputc(',',fp);
       }
@@ -102,18 +105,18 @@ void printNode(unsigned tab, Storable &node, FILE *fp){
 }
 
 
-void JsonFile::printOn(Cstr somefile, unsigned indent){
+void JsonFile::printOn(Cstr somefile, unsigned indent, bool showVolatiles){
   FILE *fout=fopen(somefile,"w");
   if(fout){
-    printNode(indent,root,fout);
+    printNode(indent,root,fout,showVolatiles);
   }
 }
 
 Cstr JsonFile::originalFile(){
-  return root.child("#loadedFromFile").image();
+  return root.child("#loadedFromFile").image().c_str();
 }
 
 
-void JsonFile::printOn(Fildes &alreadyOpened, unsigned indent){
-  printNode(indent,root,alreadyOpened.getfp("w"));
+void JsonFile::printOn(Fildes &alreadyOpened, unsigned indent, bool showVolatiles){
+  printNode(indent,root,alreadyOpened.getfp("w"),showVolatiles);
 }

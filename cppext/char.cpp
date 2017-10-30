@@ -5,7 +5,7 @@
 #include "cstr.h"   //for escaping
 
 bool isPresent(const char *flags, char flag){
-  int badStringLimiter = 26; //in case string pointer is garbage we don't want to read all of ram
+  unsigned badStringLimiter = 26; //in case string pointer is garbage we don't want to read all of ram
 
   if(flags) {
     char probe;
@@ -83,7 +83,7 @@ bool Char::isHexDigit() const noexcept {
 unsigned Char::hexDigit() const noexcept {
   unsigned trusting=(raw|0x20) - '0';//tolowerthen subtract char for zero.
   if((trusting>9)){
-    trusting-=39;
+    trusting-=39;// ~ 'a' -'0' + 10
   }
   return trusting; //'A'-'0' = 17, want 10 for that
 }

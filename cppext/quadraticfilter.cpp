@@ -25,7 +25,11 @@ int QuadraticFilter::curvish() const {
 }
 
 double QuadraticFilter::slope() const {//same as linear
-  return ratio(double(Y[1]),S2);
+  return slope(Y[1]);
+}
+
+double QuadraticFilter::slope(int extremum) const{
+  return ratio(double(extremum),S2);
 }
 
 int QuadraticFilter::signA1() const {//same as linear
@@ -33,7 +37,10 @@ int QuadraticFilter::signA1() const {//same as linear
 }
 
 double QuadraticFilter::amplitude() const {
-  return ratio((S4 * Y[0] - S2 * Y[2]),D4);
+  return amplitude(Y[0]);
+}
+double QuadraticFilter::amplitude(int datum) const {
+  return ratio(double(S4 * datum - S2 * Y[2]),D4);
 }
 
 int QuadraticFilter::ampEstimate() const {
@@ -63,9 +70,10 @@ void QuadraticFilter::init(const CenteredSlice &slice){
 
 void QuadraticFilter::step(CenteredSlice &slice){
 #if 0 //optimal
-  int low = slice.lowest();
+  int low = slice.lowest();//amplitude of point leaving view
   slice.step(true);
-  int high = slice.highest();
+  int high = slice.highest();//amplitude of point entering view
+  //common sub-expressions
   int subavg = (Y[0] - low);
   int sum = (high + low);
   int diff = (high - low);

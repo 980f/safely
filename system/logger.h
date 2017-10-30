@@ -30,6 +30,7 @@ public:
   /** makes usage look like a function */
   void operator() (const char *msg, ...);
 
+  //used for legacy in PosixWrapper
   void varg(const char *fmt, va_list &args);
   void dumpStack(const char *prefix);
 }; // class Logger
@@ -41,4 +42,5 @@ extern Logger dbg;
 /** a globally shared logger, for really egregious problems */
 extern Logger wtf;
 
+#define IgnoreGlib(err) dbg("%s ignoring %s",__PRETTY_FUNCTION__, err.what().c_str())
 #endif // LOGGER_H

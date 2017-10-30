@@ -29,7 +29,7 @@ public:
 
   /** name and value are here, make a new node.
    * if parent is null then create node out of the blue and record it in root, else add as child to the parent */
-  Storable *insertNewChild(Storable *parent,Text &name,bool haveValue,Text &value,bool valueQuoted) override;
+  Storable *applyToChild(Storable *parent,Text &name,bool haveValue,Text &value,bool valueQuoted) override;
 
   /** Illegal character encountered */
   void exclaim(PushedJSON::Parser::Diag &d) override;
@@ -38,6 +38,7 @@ public:
 
 struct StoreJsonParser: public AbstractJSONparser<Storable, Text> {
   StoreJsonConstructor core;
+  /** @param data links to buffer of content to parse. */
   StoreJsonParser(Indexer<char>&data);
 };
 

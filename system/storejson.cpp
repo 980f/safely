@@ -19,21 +19,21 @@ Text StoreJsonConstructor::extract(Span &span) {
   return Text(reinterpret_cast<const char*>(data.internalBuffer()),span);
 }
 
-Storable *StoreJsonConstructor::insertNewChild(Storable *parent, Text &name, bool haveValue, Text &value, bool valueQuoted) {
+Storable *StoreJsonConstructor::applyToChild(Storable *parent, Text &name, bool haveValue, Text &value, bool valueQuoted) {
   Storable *nova=nullptr;
   if(parent){
     if(name.empty()){
       nova=&parent->addChild("");//typically an array element, do NOT make all nameless entities the same entity.
     } else {
-      nova=&parent->child(name);
+      nova=parent->findChild(name,true);
     }
   } else {
-    root = new Storable(name);//maydo: access Stored::Groot
+    root = Storable.Groot(name);
     nova=root;
   }
   if(nova){
     if(haveValue){//todo: if node already initialized change value according to type. i.e. preserve node.type
-      nova->setImage(value,Storable::Parsed);
+      nova->setImageFrom(value.c_str(),Storable::Parsed);
       if(valueQuoted){
         //keep the text type set by setImage.
       } else {//mark for further inspection by datum user.
@@ -42,7 +42,7 @@ Storable *StoreJsonConstructor::insertNewChild(Storable *parent, Text &name, boo
       }
     } else {//either a trivial value (a formal json defect) or a parent
       if(valueQuoted){
-        nova->setType(Storable::Textual);
+        nova->setType(Storable::Textual);//#_# all we really want to signal here is 'not a keyword'
       } else {      //inferring wad node
         nova->setType(Storable::Wad);
       }

@@ -9,8 +9,48 @@
 
 //this is not a class member so that we don't force pathparser.h on all users:
 static const PathParser::Rules slasher('/',false,true);// '.' gives java property naming, '/' would allow use of filename classes. '|' was used for gtkwrappers access
-/** allow value sets to a wad create and delete children */
-//bool Storable::AllowRemoteWadOperations=false;
+static const char PathSep = '/';
+/** global/shared root, the 'slash' node for findChild */
+Storable Storable::Slash("/");
+/** access for JsonSocket */
+Storable::Mirror *Storable::remote = nullptr;
+
+Storable &Storable::Groot(TextKey pathname){
+  if(Cstr(pathname).empty()) {
+    return Slash;
+  }
+  Storable *node = Slash.findChild(pathname,true);
+  if(node) {
+    return *node;
+  } else {
+    //else a relative path that looked back past groot (or an independent tree's root)
+    return Slash.child(pathname);//which most likely will be non-functional, but at least not null.
+  }
+} // Storable::Groot
+
+bool Storable::Delete(TextKey pathname){
+  if(Cstr(pathname).empty()) {
+    return false;
+  }
+  Storable *node = FindChild(pathname,false);
+  if(node) {
+    if(node->parent) {
+      node->parent->removeChild(*node);
+      return true;
+    } else {
+      //root or floating node, can't delete those. Should also not create them! There is no need for floating nodes except as local temps.
+      return false;
+    }
+  } else {
+    return false;
+  }
+} // Storable::Delete
+
+Storable *Storable::FindChild(TextKey pathname, bool autocreate){
+  return Slash.findChild(pathname,autocreate);
+} // Storable::Delete
+
+////////////
 
 using namespace sigc;
 
@@ -29,7 +69,7 @@ static unsigned numericalName(TextKey name){
     return which;
   }
   return BadIndex;
-}
+} // numericalName
 
 Storable::Storable(TextKey name, bool isVolatile) :
   isVolatile(isVolatile),
@@ -57,10 +97,19 @@ Storable::~Storable(){
 }
 
 void Storable::notify() const {
+  static int recursionCounter = 0;//4debug of notify.
+  if(remote) {
+    remote->alter(*this);
+  }
+  if(++recursionCounter>1) {
+    wtf("recursing %d in %s",recursionCounter,fullName().c_str());
+  }
+  //todo:Omni send change
   //#we don't check isvolatile here as volatile nodes are often of singular interest, they just aren't of general interest (should not trigger group watch).
   watchers.send();
   recursiveNotify();
-}
+  --recursionCounter;
+} // Storable::notify
 
 void Storable::recursiveNotify() const {
   if(isVolatile) {//this check is one of the main reasons for existence of isVolatile, to indicate gratuitous or redundant nodes
@@ -72,7 +121,7 @@ void Storable::recursiveNotify() const {
   }
 }
 
-Storable&Storable::precreate(TextKey name){
+Storable &Storable::precreate(NodeName name){
   setType(Wad); //if we are adding a child we must be a wad.
   if(q == Empty) {
     q = Defaulted;
@@ -81,7 +130,16 @@ Storable&Storable::precreate(TextKey name){
   Storable&noob(*new Storable(name, false)); //only parent needs volatile flag as that stops recursive looking at the children.
   noob.parent = this;
   return noob;
-} // precreate
+}
+
+void Storable::Rename(TextKey newname){
+  unsigned last=numChildren();
+  Storable &noob=createChild(*this,newname);
+  wad.swap(noob.ownIndex(),this->ownIndex());
+  noob.index=ownIndex();
+  this->index=last;//in case remover looks at it.
+  parent->remove(last);//which is this so we should skedaddle
+}
 
 void *Storable::raw(){
   return static_cast<void *>(this);
@@ -120,8 +178,8 @@ void Storable::setEnumerizer(const Enumerated *enumerated){
       } else {
         if(type == NotKnown) {
           setType(Storable::Textual); //todo:1 probably should be numeric and numeric should check for presence of enumerated, or add a specific Storable::Enumerated to
+                                      // reduce redundant checks.
         }
-        // reduce redundant checks.
         text = enumerated->token(number);
       }
     } else {
@@ -204,6 +262,7 @@ bool Storable::isModified() const {
   case Textual:
     return ChangeMonitored::isModified();
   default:
+  case NotKnown:
     return false;
   } // switch
 
@@ -222,7 +281,7 @@ bool Storable::wasModified(){
     return false;
 
   case Wad: { //investigate all children:  //need bracing to keep 'changes' local.
-    int changes = 0;   //only count node's own changed if no child is changed
+    unsigned changes = 0;   //only count node's own changed if no child is changed
     ForKids(list){
       if(list.next().wasModified()) {
         ++changes;
@@ -327,14 +386,30 @@ void Storable::clone(const Storable&other){ //todo:2 try to not trigger false ch
     }
     break;
   } /* switch */
-} // clone
+} // Storable::clone
+
+void Storable::reparent(Storable &newparent){
+  if(this!=nullptr) {
+    if(this->type==Wad) {
+      while(Storable *kid = wad.takeNth(0)){//must take in order in case order is important to caller.
+        kid->parent= &newparent;
+        newparent.wad.append(kid);
+      }
+      parent->remove(ownIndex());
+    } else {
+      dbg("Tried to reparent a scalar node:%s to %s",fullName().c_str(),newparent.fullName().c_str());
+    }
+  }
+} // Storable::reparent
 
 void Storable::assignFrom(Storable&other){
   if(&other == nullptr) {
     return;                     //breakpoint, probably a pathological case.
   }
   switch(type) {
+//  default:
   case Uncertain:
+  //#JOIN
   case NotKnown:
     if(other.is(Numerical)) {
       setNumber(other.number);
@@ -383,13 +458,14 @@ double Storable::setValue(double value, Storable::Quality quality){
 } // setValue
 
 void Storable::setImageFrom(TextKey value, Storable::Quality quality){
-  bool notifeye = false;
 
   if(isTrivial()) { //don't notify or detect change, no one is allowed to watch an uninitialized node
     text = value;
-    setType(Textual);
+//interfered with determining keyword vs text:        setType(Textual);
     setQuality(quality);
+    return;
   } else {
+    bool notifeye = false;
     if(quality==Parsed){//then retain type if it is known and set according to type
       if(type==Numerical){
         text=value; //#bypass change detect here
@@ -410,6 +486,7 @@ void Storable::setImageFrom(TextKey value, Storable::Quality quality){
   if(notifeye) {
     notify();
   }
+  }
 } // setImageFrom
 
 void Storable::setImage(const TextKey &value, Quality quality){
@@ -421,13 +498,13 @@ Cstr Storable::image(void){
   default://#ignore warning, if we remove it we get a different warning.
   case Uncertain:
     resolve(false);
-    //  JOIN;
+  //#JOIN;
   case Textual://#ignore warning, if we remove it we get a different warning.
     return text;
 
   case Numerical:
     if(enumerated) {
-      return enumerated->token(number.as<int>());//don't update text, this is much more efficient since enumerated is effectively static.
+      return enumerated->token(number.as<unsigned>());//don't update text, this is much more efficient since enumerated is effectively static.
     } else {
       char buffer[64+1];//enough for 64 bit boolean image
       CharFormatter formatter(buffer,sizeof(buffer));
@@ -444,18 +521,22 @@ Cstr Storable::image(void){
         break;
       case NumericalValue::Floating:
         //set the internal image without triggering change detect
-        text.copy(NumberFormatter::makeNumber(number));
+        text.copy(NumberTextifier::makeNumber(number));
         break;
-      }
+      } // switch
       return text;
     }
   case Wad:
-    text.take(NumberFormatter::makeNumber(numChildren()));
+    text.take(NumberTextifier::makeNumber(numChildren()));
     return text;
 
   case NotKnown:
     return "(unknown)";
   } // switch
+}
+
+Cstr Storable::getText() const{
+  return text.c_str();
 } // image
 
 void Storable::setDefault(TextKey value){
@@ -478,10 +559,10 @@ unsigned Storable::numLeaves() const {
   } else {
     return 1;
   }
-}
+} // Storable::numLeaves
 
 ChainScanner<Storable> Storable::kinder(){
-  return ChainScanner<Storable>(wad);
+  return {wad};
 }
 
 ConstChainScanner<Storable> Storable::kinder() const {
@@ -544,7 +625,7 @@ unsigned Storable::setSize(unsigned qty){
     ++changes;
   }
   return changes;
-}
+} // Storable::setSize
 
 
 Storable *Storable::getChild(ChainScanner<Text> &progeny,bool autocreate){
@@ -599,9 +680,9 @@ Storable *Storable::getChild(ChainScanner<Text> &progeny,bool autocreate){
 
   //path exhausted without an abnormal exit, so we must have found the child:
   return searcher;
-}
+} // Storable::getChild
 
-Storable *Storable::findChild(TextKey path, bool autocreate){
+Storable *Storable::findChild(NodeName path, bool autocreate){
   if(this==nullptr){
     return nullptr;
   }
@@ -617,7 +698,7 @@ Storable *Storable::findChild(TextKey path, bool autocreate){
 } // findChild
 
 /** creates node if not present.*/
-Storable&Storable::child(TextKey childName){
+Storable&Storable::child(NodeName childName){
   if(nonTrivial(childName)){
     if(Storable *child = existingChild(childName)) {
       return *child;
@@ -627,9 +708,9 @@ Storable&Storable::child(TextKey childName){
   } else {//#duplicated code for debug.
     return addChild(childName);
   }
-}
+} // Storable::child
 
-Storable&Storable::operator ()(TextKey name){
+Storable&Storable::operator ()(NodeName name){
   return child(name);
 }
 
@@ -640,35 +721,35 @@ Storable&Storable::operator [](unsigned ordinal){
     addChild(""); //better than an NPE so deep in the hierarchy that we don't know where it comes from.
     return *wad.last();
   }
-  return *wad[ordinal];
+  return *wad.nth(ordinal);
 }
 
 const Storable&Storable::nth(unsigned ordinal) const {
   if(!has(ordinal)) {
     wtf("nonexisting child referenced by ordinal %d (out of %d).", ordinal, numChildren());
   }
-  return *wad[ordinal];
+  return *wad.nth(ordinal);
 }
 
 Storable &Storable::nth(unsigned ordinal){
   if(!has(ordinal)) {
     wtf("nonexisting child referenced by ordinal %d (out of %d).", ordinal, numChildren());
   }
-  return *wad[ordinal];
+  return *wad.nth(ordinal);
 }
 
 unsigned Storable::indexOf(const Storable&node) const {
   return wad.indexOf(&node);
 }
 
-Storable&Storable::addChild(TextKey childName){
+Storable&Storable::addChild(NodeName childName){
   Storable&noob(precreate(childName));
 
   return finishCreatingChild(noob);
 }
 
-Storable&Storable::createChild(const Storable&other){
-  Storable&noob(precreate(other.name));
+Storable&Storable::createChild(const Storable&other,TextKey altname){
+  Storable&noob(precreate(altname?altname:other.name.c_str()));
 
   noob.clone(other);
   return finishCreatingChild(noob);
@@ -677,11 +758,14 @@ Storable&Storable::createChild(const Storable&other){
 Storable&Storable::finishCreatingChild(Storable&noob){
   noob.index = wad.quantity();
   wad.append(&noob);
-  wadWatchers.emit(false,noob.index);
+  wadWatchers(false,noob.index);//especially used by stored group to create when remote posts into this node.
+  if(remote) {
+    remote->add(noob);
+  }
   return noob;
 }
 
-Storable&Storable::addWad(unsigned qty, Storable::Type type, TextKey name){
+Storable&Storable::addWad(unsigned qty, Storable::Type type, NodeName name){
   Storable&noob(precreate(name));
 
   noob.presize(qty, type);
@@ -696,15 +780,18 @@ void Storable::presize(unsigned qty, Storable::Type type){
       Storable&kid = addChild("");
       kid.setType(type);
       //and allow constructed default values to persist
-      setQuality(Defaulted); //not using Empty as that often masks the type being set.
+      kid.setQuality(Defaulted); //#!# not using Empty as that often masks the type being set.
     }
   }
-}
+} // Storable::presize
 
 bool Storable::remove(unsigned which){
-  if(wad.removeNth(which)) {//if something was actually removed
-     wadWatchers.emit(true,wad.quantity());
-    //renumber children, following the removal makes it easy:
+  if(has(which)) {
+    if(remote) {//#done here instead of destructor so that we don't send program shutdown deletions.
+      remote->remove(wad[which]);        //remote can figure out how to deal with a floating node.
+    }
+    wad.removeNth(which);//delete's object here
+    //renumber children, must follow removal to make for-loop cute
     for(unsigned ci = wad.quantity(); ci-- > which; ) { //from last downto item newly dropped into 'which' slot
       --(wad[ci]->index);
     }
@@ -749,7 +836,7 @@ void Storable::getArgs(ArgSet&args, bool purify){
 
 void Storable::setArgs(ArgSet&args){
   while(args.hasNext()) {
-    int which = args.ordinal();
+    unsigned which = args.ordinal();
     if(has(which)) {
       wad[which]->setNumber(args.next());
     }
@@ -757,7 +844,7 @@ void Storable::setArgs(ArgSet&args){
 }
 
 ///////////////////////
-StoredListReuser::StoredListReuser(Storable&node, int wadding) : node(node), wadding(wadding), pointer(0){
+StoredListReuser::StoredListReuser(Storable&node, unsigned wadding) : node(node), wadding(wadding), pointer(0){
   //#nada
 }
 

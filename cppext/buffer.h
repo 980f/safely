@@ -5,7 +5,7 @@
 #include "minimath.h"
 #include "sequence.h"
 #include "ordinator.h"
-
+#include "index.h"
 
 /**
  *  This class is used to prevent buffer overflows.
@@ -90,16 +90,23 @@ public:
     //#nada
   }
 
-  /* if @param rewind is negative then the new indexer covers just the data before the old one's pointer minus the ~rewind value, i.e. data already visited excluding
-   * the most recent. NB that a clip of ~0 gets everything beneath the pointer (same values as getHead), ~1 ends the new Indexer one shy of the oldone's pointer (such as removing a comma).
-   * a rewind of 0 gets you the equivalent of rewind(all) then clone() i.e. it ignores the other's pointer and gives you the construction time view of the other.
+  /* if @param clip is negative then the new indexer covers just the data before the old one's pointer minus the ~clip value, i.e. data already visited excluding the most recent. NB that a clip of ~0 gets everything beneath the pointer (same values as getHead), ~1 ends the new Indexer one shy of the oldone's pointer (such as removing a comma).
+   * a rewind of 0 gets you the equivalent of getTail
    * a rewind>0 gets you the unvisited part of the other, with the given number of already visited elements.
    * e.g. a value of 1 after reading a comma will get you a buffer starting with that comma */
-  Indexer(const Indexer &other, int rewind = 0) : //default value is clone of created state of other.
-    Ordinator(other, rewind),
+  Indexer(const Indexer &other, int clip) : //default value is clone of created state of other.
+    Ordinator(other, clip),
     //if 0 or ~clipsome start is same as start of other, else start offset from this one's current location
-    buffer(rewind<=0 ? other.buffer : other.buffer + (other.pointer - rewind)){
+    buffer(0){
+    if(clip<=0){
+     buffer= other.buffer ;
+    } else {
+      buffer= (other.buffer + (other.pointer + clip));
   }
+  }
+
+  /** simple copy constructor */
+  Indexer(const Indexer &other)=default;
 
   /** @returns whether this seems to be a useful object. Note that it might have no freespace(), but it will have content.
  It was created to detect buffers that were created around a malloc or the like return.*/
@@ -225,7 +232,7 @@ public:
     if(high<length){
       length=high;
     }
-    skip(low);//todo: alter buffer address
+    skip(low);//todo: alter buffer address so that rewind is clipped
   }
 
   /** reworks this one to be a byte accessor of the filled portion of another one,
@@ -271,16 +278,16 @@ public:
   }
 
   //publish parts of ordinator, without these derived classes are deemed abstract.
-  virtual bool hasNext(void) {
+  virtual bool hasNext(void) override {//const removed to allow derived classes to lookahead and cache
     return Ordinator::hasNext();
   }
 
-  bool hasPrevious(void) const {
+  bool hasPrevious(void) const override {
     return Ordinator::hasPrevious();
   }
 
   /** on overrun of buffer returns last valid entry*/
-  virtual Content &next(void){
+  virtual Content &next(void) override{
     CppExtBufferFailureGuard
     return buffer[pointer < length ? pointer++ : length - 1];
   }
@@ -312,7 +319,7 @@ public:
   }
 
   /** @return current object ('s reference), rigged for sensible behavior when buffer is used circularly*/
-  Content &peek(void) const {
+  Content &peek(void) const override {
     CppExtBufferFailureGuard
     return buffer[pointer < length ? pointer : 0];
   }
@@ -525,5 +532,10 @@ public:
 
 //raw (bytewise) access to object
 #define IndexBytesOf(indexer, thingy) Indexer<u8> indexer(reinterpret_cast<u8 *>(&thingy), sizeof(thingy))
+
+//do we still need these?:
+#define BytesOf(thingy) IndexBytesOf(, thingy)
+
+#define ForIndexed(classname, indexer) for(Indexer<classname> list(indexer); list.hasNext(); )
 
 #endif // bufferH

@@ -20,11 +20,17 @@ struct JsonStats {
   unsigned totalScalar = 0;
   /** greatest depth of nesting */
   SimpleExtremer<unsigned> maxDepth;
-  /** number of unmatched braces at end of parsing */
+  /** number of unmatched braces at end of parsing. If massive then more closes than opens. */
   unsigned nested = 0;
 
+  /** call when you push to a child */
+  void nest();
+  /** call when you complete a child */
+  void popnest();
+  /** prepare for fresh use */
   void reset();
 
+  /** update node counters, @param scalar should be true for just leaf nodes. */
   void onNode(bool scalar);
 
   class DepthTracker:public CountedLock {

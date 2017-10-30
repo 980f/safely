@@ -60,6 +60,7 @@ public:
 
   char operator [](const Index &index) const noexcept;
 
+  char at(const Index &index) const noexcept;
   /** needed by changed() template function */
   bool operator !=(TextKey other) const  noexcept{
     return !is(other);

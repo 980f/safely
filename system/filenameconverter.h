@@ -2,6 +2,7 @@
 #define FILENAMECONVERTER_H
 
 #include "converter.h"
+#include "buffer.h"
 class FileNameConverter:public Converter {
   //for now do nothing, need to get a compile.
   //later on convert filesystem chars into %xx escapes.

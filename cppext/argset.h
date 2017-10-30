@@ -1,8 +1,8 @@
 #ifndef ARGSET_H
 #define ARGSET_H
 
-#include "buffer.h"
 #include "safely.h"       //ArgsPerMessage maximum copyable set
+#include "buffer.h"
 
 /** used as an intermediate representation of a struct made of only numbers (no text) */
 class ArgSet : public Indexer<double> {

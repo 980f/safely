@@ -15,7 +15,7 @@ public:
   /** risks calling strlen on content. Caller must ensure @param content is a null terminated string. */
   static CharScanner infer(TextKey content);
   CharScanner(char  * content, unsigned size);
-  virtual ~CharScanner();
+  virtual ~CharScanner()=default;
   /** explicit copy constructor helps compiler out, better than defaulting portion to 0*/
   CharScanner(const CharScanner &other);
   CharScanner(const Indexer<char>&other);
@@ -95,7 +95,7 @@ struct ByteScanner : public Indexer<u8> {
   /**had to copy from the base class, couldn't figure out how to cast one template into another.*/
   void getTail(CharScanner&other);
 
-  void getTail(ByteScanner&other){
+  void getTail(const ByteScanner&other){
     Indexer<u8>::getTail(other);
   }
 
@@ -118,7 +118,7 @@ struct ByteScanner : public Indexer<u8> {
 };
 
 struct ByteLooker : public Indexer<const u8> {
-  ~ByteLooker();
+  virtual ~ByteLooker()=default;
   ByteLooker(const u8 * content, unsigned size);
   ByteLooker(const ByteLooker &other, int clip = 0);
   //casting constructor, pointer to existing content like a snap().

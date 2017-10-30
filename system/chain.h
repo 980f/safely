@@ -8,7 +8,8 @@
  * Safe(r) and convenient wrapper around a vector of pointers.
  * It is very suited for container managed persistence, i.e. all objects of a class can be tracked herein and removal from here results in deletion of object.
  *
- * Since all references to the content class are pointer-like this container handles polymorphic sets of classes with ease. All such usages should have virtual destructors.
+ * Since all references to the content class are pointer-like this container handles polymorphic sets of classes with ease. All such usages should have virtual
+ *destructors.
  *
  * a const Chain is one that cannot have additions and deletions, a Chain of const items is a different thing.
  * const Chain<T> &things is a set of T's that cannot be added to or removed from
@@ -124,6 +125,14 @@ public:
     return true;
   }
 
+  /** removes @param n th item, 0 removes first in chain. @returns the item. Compared to removeNth this never deletes the object even if this wad claims ownership */
+  T* takeNth(unsigned n){
+    T* adoptee = nth(n);
+    if(adoptee) {
+      v.erase(v.begin() + n);//things like this is sufficient reason to hate the stl.
+    }
+    return adoptee;
+  }
   bool removeLast(){
     return removeNth(quantity()-1);
   }
@@ -141,6 +150,18 @@ public:
   /** removes item @param thing if present. @returns whether something was actually removed*/
   bool remove(T *thing){
     return removeNth(indexOf(thing));
+  }
+
+  /** change positions of a pair of elements. @returns whether elements existed. */
+  bool swap(unsigned from, unsigned to){
+    if(has(from)&&has(to)) {
+      T* thing = v[from];
+      v[from]=v[to];
+      v[to]=thing;
+      return true;
+    } else {
+      return false;
+    }
   }
 
   /** move item at @param from location to @param to location, shifting the items inbetween.
@@ -198,7 +219,7 @@ public:
   ChainScanner(Chain<T> &list) : list(list),steps(0){
   }
 
-  bool hasNext() const {
+  bool hasNext(){
     return steps<list.quantity();
   }
 
@@ -254,7 +275,7 @@ public:
     steps(0){
   }
 
-  bool hasNext() const {
+  bool hasNext(){
     return steps<list.quantity();
   }
 
@@ -296,7 +317,7 @@ public:
     rewind();
   }
 
-  bool hasNext() const {
+  bool hasNext() {
     return steps>0;
   }
 

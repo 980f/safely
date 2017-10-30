@@ -38,6 +38,7 @@ bool isTrivial(TextKey key);
 
 /** @returns whether @param  t is not null and the first char is not the null terminator*/
 bool nonTrivial(TextKey key);
+void denull(TextKey &t);
 
 /** compare for equality, with rational behavior when either pointer is null */
 bool same(TextKey a,TextKey b);

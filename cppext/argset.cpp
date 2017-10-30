@@ -55,6 +55,9 @@ bool ArgSet::equals(const ArgSet &args, int bits) const {
       return false;
     }
   }
+  if(cf.hasNext()||others.hasNext()){//todo:1 ensure all users agree with this or add a boolean for this test.//was buggy before safely@desktop
+    return false;//a mismatch in numargs.
+  }
   return true;
 }
 

@@ -1,7 +1,7 @@
 #ifndef ORDINATOR_H
 #define ORDINATOR_H
 
-#include "safely.h"
+#include "index.h"
 /** utility class for generator a sequence of integers up to a limit.
  * This is built for the needs of the Indexer<> class, which explains the comments and some curious design choices.
  */
@@ -14,25 +14,37 @@ public:
 
   /** create a range of sorts */
   Ordinator(unsigned length, unsigned pointer = 0 ) : pointer(pointer),length(length){
-    if(static_cast<unsigned>(pointer)>length) {//bad value: will normalize to 'consumed'. The cast to unsigned makes negative numbers HUGE.
+    if(pointer>length) {//bad value: will normalize to 'consumed'. The cast to unsigned makes negative numbers HUGE.
       this->pointer = length;
     }
   }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsign-compare"
   /** create a subset of @param other. In all cases pointer will be 0, you can't back this baby up past the beginning of the other.
    * if @param clip<0 then the 'used' subset, shortened by the ~clip value (~0 gets all, ~1 loses the most recent one)
-   * if @param clip==0 then the subset is 'all' of the original, original pointer is ignored.
-   * if @param clip<0 then the 'unused' subset, skipping clip -1 items (presuming caller moves pointer to the coordinate place)
+   * if @param clip>=0 then the 'unused' subset, skipping clip  items (presuming caller moves pointer to the coordinate place)
    */
-  Ordinator(const Ordinator &other,int clip = 0) : pointer(0),length(other.length){
+  Ordinator(const Ordinator &other,int clip) :
+    pointer(0),
+    length(0){
     if(clip<0) {  //section past, usually 0..pointer-1,
+      if(~clip<=other.pointer){
       length = other.pointer - (~clip);
-    }
-    if(clip>0) { //end section pointer .. length -1,
-      length = other.freespace() + (~clip);
+      }//else stays at 0
+    } else { //end section pointer .. length -1,
+      length = other.freespace();
+      if(length>=clip){
+        length-=clip;
+      } else {
+        length=0;
+      }
     }
     //else constructor init list has taken care of it.
   }
+#pragma GCC diagnostic pop
+
+  Ordinator(const Ordinator &other)=default;//simple copy
 
   /**  @return whether index is in the present data*/
   bool contains(unsigned index) const {
@@ -45,7 +57,7 @@ public:
   }
 
   /** @returns whether pointer is not past the last */
-  bool hasNext(void) const {
+  bool hasNext(void) {
     return length > 0 && pointer < length;
   }
 
@@ -109,7 +121,7 @@ public:
       amount = pointer;
     }
     pointer -= amount;
-    length -= amount;
+    length -= amount;//todo:2 this is probably a bug for SOME uses, the buffer doesn't change size just cause we discard an entry.
   }
 
   /** if other isn't at its start then we get the part past, else we get a copy */

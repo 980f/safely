@@ -23,7 +23,7 @@ void SegmentedName::purify(){
 
 void SegmentedName::copycat(const SegmentedName &other){
   for(auto index=other.indexer();index.hasNext();){
-    Text &item=index.next();
+    const Text &item=index.next();
     this->suffix(item.c_str());//c_str() here forces copy, see transfer where we take the content
   }
 }

@@ -22,7 +22,7 @@ public:
   /** digits after zero, divide by 10^div10 for their mathematical value */
   u64 postdecimal;
   /** how many post decimal digits are represented by 'postdecimal' value */
-  int div10;
+  unsigned div10;
   /** whether an explicit exponents was encountered */
   bool hasEterm;
   /** whether an explicit exponent was negative*/
