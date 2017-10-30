@@ -195,7 +195,7 @@ int ilog10(double value);
 
 /** an integer power of 10. out of bounds arg gets you nothing but trouble ... */
 u32 i32pow10(unsigned power);
-xxx
+
 unsigned digitsAbove(unsigned int value, unsigned numDigits);
 
 /** an integer power of 10. out of bounds arg gets you nothing but trouble ... */
