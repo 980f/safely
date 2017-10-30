@@ -7,12 +7,6 @@
 //we will now coerce each field to be Settable:
 #include "settable.h"
 
-// message#extraneous data seperator
-#define OOBmarker '#'
-
-// message|checksum seperator
-#define FrameBreak '|'
-
 typedef char ID;
 
 /** primitive human readable transport format
@@ -29,7 +23,7 @@ struct ParamKey {
   ID unit;
   ID field;
   /** defaulting either value gives you a false/useless one.*/
-  ParamKey(u8 unit = 0,u8 field = 0) : unit(unit),field(field){
+  ParamKey(char unit = 0,char field = 0) : unit(unit),field(field){
     //#nada
   }
 
@@ -94,7 +88,7 @@ public:
   OLM &locate(ID code);
 
   /** report offset for given char*/
-  unsigned lookup(ID ch,unsigned nemo = ~0) const;
+  unsigned lookup(ID ch,unsigned nemo = BadIndex) const;
   /** @see lookup*/
   unsigned operator()(ID asciiId) const;
   /** char for nth param*/
@@ -147,6 +141,10 @@ public:
   virtual CharScanner &customReport(ID fieldId) const;
   bool differs(const HasSettings &other) const;//compare
   bool differed(const HasSettings &other);//compare and copy
+
+  /** @return whether posting is attempted (useful for breakpoints), clears modified flags on both entities. */
+  bool blockCheck(HasSettings &desired,ID fieldID);
+
   void copy(const HasSettings &other);//non-recursive assignment
 
   /** flag deferred read */
@@ -168,80 +166,78 @@ public:
     return pMap.reportFor(fieldID);
   }
 
-  /** print values associated with field on given stringlike thing @param response */
-  virtual bool printField(ID fieldID, CharFormatter&response,bool master);//#can't const as state machines may need to change when a message is actually sent.
+//  /** print values associated with field on given stringlike thing @param response */
+//  virtual bool printField(ID fieldID, CharFormatter&response,bool master);//#can't const as state machines may need to change when a message is actually sent.
 
-  /** @return whether posting is attempted (useful for breakpoints), clears modified flags on both entities. */
-  bool blockCheck(HasSettings &desired,ID fieldID);
 
-  /** @return whether string appeared to be decent, after extracting comma separate numbers from it.*/
-  static bool parseArgstring(ArgSet &args,CharFormatter &p);
+//  /** @return whether string appeared to be decent, after extracting comma separate numbers from it.*/
+//  static bool parseArgstring(ArgSet &args,CharFormatter &p);
 
-  /** unterminate the buffer and mark it with the "more to come" flag*/
-  static void startOOBdata(CharFormatter &);
+//  /** unterminate the buffer and mark it with the "more to come" flag*/
+//  static void startOOBdata(CharFormatter &);
 }; // class HasSettings
 
 
-struct CustomFormatter {
-  virtual int printOn(CharFormatter &buf) const = 0;
-};
+//struct CustomFormatter {
+//  virtual int printOn(CharFormatter &buf) const = 0;
+//};
 
-#include "settable.h" //#this include is not needed locally but sooo many HasSettings instances include Settables this saved a bunch of rework.
+//#include "settable.h" //#this include is not needed locally but sooo many HasSettings instances include Settables this saved a bunch of rework.
 
-class GroupMapper {
-public:
-//  OLM units;
-//  GroupMapper(const char *unitMap);
-//  OLM *lastReporter;
-  ParamKey nextReport();
-//  void link(OLM &pList){
-//    units.append(&pList);
-//  }
+//class GroupMapper {
+//public:
+////  OLM units;
+////  GroupMapper(const char *unitMap);
+////  OLM *lastReporter;
+//  ParamKey nextReport();
+////  void link(OLM &pList){
+////    units.append(&pList);
+////  }
 
-  void markAll(bool send = true);
-}; // class GroupMapper
+//  void markAll(bool send = true);
+//}; // class GroupMapper
 
-/**function pointer for sending implied information*/
-class Poster {
-public:
-  bool postMessage(const char *twochar);
-  virtual bool postKey(const ParamKey &parm) = 0;
-};
+///**function pointer for sending implied information*/
+//class Poster {
+//public:
+//  bool postMessage(const char *twochar);
+//  virtual bool postKey(const ParamKey &parm) = 0;
+//};
 
-#include "safestr.h"
-/** finds a thing with settings given an ID code.
- *  Chained to link cores.*/
-class SettingsGrouper : public Chained<SettingsGrouper>,public Poster {
-protected:
-  GroupMapper grouper;
-public:
-  SettingsGrouper(const char *unitList /*,bool *scoreboard,int scores*/);
-  /**haven't yet managed to statically compile a linked list, which is theoretically possible with lots of fancy templating.*/
-  void init();
-  bool imLinkMaster;
-  virtual HasSettings *unit4(ID asciiId,bool forRead = false) = 0;
-  /** @return scoreboard index for given field's report*/
-  BitReference reportFor(const ParamKey &ID);
-  /** @return scoreboard index for given field's report*/
-  BitReference bitFor(const char*twochar);
+//#include "safestr.h"
+///** finds a thing with settings given an ID code.
+// *  Chained to link cores.*/
+//class SettingsGrouper : public Chained<SettingsGrouper>,public Poster {
+//protected:
+//  GroupMapper grouper;
+//public:
+//  SettingsGrouper(const char *unitList /*,bool *scoreboard,int scores*/);
+//  /**haven't yet managed to statically compile a linked list, which is theoretically possible with lots of fancy templating.*/
+//  void init();
+//  bool imLinkMaster;
+//  virtual HasSettings *unit4(ID asciiId,bool forRead = false) = 0;
+//  /** @return scoreboard index for given field's report*/
+//  BitReference reportFor(const ParamKey &ID);
+//  /** @return scoreboard index for given field's report*/
+//  BitReference bitFor(const char*twochar);
 
-  /** request for deferred report*/
-  bool postKey(const ParamKey &parm);
+//  /** request for deferred report*/
+//  bool postKey(const ParamKey &parm);
 
-  /** next queued item's code.*/
-  virtual ParamKey nextReport();
-  /** @return null on success, else error message*/
-  const char * stuff(const ParamKey &param, CharFormatter p);
-  const char * stuff(const ParamKey &param, ArgSet &args);
-  /** dump guts entirely, hopefully the stupid ones won't disturb the recipient.*/
-  void sendAll(/*const char*except*/);
-  /** build header then tail to @return getParams */
-  bool printParam(CharFormatter&response, const ParamKey &Id,bool master); //exporting reporting from command responder to allow for deferred reports
-  /** by default returns a pointer to a shared buffer, don't call printReport until the previous usage has been finished*/
-  bool printReport(CharFormatter&response, const ParamKey &nexrep);
-  /** get values for a named thing. @returns whether @param key was valid. This will not include any OutOfBand data. */
-  bool getParam(const ParamKey &key,ArgSet &args);
+//  /** next queued item's code.*/
+//  virtual ParamKey nextReport();
+//  /** @return null on success, else error message*/
+//  const char * stuff(const ParamKey &param, CharFormatter p);
+//  const char * stuff(const ParamKey &param, ArgSet &args);
+//  /** dump guts entirely, hopefully the stupid ones won't disturb the recipient.*/
+//  void sendAll(/*const char*except*/);
+//  /** build header then tail to @return getParams */
+//  bool printParam(CharFormatter&response, const ParamKey &Id,bool master); //exporting reporting from command responder to allow for deferred reports
+//  /** by default returns a pointer to a shared buffer, don't call printReport until the previous usage has been finished*/
+//  bool printReport(CharFormatter&response, const ParamKey &nexrep);
+//  /** get values for a named thing. @returns whether @param key was valid. This will not include any OutOfBand data. */
+//  bool getParam(const ParamKey &key,ArgSet &args);
 
-}; // class SettingsGrouper
+//}; // class SettingsGrouper
 
 #endif // HASSETTINGS_H
