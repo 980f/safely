@@ -11,6 +11,7 @@ struct NumericalValue {
     //more later
     double dee;
   } storage;
+
   enum Detail {
     Truthy,
     Whole,

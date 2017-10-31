@@ -48,7 +48,7 @@ bool Fildes::open(const char *devname, int O_stuff){//todo:3 expose 3rd argument
 }
 
 FILE *Fildes::getfp(const char *fargs){
-  return ::fdopen(fd,fargs ?"": "r");//todo:2 make string to match present state of fd's flags
+  return ::fdopen(fd,fargs ?fargs: "r");//todo:2 make string to match present state of fd's flags
 }
 
 unsigned Fildes::available() const{

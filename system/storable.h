@@ -3,7 +3,7 @@
 
 //#include "safely.h"
 
-#include "argset.h" //for arrays to mate to hardware structs
+//#include "argset.h" //for arrays to mate to hardware structs
 
 #include "chain.h" //wrap std::vector to cover its sharp pointy sticks.
 #include "changemonitored.h"
@@ -44,9 +44,6 @@ class Storable : public ChangeMonitored, SIGCTRACKABLE {
   //needed to be a template, not worth figuring out the syntax friend class StoredGroup;
   template<typename> friend class StoredGroup;
 public:
-  /** allow value sets to a wad create and delete children */
-//  static bool AllowRemoteWadOperations;
-
   enum Type {  //referring to the type of data in the node
     NotKnown,   //construction error, parse error
     Numerical, //asked to be a number, converts image to number when this is set
@@ -152,10 +149,6 @@ public:
   // more involved functions
   bool wasModified();
 
-#if StorableDebugStringy
-  /** @return number of changes */
-  unsigned listModified(sigc::slot<void, Ustring> textViewer) const;
-#endif
   Text fullName() const;
 
   /** the index is often not meaningful, but always is valid. It is -1 for a root node.*/
@@ -260,6 +253,9 @@ public:
   /** @returns an iterator over the children, in ascending order*/
   ConstChainScanner<Storable> kinder() const;
 
+  /** experimental, to see if syntax is tolerable: */
+  void forChildren(sigc::slot<void, Storable &> action);
+
   bool has(unsigned ordinal) const {
     return ordinal < numChildren();
   }
@@ -320,11 +316,11 @@ public:
 
   /** remove all children */
   void filicide(bool notify = false);
-  /** packs child values into the given @param args, if purify is true then argset entries in excess of the number of this node's
-   * children are zeroed, else they are left unmodified  */
-  void getArgs(ArgSet &args, bool purify = false);
-  /** overwrite child nodes setting them to the given values, adding nodes as necessary to store all of the args.*/
-  void setArgs(ArgSet &args);
+//  /** packs child values into the given @param args, if purify is true then argset entries in excess of the number of this node's
+//   * children are zeroed, else they are left unmodified  */
+//  void getArgs(ArgSet &args, bool purify = false);
+//  /** overwrite child nodes setting them to the given values, adding nodes as necessary to store all of the args.*/
+//  void setArgs(ArgSet &args);
 
   /** @returns rootnode of this node, 'this' if 'this' is a root node.*/
   Storable &getRoot();
@@ -354,7 +350,6 @@ public:
     virtual void remove(const Storable &noob) = 0;
   };
   static Mirror *remote;
-//  ArtString fullName() const;
 }; // class Storable
 
 /** iterate over the children of given node (kinder is german  plural for child, like kindergarten) */

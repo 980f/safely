@@ -118,5 +118,6 @@ Cstr JsonFile::originalFile(){
 
 
 void JsonFile::printOn(Fildes &alreadyOpened, unsigned indent, bool showVolatiles){
-  printNode(indent,root,alreadyOpened.getfp("w"),showVolatiles);
+  auto fp=alreadyOpened.getfp("w");
+  printNode(indent,root,fp,showVolatiles);
 }

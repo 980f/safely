@@ -302,42 +302,6 @@ bool Storable::wasModified(){
   } // switch
 } // wasModified
 
-#if StorableDebugStringy
-int Storable::listModified(sigc::slot<void, Ustring> textViewer) const {
-  if(isVolatile) {
-    return 0;
-  }
-  switch(type) {
-  default:
-  case NotKnown:
-    return 0;
-
-  case Wad: {
-    int changes = 0;
-    ForKidsConstly(list){
-      const Storable&child(list.next());
-
-      changes += child.listModified(textViewer);   //recurse
-    }
-    if(!changes && ChangeMonitored::isModified()) {   //try not to report propagated changes already reported by loop above.
-      textViewer(fullName() + ":reorganized");
-      ++changes;
-    }
-    return changes;
-  }
-  case Numerical:
-  case Uncertain:
-  case Textual:
-    if(ChangeMonitored::isModified()) {
-      textViewer(Ustring::compose("%1:%2", fullName(), image()));
-      return 1;
-    }
-    return 0;
-  } // switch
-} // Storable::listModified
-
-#endif // if StorableDebugStringy
-
 Text Storable::fullName() const {
   //non-recursive,
   SegmentedName pathname;
@@ -566,6 +530,13 @@ ChainScanner<Storable> Storable::kinder(){
 
 ConstChainScanner<Storable> Storable::kinder() const {
   return ConstChainScanner<Storable>(wad);
+}
+
+void Storable::forChildren(sigc::slot<void,Storable &> action){
+  ForKids(list){
+     Storable&one(list.next());
+     action(one);
+  }
 }
 
 Storable *Storable::existingChild(TextKey childName){
@@ -812,28 +783,6 @@ void Storable::filicide(bool notify){
   }
 }
 
-void Storable::getArgs(ArgSet&args, bool purify){
-  ForKids(list){
-    if(!args.hasNext()) {
-      break;
-    }
-    args.next() = list.next().getNumber<double>();
-  }
-  if(purify) {
-    while(args.hasNext()) {
-      args.next() = 0.0;
-    }
-  }
-} // getArgs
-
-void Storable::setArgs(ArgSet&args){
-  while(args.hasNext()) {
-    unsigned which = args.ordinal();
-    if(has(which)) {
-      wad[which]->setNumber(args.next());
-    }
-  }
-}
 
 ///////////////////////
 StoredListReuser::StoredListReuser(Storable&node, unsigned wadding) : node(node), wadding(wadding), pointer(0){

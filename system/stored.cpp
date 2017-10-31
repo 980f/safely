@@ -1,18 +1,4 @@
-#include "stored.h"
-
-/////////////////
-
-Storable &Stored::Groot(TextKey pathname){
-  if(Cstr(pathname).empty()){
-    return groot;
-  }
-  Storable *node=Stored::groot.findChild(pathname,true);
-  if(node){
-    return *node;
-  }
-  //else a relative path that looked back past groot (or an independent tree's root)
-  return groot.child(pathname);//which most likely will be non-functional, but at least not null.
-}
+#include "stored.h"  //(C) 2017 Andrew L. Heilveil
 
 Stored::Stored(Storable&node) : duringConstruction(true), node(node), refreshed(true){
   //onAnyChange(MyHandler(Stored::doParse), false); //# can't call onParse here as required children might not exist.
@@ -76,33 +62,6 @@ sigc::slot<unsigned> Stored::liveindex() const {
   return mem_fun(node, &Storable::ownIndex); //faster
 }
 
-void Stored::getArgs(ArgSet&args){
-  node.getArgs(args);
-}
-
-void Stored::setArgs(ArgSet&args){
-  node.setArgs(args);
-}
-
-/** watcher is invoked on first call to watchArgs but not subsequent ones, should move that to caller*/
-sigc::connection Stored::watchArgs(const SimpleSlot&watcher, bool kickme){
-  return onAnyChange(watcher, kickme);
-}
-
-void Stored::allocArgs(int qty){
-  node.presize(qty, Storable::Numerical);
-}
-
-void Stored::getArgs(TextKey child, ArgSet&args){
-  node.child(child).getArgs(args, false);
-}
-
-void Stored::setArgs(TextKey child, ArgSet&args){
-  Storable&array = node.child(child);
-
-  array.setArgs(args);
-}
-
 bool Stored::isEmpty() const {
   //first two terms avert NPE's on horribly bad code, should never fire.
   return this == nullptr || &node == nullptr || node.q == Storable::Empty;
@@ -131,5 +90,3 @@ bool Stored::notRefreshed() const {
 TextKey Stored::getName() const {
   return node.name;
 }
-
-Storable Stored::groot("/",true);

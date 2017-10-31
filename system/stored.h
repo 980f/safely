@@ -10,7 +10,6 @@
 class Stored : SIGCTRACKABLE {
   Stored()=delete;//# we must attache to a storable, we exist to wrap access to one with type-safety.
   Stored(const Stored &cantbecopied)=delete;//can't copy a subset of a tree, not generically.
-  static Storable groot;
 protected:
   /** used to per-class disable notification causing onParse' to be called before all children exist.
    * Only a few situations have needed to do this.
@@ -22,9 +21,6 @@ protected:
   //    onParse();
 
 public:
-  /** a global root node, for your convenience */
-  static Storable &Groot(TextKey pathname);
-
   /** being a reference there is little danger in exposing it. It was handy having it available without the extra () of a getter.*/
   Storable &node;
   /** the essential constructor. */
@@ -67,16 +63,6 @@ public:
   /** @returns *copy* of underlying node's name. Since the node name is const as of late 2016 this will stay the name, but manipulating the returned value will not alter the node's
    * name. */
   TextKey getName() const;
-
-  void getArgs(ArgSet &args);
-  void setArgs(ArgSet &args);
-
-  sigc::connection watchArgs(const SimpleSlot &watcher, bool kickme = false);
-
-  void allocArgs(int qty);
-  /** user wants children*/
-  void getArgs(TextKey child, ArgSet &args);
-  void setArgs(TextKey child, ArgSet &args);
 
   bool isEmpty() const;
   /** fire off node watchers */
@@ -128,7 +114,7 @@ public:
 #define ConnectSibling(varname, ...) varname(node.parent->child( # varname ), ## __VA_ARGS__)
 
 //use this to construct an object which is not a member of a Stored:
-#define ConnectGroot(varname,...)  varname(Stored::Groot( # varname ), ## __VA_ARGS__)
+#define ConnectGroot(varname,...)  varname(Storable::Groot( # varname ), ## __VA_ARGS__)
 
 /** for usage as filter: sigc::bind(&byName, sigc::ref(name)) */
 template<class Groupie> bool byName(const TextKey &name, const Groupie & /*child*/, const TextValue &seeking){
