@@ -93,11 +93,11 @@ void Stored::allocArgs(int qty){
   node.presize(qty, Storable::Numerical);
 }
 
-void Stored::getArgs(NodeName child, ArgSet&args){
+void Stored::getArgs(TextKey child, ArgSet&args){
   node.child(child).getArgs(args, false);
 }
 
-void Stored::setArgs(NodeName child, ArgSet&args){
+void Stored::setArgs(TextKey child, ArgSet&args){
   Storable&array = node.child(child);
 
   array.setArgs(args);
@@ -128,7 +128,7 @@ bool Stored::notRefreshed() const {
   return refreshed == false;
 }
 
-NodeName Stored::getName() const {
+TextKey Stored::getName() const {
   return node.name;
 }
 

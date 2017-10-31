@@ -66,7 +66,7 @@ public:
 
   /** @returns *copy* of underlying node's name. Since the node name is const as of late 2016 this will stay the name, but manipulating the returned value will not alter the node's
    * name. */
-  NodeName getName() const;
+  TextKey getName() const;
 
   void getArgs(ArgSet &args);
   void setArgs(ArgSet &args);
@@ -75,8 +75,8 @@ public:
 
   void allocArgs(int qty);
   /** user wants children*/
-  void getArgs(NodeName child, ArgSet &args);
-  void setArgs(NodeName child, ArgSet &args);
+  void getArgs(TextKey child, ArgSet &args);
+  void setArgs(TextKey child, ArgSet &args);
 
   bool isEmpty() const;
   /** fire off node watchers */

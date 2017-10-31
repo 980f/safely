@@ -93,9 +93,9 @@ bool LibUsber::find(uint16_t idVendor ,uint16_t idProduct,unsigned nth){
   libusb_device **devs=nullptr;
 
   OnExit release([devs](){
-    libusb_free_device_list(devs, 1);//libusb_open ++the ref count for trhe one we keep a ref to.
+    libusb_free_device_list(devs, 1);//libusb_open ++'s the ref count for the one we keep a ref to.
   });
-  ssize_t devcnt=libusb_get_device_list(NULL, &devs);
+  ssize_t devcnt=libusb_get_device_list(nullptr, &devs);
 
   if (devcnt < 0) {
     errornumber=devcnt;

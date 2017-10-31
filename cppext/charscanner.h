@@ -74,7 +74,7 @@ struct ByteScanner : public Indexer<u8> {
   ByteScanner(const ByteScanner &other, int clip = 0);
   //casting constructor, pointer to existing content like a snap().
   ByteScanner(const CharScanner &other);
-  ~ByteScanner();
+  virtual ~ByteScanner()=default;
 
   /** added this modality instead of dusting off yet another variant of this class (Bigendianer) */
   bool bigendian=false;

@@ -90,7 +90,7 @@ void Text::copy(TextKey other){
   if(ptr && ptr != other) { //# if not passed self as a pointer to this' storage.
     clear();
   }
-  if(nonTrivial(other)) {//definitely same data
+  if(nonTrivial(other)) {//definitely some data
     ptr = strdup(other);//don't delete!
   }
   tbg("copied by cstr %p:%p  <-%p",this,ptr,other);

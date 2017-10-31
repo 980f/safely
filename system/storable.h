@@ -19,9 +19,6 @@
 #include "textpointer.h"
 #include "numericalvalue.h"
 
-//class used for communicating keys, once was also for the actual storage.
-typedef TextKey NodeName;
-
 //class for text value storage.
 typedef Text TextValue;
 
@@ -118,7 +115,8 @@ private:
   /**a piece of constructor. @param name is node name */
   Storable &precreate(TextKey name);
 public:
-  const TextValue name;
+  //had to change to Text vs saving a pointer when file loading comes first, else the file content gets ripped out from under us and we are pointing to reclaimable heap. It still is a good idea to not rename nodes, unless perhaps the name is empty.
+  const Text name;
   /** somehow rename the node, perhaps by clone and replace */
   void Rename(TextKey newname);
 public:
@@ -290,7 +288,7 @@ public:
   /** creates node if not present.*/
   Storable &child(TextKey childName);
 
-  /** syntactic sugar for @see child(NodeName) */
+  /** syntactic sugar for @see child(TextKey) */
   Storable &operator ()(TextKey name);
   //these give nth child
   Storable &operator [](unsigned ordinal);
@@ -333,7 +331,7 @@ public:
   /** force size of wad. */
   unsigned setSize(unsigned qty);
   /** find/create from an already parsed path. Honors '#3' notation for child [3]*/
-  Storable *getChild(ChainScanner<Text> &progeny, bool autocreate);
+  Storable *getChild(Sequence<Text> &progeny, bool autocreate);
 private:
   Storable &finishCreatingChild(Storable &noob);
 ///////////////////////////////////

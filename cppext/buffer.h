@@ -369,7 +369,7 @@ public:
 
   /** remove bytes from the start of the allocation, actually moving data.
  This method does NOT alter the allocation. This only makes sense for a receive buffer as you peel items off the front. */
-  Indexer &removeFirst(unsigned amount){
+  Indexer &removeHead(unsigned amount){
     if(amount>=pointer){//remove all
       pointer=0;//simple ignore what we had
     } else {
@@ -378,15 +378,19 @@ public:
     return *this;
   }
 
-  /** if you lookedahead and instead of just skipping you want to move data in the buffer  */
-  bool removeNext(unsigned amount){
-    //data start is pointer+amount
-    unsigned start=pointer+amount;
+  /** use: if you lookedahead and instead of just skipping you want to move data in the buffer.
+   @returns whether the move was done, which will only happen if the @param amount is reasonable.
+ @param andShrink tells whether the buffer should be shrunk to reflect removed content. */
+  bool removeNext(unsigned amount,bool andShrink=true){
+    unsigned start=pointer+amount;//what should be next when we are done.
     if(canContain(start)){//don't pull from past end
       //data quantity is freespace-amount being removed since we are removing from the freespace
       unsigned quantity=freespace()-amount;
       if(canContain(quantity)){//slightly bogus, but a negative quantity will fail this test.
         movem(start,pointer,quantity);
+        if(andShrink){
+          length-=quantity;
+        }
         return true;
       }
     }
@@ -395,8 +399,8 @@ public:
 
   /** seeks in head of buffer for something that operator=='s @param item.
 @deprecated untested */
-  unsigned findFirst(const Content &item){
-    for(int peek=0;peek<pointer;++peek){
+  unsigned findInHead(const Content &item){
+    for(unsigned peek=0;peek<pointer;++peek){
       if(item==buffer[peek]){
         return peek;
       }
@@ -407,7 +411,7 @@ public:
   /** seeks in tail of buffer for something that operator=='s @param item.
    * pointer is not moved, typically you will skip in some fashion.
 @deprecated untested */
-  unsigned findNext(const Content &item){
+  unsigned findInTail(const Content &item){
     for(unsigned peek=pointer;peek<allocated();++peek){
       if(item==buffer[peek]){
         return peek;

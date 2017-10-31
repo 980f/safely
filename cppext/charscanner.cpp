@@ -273,7 +273,7 @@ bool CharScanner::isBlank(){
 
 CharScanner CharScanner::cut(char separator){
   if(hasNext()){
-  Index termlocation(findNext(separator));
+  Index termlocation(findInTail(separator));
   if(termlocation.isValid()){//return from pointer to termlocation
     AssignOnExit<unsigned> aoe(pointer,termlocation+1);//move past terminator, but not until we've grabbed our reference
     buffer[termlocation]=0;

@@ -417,7 +417,7 @@ public:
   }
 
   /** @deprecated need to get rid of these as they generate warnings:*/
-  void forEach(const sigc::slot<void, const NodeName &, const Groupie &, unsigned> &action) const {
+  void forEach(const sigc::slot<void, const TextKey &, const Groupie &, unsigned> &action) const {
     ForValues(list){
       Groupie &item(list.next());
 

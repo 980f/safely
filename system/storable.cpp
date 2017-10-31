@@ -121,7 +121,7 @@ void Storable::recursiveNotify() const {
   }
 }
 
-Storable &Storable::precreate(NodeName name){
+Storable &Storable::precreate(TextKey name){
   setType(Wad); //if we are adding a child we must be a wad.
   if(q == Empty) {
     q = Defaulted;
@@ -133,12 +133,16 @@ Storable &Storable::precreate(NodeName name){
 }
 
 void Storable::Rename(TextKey newname){
+#if 0
   unsigned last=numChildren();
   Storable &noob=createChild(*this,newname);
   wad.swap(noob.ownIndex(),this->ownIndex());
   noob.index=ownIndex();
   this->index=last;//in case remover looks at it.
   parent->remove(last);//which is this so we should skedaddle
+#else
+  const_cast<Text&>(name)=newname;
+#endif
 }
 
 void *Storable::raw(){
@@ -492,7 +496,8 @@ Cstr Storable::image(void){
   switch(type) {
   case Uncertain:
     resolve(false);
-  //#JOIN;
+    JOIN;
+  default:
   case Textual://#ignore warning, if we remove it we get a different warning.
     return text;
 
@@ -622,7 +627,7 @@ unsigned Storable::setSize(unsigned qty){
 } // Storable::setSize
 
 
-Storable *Storable::getChild(ChainScanner<Text> &progeny,bool autocreate){
+Storable *Storable::getChild(Sequence<Text> &progeny,bool autocreate){
   if(this==nullptr){
     return nullptr;//detect recursion gone bad
   }
@@ -635,22 +640,22 @@ Storable *Storable::getChild(ChainScanner<Text> &progeny,bool autocreate){
       searcher=searcher->parent;
       if(!searcher){
         //we can't autocreate a root, it would leak if we tried.
-        wtf("Storable::findChild asked to look above root [%s]",searcher->name.c_str());
+        wtf("Storable::getChild asked to look above root [%s]",searcher->name.c_str());
         return nullptr;//we do NOT autocreate in this case.
       }
       continue;//look for next child in path
     }
 
     Index which=numericalName(lname.c_str());
-    //pick node by number.
-    if(which.isValid()){
+
+    if(which.isValid()){//pick node by number.
       if(searcher->wad.has(which)){
         searcher=searcher->wad[which];
         continue;
       }
       if(autocreate){
-        searcher->setSize(which+1);
-        searcher=searcher->wad[which];
+        searcher->setSize(which+1);//0-based which
+        searcher=searcher->wad[which];//setSize creates nodes.
         return searcher->getChild(progeny,true);//must recurse to not copy all the 'is it a number' logic
       }
       return nullptr;
@@ -659,24 +664,17 @@ Storable *Storable::getChild(ChainScanner<Text> &progeny,bool autocreate){
     if(Storable * found = searcher->existingChild(lname)) {
       searcher = found;
       continue;//look for next child in path
-    } else if(autocreate) {
-      return searcher->addChild(lname).getChild(progeny,true);
-      //build children expeditiously, could create one via lname and recurse, but that would entail repeat parsing of the path.
-//      progeny.rewind(1);//undo the next so we don't have to duplicate code using lname.
-//      while(progeny.hasNext()) {
-//        searcher = &(searcher->addChild(progeny.next()));
-//      }
-//      return searcher;//created the child (and possibly a few parents as well)
-    } else {
-      return nullptr;
     }
+    if(autocreate) {
+      return searcher->addChild(lname).getChild(progeny,true);
+    }
+    return nullptr;
   }
-
   //path exhausted without an abnormal exit, so we must have found the child:
   return searcher;
 } // Storable::getChild
 
-Storable *Storable::findChild(NodeName path, bool autocreate){
+Storable *Storable::findChild(TextKey path, bool autocreate){
   if(this==nullptr){
     return nullptr;
   }
@@ -692,7 +690,7 @@ Storable *Storable::findChild(NodeName path, bool autocreate){
 } // findChild
 
 /** creates node if not present.*/
-Storable&Storable::child(NodeName childName){
+Storable&Storable::child(TextKey childName){
   if(nonTrivial(childName)){
     if(Storable *child = existingChild(childName)) {
       return *child;
@@ -704,7 +702,7 @@ Storable&Storable::child(NodeName childName){
   }
 } // Storable::child
 
-Storable&Storable::operator ()(NodeName name){
+Storable&Storable::operator ()(TextKey name){
   return child(name);
 }
 
@@ -736,7 +734,7 @@ unsigned Storable::indexOf(const Storable&node) const {
   return wad.indexOf(&node);
 }
 
-Storable&Storable::addChild(NodeName childName){
+Storable&Storable::addChild(TextKey childName){
   Storable&noob(precreate(childName));
 
   return finishCreatingChild(noob);
@@ -759,7 +757,7 @@ Storable&Storable::finishCreatingChild(Storable&noob){
   return noob;
 }
 
-Storable&Storable::addWad(unsigned qty, Storable::Type type, NodeName name){
+Storable&Storable::addWad(unsigned qty, Storable::Type type, TextKey name){
   Storable&noob(precreate(name));
 
   noob.presize(qty, type);
