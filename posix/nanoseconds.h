@@ -38,6 +38,11 @@ struct NanoSeconds {
 
   NanoSeconds operator -(const NanoSeconds &lesser);
 
+  /** wraps nanosleep. @returns the usual posix nonsense. 0 OK/-1 -> see errno */
+  int sleep(){
+    return nanosleep(&ts, &ts);
+  }
+
 };
 
 #endif // NANOSECONDS_H
