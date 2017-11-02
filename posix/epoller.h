@@ -28,16 +28,16 @@ public:
   bool remove(int fd);
   /** data returned from wait():*/
   Indexer<epoll_event> waitlist;
-  int numEvents;
+  unsigned numEvents;
   /** FYI: number of times wait() has been called, will wrap so mostly just for debug.*/
   unsigned waitcount=0;
-  bool wait(int timeoutms);
+  bool wait(unsigned timeoutms);
 
   /** respond to an event report from wait: */
   static void exec(const epoll_event &ev);
 
   /** core of event loop */
-  bool doEvents(int timeoutms);
+  bool doEvents(unsigned timeoutms);
   void explain(unsigned epevs);
 
   /** when events are processed this clock is updated, reading the clock once per event wakeup */

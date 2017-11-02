@@ -13,7 +13,7 @@ class InputMonitor {
   //timestamp is seconds as double
   double lastChecked;
   double events[2];
-   Din &input;
+  Din &input;
 public:
   InputMonitor(Din &input);
   /** take first sample, arrange for isHigh or isLow to not trigger until sample() has been called. */
@@ -21,20 +21,29 @@ public:
   /** samples the input, records info about it.
    * @returns whether the input just changed due to this call to sample it. */
   bool sample(double timestamp);
-  operator bool() const noexcept;
+
+  /** @returns whether most recent reading was active */
+  operator bool() const noexcept {
+    return lastSample;
+  }
+
   bool isHigh(double debounced)const noexcept;
 
   bool isLow(double debounced)const noexcept;
 
 };
 
-//class InputEvent {
-//  int level;
-//  double debounce;
-//  InputMonitor &inp;
-//  bool check(double timestamp);
+/** filtering edge detector */
+struct InputEvent {
+  InputMonitor &inp;
+  bool lastStable;
+  double debounce[2];
+  InputEvent (InputMonitor &inp,double lowfilter=0.0,double highfilter=0.0);
+  void init(double timestamp);
+  /** take fresh sample and @returns true if lastStable gets updated.*/
+  bool changed(double timestamp);
 
-//};
+};
 
 
 #endif // INPUTMONITOR_

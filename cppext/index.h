@@ -43,7 +43,8 @@ struct Index {
     return raw!=BadIndex;//replace this with ~raw!=0 if compiler can't figure that out on its own.  Or load/inc/ inspect Z bit of status.
   }
 
-  void clear() noexcept {
+  /** set to the canonical invalid value. */
+  void invalidate() noexcept {//the name 'clear' was ambiguous given that take() sets raw to the valid value of zero.
     raw=BadIndex;
   }
 
@@ -113,7 +114,7 @@ struct Index {
     }
   }
 
-  /** @returns present value, then sets it to zero. */
+  /** @returns present value, then sets it to zero. NB it is set to 0 not invalidated. */
   unsigned take() noexcept {
     return take(raw);
   }

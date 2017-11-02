@@ -19,3 +19,11 @@ NanoSeconds NanoSeconds::operator -(const NanoSeconds &lesser){
   diff.ts.tv_sec=this->ts.tv_sec-lesser.ts.tv_sec;
   return diff;
 }
+
+int NanoSeconds::sleep(){
+  return nanosleep(&ts, &ts);
+}
+
+int NanoSeconds::sleep(NanoSeconds *dregs)const{
+  return nanosleep(&ts,dregs?&dregs->ts:nullptr);
+}

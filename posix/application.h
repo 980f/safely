@@ -11,7 +11,7 @@ class Application: public PosixWrapper {
 protected:
   Indexer<TextKey> arglist;
   Epoller looper;
-  /** ticks in logic driver period */
+  /** millseconds in logic driver period */
   unsigned period;
 private:
   /** if greater than zero and less than period it replaces period for one cycle */
@@ -29,6 +29,7 @@ protected:
 public:
   /** doesn't do much, but someday we may mate this to gnu getargs */
   Application(unsigned argc, char *argv[]);
+  virtual ~Application()=default;
   /** show argv */
   void logArgs();
   /** show cwd */
@@ -39,6 +40,7 @@ public:
   void stop(){
     beRunning=false;
   }
+  unsigned pollingTicks(double seconds);
 
 public: //utilities
   /** @returns a copy of the hostname, not a static function as it records errors from the attempt */

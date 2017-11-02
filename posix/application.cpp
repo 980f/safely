@@ -15,7 +15,7 @@
 #include "cheaptricks.h" //take()
 
 bool Application::setQuickCheck(unsigned soonish){
-  if(quickCheck==0 || soonish<quickCheck){
+  if(soonish>0 && (quickCheck==0 || soonish<quickCheck)){
     quickCheck=soonish;
     return true;
   } else {
@@ -55,7 +55,7 @@ void Application::logCwd(){
 int Application::run(){
   beRunning=true;
   while(beRunning){
-    int nextPeriod=period;
+    unsigned nextPeriod=period;
     //first use: libusb sometimes wants us to get back to it perhaps sooner than our period is set for.
     if(quickCheck>0){
       if(quickCheck<period){
@@ -65,12 +65,9 @@ int Application::run(){
       }
     }
     if(justTime){ //added to deal with corruption of callbacks on raspberry pi, ignore callbacks.
-      NanoSeconds sleeper;
       NanoSeconds dregs;
       dregs.setMillis(nextPeriod);
-      do {
-        sleeper=dregs;
-      } while(nanosleep(&sleeper.ts,&dregs.ts));//returns 0 on normal completion, else errno is set and dregs is timeremaining
+      while(dregs.sleep());//returns 0 on normal completion, else errno is set and dregs is timeremaining
       looper.elapsed=looper.eventTime.roll();//emulate looper's wait.
       beRunning=keepAlive();
     } else {
@@ -96,6 +93,10 @@ int Application::run(){
     }
   }
   return looper.errornumber;
+}
+
+unsigned Application::pollingTicks(double seconds){
+  return chunks(seconds,1000.0);//epoll timebase is hardcoded to milliseconds.
 }
 
 Text Application::hostname(){

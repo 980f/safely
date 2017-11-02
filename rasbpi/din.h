@@ -17,12 +17,9 @@ public:
   GPIO *beGpio(unsigned pinIndex,unsigned af,unsigned pull);//make a gpio
   SerialDevice::Pin *beSpio(SerialDevice &port,SerialDevice::Pin::Which one, bool invert);//make an spio
 
-  void connect(SerialDevice *port, unsigned which, bool initValue);
-
-public: // AbstractPin interface
-  void operator =(bool value) noexcept ;
+  void connect(SerialDevice *port, unsigned which, bool invert=true);
+public:
   operator bool() noexcept ;
-  void toggle() noexcept ;
 };
 
 #endif // DIN_H

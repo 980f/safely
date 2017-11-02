@@ -49,8 +49,9 @@ public:
   void operator =(CharScanner &&other);
   bool isBlank();
 
-  /** @return a null terminated subset of this, modifying this to omit the returned part and the separator */
-  CharScanner cut(char separator); // split
+  /** @return a null terminated subset of this, modifying this to omit the returned part and the separator.
+ If the separator is not found then the remainder of the buffer is returned.*/
+  CharScanner cut(char separator); //may have once been name 'split'
 
   /** added this modality instead of dusting off yet another variant of this class (Bigendianer) */
   bool bigendian=false;

@@ -35,7 +35,7 @@ public: //so that we can merge errors from functions called outside of the objec
   /** @returns whether last error was just some variant of 'try again later' */
   bool isWaiting();
 
-  /** set @param target with @param value, if value is -1 then call failure(errno), @returns value>=0. */
+  /** set @param target with @param value, if value is -1 (all ones, ~0) then call failure(errno), @returns whether value>=0. */
   template <typename Integrish> bool okValue(Integrish &target,Integrish value){
     target=value;
     return !setFailed(value==Integrish(~0UL));

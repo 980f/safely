@@ -50,12 +50,12 @@ bool Epoller::remove(int fd){
   return ok(epoll_ctl(epfd,EPOLL_CTL_DEL,fd,nullptr));
 }
 
-bool Epoller::wait(int timeoutms){
+bool Epoller::wait(unsigned timeoutms){
   static StopWatch reactionTime(false,true);//perhaps using the wrong timebase caused epoller to not wait?
   static unsigned long shortwait=0;
   reactionTime.start();
   ++waitcount;
-  if(okValue(numEvents, epoll_wait(epfd,&waitlist.peek(),waitlist.freespace(),timeoutms))){
+  if(okValue(numEvents, unsigned(epoll_wait(epfd,&waitlist.peek(),int(waitlist.freespace()),int(timeoutms))))){
     elapsed=eventTime.roll();//time since last wait, possibly large the first time after app launch.
     reactionTime.stop();
     double waitedFor=reactionTime.elapsed();
@@ -78,7 +78,7 @@ void Epoller::exec(const epoll_event &ev){
   }
 }
 
-bool Epoller::doEvents(int timeoutms){
+bool Epoller::doEvents(unsigned timeoutms){
   waitlist.rewind();
   if(wait(timeoutms)){//HEREIS the actual blocking call!
 //too frequent    dbg("polled event count %d",waitlist.used());

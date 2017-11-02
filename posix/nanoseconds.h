@@ -38,10 +38,13 @@ struct NanoSeconds {
 
   NanoSeconds operator -(const NanoSeconds &lesser);
 
-  /** wraps nanosleep. @returns the usual posix nonsense. 0 OK/-1 -> see errno */
-  int sleep(){
-    return nanosleep(&ts, &ts);
-  }
+  /** wraps posix nanosleep. @returns the usual posix nonsense. 0 OK/-1 -> see errno
+ sleeps for given amount, is set to time remaining if sleep not totally completed  */
+  int sleep();
+
+  /** wraps posix nanosleep. @returns the usual posix nonsense. 0 OK/-1 -> see errno
+ if dregs is not null then it is set to dregs of nanosleep (amount by which the sleep returned early) */
+  int sleep(NanoSeconds *dregs)const;
 
 };
 
