@@ -109,9 +109,10 @@ Text Application::hostname(){
 }
 
 bool Application::writepid(TextKey pidname){
+  pid_t pid = getpid();
+  //todo: global debugger- dbg("pid: %ld\n", long(pid));//coercing type for platform portability
   FILE* pidler(fopen(pidname,"w"));//want exclusive access
   if(pidler){
-    pid_t pid=getpid();
     fprintf(pidler,"%ld\n", long(pid));//coercing type for platform portability
     fflush(pidler);
     fclose(pidler);//to get it to flush asap

@@ -90,7 +90,7 @@ bool Filer::readall(unsigned maxalloc){
       buffer = new unsigned char[size];  //DEL@ destructor
       ByteScanner scanner(buffer, size);
       int read = fd.read(scanner);
-      if(unsigned(read) != size) {
+      if(scanner.freespace()>0) {
         dbg("funky read in Filer::readall:%d of %d", read, size);
 //        read = size;
       }

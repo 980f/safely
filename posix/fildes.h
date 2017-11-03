@@ -11,9 +11,10 @@ class Fildes : public PosixWrapper {
 public:
   //make a true variable for something that is usuall #defined.
   static const int BADFD= ~0;
-  //retain for post-mortem debug.
+  //retain for post-mortem debug. using practical type vs posix type to minimize compiler warnings
   ssize_t lastRead;
   ssize_t lastWrote;
+  static const ssize_t BadSize=~0;
 protected:
 /** whether this object opened the fd it wraps. That is the normal case but if you want to do multiple operations and retain error info on each step then you might use multiple Fildes objects around the same fd. */
   bool amOwner;
@@ -57,16 +58,19 @@ public:
   unsigned available() const;
 
   /** read into freespace of buffer */
-  int read(Indexer<u8>&p);
-  int read(u8* buf,unsigned len);//placeholder
+  bool read(Indexer<u8> &p);
+  bool read(Indexer<char> &p);
+  bool read(u8* buf,unsigned len);
+
   /** write from freespace of buffer */
   bool write(Indexer<u8> &p);
   bool write(Indexer<u8> &&p);
+  bool write(Indexer<char> &p);
   bool write(Indexer<char> &&p);
 
   bool write(const u8* buf,unsigned len);//placeholder
   /** write a character a bunch of times. Handy for things like indenting a nested text printout. */
-  int writeChars(char c, unsigned repeats);//a default arg makes this and write(Indexer<u8>) ambiguous
+  bool writeChars(char c, unsigned repeats);//a default arg makes this and write(Indexer<u8>) ambiguous
 
   /** @returns isOpen()*/
   bool mark(FDset&fdset) const;

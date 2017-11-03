@@ -17,6 +17,7 @@ bool changed(double&target, double newvalue,int bits = 32);
 /** atomisable compare and assign
  * @returns whether assigning @param newvalue to @param target changes the latter */
 template<typename Scalar1, typename Scalar2=Scalar1> bool changed(Scalar1 &target, const Scalar2 &newvalue){
+  //attempt to cast newvalue to Scalar1 via declaring a local Scalar1 here wasn't universally acceptible, tried to implicitly construct and that can be expensive
   if(target != newvalue) {
     target = newvalue;
     return true;

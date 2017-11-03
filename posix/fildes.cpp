@@ -128,14 +128,29 @@ bool Fildes::isMarked(const FDset&fdset) const {
   return isOpen() && fdset.includes(fd);
 }
 
-int Fildes::read(Indexer<u8> &p){
+bool Fildes::read(Indexer<u8> &p){
   if(isOpen()) {
     if(okValue(lastRead ,::read(fd, &p.peek(), p.freespace()))) {
       p.skip(lastRead);
+      return true;
     }
-    return isWaiting()?0:lastRead;
+    return isWaiting();
   } else {
-    return lastRead = -1;//todo:2 ensure errno is 'file not open'
+    lastRead = BadSize;//todo:2 ensure errno is 'file not open'
+    return false;
+  }
+} // Fildes::read
+
+bool Fildes::read(Indexer<char> &p){
+  if(isOpen()) {
+    if(okValue(lastRead ,::read(fd, &p.peek(), p.freespace()))) {
+      p.skip(lastRead);
+      return true;
+    }
+    return isWaiting();
+  } else {
+    lastRead = BadSize;//todo:2 ensure errno is 'file not open'
+    return false;
   }
 } // Fildes::read
 
@@ -150,6 +165,14 @@ bool Fildes::write(Indexer<u8> &p){
 
 bool Fildes::write(Indexer<u8> &&p){
   if(write(&p.peek(),p.freespace())){
+    p.skip(lastWrote);
+    return true;
+  }
+  return false;
+}
+
+bool Fildes::write(Indexer<char> &p){
+  if(write(reinterpret_cast<const u8 *>(&p.peek()),p.freespace())){
     p.skip(lastWrote);
     return true;
   }
@@ -171,18 +194,18 @@ bool Fildes::write(const u8 *buf, unsigned len){
     }
     return false;
   } else {
-    lastWrote = -1; //todo:2 error code
+    lastWrote = BadSize;
     return false;
   }
 }
 
-int Fildes::writeChars(char c, unsigned repeats){
+bool Fildes::writeChars(char c, unsigned repeats){
   if(repeats<=4096){
     u8 reps[repeats];
-    fillObject(reps,sizeof(reps),c);
+    fillObject(reps,sizeof(reps),u8(c));
     return write(reps,repeats);
   } else {
-    return -1;
+    return false;
   }
 }
 

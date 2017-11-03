@@ -136,7 +136,7 @@ SerialDevice::Pin::operator bool() noexcept {
   }
 }
 
-SerialDevice::Pin::Pin(const Fildes &fd, SerialDevice::Pin::Which one, bool invert) :
+SerialDevice::Pin::Pin(Fildes &fd, SerialDevice::Pin::Which one, bool invert) :
   fd(fd),
   which(one), //kept for debug
   invert(invert),

@@ -17,7 +17,7 @@ public:
   bool bit(unsigned id) const;
 
   static const unsigned ALL=~0U;
-  /** set bit and @return whether was already posted */
+  /** set bit and @return whether was a valid id */
   bool post(unsigned id);
   /** @return index of next set bit, clear bit on return
     * usage: value=rr.next(); if(value>=0){ do something with value } else //there was nothing to do.

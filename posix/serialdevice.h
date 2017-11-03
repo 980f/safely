@@ -34,18 +34,18 @@ public:
       Dcd, Ri,
     };
 private:
-    Fildes fd;
+    Fildes &fd;//changed to reference else we would have to implement fd cloning.
     int which;
     int pattern;
     bool invert;
     bool lastSet;
   public:
-    Pin(const Fildes &fd,Which one,bool invert);
+    Pin(Fildes &fd, Which one, bool invert);
     virtual ~Pin()=default;
     operator bool() noexcept;
     bool operator =(bool on)noexcept;
     virtual void toggle() noexcept{
-      *this=1-lastSet;//opposite of last request, in case read doesn't work.
+      *this=!lastSet;//opposite of last request, in case read doesn't work.
     }
   };
 
@@ -58,7 +58,7 @@ class SPIO: public AbstractPin {
   SerialDevice::Pin &raw;
 public:
   SPIO(SerialDevice::Pin &raw);
-
+  virtual ~SPIO()=default;
 public:// AbstractPin interface
   void operator =(bool value)  noexcept override;
   operator bool() noexcept override;

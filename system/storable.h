@@ -76,9 +76,9 @@ private: //#the watchers must be mutable because sigc needs to be able to cull d
   /** sent when any child's value changes, allows setting a watch on children that may not exist at the time of registration of the watcher. */
   mutable GatedSignal childwatchers; //# mutable, see @watchers.
 public: //needed only by StoredGroup, but that being a template made friending it difficult.
-  /** bool remove (else add at end) , int which
-   * called when an item is added or removed.
-   * This only matters to StoredGroup and was first needed by socket access for remote editing of StoredGroups.
+  /** bool remove (else add at end) , unsigned which
+   * called after an item is added or before it is removed.
+   * First needed by socket access for remote editing of StoredGroups.
    */
   mutable  sigc::signal<void, bool, unsigned> wadWatchers;
 
