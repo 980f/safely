@@ -33,7 +33,9 @@ public:
   /* write bit */
   void operator =(bool value) const noexcept;
   /* read bit */
-  operator bool() const noexcept;
+  operator bool() const noexcept{
+    return readpin();
+  }
   /* flip bit */
   void toggle() const noexcept {
     *this = 1 - *this;
@@ -46,6 +48,7 @@ public:
 
   static bool isOperational();
 
+  bool readpin() const noexcept;
 }; // class GPIO
 
 #include "abstractpin.h"

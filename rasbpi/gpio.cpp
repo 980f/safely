@@ -31,8 +31,14 @@ void GPIO::operator =(bool value) const noexcept {
   gpioBase[offset + (value ? SetBits : ClearBits)] = mask;
 }
 
-GPIO::operator bool() const noexcept {
+
+bool GPIO::readpin() const noexcept {
+//  auto address= &gpioBase[offset + Read];
+//  auto bitset=gpioBase[offset + Read];
+//  auto forsure=*address;
+//  if(forsure==bitset)
   return (gpioBase[offset + Read] & mask)!=0;
+//  else return false;
 }
 
 GPIO& GPIO::configure(unsigned af){

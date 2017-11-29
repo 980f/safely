@@ -13,7 +13,7 @@ void InputMonitor::init(double timestamp){
 
 bool InputMonitor::sample(double timestamp){
   lastChecked = timestamp;
-  if(changed(lastSample,bool(input))) {
+  if(changed(lastSample,input.readpin())) {
     ++changes[lastSample];
     events[lastSample] = lastChecked;
     return true;
@@ -42,12 +42,14 @@ void InputEvent::init(double timestamp){
 }
 
 bool InputEvent::changed(double timestamp){
-  inp.sample(timestamp);
-  if(lastStable!=bool(inp)) {
-    if(lastStable ? inp.isLow(debounce[0]) : inp.isHigh(debounce[1])) {
-      lastStable = !lastStable;
-      return true;
-    }
-  }
-  return false;
+  return //ignoring debounce now
+    inp.sample(timestamp);
+
+//  if(lastStable!=bool(inp)) {
+//    if(lastStable ? inp.isLow(debounce[0]) : inp.isHigh(debounce[1])) {
+//      lastStable = !lastStable;
+//      return true;
+//    }
+//  }
+//  return false;
 }

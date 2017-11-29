@@ -34,15 +34,19 @@ void Din::connect(SerialDevice *port, unsigned which, bool invert){
   }
 }
 
+bool Din::readpin() const noexcept{
+    if(bygp) {
+      return bygp->readpin();
+    }
+    if(bysp) {
+      return *bysp;//todo:0 check that this reads the actual pin
+    }
+    return false;
+}
+
 
 Din::operator bool() noexcept {
-  if(bygp) {
-    return *bygp;
-  }
-  if(bysp) {
-    return *bysp;
-  }
-  return false;
+  return readpin();
 }
 
 

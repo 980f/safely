@@ -42,7 +42,9 @@ struct InputEvent {
   void init(double timestamp);
   /** take fresh sample and @returns true if lastStable gets updated.*/
   bool changed(double timestamp);
-
+  bool stable(){//temporary bypass
+    return inp.operator bool();
+  }
 };
 
 

@@ -19,6 +19,7 @@ public:
 
   void connect(SerialDevice *port, unsigned which, bool invert=true);
 public:
+  bool readpin() const noexcept;
   operator bool() noexcept ;
 };
 
