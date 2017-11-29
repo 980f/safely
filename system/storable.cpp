@@ -73,7 +73,7 @@ static unsigned numericalName(TextKey name){
 
 Storable::Storable(TextKey name, bool isVolatile) :
   isVolatile(isVolatile),
-  type(NotKnown),
+  type(NotDefined),
   q(Empty),
   number(),
   parent(nullptr),
@@ -180,8 +180,8 @@ void Storable::setEnumerizer(const Enumerated *enumerated){
       if((q >= Parsed) && is(Storable::Textual)) { //if already has a text value
         number = enumerated->valueOf(text.c_str()); //reconcile numeric value
       } else {
-        if(type == NotKnown) {
-          setType(Storable::Textual); //todo:1 probably should be numeric and numeric should check for presence of enumerated, or add a specific Storable::Enumerated to
+        if(type <= Uncertain) {
+          setType(Storable::Textual); //todo:0 probably should be numeric and numeric should check for presence of enumerated, or add a specific Storable::Enumerated to
                                       // reduce redundant checks.
         }
         text = enumerated->token(number);
@@ -237,7 +237,7 @@ bool Storable::resolve(bool recursively){
 } // convertToNumber
 
 bool Storable::isTrivial() const {
-  return type == NotKnown || q == Empty;
+  return type == NotDefined || q == Empty;
 }
 
 bool Storable::is(Type ty) const {
@@ -266,7 +266,7 @@ bool Storable::isModified() const {
   case Textual:
     return ChangeMonitored::isModified();
   default:
-  case NotKnown:
+  case NotDefined:
     return false;
   } // switch
 
@@ -281,7 +281,7 @@ bool Storable::wasModified(){
   switch(type) {
   default:
   case Uncertain:
-  case NotKnown:
+  case NotDefined:
     return false;
 
   case Wad: { //investigate all children:  //need bracing to keep 'changes' local.
@@ -314,6 +314,18 @@ Text Storable::fullName() const {
   return PathParser::pack(pathname,slasher);
 } // Storable::fullName
 
+unsigned Storable::parentIndex(int generations) const {
+  const Storable *genealogist = this;
+  while(genealogist&&generations-- > 0) {
+    genealogist = genealogist->parent;
+  }
+  if(genealogist) {
+    return genealogist->ownIndex();
+  } else {
+    return BadIndex;
+  }
+} // Storable::fullName
+
 connection Storable::addChangeWatcher(const SimpleSlot&watcher, bool kickme) const {
   if(kickme) {
     watcher();
@@ -337,7 +349,7 @@ void Storable::clone(const Storable&other){ //todo:2 try to not trigger false ch
   enumerated = other.enumerated;
   switch(other.type) {
   //trust compiler to bitch if case missing:--  default:
-  case NotKnown:
+  case NotDefined:
     dbg("!Unknown node in tree being copied");
     return; //
 
@@ -378,7 +390,7 @@ void Storable::assignFrom(Storable&other){
 //  default:
   case Uncertain:
   //#JOIN
-  case NotKnown:
+  case NotDefined:
     if(other.is(Numerical)) {
       setNumber(other.number);
     } else if(other.is(Textual)) {
@@ -434,18 +446,19 @@ void Storable::setImageFrom(TextKey value, Storable::Quality quality){
     }
     setQuality(quality);
     return;
-  } else {
+  } else {//has been touched in some fashion
     bool notifeye = false;
-    if(quality==Parsed) {//then retain type if it is known and set according to type
-      if(type==Numerical) {
-        text = value; //#bypass change detect here
-        bool impure(true);//4 debug
-        setValue(toDouble(text.c_str(), &impure),quality);//todo:0 refine subtype of number
-        return;//already invoked change in setValue
-      }
+//    if(quality==Parsed) {//then retain type if it is known and set according to type
+    if(type==Numerical) {
+      text = value;   //#bypass change detect here, just recording for posterity
+      bool impure(true);  //true: 4 debug
+      setValue(toDouble(text.c_str(), &impure),quality);  //todo:0 refine subtype of number
+      return;  //already invoked change in setValue
     }
+//    }
     notifeye = changed(text, value);
     notifeye |= setQuality(quality);
+    //we could COA and check for Wadness here, but that would preclude surviving a particular trival json defect.
     notifeye |= setType(Textual);
     also(notifeye); //record changed, but only trigger on fresh change
     if(notifeye) {
@@ -495,7 +508,7 @@ Cstr Storable::image(void){
     text.take(NumberFormatter::makeNumber(numChildren()));
     return text;
 
-  case NotKnown:
+  case NotDefined:
     return "(unknown)";
   } // switch
 } // Storable::image
@@ -781,6 +794,15 @@ void Storable::filicide(bool notify){
   wad.clear(); //remove WITHOUT notification, we only call filicide when we are cloning
   if(notify) {
     watchers.send();
+  }
+}
+
+void Storable::suicide(bool andDelete){
+  if(parent) {
+    parent->remove(ownIndex());
+    if(andDelete) {
+      delete this;
+    }
   }
 }
 

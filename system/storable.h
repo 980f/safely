@@ -44,15 +44,17 @@ class Storable : public ChangeMonitored, SIGCTRACKABLE {
   //needed to be a template, not worth figuring out the syntax friend class StoredGroup;
   template<typename> friend class StoredGroup;
 public:
-  enum Type {  //referring to the type of data in the node
-    NotKnown,   //construction error, parse error
-    Numerical, //asked to be a number, converts image to number when this is set
-    Uncertain, //parsed, not yet evaluated as to type (defering a step of the original parser to lazyinit code in setType.
+  /** the type of data in the node */
+  enum Type { //#ordered for certain tests
+    NotDefined,   //construction error, parse error
+    Uncertain, //parsed, not yet evaluated as to type (defering a step of the original parser to lazyinit code in setType).
     Textual,   //asked to be text, or was found quoted during parse
+    Numerical, //asked to be a number, converts image to number when this is set
     Wad,  //any node that has children is a wad
   };
 
-  enum Quality { //will use this during diffs
+  /** for debugging application logic, e.g. if Edited then it has changed since loaded by a file or set by default. */
+  enum Quality {
     Empty, //constructed but never referenced
     Defaulted, //created by attempted access
     Parsed, //parsed from stream
@@ -91,7 +93,7 @@ protected:
   NumericalValue number;
   /** value if type is textual or enum, also used for class diagnostics */
   TextValue text;
-public:   //made public for sibling access, could hide it with some explicit sibling methods.
+protected: //if you need access add a method
   /** used primarily for debugging, don't have to unwind stack to discover source of a wtf herein. */
   Storable *parent;
 protected:
@@ -107,9 +109,9 @@ protected:
   void recursiveNotify() const;
 private:
   /* non-copyable */
-  Storable(const Storable &noncopyable)=delete; // non construction-copyable
-  Storable &operator =(const Storable &noncopyable)=delete; // non copyable
-  /**a piece of constructor. @param name is node name */
+  Storable(const Storable &noncopyable)=delete;
+  Storable &operator =(const Storable &noncopyable)=delete;
+  /** a piece of constructor. @param name is node name */
   Storable &precreate(TextKey name);
 public:
   //had to change to Text vs saving a pointer when file loading comes first, else the file content gets ripped out from under us and we are pointing to reclaimable heap. It still is a good idea to not rename nodes, unless perhaps the name is empty.
@@ -155,6 +157,9 @@ public:
   unsigned ownIndex() const {
     return index;
   }
+  /** parent (0) is self, return own index ,if a member of a StoredGroup then this is index within group
+   *  parent (1) is node containing the node of interest*/
+  unsigned parentIndex(int generations) const; // parentIndex
 
   /** watch this node's value, if wad the only change here is adds and removes. */
   sigc::connection addChangeWatcher(const SimpleSlot &watcher, bool kickme = false) const;
@@ -305,9 +310,9 @@ public:
   Storable &createChild(const Storable &other, TextKey altname=nullptr);
 
   //combined presize and addChild to stifle trivial debug spew when adding a row to a table.
-  Storable &addWad(unsigned qty, Storable::Type type = NotKnown, TextKey name = "");
+  Storable &addWad(unsigned qty, Storable::Type type = NotDefined, TextKey name = "");
   /** add a bunch of null-named children of the given type to this node. Probably not good to use outside of this class cloning an object.*/
-  void presize(unsigned qty, Storable::Type type = NotKnown);
+  void presize(unsigned qty, Storable::Type type = NotDefined);
 
   /** remove a child of the wad, only makes sense for use with StoredGroup (or legacy cleanup) */
   bool remove(unsigned which);
@@ -316,12 +321,8 @@ public:
 
   /** remove all children */
   void filicide(bool notify = false);
-//  /** packs child values into the given @param args, if purify is true then argset entries in excess of the number of this node's
-//   * children are zeroed, else they are left unmodified  */
-//  void getArgs(ArgSet &args, bool purify = false);
-//  /** overwrite child nodes setting them to the given values, adding nodes as necessary to store all of the args.*/
-//  void setArgs(ArgSet &args);
-
+  /** remove from parent */
+  void suicide(bool andDelete=false);//don't normally delete as someone is looking for the removal and they do the delete.
   /** @returns rootnode of this node, 'this' if 'this' is a root node.*/
   Storable &getRoot();
   /** force size of wad. */

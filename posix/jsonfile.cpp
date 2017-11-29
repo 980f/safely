@@ -88,7 +88,7 @@ void printNode(unsigned tab, Storable &node, FILE *fp,bool showVolatiles){
     fprintf(fp,"%g ",node.getNumber<double>());
     break;
   case Storable::Uncertain:
-  case Storable::NotKnown:
+  case Storable::NotDefined:
     fprintf(fp,"%s ",node.image().c_str());
     break;
   case Storable::Textual:

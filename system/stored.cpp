@@ -38,15 +38,16 @@ void Stored::legacy(TextKey oldname, TextKey newname, bool purgeOld){//purgeOld 
 /** parent (0) is self, return own index ,if a member of a StoredGroup then this is index within group
  *  parent (1) is node containing the node of interest*/
 unsigned Stored::parentIndex(int generations) const {
-  Storable *parent = &(node);
+  return node.parentIndex(generations);
+//  Storable *parent = &(node);
 
-  while(generations-- > 0) {
-    if(!parent) {
-      return BadIndex;
-    }
-    parent = parent->parent;
-  }
-  return parent ? parent->ownIndex() : BadIndex;
+//  while(generations-- > 0) {
+//    if(!parent) {
+//      return BadIndex;
+//    }
+//    parent = parent->parent;
+//  }
+//  return parent ? parent->ownIndex() : BadIndex;
 } // parentIndex
 
 unsigned Stored::index() const {

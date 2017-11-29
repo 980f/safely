@@ -98,8 +98,8 @@ bool LibUsber::find(uint16_t idVendor ,uint16_t idProduct,unsigned nth){
   ssize_t devcnt=libusb_get_device_list(nullptr, &devs);
 
   if (devcnt < 0) {
-    errornumber=devcnt;
-    dbg("failed to get device list, %s",errornumber);
+    errornumber=int(devcnt);//#cast error code
+    dbg("failed to get device list, %d",errornumber);//todo: translate error code for message.
     return false;
   }
 
@@ -155,7 +155,7 @@ bool LibUsber::submit(libusb_transfer *xfer){
     //  }
     //xfer->timeout=1011;//wag, will do stats
     xferInProgress=xfer;
-    if(failure(libusb_submit_transfer(xfer))){
+    if(failure(libusb_submit_transfer(xfer))){//#non-blocking call
       failure(xfer->last_errno);//above 'hides' core errno. //22 invalid parameter
       ack(xfer);
       return false;
