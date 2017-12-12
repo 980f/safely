@@ -3,7 +3,7 @@
 
 /** bit and bitfield setting and getting.*/
 
-#include "eztypes.h"
+//#include "eztypes.h"
 
 constexpr bool bit(unsigned patter, unsigned bitnumber){
   return (patter & (1 << bitnumber)) != 0;
@@ -64,7 +64,7 @@ inline void raiseBit(volatile unsigned *address, unsigned  bit){
 }
 
 
-inline bool assignBit(unsigned &pattern, unsigned bitnumber,bool one){
+inline bool assignBit(volatile unsigned &pattern, unsigned bitnumber,bool one){
   if(one){
     setBit(pattern,bitnumber);
   } else {
@@ -73,9 +73,10 @@ inline bool assignBit(unsigned &pattern, unsigned bitnumber,bool one){
   return one;
 }
 
+/** for when neither address nor bit is known at compile time */
 struct BitReference {
-  u32 &word;
-  u32 mask;
+  unsigned &word;
+  unsigned mask;
 
   /** naive constructor, code will work if @param bits isn't aligned, but will be inefficient.*/
   BitReference(unsigned *bits,unsigned bitnumber):
@@ -199,6 +200,8 @@ public:
   }
 };
 
+
+/** apply a bit to many different words */
 template <unsigned lsb> class BitPicker {
   enum {
     mask = bitMask(lsb) // aligned mask

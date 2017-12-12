@@ -39,16 +39,7 @@ void Stored::legacy(TextKey oldname, TextKey newname, bool purgeOld){//purgeOld 
  *  parent (1) is node containing the node of interest*/
 unsigned Stored::parentIndex(int generations) const {
   return node.parentIndex(generations);
-//  Storable *parent = &(node);
-
-//  while(generations-- > 0) {
-//    if(!parent) {
-//      return BadIndex;
-//    }
-//    parent = parent->parent;
-//  }
-//  return parent ? parent->ownIndex() : BadIndex;
-} // parentIndex
+}
 
 unsigned Stored::index() const {
   return node.ownIndex();
@@ -64,7 +55,7 @@ sigc::slot<unsigned> Stored::liveindex() const {
 }
 
 bool Stored::isEmpty() const {
-  //first two terms avert NPE's on horribly bad code, should never fire.
+  //first two terms avert NPE's on horribly bad code, should never fire. (they were added due to gtk using void *'s and occasionally a null leaking into those).
   return this == nullptr || &node == nullptr || node.q == Storable::Empty;
 }
 

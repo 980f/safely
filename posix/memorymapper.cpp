@@ -24,8 +24,8 @@ void *MemoryMapper::map(unsigned addr, unsigned len){//initMapMem
   }
 }
 
-bool MemoryMapper::free(void *addr, unsigned size){
-  return fd.ok(munmap(addr, size));
+bool MemoryMapper::free(volatile void *addr, unsigned size){
+  return fd.ok(munmap(const_cast<void *>(addr), size));
 }
 
 int MemoryMapper::getError(){
@@ -42,8 +42,7 @@ int MemoryMapper::getError(){
 
 bool MemoryMapper::init(bool refresh){
   if(Mmap || refresh){
-    delete Mmap;
-    Mmap=nullptr;
+    Obliterate(Mmap);
   }
   Mmap=new MemoryMapper();
   return isOperational();
