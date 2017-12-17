@@ -1,9 +1,8 @@
 #include "jsonstore.h"
-#include "logger.h"
-//#include <charscanner.h>
-//#include "bitwise.h"
+#include <charscanner.h>
+#include "bitwise.h"
 
-//#include <ostream>
+#include <ostream>
 
 const char *JsonStore::Lexer::separator(":,{}[]"); //maydo: bare newline is a comma.const char
 #define CEscape(ch) replace(pointer - 1, 2, 1, ch )  //may be off by one
@@ -16,7 +15,7 @@ u32 parseHex(unsigned pointer, const std::string&image, unsigned numDigits){
     u32 packed(0);
     for(unsigned n = numDigits; n-- > 0; ) {
       packed <<= 4;
-      unsigned char c = static_cast<unsigned char> (image.at(pointer++));
+      auto c = static_cast<unsigned char> (image.at(pointer++));
       if(c >= '0' && c <= '9') {
         packed |= c - '0';
       } else if(c >= 'A' && c <= 'F') {
@@ -177,15 +176,15 @@ JsonStore::Parser::Parser(Storable&rootNode) : notStarted(true), node(&rootNode)
 
 void JsonStore::Parser::addNode(std::string&tokenImage){
   processEscapes(tokenImage);
-  Storable* child(node->findChild(name,true/*create*/));
+  Storable *child(node.findChild(name, true/*create*/));
   if(child){
     child->setImage(tokenImage.c_str(), Storable::Parsed);
   }
 }
 
-bool JsonStore::Parser::acceptToken(std::string&tokenImage, UTF8 term){
+bool JsonStore::Parser::acceptToken(std::string &tokenImage, UTF8 term) {
   //if term is not a separator then we are somewhat lost.
-  if(node == nullptr) {
+  if (node.empty()) {
     return false;
   }
   switch(term.raw) {
@@ -204,9 +203,9 @@ bool JsonStore::Parser::acceptToken(std::string&tokenImage, UTF8 term){
 //todo:1 why did we think we could rename the present node?        node->setName(name);
       }
     } else {
-      node = node->findChild(name,true); //push the "node stack"
-      node->setType(Storable::Wad);
-//      node->setQuality(Storable::Parsed);//this should be intrinsic in the addChild
+      node.pushChild(name, true); //push the "node stack"
+      node.setType(Storable::Wad);
+//      node->setQuality(Storable::Parsed);//this should be intrinsic in the addChild of findChild
     }
     name.clear();
     break;
@@ -214,7 +213,7 @@ bool JsonStore::Parser::acceptToken(std::string&tokenImage, UTF8 term){
     if(tokenImage.length() != 0) { //final value of a wad
       addNode(tokenImage);
     }
-    node = node->parent;  //pop the "node stack"
+    node.pop();
     name.clear();
     break;
   } // switch

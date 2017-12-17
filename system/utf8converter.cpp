@@ -1,7 +1,4 @@
 #include "utf8converter.h"
-#include "utf8transcoder.h"
-
-
 
 unsigned Utf8ConverterOut::length(const char *source) const{
   if(Cstr(source).empty()) {
@@ -145,7 +142,7 @@ UnicharScanner::UnicharScanner(const Indexer<const char> &utf8, int rewind):utf8
   //#nada
 }
 
-bool UnicharScanner::hasNext() const {
+bool UnicharScanner::hasNext() {
   return utf8.hasNext();
 }
 
@@ -159,7 +156,7 @@ Unichar UnicharScanner::next(){
 }
 
 
-bool UnicharReader::hasNext() const {
+bool UnicharReader::hasNext() {
   return utf8.hasNext();
 }
 

@@ -41,7 +41,10 @@ class Storable : public ChangeMonitored, SIGCTRACKABLE {
   friend class Stored; //access to q and the like.
   friend class StoredLabel; //ditto
   friend class StoredEnum;
-  //needed to be a template, not worth figuring out the syntax friend class StoredGroup;
+
+  friend class StorageWalker;
+
+  //needed to be a template to befriend any StoredGroup
   template<typename> friend class StoredGroup;
 public:
   /** the type of data in the node */
@@ -107,10 +110,11 @@ protected:
   /** calls watchers */
   void notify() const;
   void recursiveNotify() const;
-private:
+public://publicly proclaim not accessible, priority of error messsages changed over time.
   /* non-copyable */
   Storable(const Storable &noncopyable)=delete;
   Storable &operator =(const Storable &noncopyable)=delete;
+private:
   /** a piece of constructor. @param name is node name */
   Storable &precreate(TextKey name);
 public:
@@ -120,10 +124,10 @@ public:
   void Rename(TextKey newname);
 public:
   /** @param isVolatile was added here to get it set earlier for debug convenience */
-  Storable(TextKey name, bool isVolatile = false);
-  Storable(bool isVolatile = false);
+  explicit Storable(TextKey name, bool isVolatile = false);
+  explicit Storable(bool isVolatile = false);
 
-  //todo: why is this virtual? does sigc need that? we shouldn't derive from Storable, we wrap it.
+  //virtual for sigc
   virtual ~Storable();
 
   /** @returns untyped pointer to this, handy for gtk gui access.*/
@@ -147,9 +151,9 @@ public:
   bool isTrivial() const;
   bool is(Type ty) const;
   bool is(Quality q) const;
-  bool isModified() const;
+  bool isModified() const override;
   // more involved functions
-  bool wasModified();
+  bool wasModified() override;
 
   Text fullName() const;
 
@@ -173,7 +177,7 @@ public:
     bool onlyChildren;
     Storable &node;
 public:
-    Freezer(Storable &node, bool childrenToo = true, bool onlyChildren = false);
+    explicit Freezer(Storable &node, bool childrenToo = true, bool onlyChildren = false);
     ~Freezer();
     /** permenently freeze a node, such as when we are going to chop one up for export then discard it.*/
     static void freezeNode(Storable &node, bool childrenToo = true, bool onlyChildren = false);
@@ -235,9 +239,9 @@ public:
   void setImage(const TextKey &value, Quality quality = Edited);
 
   /** this method is not const as we lazily reuse text for image of non-text instances */
-  Cstr image(void);
+  Cstr image();
  /** this uses whatever the text presently is, if stale then you will have to find out why. */
-  Cstr getText(void)const;
+ Cstr getText() const;
 
   void setDefault(TextKey value);
 
@@ -271,7 +275,7 @@ public:
   /** @see existingChild() non const version */
   const Storable *existingChild(TextKey childName) const;
 
-  /** find nameless nodes, starting at &param l  astFound. Pass BadIndex for 'beginning`.
+  /** find nameless nodes, starting at &param lastFound. Pass BadIndex for 'beginning`.
    * To walk the list:
    * for(Storable *nemo=node.findNameless();nemo;nemo=node.findNameless(nemo.ownIndex())) dosomething(nemo); //nemo will not be null
    * @deprecated untested
@@ -347,11 +351,48 @@ public:
     virtual void add(const Storable &noob) = 0;
     /** value changed */
     virtual void alter(const Storable &noob) = 0;
-    /** impementor must copy over any members, noob will shortly be destructed. */
+    /** implementor must copy over any members, noob will shortly be destructed. */
     virtual void remove(const Storable &noob) = 0;
   };
   static Mirror *remote;
 }; // class Storable
+
+
+struct StorageWalker {
+  Storable *p;
+
+  explicit StorageWalker(Storable *p) : p(p) {
+  }
+
+  explicit operator Storable *() {
+    return p;
+  }
+
+  //todo: findChild variations.
+  void push(Storable *child) {
+    p = child;
+  }
+
+  void pop() {
+    p = p->parent;
+  }
+
+  Storable *findChild(Text name, bool autocreate = true) {
+    return p->findChild(name, autocreate);
+  }
+
+  bool empty() {
+    return p == nullptr;
+  }
+
+  void pushChild(Text path, bool autocreate = true) {
+    p = findChild(path, autocreate);
+  }
+
+  void setType(Storable::Type type) {
+    p->setType(type);
+  }
+};
 
 /** iterate over the children of given node (kinder is german  plural for child, like kindergarten) */
 #define ForKinder(node) for(auto list(node.kinder()); list.hasNext(); )
@@ -365,7 +406,7 @@ class StoredListReuser {
   unsigned wadding;
   unsigned pointer;
 public:
-  StoredListReuser(Storable &node, unsigned wadding = 0);
+  explicit StoredListReuser(Storable &node, unsigned wadding = 0);
   Storable &next();
   unsigned done();
 };

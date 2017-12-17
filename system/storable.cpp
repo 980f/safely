@@ -701,6 +701,15 @@ Storable&Storable::operator [](unsigned ordinal){
   return *wad.nth(ordinal);
 }
 
+const Storable &Storable::operator[](unsigned ordinal) const {
+  if (!has(ordinal)) {
+    wtf("nonexisting child of %s referenced by ordinal %d (out of %d).", fullName().c_str(), ordinal, numChildren());
+    dbg.dumpStack("nth child doesn't exist, null this returned");
+  }
+  return *wad.nth(ordinal);
+}
+
+
 const Storable&Storable::nth(unsigned ordinal) const {
   if(!has(ordinal)) {
     wtf("nonexisting child referenced by ordinal %d (out of %d).", ordinal, numChildren());
@@ -765,7 +774,7 @@ void Storable::presize(unsigned qty, Storable::Type type){
 bool Storable::remove(unsigned which){
   if(has(which)) {
     if(remote) {//#done here instead of destructor so that we don't send program shutdown deletions.
-      remote->remove(wad[which]);        //remote can figure out how to deal with a floating node.
+      remote->remove(*wad[which]);        //remote can figure out how to deal with a floating node.
     }
     wad.removeNth(which);//delete's object here
     //renumber children, must follow removal to make for-loop cute
@@ -805,6 +814,7 @@ void Storable::suicide(bool andDelete){
     }
   }
 }
+
 
 ///////////////////////
 StoredListReuser::StoredListReuser(Storable&node, unsigned wadding) : node(node), wadding(wadding), pointer(0){

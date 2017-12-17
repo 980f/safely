@@ -2,16 +2,17 @@
 #define ALLOCATEDINDEXER_H "(C) Andrew L. Heilveil, 2017"
 
 #include "buffer.h"
-#include "stdlib.h"
+#include <cstdlib>
+
 /** dynamically allocated buffer, with pointer knowledge.
 @deprecated untested */
 template<typename Content> class AllocatedIndexer : public Indexer<Content>{
 public:
-  AllocatedIndexer (unsigned quanta):
+  using Indexer<Content>::length;
+  using Indexer<Content>::buffer;
+
+  explicit AllocatedIndexer(unsigned quanta) :
     Indexer<Content>(calloc(quanta,sizeof(Content)),quanta*sizeof(Content)){
-    if(quanta!=length){
-      //andy can't program worth a damn.
-    }
   }
 
   bool isLegitimate()const{

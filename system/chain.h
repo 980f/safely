@@ -3,6 +3,7 @@
 
 #include "safely.h"
 #include <vector>  //an STL class that is dangerous for naive users (as is all of the STL)
+#include <cstring>
 
 /**
  * Safe(r) and convenient wrapper around a vector of pointers.

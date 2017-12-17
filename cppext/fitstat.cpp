@@ -1,16 +1,18 @@
+//(C) 2017 Andy Heilveil
 #include "fitstat.h"
 #include "minimath.h"
+
 FitStat::FitStat(){
   init();
 }
 
-void FitStat::init(int df){
+void FitStat::init(unsigned df) {
   num = 0;
   this->df = df;
   chiSquare = 0.0;
 }
 
-FitStat&FitStat ::operator = (FitStat & other) {
+FitStat &FitStat::operator=(const FitStat &&other) {
   chiSquare = other.chiSquare;
   df = other.df;
   num = other.num;
