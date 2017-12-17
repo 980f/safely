@@ -92,7 +92,7 @@ ByteScanner::ByteScanner(const CharScanner&other ) : //choices herein are for fi
 
 
 u16 ByteScanner ::getU16(u16 def){
-  return getU(2, def);
+  return u16(getU(2, def));
 }
 
 u32 ByteScanner ::getU24(u32 def){
@@ -131,7 +131,7 @@ bool ByteScanner::chuckSpaces(){
 }
 
 ///////////////////
-CharScanner::CharScanner(void) : Indexer<char >(){
+CharScanner::CharScanner() : Indexer<char>() {
   //#nada
 }
 
@@ -173,7 +173,7 @@ CharScanner::CharScanner(const Indexer<u8> &other):
  * maydo: return null if we can't put a null at the end
  * maydo: add argument for 'urgent' or not, and if not urgent see if there is a null before the end, not just at the end
  */
-TextKey CharScanner::asciiz(void){
+TextKey CharScanner::asciiz() {
   if(length == 0) { //then we don't have a place for a terminating null
     return ""; //so point to a universal empty string.
   }
@@ -208,7 +208,7 @@ bool CharScanner::operator == (const CharScanner &rhs) const {
 } // ==
 
 /** for use with trusted rhs strings */
-#include "string.h"
+//#include "string.h"
 bool CharScanner::operator == (const char *literal) const {
   if(!literal) {
     return used()==0; //null pointer matches empty string
@@ -252,8 +252,6 @@ void CharScanner::trimNulls(void){
   }
 }
 
-#include "cheaptricks.h"
-#include "cstr.h"
 bool CharScanner::isBlank(){
   if(length==0) {
     return true;
