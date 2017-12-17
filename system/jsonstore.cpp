@@ -305,11 +305,11 @@ void JsonStore::Printer::printText(const char *p, bool forceQuote){
 
 bool JsonStore::Printer::printName(){
   indent();
-  if(node->name.empty()) {
+  if (node.p->name.empty()) {
     return false;
   } else {
     os << '"';
-    os << node->name;
+    os << node.p->name;
     os << '"';
     //printText(node->name, true); //forcing quotes here, may not need to
     os << ':';
@@ -320,9 +320,9 @@ bool JsonStore::Printer::printName(){
 void JsonStore::Printer::printWad(){
   os << '{' << std::endl;
   ++tablevel;
-  ChainScanner<Storable> scanner(node->kinder());
+  ChainScanner<Storable> scanner(node.p->kinder());
   while(scanner.hasNext()) {
-    node = &scanner.next();
+    node.p = &scanner.next();
     if(printValue()) { //if node actual was emitted into the output stream
       if(scanner.hasNext()) {
         os << ',';
@@ -330,24 +330,24 @@ void JsonStore::Printer::printWad(){
       os << std::endl;
     }
   }
-  node = node->parent;
+  node.pop();
   --tablevel;
   indent();
   os << '}';
 } /* printWad */
 
 bool JsonStore::Printer::printValue(){
-  if(!node) { //COA
+  if (node.empty()) { //COA
     return false;
   }
-  if(node->isTrivial()) { //drop autocreated but unused nodes.
+  if (node.p->isTrivial()) { //drop autocreated but unused nodes.
     return false;
   }
-  node->preSave(); //when not trivial this flushes cached representations
+  node.p->preSave(); //when not trivial this flushes cached representations
 
-  switch(node->getType()) {
+  switch (node.p->getType()) {
   default:
-  case Storable::NotKnown:
+  case Storable::Type::Uncertain:
     if(printName()) {
       os << "!Unknown"; //fix code whenever you see one of these
     } else {
@@ -358,7 +358,7 @@ bool JsonStore::Printer::printValue(){
 
   case Storable::Numerical: {
     printName();
-    double number = node->getNumber<double>();
+    double number = node.p->getNumber<double>();
     //todo:1 output nans as keyword
     if(int(number) == number) {
       os << int(number); //makes small numbers more readable.
@@ -372,10 +372,10 @@ bool JsonStore::Printer::printValue(){
 
   case Storable::Textual:
     printName();
-    printText(node->image().c_str(), true); //always quote
+    printText(node.p->image().c_str(), true); //always quote
     break;
   case Storable::Wad:
-    if(node->numChildren() > 0) { //suppressing empty wads to get rid of trivial "trailing comma" false alarms.
+    if (node.p->numChildren() > 0) { //suppressing empty wads to get rid of trivial "trailing comma" false alarms.
       printName();
       printWad();
     }
