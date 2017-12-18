@@ -1,11 +1,5 @@
 #include "tcpsocket.h"
-#include <netinet/in.h>
 #include <unistd.h>
-#include <sys/socket.h>
-#include "logger.h"
-#include <errno.h>
-#include "netinet/tcp.h"
-#include "cheaptricks.h"
 
 #include "microseconds.h"
 
@@ -119,7 +113,7 @@ void TcpSocket::flush(){
 }
 
 bool TcpSocket::readable() {
-  u8 bytes[4096] = {0};
+  u8 bytes[4096] = {0};//null first byte to keep debugger from spewing.
 
   fd.read(bytes, sizeof(bytes));
   if(fd.lastRead < 0) {

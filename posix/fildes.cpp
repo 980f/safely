@@ -1,25 +1,22 @@
 #include "fildes.h"
 
-#include "cheaptricks.h"
 #include <unistd.h>
-#include <stdlib.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
 #include "fdset.h"
-#include "errno.h"
 
-Fildes::Fildes(const char *whatfor):PosixWrapper (whatfor){
+Fildes::Fildes(const char *whatfor) : PosixWrapper(whatfor) {
   errornumber = 0;
   lastRead = lastWrote = 0;
   fd = BADFD;
   amOwner = false;
 }
 
-Fildes::Fildes(const Fildes &other):Fildes(other.dbg.prefix){
+Fildes::Fildes(const Fildes &other) : Fildes(other.dbg.prefix) {
   this->fd = other.fd;
 }
 
-bool Fildes::assignFd(int anFD){
+bool Fildes::assignFd(int anFD) {
   this->fd = anFD;
   lastRead = lastWrote = 0;
   //no, might call another member which generates an error while generating the fd: errornumber=0;
@@ -27,63 +24,64 @@ bool Fildes::assignFd(int anFD){
 }
 
 /** since we close on going out of scope if you share an fd you must take care to use pointer or reference*/
-Fildes::~Fildes(){
-  if(amOwner) {
+Fildes::~Fildes() {
+  if (amOwner) {
     close();
   }
 }
 
-bool Fildes::open(const char *devname, int O_stuff){//todo:3 expose 3rd argument
+bool Fildes::open(const char *devname, int O_stuff) {//todo:3 expose 3rd argument
   close();//is a smart close, ignore any errors
 
   amOwner = true;
   int maybefd;
-  if(okValue(maybefd,::open(devname, O_stuff,0777))){//3rd arg is only relevant if O_stuff includes O_Creat. The (3) 7's lets umask provide the argument.)
+  if (okValue(maybefd, ::open(devname, O_stuff,
+                              0777))) {//3rd arg is only relevant if O_stuff includes O_Creat. The (3) 7's lets umask provide the argument.)
     assignFd(maybefd);
     return true;
   } else {
-    dbg("Failed to open %s",devname);
+    dbg("Failed to open %s", devname);
     return false;
   }
 }
 
-FILE *Fildes::getfp(const char *fargs){
-  return ::fdopen(fd,fargs ?fargs: "r");//todo:2 make string to match present state of fd's flags
+FILE *Fildes::getfp(const char *fargs) {
+  return ::fdopen(fd, fargs ? fargs : "r");//todo:2 make string to match present state of fd's flags
 }
 
-unsigned Fildes::available() const{
-  return unsigned(ioctl(fd,FIONREAD));
+unsigned Fildes::available() const {
+  return unsigned(ioctl(fd, FIONREAD));
 //  FIONREAD ioctl(2)
 }
 
-bool Fildes::preopened(int fd,bool urit){
+bool Fildes::preopened(int fd, bool urit) {
   close();
   amOwner = urit;
   return assignFd(fd);
 }
 
-bool Fildes::setBlocking(bool block)  {
+bool Fildes::setBlocking(bool block) {
   return setSingleFlag(O_NONBLOCK, !block);
 }
 
-void Fildes::Close(int &somefd){
+void Fildes::Close(int &somefd) {
   ::close(somefd);
-  somefd=BADFD;
+  somefd = BADFD;
 }
 
-bool Fildes::setSingleFlag(int bitfield, bool one)  {
-  if(!isOpen()) {
+bool Fildes::setSingleFlag(int bitfield, bool one) {
+  if (!isOpen()) {
     return false;
   }
   int flags;
-  if(okValue(flags,fcntl(fd, F_GETFL, 0))) {
-    int existing=flags;
-    if(one) {
+  if (okValue(flags, fcntl(fd, F_GETFL, 0))) {
+    int existing = flags;
+    if (one) {
       flags |= bitfield;
     } else {
       flags &= ~bitfield;
     }
-    if(changed(existing,flags)){
+    if (changed(existing, flags)) {
       return ok(fcntl(fd, F_SETFL, flags));
     } else {
       return true;//didn't need to change.
@@ -94,44 +92,43 @@ bool Fildes::setSingleFlag(int bitfield, bool one)  {
 }
 
 bool Fildes::getSingleFlag(int bitfield, bool &bit) {
-  if(!isOpen()) {
+  if (!isOpen()) {
     return false;
   }
   int flags;
-  if(okValue(flags,fcntl(fd, F_GETFL, 0))) {
-    bit= (flags&bitfield)!=0;
+  if (okValue(flags, fcntl(fd, F_GETFL, 0))) {
+    bit = (flags & bitfield) != 0;
     return true;
   } else {
     return false;
   }
-
 }
 
-int Fildes::close(void){
-  if(amOwner&&isOpen()) {
+int Fildes::close(void) {
+  if (amOwner && isOpen()) {
     amOwner = false;
-    return ::close(postAssign(fd,BADFD));//when we close an fd someone else can claim it.
+    return ::close(postAssign(fd, BADFD));//when we close an fd someone else can claim it.
   } else {
     return 0; //not an error to close something that isn't open
   }
 }
 
-bool Fildes::mark(FDset&bitset) const {
-  if(isOpen()) {
+bool Fildes::mark(FDset &bitset) const {
+  if (isOpen()) {
     return bitset.include(fd);
   } else {
     return bitset.exclude(fd);
   }
 }
 
-bool Fildes::isMarked(const FDset&fdset) const {
+bool Fildes::isMarked(const FDset &fdset) const {
   return isOpen() && fdset.includes(fd);
 }
 
-bool Fildes::read(Indexer<u8> &p){
-  if(isOpen()) {
-    if(okValue(lastRead ,::read(fd, &p.peek(), p.freespace()))) {
-      p.skip(lastRead);
+
+bool Fildes::read(u8 *buf, unsigned len) {
+  if (isOpen()) {
+    if (okValue(lastRead, ::read(fd, buf, len))) {
       return true;
     }
     return isWaiting();
@@ -139,57 +136,66 @@ bool Fildes::read(Indexer<u8> &p){
     lastRead = BadSize;//todo:2 ensure errno is 'file not open'
     return false;
   }
+}
+
+bool Fildes::read(Indexer<u8> &p) {
+  if (read(&p.peek(), p.freespace())) {
+    if (!isWaiting()) {
+      p.skip(lastRead);
+    }
+    return true;
+  } else {
+    return false;
+  }
 } // Fildes::read
 
-bool Fildes::read(Indexer<char> &p){
-  if(isOpen()) {
-    if(okValue(lastRead ,::read(fd, &p.peek(), p.freespace()))) {
+bool Fildes::read(Indexer<char> &p) {
+  if (read(reinterpret_cast<u8 *>(&p.peek()), p.freespace())) {
+    if (!isWaiting()) {
       p.skip(lastRead);
-      return true;
     }
-    return isWaiting();
+    return true;
   } else {
-    lastRead = BadSize;//todo:2 ensure errno is 'file not open'
     return false;
   }
 } // Fildes::read
 
 
-bool Fildes::write(Indexer<u8> &p){
-  if(write(&p.peek(),p.freespace())){
+bool Fildes::write(Indexer<u8> &p) {
+  if (write(&p.peek(), p.freespace())) {
     p.skip(lastWrote);
     return true;
   }
   return false;
 }
 
-bool Fildes::write(Indexer<u8> &&p){
-  if(write(&p.peek(),p.freespace())){
+bool Fildes::write(Indexer<u8> &&p) {
+  if (write(&p.peek(), p.freespace())) {
     p.skip(lastWrote);
     return true;
   }
   return false;
 }
 
-bool Fildes::write(Indexer<char> &p){
-  if(write(reinterpret_cast<const u8 *>(&p.peek()),p.freespace())){
+bool Fildes::write(Indexer<char> &p) {
+  if (write(reinterpret_cast<const u8 *>(&p.peek()), p.freespace())) {
     p.skip(lastWrote);
     return true;
   }
   return false;
 }
 
-bool Fildes::write(Indexer<char> &&p){
-  if(write(reinterpret_cast<const u8 *>(&p.peek()),p.freespace())){
+bool Fildes::write(Indexer<char> &&p) {
+  if (write(reinterpret_cast<const u8 *>(&p.peek()), p.freespace())) {
     p.skip(lastWrote);
     return true;
   }
   return false;
 }
 
-bool Fildes::write(const u8 *buf, unsigned len){
-  if(isOpen()) {
-    if(okValue(lastWrote, ::write(fd,buf, len))) {
+bool Fildes::write(const u8 *buf, unsigned len) {
+  if (isOpen()) {
+    if (okValue(lastWrote, ::write(fd, buf, len))) {
       return true;
     }
     return false;
@@ -199,11 +205,11 @@ bool Fildes::write(const u8 *buf, unsigned len){
   }
 }
 
-bool Fildes::writeChars(char c, unsigned repeats){
-  if(repeats<=4096){
+bool Fildes::writeChars(char c, unsigned repeats) {
+  if (repeats <= 4096) {
     u8 reps[repeats];
-    fillObject(reps,sizeof(reps),u8(c));
-    return write(reps,repeats);
+    fillObject(reps, sizeof(reps), u8(c));
+    return write(reps, repeats);
   } else {
     return false;
   }
@@ -212,30 +218,30 @@ bool Fildes::writeChars(char c, unsigned repeats){
 //todo:3 configuration parameter for how much we are willing to transfer before checking other channels
 #define CHUNK 3000
 
-int Fildes::moveto(Fildes&other){
+int Fildes::moveto(Fildes &other) {
   // This presumes that write copies to an internal buffer before returning.
   u8 localbuffer[CHUNK];
 
   ByteScanner wrapper(localbuffer, sizeof(localbuffer));
 
-  if(isOpen()) {
+  if (isOpen()) {
     int got = read(wrapper);
-    if(got > 0) { //write to otherfd, nonblocking!
+    if (got > 0) { //write to otherfd, nonblocking!
       int put = other.isOpen() ? other.write(wrapper) : 0;
-      if(put < 0) {
+      if (put < 0) {
         //device has a problem.
         return -2;
       }
-      if(got > put) { //on incomplete write
+      if (got > put) { //on incomplete write
         return got - put; //note it and proceed, else we would have to add extra buffering herein.
       }
     }
-    if(got < 0) { //then somehow the device got closed.
+    if (got < 0) { //then somehow the device got closed.
       setFailed(true);
       return -1;
     }
   }
   return 0;
-} /* moveto */
+}
 
 //end of file
