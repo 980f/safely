@@ -1,8 +1,8 @@
 #include "localonexit.h"
 
 
-AutoFlag::AutoFlag(bool &toBeCleared) : ClearOnExit<bool>(toBeCleared,true){
-  //#nada
+AutoFlag::AutoFlag(bool &toBeCleared) : ClearOnExit<bool>(toBeCleared){
+  toBeCleared=true;
 }
 
 

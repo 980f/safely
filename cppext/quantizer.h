@@ -1,6 +1,7 @@
 #ifndef Quantizer_h
 #define Quantizer_h
 #include "range.h"
+#include "interval.h"
 
 /**
   * first use is converting a range of digital values
@@ -29,7 +30,7 @@ public:
 
   /** clamp to range */
   u16 quantize(double nat) const {
-    return discrete.start() + discrete.span() * natural.fragment(natural.clamped( nat));
+    return discrete.start() + u16(discrete.span() * natural.fragment(natural.clamped(nat)));
   }
 
   double interpret(u16 digital) const {

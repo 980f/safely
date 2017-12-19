@@ -34,7 +34,7 @@ public:
   /** delete a file */
   static int rm(const char *name,bool dashf=false, bool dashr=false);
 
-  static int makeUniqueName(const char *dirname);
+//  static int makeUniqueName(const char *dirname);
 
   static bool exists(const char *pathname);
 //  /** this rename works in background */

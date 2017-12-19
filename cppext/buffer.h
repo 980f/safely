@@ -302,7 +302,7 @@ public:
   }
 
   //syntactic sugar:
-  operator bool() const {
+  operator bool()  {
     return hasNext();
   }
 
@@ -445,7 +445,7 @@ public:
   /** append @param other 's pointer through length-1 to this, but will append all or none.
    * Suitable for picking up the end of a partially copied buffer */
   Indexer appendRemaining(Indexer<Content> &other){
-    int qty = other.emptySpace();
+    int qty = other.freespace();
     if(stillHas(qty)) {
       catFrom(other, qty);
     }

@@ -47,3 +47,8 @@ bool FileReader::process(TextKey fname){
   return false;
 }
 
+void FileReader::loiter() {
+  //todo: hang around until transfer is complete.
+  //find out where original code went!
+}
+

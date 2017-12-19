@@ -193,7 +193,7 @@ public:
   /** removes all items. */
   void clear(){
     if(isOwner) {
-      for(int i = v.size(); i-->0; ) {//#explicit iteration to make it easier to debug exceptions
+      for(unsigned i = v.size(); i-->0; ) {//#explicit iteration to make it easier to debug exceptions
         delete v[i];
       }
     }
@@ -201,7 +201,7 @@ public:
   }
 
   /** destruction removes all items */
-  ~Chain(){
+  virtual ~Chain(){
     clear();
   }
 
@@ -258,7 +258,7 @@ public:
     if(which<steps) {//if removing history
       --steps;//decrement so we don't skip the one moving into the spot erased.
     }
-    list.remove(which);
+    list.removeNth(which);
   }
 
   //todo: detect c++14 and add a forEach
@@ -337,7 +337,7 @@ public:
   }
 
   void remove(unsigned which){
-    list.remove(which);
+    list.removeNth(which);
   }
 
   /** removes  the item that the last call to next() gave you, adjusting iteration for its absence */

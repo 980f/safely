@@ -625,7 +625,7 @@ Storable *Storable::getChild(Sequence<Text> &progeny,bool autocreate){
       searcher = searcher->parent;
       if(!searcher) {
         //we can't autocreate a root, it would leak if we tried.
-        wtf("Storable::getChild asked to look above root [%s]",searcher->name.c_str());
+        wtf("Storable::getChild asked to look above root");
         return nullptr;//we do NOT autocreate in this case.
       }
       continue;//look for next child in path

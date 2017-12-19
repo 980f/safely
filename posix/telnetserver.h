@@ -19,7 +19,7 @@ public:
 
   /** the factory is usually set when the host is defined */
   TelnetServer(Factory aFactory = simpleFactory);
-  void start();
+  void start();//todo: ?virtual
   bool isStarted();
 
   using TelnetAction = std::function<void(Socketeer&)>;
@@ -31,7 +31,7 @@ public:
   //only checked when clients connect
   unsigned maxClients;
   //not an override
-  void close();
+  void close();//todo: ?~virtual
   Socketeer *newest();
 }; // class TelnetServer
 #endif // TELNETSERVER_H

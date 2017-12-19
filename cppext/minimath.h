@@ -6,6 +6,7 @@ math related functions that either had platform/compiler variations or have plat
 */
 
 
+#include <cmath>
 #include "eztypes.h"
 
 //portable nan etc. symbols, our compilers don't seem to agree on these guys, or the syntax is horrible.

@@ -25,7 +25,7 @@ public:
   /** copies ONLY the fd, none of the other state, and most especially is NOT the owner of the underlying file descriptor */
   Fildes(const Fildes &other);
   /** since we close on going out of scope if you share an fd you must take care to use pointer or reference*/
-  ~Fildes();
+  virtual ~Fildes();
   bool open(const char *devname, int O_stuff); //open a named file
   /** takes ownership of an FD, if @param urit is true ("You are it")*/
   bool preopened(int fd,bool urit=true);
@@ -36,9 +36,9 @@ public:
    * If you cheat and send a multi-bit bitfield you'll have to read the code to see what happens. */
   bool getSingleFlag(int bitfield,bool &bit);
 
-  int close(void);
+  int close();
   /**make this transparently usable as an fd number*/
-  operator int() const {
+  operator int() const {//#~intentionally implicit
     return fd;
   }
   /** to get rid of warnings when compiler can't figure out an automatic cast to int.*/

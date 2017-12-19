@@ -327,7 +327,7 @@ public:
   void filicide(bool notify = false);
   /** remove from parent */
   void suicide(bool andDelete=false);//don't normally delete as someone is looking for the removal and they do the delete.
-  /** @returns rootnode of this node, 'this' if 'this' is a root node.*/
+  /** @returns rootnode of this node, 'this' if 'this' is a root node. (i.e a root is its own parent using this method) */
   Storable &getRoot();
   /** force size of wad. */
   unsigned setSize(unsigned qty);

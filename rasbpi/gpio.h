@@ -46,7 +46,7 @@ public:
   /** @param pull: -1 for down, +1 for up, 0 for let it float */
   GPIO& pullit(int pull);
 
-  static bool isOperational();
+//todo: ?why did this disappear  static bool isOperational();
 
   bool readpin() const noexcept;
 }; // class GPIO

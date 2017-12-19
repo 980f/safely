@@ -151,7 +151,7 @@ bool Socketeer::serve(unsigned backlog){
         bug("Couldn't bind");
       }
     } else {
-      return "Couldn't make socket";
+      bug("Couldn't make socket");
     }
   }
   return false;
@@ -298,7 +298,12 @@ void HostInfo::hint(bool tcp){
   hints.ai_addr = nullptr;
   hints.ai_canonname = nullptr;
   hints.ai_next = nullptr;
-} // HostInfo::hint
+}
+
+addrinfo *HostInfo::anIpv4() {
+  return this->bestAddress();//todo: what was intended here?
+}
+// HostInfo::hint
 
 unsigned SockAddress::getPort(){
   if(address.sa_family==AF_INET) {

@@ -18,13 +18,13 @@ public:
       a[ai]=0;
     }
   }
-  ~Polynomial(){}  //the compiler made me do it
+  ~Polynomial() = default;  //the compiler made me do it
   
   /** @returns whether the assignment changed this object.*/
   
   bool operator =(const Polynomial<degree>&other){
     for(unsigned ai = 0;ai <= degree;++ai) {
-      set(a[ai], ai<=other.degree?other[ai]:0);
+      set(a[ai], ai<=degree?other[ai]:0);//todo:1 template a different degree for 2nd argument.
     }
     return isModified();
   }

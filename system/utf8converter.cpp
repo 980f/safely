@@ -71,7 +71,7 @@ unsigned Utf8ConverterIn::length(const char *source) const {
   if(Cstr(source).empty()) {
     return 0;
   }
-  int totes(0);
+  unsigned totes(0);
 
   Utf8Decoder dx;
   //#not using elseif below because of one exception and to make it easy to reorder the tests.
@@ -96,7 +96,7 @@ unsigned Utf8ConverterIn::length(const char *source) const {
       return totes;
     }
   }
-  return BadIndex;
+  return BadIndex;//#can't get here.
 }
 
 bool Utf8ConverterIn::operator()(const char *peeker, Indexer<char> &packer){

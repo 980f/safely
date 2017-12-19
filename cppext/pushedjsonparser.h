@@ -87,9 +87,10 @@ public://extended return value
 
 private:
   void recordName();
-  void endToken(unsigned mark);
+//todo: when did this go away?  void endToken(unsigned mark);
 }; // class Parser
 
+// standard punctuation of json.
 #define StandardJSONFraming ":{,}[]"
 
 } // namespace PushedJSON

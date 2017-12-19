@@ -18,20 +18,21 @@ extern double svn();
 //using namespace Glib;
 //using namespace std;
 
-TreeFile::TreeFile(FileName &fname, Storable &root) :
+TreeFile::TreeFile(FileName &fname, Storable &node) :
   filename(fname),
-  root(root){
+  root(&node),
+  ConnectChild(svnnumber){
 }
 
 bool TreeFile::parseTreeFile(void){
 //  PerfTimer perf(ustring::compose("parse tree %1", filename).c_str());
-  Filer file;
+  Filer file("TreeFile");
   if(file.openFile(filename.c_str(),O_RDONLY,false)) {
     if(file.readall(20000000)) {
       JsonStore parser(root);
       ByteScanner scanner(file.contents());
       bool parsedok = parser.parse(scanner);
-      root.wasModified();//to clear flags set by parsing;
+      root->wasModified();//to clear flags set by parsing;
       return parsedok;
     } else {
       dbg("Filename %s too big to be parsed.", filename.c_str());

@@ -8,10 +8,10 @@ unsigned CenteredSlice::width()const {
 }
 
 int CenteredSlice::operator [](int i) const{
-  if(i<-int(hwidth)){
+  if(i<-hwidth){
     return 0;
   }
-  if(i>int(hwidth)){
+  if(i > hwidth){
     return 0;
   }
   return data[i];
@@ -65,5 +65,5 @@ CenteredSlice CenteredSlice::Half(bool upper)const{
 
 CenteredSlice CenteredSlice::Endpoint(bool upper, unsigned newwidth)const{
   constrainClip(newwidth);
-  return subslice(int(upper?hwidth:-hwidth),newwidth);
+  return subslice(upper ? hwidth : -hwidth, newwidth);
 }

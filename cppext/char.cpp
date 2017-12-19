@@ -61,7 +61,7 @@ bool Char::isLower() const noexcept {
 }
 
 char Char::asLower() const noexcept {
-  return tolower(raw);
+  return static_cast<char>(tolower(raw));
 }
 
 bool Char::isUpper()const noexcept {
@@ -69,7 +69,7 @@ bool Char::isUpper()const noexcept {
 }
 
 char Char::asUpper() const noexcept {
-  return toupper(raw);
+  return static_cast<char>(toupper(raw));
 }
 
 bool Char::isControl() const noexcept{
@@ -104,4 +104,8 @@ unsigned Char::hexDigit() const noexcept {
 char Char::hexNibble(unsigned sb) const noexcept {
   unsigned char nib= 15&(raw>>(sb*4)); //push to low nib
   return nib>9? 'A'+nib-10: '0'+nib;
+}
+
+bool Char::startsNumber() const noexcept {
+  return isDigit()||is('-')||is('+');//todo: ?how did this disappear
 }
