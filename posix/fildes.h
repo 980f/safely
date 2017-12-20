@@ -11,10 +11,13 @@ class Fildes : public PosixWrapper {
 public:
   //make a true variable for something that is usuall #defined.
   static const int BADFD= ~0;
+  static const ssize_t BadSize=~0;
   //retain for post-mortem debug. using practical type vs posix type to minimize compiler warnings
   ssize_t lastRead;
   ssize_t lastWrote;
-  static const ssize_t BadSize=~0;
+  //debug aid
+  bool traceRead=false;
+  bool traceWrite=false;
 protected:
 /** whether this object opened the fd it wraps. That is the normal case but if you want to do multiple operations and retain error info on each step then you might use multiple Fildes objects around the same fd. */
   bool amOwner;

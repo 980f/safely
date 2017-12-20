@@ -129,9 +129,18 @@ bool Fildes::isMarked(const FDset &fdset) const {
 bool Fildes::read(u8 *buf, unsigned len) {
   if (isOpen()) {
     if (okValue(lastRead, ::read(fd, buf, len))) {
+      if(traceRead){
+        return true;
+      }
       return true;
+    } else {
+      if(isWaiting()){
+        lastRead=0;
+        return true;
+      } else {
+        return false;
+      }
     }
-    return isWaiting();
   } else {
     lastRead = BadSize;//todo:2 ensure errno is 'file not open'
     return false;
@@ -140,9 +149,9 @@ bool Fildes::read(u8 *buf, unsigned len) {
 
 bool Fildes::read(Indexer<u8> &p) {
   if (read(&p.peek(), p.freespace())) {
-    if (!isWaiting()) {
+//    if (!isWaiting()) {//didn't work well, moved intention into read(raw)
       p.skip(lastRead);
-    }
+//    }
     return true;
   } else {
     return false;
@@ -151,9 +160,9 @@ bool Fildes::read(Indexer<u8> &p) {
 
 bool Fildes::read(Indexer<char> &p) {
   if (read(reinterpret_cast<u8 *>(&p.peek()), p.freespace())) {
-    if (!isWaiting()) {
+//    if (!isWaiting()) {
       p.skip(lastRead);
-    }
+//    }
     return true;
   } else {
     return false;
@@ -196,6 +205,9 @@ bool Fildes::write(Indexer<char> &&p) {
 bool Fildes::write(const u8 *buf, unsigned len) {
   if (isOpen()) {
     if (okValue(lastWrote, ::write(fd, buf, len))) {
+      if(traceWrite){
+        return true;
+      }
       return true;
     }
     return false;
