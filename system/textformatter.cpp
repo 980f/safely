@@ -102,7 +102,7 @@ void TextFormatter::onFailure(CharFormatter workspace){
 }
 
 void TextFormatter::substitute(double value){
-  width = Zguard(nf.needs());
+  width = Zguard(nf.needs());//todo: value sensitive computation, this presently is worst case.
   CharFormatter workspace = makeWorkspace();
   if(workspace.isUseful()) {
     if( !workspace.printNumber(value,nf)) {   //if failed to insert anything
