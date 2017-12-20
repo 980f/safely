@@ -85,7 +85,7 @@ void TextFormatter::reclaimWaste(const CharFormatter &workspace){
   dataend-=substWidth;
   //pull data back down over unused stuff
   unsigned excess = workspace.freespace();
-  body.removeNext(excess);
+  body.removeNext(excess,false/* do not clip allocation*/);
 }
 
 CharFormatter TextFormatter::makeWorkspace(){
