@@ -44,7 +44,7 @@ double NumberPieces::packed() const {
 }
 
 NumberPieces::NumberPieces(double d){
-  reset();
+//  reset();
   decompose(d);
 }
 

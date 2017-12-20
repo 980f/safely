@@ -361,10 +361,14 @@ bool CharFormatter::printNumber(double d, const NumberFormat &nf, bool addone){
           if(stillwant>0) {
             u64 postdec = truncateDecimals(np.postdecimal,stillwant);
             unsigned stillhave = 1 + ilog10(postdec);//double checking, unlike to left of radix we want 0 here to result in -1.
-            if(stillhave<stillwant) {
-              checker &= printChar('0',stillwant - stillhave);
+            if(postdec==0) {//ilog10 doesn't give us what we want here , we got an extra trailing 0
+              checker &= printChar('0',stillwant);
+            } else {
+              if(stillhave<stillwant) {
+                checker &= printChar('0',stillwant - stillhave);
+              }
+              checker &= printUnsigned(postdec);
             }
-            checker &= printUnsigned(postdec);
           }
         }
       }
