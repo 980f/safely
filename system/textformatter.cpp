@@ -126,6 +126,14 @@ void TextFormatter::substitute(u64 value){
   }
 }
 
+void TextFormatter::substitute(u32 value){
+  substitute(u64(value));//need this to distinguish char * from implied char &
+} //
+
+void TextFormatter::substitute(u16 value){
+  substitute(u64(value));//need this to distinguish char * from implied char &
+} //
+
 void TextFormatter::substitute(u8 value){
   substitute(u64(value));//need this to distinguish char * from implied char &
 } // TextFormatter::substitute

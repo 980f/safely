@@ -113,6 +113,10 @@ public:
     return const_cast<char *>(ptr);
   }
 
+  unsigned char *casted(){
+    return const_cast<unsigned char *>(reinterpret_cast<const unsigned char *>(ptr));
+  }
+
 }; // class Cstr
 
 #endif // CSTR_H
