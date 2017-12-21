@@ -10,8 +10,9 @@
 class Application: public PosixWrapper {
 protected:
   Indexer<TextKey> arglist;
+  /** event manager */
   Epoller looper;
-  /** millseconds in logic driver period */
+  /** ticks until next keepalive/sampling */
   unsigned period;
 private:
   /** if greater than zero and less than period it replaces period for one cycle */

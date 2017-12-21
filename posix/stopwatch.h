@@ -5,13 +5,10 @@
 
 /** an interval timer */
 class StopWatch {
+
 private:
-  /** first time of interest in this run of the application.
-   * At the moment that is when the first StopWatch is created, even if it is later destroyed.
-   * This is used to reduce the 'number of seconds' used in some calculations to make sure nanoseconds don't get discarded when added to seconds.
-*/
-  static __time_t epoch;
-private:
+  NanoSeconds epoch;//saves time of construction
+
   bool readit(timespec &ts);
   const int CLOCK_something;
 protected:

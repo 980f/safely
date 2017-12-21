@@ -26,11 +26,11 @@ static SerialDevice::Pin::Which spinMap[]={
 };
 
 
-void Din::connect(SerialDevice *port, unsigned which, bool invert){
+void Din::connect(SerialDevice *port, unsigned which, bool invert,int pullit){
   if(port!=nullptr) {
     beSpio(*port,spinMap[which%countof(spinMap)],invert);
   } else {
-    beGpio(which,0,0);//maydo: use invert to control pull direction?
+    beGpio(which,0,pullit);
   }
 }
 

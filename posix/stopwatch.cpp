@@ -1,8 +1,6 @@
 #include "stopwatch.h"
 #include "cheaptricks.h"
 
-__time_t StopWatch::epoch = 0;
-
 bool StopWatch::readit(timespec &ts){
   if(clock_gettime(CLOCK_something,&ts)){
     return false;
@@ -14,10 +12,9 @@ bool StopWatch::readit(timespec &ts){
 
 StopWatch::StopWatch(bool beRunning,bool realElseProcess) :
   CLOCK_something(realElseProcess ? CLOCK_MONOTONIC : CLOCK_THREAD_CPUTIME_ID){
+  epoch=0;
   readit(started);
-  if(epoch==0) {//once per application start
-//needs to be per-watch    epoch = take(started.ts.tv_sec);
-  }
+  epoch = take(started.ts.tv_sec);
   stopped = started;
   running = beRunning;
 }

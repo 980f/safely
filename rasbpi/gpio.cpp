@@ -42,7 +42,7 @@ bool GPIO::readpin() const noexcept {
 }
 
 GPIO& GPIO::configure(unsigned af){
-  unsigned word = pinIndex / 10;
+  unsigned word = pinIndex / 10; //10 pins per config register. 3 bits each.
   unsigned fielder = 3 * (pinIndex % 10);
   mergeField(base.reg[word],af,(fielder + 3),fielder);
   return *this;
@@ -50,14 +50,14 @@ GPIO& GPIO::configure(unsigned af){
 
 GPIO& GPIO::pullit(int pull){
   //set puller register
-  base.reg[PullerCode] = (pull>0) ? 2 : (pull<0) ? 1 : 0;//todo:0 why does this one not reference offset?
+  base.reg[PullerCode] = (pull>0) ? 2 : (pull<0) ? 1 : 0;
   //wait 150, presumably at 150Mhz.
   nanoSpin(150);
-  //set clock bit
+  //set clock bit to program above value into the selected bit(s)
   base.reg[offset + PullerClock] = mask;
   nanoSpin(150);
-  //writing a zero to the register, although they claim only writing a 1 does anything.
-  base.reg[offset + PullerClock] = 0;
+  //writing a zero to the register, although they claim only writing a 1 does anything everyone else seem to think this is needed:
+  base.reg[offset + PullerClock] = 0; //todo:2 see if this is necessary
   return *this;
 } // GPIO::pullit
 
