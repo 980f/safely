@@ -78,9 +78,9 @@ void Epoller::exec(const epoll_event &ev){
   }
 }
 
-bool Epoller::doEvents(unsigned timeoutms){
+bool Epoller::doEvents(NanoSeconds timeout){
   waitlist.rewind();
-  if(wait(timeoutms)){//HEREIS the actual blocking call!
+  if(wait(timeout.ms())){//HEREIS the actual blocking call!
 //too frequent    dbg("polled event count %d",waitlist.used());
     Indexer<epoll_event> list(waitlist,~0);
     while(list.hasNext()){

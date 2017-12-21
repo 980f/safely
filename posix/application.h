@@ -10,16 +10,18 @@
 class Application: public PosixWrapper {
 protected:
   Indexer<TextKey> arglist;
+    double hz;
   /** event manager */
   Epoller looper;
-  /** ticks until next keepalive/sampling */
-  unsigned period;
+  /** time until next keepalive/sampling */
+  NanoSeconds period;
+
 private:
   /** if greater than zero and less than period it replaces period for one cycle */
-  unsigned quickCheck=0;
+  NanoSeconds quickCheck;
 protected:
   /** set quickCheck if @param soonish is sooner than a prior setting */
-  bool setQuickCheck(unsigned soonish);
+  bool setQuickCheck(NanoSeconds soonish);
   /** clear this to try to get app to exit gracefully */
   bool beRunning;
   /** called with each event, especially when period is up. Not harmonic */
@@ -41,7 +43,6 @@ public:
   void stop(){
     beRunning=false;
   }
-  unsigned pollingTicks(double seconds);
 
 public: //utilities
   /** @returns a copy of the hostname, not a static function as it records errors from the attempt */

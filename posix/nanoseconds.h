@@ -22,9 +22,12 @@ struct NanoSeconds {
 
   NanoSeconds(const NanoSeconds &other)=default;\
 
-  void operator=(double seconds){
+  NanoSeconds& operator=(double seconds){
     parseTime (ts,seconds);
+    return *this;
   }
+
+  //allow default assignment to work
 
   operator double()const{
     return from(ts);
@@ -36,7 +39,19 @@ struct NanoSeconds {
 
   void setMillis(unsigned ms);
 
-  NanoSeconds operator -(const NanoSeconds &lesser);
+  /** @returns 0 if negative or 0 else ceiling of value*/
+  unsigned ms() const noexcept;
+  NanoSeconds operator -(const NanoSeconds &lesser) const;
+  NanoSeconds &operator -=(const NanoSeconds &lesser);
+
+  /** @returns whether this comes after @param that */
+  NanoSeconds operator >(const NanoSeconds &that);
+
+  /** @returns 1,0,-1,  if @param dub is not null then it is the absolute value of the time in seconds. */
+  int signabs(double *dub=nullptr)const;
+
+  bool isZero()const noexcept;
+
 
   /** wraps posix nanosleep. @returns the usual posix nonsense. 0 OK/-1 -> see errno
  sleeps for given amount, is set to time remaining if sleep not totally completed  */

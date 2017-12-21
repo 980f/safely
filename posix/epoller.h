@@ -37,7 +37,7 @@ public:
   static void exec(const epoll_event &ev);
 
   /** core of event loop */
-  bool doEvents(unsigned timeoutms);
+  bool doEvents(NanoSeconds timeoutms);
   void explain(unsigned epevs);
 
   /** when events are processed this clock is updated, reading the clock once per event wakeup */
