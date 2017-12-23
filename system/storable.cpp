@@ -511,7 +511,7 @@ Cstr Storable::image(void){
   case Wad:
     text.take(NumberFormatter::makeNumber(numChildren()));
     return text;
-
+  default:
   case NotDefined:
     return "(unknown)";
   } // switch

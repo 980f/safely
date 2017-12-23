@@ -7,40 +7,56 @@ ContinuedFractionRatioGenerator::ContinuedFractionRatioGenerator(){
 }
 
 bool ContinuedFractionRatioGenerator::restart(double ratio, unsigned limit){
-  this->limit=limit;
-  fraction=ratio;
-  h[0]=k[1]=0;
-  h[1]=k[0]=1;
-  return true;//todo:0 check range of args against range of unsigned
-}
+  this->limit = limit;
+  fraction = fabs(ratio);
+  h[0] = k[1] = 0;
+  h[1] = k[0] = 1;
+  h[2] = k[2] = 0;//4 debug
+  step();//gives 1/0
+  return step();//gives int(ratio)/1
+} // ContinuedFractionRatioGenerator::restart
 
-bool ContinuedFractionRatioGenerator::step(){
-  if(split()){
-    h[2]=an*h[1] + h[0];
-    k[2]=an*k[1] + k[0];
-    if(k[2]>limit || h[2]>limit){
-      return false;//we've gone one step beyond the limit
-    }
-    h[0]=h[1];
-    h[1]=h[2];
-    k[0]=k[1];
-    k[1]=k[2];
+
+bool ContinuedFractionRatioGenerator::bump(unsigned hk[3]){
+  u64 provisional = u64(an) * hk[1] + hk[0];
+  if(provisional<=limit){
+    hk[2]=unsigned(provisional);
     return true;
   }
   return false;
 }
 
-bool ContinuedFractionRatioGenerator::split(){
-  if(fraction==0.0){
-    return false;
+static void shift(unsigned hk[3]){
+  hk[0] = hk[1];
+  hk[1] = hk[2];
+}
+
+bool ContinuedFractionRatioGenerator::step(){
+  if(split()) {
+    if(bump(h)&& bump(k)){
+      shift(h);
+      shift(k);
+      return true;
+    } else {
+      return false;
+    }
   }
-  double inverse=1.0/fraction;
-  if(isNan(inverse)){
+  return false;
+} // ContinuedFractionRatioGenerator::step
+
+bool ContinuedFractionRatioGenerator::split(){
+  static double u32epsilon=pow(2,-32);//confirmed perfect representation. 0x3df0000000000000
+  if(fraction==0.0) {
     return false;
   }
 
-  int nextterm=splitter(inverse);//more bounds checks needed
+  if(fraction< u32epsilon){//subsequent math would overflow without notices.
+    return false;
+  }
+
+  double inverse = 1.0 / fraction;
+
+  an = splitter2(inverse);
   fraction = inverse;
-  an=unsigned(nextterm);
   return true;
-}
+} // ContinuedFractionRatioGenerator::split

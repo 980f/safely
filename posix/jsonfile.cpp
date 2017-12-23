@@ -17,8 +17,9 @@ int JsonFile::reload(){
 }
 
 int JsonFile::loadFile(Cstr thename){
-  root.child("#loadedFromFile").setImage(thename.c_str());//record where we try to load from.
+//did crazy thing when the node being loaded is a StoredGroup<StoredNumeric>  root.child("#loadedFromFile").setImage(thename.c_str());
   Filer optionFile("LoadJSON");
+  loadedFrom=thename;//mark intended file name
   if(! optionFile.openFile(thename)){
     dbg("Couldn't open \"%s\", error:[%d]%s",thename.c_str(),optionFile.errornumber,optionFile.errorText());
     return optionFile.errornumber;
@@ -27,6 +28,7 @@ int JsonFile::loadFile(Cstr thename){
     dbg("Couldn't read all of \"%s\", error:[%d]%s",thename.c_str(),optionFile.errornumber,optionFile.errorText());
     return optionFile.errornumber;
   }
+  //maydo: set loadedFrom to absolute canonical pathname.
   //free up options file for external editing (in case we ever open_exclusive)
   optionFile.close();//this does not lose the data already read.
   CharScanner optsText(optionFile.contents());
@@ -40,10 +42,9 @@ int JsonFile::loadFile(Cstr thename){
   parser.parser.lookFor(StandardJSONFraming ";=");
 
   parser.parse();
-  loadedFrom=thename;//record after success
-  //todo: stats?
+
   dbg("loaded %d nodes, %d levels, from %s",parser.stats.totalNodes,parser.stats.maxDepth.extremum,thename.c_str());
-  return 0;
+  return 0;//#an errno
 }
 
 bool indent(FILE *fp, unsigned tab){
@@ -114,7 +115,7 @@ void JsonFile::printOn(Cstr somefile, unsigned indent, bool showVolatiles){
 }
 
 Cstr JsonFile::originalFile(){
-  return loadedFrom.empty()?root.child("#loadedFromFile").image().c_str(): loadedFrom.c_str();
+  return loadedFrom.c_str();
 }
 
 

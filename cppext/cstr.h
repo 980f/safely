@@ -26,7 +26,7 @@ public:
   Cstr(unsigned char *target);//# we desire implicit conversions
 
   //virtual destructor as this is a base for classes which may do smart things with the pointer on destruction.
-  virtual ~Cstr()=default;//we never take ownership of ptr, see class Text for such a beast.
+  virtual ~Cstr() = default;//we never take ownership of ptr, see class Text for such a beast.
   /** change internal pointer */
   virtual TextKey operator =(TextKey ptr);//# we desire passthrough on argument
 
@@ -56,18 +56,18 @@ public:
   bool endsWith(char isit) const noexcept;
 
   /** @returns whether @param other exactly matches this' content, with nullptr matching the same or "" */
-  bool is(TextKey other) const  noexcept;
+  bool is(TextKey other) const noexcept;
 
   char operator [](const Index &index) const noexcept;
 
   char at(const Index &index) const noexcept;
   /** needed by changed() template function */
-  bool operator !=(TextKey other) const  noexcept{
+  bool operator !=(TextKey other) const noexcept {
     return !is(other);
   }
 
   /** needed by changed() template function if we kill the != one */
-  bool operator ==(TextKey other) const  noexcept{
+  bool operator ==(TextKey other) const noexcept {
     return is(other);
   }
 
@@ -93,16 +93,19 @@ public:
   const char *rchr(int chr) const noexcept;
 
   /** strtod */
-  double asNumber(Cstr *tail=nullptr)const noexcept;
+  double asNumber(Cstr *tail = nullptr) const noexcept;
 
-  template <typename Numeric> Numeric cvt(Numeric onNull, Cstr *units=nullptr)const noexcept;
+  /** for bool: 1,0,true, false have definite values.
+   * to distinguish onNull from the same value being parsed inspect units.
+   */
+  template<typename Numeric> Numeric cvt(Numeric onNull, Cstr *units = nullptr) const noexcept;
   /** forget the target */
   virtual void clear() noexcept;
 
   /** marker for tedious syntax const_cast<char *>()
    * this should only be used when passing the pointer to old stdlib functions, and only when you have verified the string is null terminated.
    */
-  static char *violate(TextKey violatus) noexcept{
+  static char *violate(TextKey violatus) noexcept {
     return const_cast<char *>(violatus);
   }
 
@@ -118,5 +121,12 @@ public:
   }
 
 }; // class Cstr
+
+//versions implemented in cstr.cpp. You should probably add others here if the type is intrinsic or already known to this module.
+template<> bool Cstr::cvt(bool onNull, Cstr *units) const noexcept;
+template<> long Cstr::cvt(long onNull, Cstr *units) const noexcept;
+template<> unsigned Cstr::cvt(unsigned onNull, Cstr *units) const noexcept;
+template<> int Cstr::cvt(int onNull, Cstr *units) const noexcept;
+template<> double Cstr::cvt(double onNull, Cstr *units) const noexcept;
 
 #endif // CSTR_H

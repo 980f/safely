@@ -290,11 +290,13 @@ template< typename Scalar > void swap(Scalar &a, Scalar &b) {
 }
 
 
-/** Things that are coded in assembler on some platforms, due to efficiency concerns. In 2009 one version of the GCC compiler for ARM often produced horrible and sometimes incorrect code. Time permitting these should be compiled from the C equivalents and compared to the hand coded assembler to see if we can abandon the assembler due to compiler improvements. */
+/** Things that are coded in assembler on some platforms, due to efficiency concerns. In 2009 one version of the GCC compiler for ARM often produced horrible and sometimes incorrect code. Time permitting these should be compiled from the C equivalents and compared to the hand coded assembler to see if we can abandon the assembler source due to compiler improvements. */
 extern "C" {
 /* @returns integer part of d, modify d to be its fractional part.
 */
   int splitter(double &d);
+  /** like splitter but has an extra bit of output range by presuming input is non-negative. */
+  unsigned splitter2(double &d);
 
   /** the time delay given by ticks is ambiguous, it depends upon processor clock. @72MHz 1000 ticks is roughly one microsecond.*/
   void nanoSpin(unsigned ticks); //fast spinner, first used in soft I2C.

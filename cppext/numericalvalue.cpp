@@ -80,6 +80,7 @@ bool NumericalValue::changeInto(NumericalValue::Detail newis){
       }
       break;
     }
+    is=newis;
     return true;
   } else {
     return false;
@@ -164,22 +165,22 @@ template <> double NumericalValue::cast<double>() const noexcept{
 }
 
 
-/** @returns whether value is non-zero */
+/** @returns value saturatedly converted to unsigned */
 template <> unsigned NumericalValue::cast<unsigned>() const noexcept{
   switch (is) {
   case Truthy:
     return storage.bee?1:0;
-  case Whole:
+  case Whole://int to unsigned with saturation, all negatives are ~0
     return storage.eye>=0?unsigned(storage.eye):BadIndex;
   default:
   case Counting:
     return storage.ewe;
-  case Floating:
+  case Floating://todo:1 find stdlib saturating conversion function.
     return ::isNormal(storage.dee)&&storage.dee>0.0&&storage.dee<double(BadIndex)?unsigned(storage.dee):BadIndex;
   }
 }
 
-/** @returns whether value is non-zero */
+/** @returns value saturatedly converted to int */
 template <> int NumericalValue::cast<int>() const noexcept{
   switch (is) {
   case Truthy:

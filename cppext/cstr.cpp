@@ -7,7 +7,7 @@ Cstr::Cstr() : ptr(nullptr){
   //#nada
 }
 
-Cstr::Cstr(TextKey target):ptr(target){
+Cstr::Cstr(TextKey target) : ptr(target){
 
 }
 
@@ -33,7 +33,7 @@ const unsigned char *Cstr::raw() const {
 }
 
 const char *Cstr::notNull() const {
-  if(ptr){
+  if(ptr) {
     return ptr;
   } else {
     return emptyString;//the const in the return type allows us to point to a byte of read-only memory.
@@ -41,7 +41,7 @@ const char *Cstr::notNull() const {
 }
 
 const char *Cstr::nullIfEmpty() const {
-  if(empty()){
+  if(empty()) {
     return nullptr;
   } else {
     return ptr;
@@ -61,7 +61,7 @@ unsigned Cstr::length() const noexcept {
 }
 
 bool Cstr::endsWith(char isit) const noexcept {
-  return *this[length()-1]==isit;
+  return *this[length() - 1]==isit;
 }
 
 bool Cstr::is(TextKey other) const noexcept {
@@ -69,11 +69,11 @@ bool Cstr::is(TextKey other) const noexcept {
 }
 
 char Cstr::operator [](const Index &index) const noexcept {
-  return (nonTrivial(ptr)&&isValid(index)) ? ptr[index]:0;
+  return (nonTrivial(ptr)&&isValid(index)) ? ptr[index] : 0;
 }
 
 char Cstr::at(const Index &index) const noexcept {
-  return (nonTrivial(ptr)&&isValid(index)) ? ptr[index]:0;
+  return (nonTrivial(ptr)&&isValid(index)) ? ptr[index] : 0;
 }
 
 /** attempt to match the reasoning of the @see same() function with respect to comparing null strings and empty strings */
@@ -87,7 +87,7 @@ int Cstr::cmp(TextKey rhs) const noexcept {
   } else {//this wraps nullptr
     return nonTrivial(rhs) ? -1 : 0;
   }
-}
+} // Cstr::cmp
 
 bool Cstr::startsWith(TextKey other) const noexcept {
   if(ptr == nullptr) {
@@ -111,9 +111,9 @@ bool Cstr::startsWith(TextKey other) const noexcept {
     }
   }
   return true;
-}
+} // Cstr::startsWith
 
-bool Cstr::startsWith(char ch) const noexcept{
+bool Cstr::startsWith(char ch) const noexcept {
   return ptr&&*ptr==ch;
 } // Cstr::startsWith
 
@@ -149,68 +149,77 @@ const char *Cstr::rchr(int chr) const noexcept {
   }
 }
 
-double Cstr::asNumber(Cstr *tail) const noexcept{
-  if(nonTrivial(ptr)){
+double Cstr::asNumber(Cstr *tail) const noexcept {
+  if(nonTrivial(ptr)) {
     return strtod(ptr, tail ? const_cast<char **>(&tail->ptr) : nullptr);
   } else {
     return 0.0;
   }
 }
 
-void Cstr::clear() noexcept{
+void Cstr::clear() noexcept {
   ptr = nullptr;
 }
 
 template<> bool Cstr::cvt(bool onNull, Cstr *units) const noexcept {
-  if(units){//COA
-    *units=ptr;
+  if(units) {//COA
+    *units = ptr;
   }
-  if(nonTrivial(ptr)){
-    if(length()==1){
-      if((*ptr|1)=='1'){//single decimal 1 or 0
-        if(units){
-          *units=nullptr;
+  if(nonTrivial(ptr)) {
+    if(length()==1) {
+      if((*ptr | 1)=='1') {//single decimal 1 or 0
+        if(units) {
+          *units = nullptr;
         }
-        return *ptr&1;
+        return *ptr & 1;
       }
-      //todo: 't' or 'f'
+      //maydo: 't' or 'f'
+    }
+    if(is("true")) {
+      if(units) {
+        *units = nullptr;
+      }
+      return true;
+    }
+    if(is("false")) {
+      if(units) {
+        *units = nullptr;
+      }
+      return false;
     }
     return onNull;
   } else {
     return onNull;
   }
-}
-
+} // Cstr::cvt
 
 template<> long Cstr::cvt(long onNull, Cstr *units) const noexcept {
-  if(nonTrivial(ptr)){
-    return strtol(ptr, units? const_cast<char **>(&units->ptr) : nullptr,10);
+  if(nonTrivial(ptr)) {
+    return strtol(ptr, units ? const_cast<char **>(&units->ptr) : nullptr,10);
   } else {
     return onNull;
   }
 }
 
 template<> unsigned Cstr::cvt(unsigned onNull, Cstr *units) const noexcept {
-  if(nonTrivial(ptr)){
-    return strtoul(ptr, units? const_cast<char **>(&units->ptr) : nullptr,10);
+  if(nonTrivial(ptr)) {
+    return strtoul(ptr, units ? const_cast<char **>(&units->ptr) : nullptr,10);
   } else {
     return onNull;
   }
 }
 
 template<> int Cstr::cvt(int onNull, Cstr *units) const noexcept {
-  if(nonTrivial(ptr)){
-    return strtol(ptr, units? const_cast<char **>(&units->ptr) : nullptr,10);
+  if(nonTrivial(ptr)) {
+    return strtol(ptr, units ? const_cast<char **>(&units->ptr) : nullptr,10);
   } else {
     return onNull;
   }
 }
 
-
-
 template<> double Cstr::cvt(double onNull, Cstr *units) const noexcept {
-  if(nonTrivial(ptr)){
-    return strtod(ptr, units? const_cast<char **>(&units->ptr) : nullptr);
+  if(nonTrivial(ptr)) {
+    return strtod(ptr, units ? const_cast<char **>(&units->ptr) : nullptr);
   } else {
     return onNull;
   }
