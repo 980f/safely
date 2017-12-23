@@ -59,11 +59,11 @@ unsigned NumberFormat::needs(double value, NumberPieces *preprint) const {
       //will print some blanks and proceed, we only implement right-align in fixed fields.
       return fieldWidth;
     } else {
-      if(preprint->div10>0 && (necessary-preprint->div10)<fieldWidth){
+      if(preprint->postDigits>0 && (necessary-preprint->postDigits)<fieldWidth){
         //truncate precision since we can
         int trunc=necessary-fieldWidth;
         preprint->postdecimal/= pow10(trunc);
-        preprint->div10-=trunc;
+        preprint->postDigits-=trunc;
       }
     }
   }

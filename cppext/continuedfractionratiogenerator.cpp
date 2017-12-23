@@ -7,7 +7,7 @@ ContinuedFractionRatioGenerator::ContinuedFractionRatioGenerator(){
 }
 
 bool ContinuedFractionRatioGenerator::restart(double ratio, unsigned limit){
-  this->limit = limit;
+  this->limit = limit==0?~0U:limit;//too many defective call points, fix it here.
   fraction = fabs(ratio);
   h[0] = k[1] = 0;
   h[1] = k[0] = 1;

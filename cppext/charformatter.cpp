@@ -341,34 +341,32 @@ bool CharFormatter::printNumber(double d, const NumberFormat &nf, bool addone){
       if(np.negative) {
         checker &= printChar('-');
       }
-
       checker &= printUnsigned64(np.predecimal);
-      if(nf.decimals>0) {
+      if(nf.decimals>0) {//if we want radix and digits
         checker &= printChar('.');//not doing locale's herein.
         unsigned stillwant = nf.decimals + addone;
-        if(np.postdecimal==0) {//frequent case, when number was actually an integer
+        if(np.postdecimal==0||np.postDigits==0) {//all zeros after radix, frequent case, when number was actually an integer
           checker &= printChar('0',stillwant);
+          //and we are done
         } else {
-          if(np.div10>0) {//NB we aren't yet always stripping leading zeroes.
-            //the number we have has been boosted by that many digits
-            if(np.div10>=stillwant) {
-              checker &= printChar('0',take(stillwant));
-            } else {
-              checker &= printChar('0',np.div10);
-              stillwant -= np.div10;
-            }
-          }
-          if(stillwant>0) {
-            u64 postdec = truncateDecimals(np.postdecimal,stillwant);
-            unsigned stillhave = 1 + ilog10(postdec);//double checking, unlike to left of radix we want 0 here to result in -1.
-            if(postdec==0) {//ilog10 doesn't give us what we want here , we got an extra trailing 0
-              checker &= printChar('0',stillwant);
-            } else {
-              if(stillhave<stillwant) {
-                checker &= printChar('0',stillwant - stillhave);
-              }
-              checker &= printUnsigned64(postdec);
-            }
+          //some of postdecimal's digits are zeroes.
+          unsigned digitsPresent=1+ilog10(np.postdecimal);
+          auto numZeroes=np.postDigits-digitsPresent;
+          if(numZeroes>=stillwant){
+             checker &= printChar('0',stillwant);
+             //and we are done
+          } else {
+             checker &= printChar('0',numZeroes);
+             stillwant-=numZeroes;
+
+             if(digitsPresent>=stillwant) {//have more than desired
+               u64 postdec = truncateDecimals(np.postdecimal,stillwant);
+               checker &= printUnsigned64(postdec);
+             } else {//neeed a few tailing zeroes
+               checker &= printUnsigned64(np.postdecimal);
+               //if fixed width ... which we have presumed before here.
+               checker &= printChar('0',stillwant -digitsPresent);
+             }
           }
         }
       }

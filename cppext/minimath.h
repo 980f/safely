@@ -210,7 +210,7 @@ u64 keepDecimals(u64 p19,unsigned digits);
 @returns a truncated int that has those digits of interest, but you may need to pad with leading zeroes. */
 u64 truncateDecimals(u64 p19,unsigned digits);
 /** filtering in case we choose to optimize this */
-double pow10(int exponent);
+double dpow10(int exponent);
 
 template <typename mathy> double squared(mathy x) {
   return x * x;

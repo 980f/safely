@@ -184,7 +184,16 @@ int fexp(double d){ //todo:1 remove dependence on cmath.
   return ret;
 }
 
-double pow10(int exponent){
+double dpow10(int exponent){
+  if(exponent>0){
+    if(exponent<countof(Decimal1)){
+      return double(Decimal1[exponent]);
+    }
+    if(exponent<countof(Decimal2)+countof(Decimal1)){
+       return double(Decimal2[exponent-countof(Decimal1)]);
+    }
+  }
+  //todo: see if std lib uses RPE to compute this.
   return pow(double(10), exponent);
 }
 

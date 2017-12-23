@@ -70,7 +70,7 @@ void NumberPieces::reset(void){
   predecimal = 0;
   pow10 = 0;
   postdecimal = 0;
-  div10 = 0;
+  postDigits = 0;
   hasEterm = false;
   exponent = 0;
   negativeExponent = false;
@@ -96,22 +96,20 @@ void NumberPieces::decompose(double d){
   if(isNormal(d)){
     double exp=log10(d);
     negativeExponent=signabs(exp)<0;
-    exponent=int(exp);
+    exponent=unsigned(exp);
 
     //todo:0 check against DecimalCutoff, intbin will truncate if d>than that.
     double fraction=d;
     predecimal=intbin<u64,double>(fraction);
-    postdecimal=fraction * p19;//as many digits as we dare
-
-//    if(negativeExponent){//number less than 1
-////todo: try to grab some extra digits      div10=exponent;
-////      postdecimal=fraction*::pow10(div10) * p19;
-//    } else
-    if(exponent>maxDigits){
+    postdecimal=u64(fraction * p19);//as many digits as we dare
+    postDigits=19;
+    if(!negativeExponent && exponent>maxDigits){//predecimal was truncated by intbin
       //divide by 10 until it fits
-      pow10=exponent-maxDigits;
-      fraction=d * ::pow10(-pow10);
+      pow10=unsigned(exponent-maxDigits);
+      fraction=d * dpow10(-pow10);
       predecimal=intbin<u64,double>(fraction);
+      postdecimal=0;//anything here is garbage
+      postDigits=0;//
       hasEterm=true;
     }
   } else {
