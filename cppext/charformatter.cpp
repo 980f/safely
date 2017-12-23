@@ -342,14 +342,14 @@ bool CharFormatter::printNumber(double d, const NumberFormat &nf, bool addone){
         checker &= printChar('-');
       }
 
-      checker &= printUnsigned(np.predecimal);
-      if(nf.decimals>0 &&np.postdecimal>0) {
+      checker &= printUnsigned64(np.predecimal);
+      if(nf.decimals>0) {
         checker &= printChar('.');//not doing locale's herein.
         unsigned stillwant = nf.decimals + addone;
         if(np.postdecimal==0) {//frequent case, when number was actually an integer
           checker &= printChar('0',stillwant);
         } else {
-          if(np.div10>0) {
+          if(np.div10>0) {//NB we aren't yet always stripping leading zeroes.
             //the number we have has been boosted by that many digits
             if(np.div10>=stillwant) {
               checker &= printChar('0',take(stillwant));
@@ -367,7 +367,7 @@ bool CharFormatter::printNumber(double d, const NumberFormat &nf, bool addone){
               if(stillhave<stillwant) {
                 checker &= printChar('0',stillwant - stillhave);
               }
-              checker &= printUnsigned(postdec);
+              checker &= printUnsigned64(postdec);
             }
           }
         }
