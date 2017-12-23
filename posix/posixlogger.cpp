@@ -5,13 +5,7 @@
 #include <execinfo.h> //backtrace
 #include "cstr.h" //nonTrivial
 
-//implements what system/logger.h externs:
-#if LoggerManagement == 1
-ChainedAnchor<Logger> Logger::root(nullptr,false);//most will be either static (never delete) or auto (delete by compiler on exit of scope)
-//todo: return logger by name
-//todo: how do we access the list without a gui?
-#endif
-
+__attribute__ ((init_priority (202))) //after manager is created, but before much of anything else
 Logger dbg("DBG");
 Logger wtf("WTF");
 

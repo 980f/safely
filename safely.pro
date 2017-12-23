@@ -15,3 +15,5 @@ QMAKE_CFLAGS += -funsigned-char
 
 #safely projects put their application specific library altering includes above the module src path.
 INCLUDEPATH += $$PWD
+
+#any headers our source declarations following this are a user-error via qtcreator, move to appropriate pro file.

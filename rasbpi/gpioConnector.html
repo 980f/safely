@@ -13,7 +13,7 @@
             <table border="1">
               <tbody>
                 <tr>
-                  <td colspan="9" rowspan="1">MOUNTING HOLE</td>
+                  <td colspan="9" rowspan="1">END NEAREST A CORNER</td>
                 </tr>
                 <tr>
                   <td>project usage<br>
@@ -38,12 +38,14 @@
                   <td>3V3</td>
                   <td style="background-color: #cccccc;">1</td>
                   <td style="background-color: #cccccc;">2</td>
-                  <td>5V</td>
-                  <td>+<br>
+                  <td rowspan="2" colspan="1">5V</td>
+                  <td rowspan="2" colspan="1">+<br>
+                    <br>
                   </td>
                   <td><br>
                   </td>
-                  <td>host pwr into pi</td>
+                  <td rowspan="2" colspan="1">host pwr <br>
+                    into pi</td>
                 </tr>
                 <tr>
                   <td><br>
@@ -52,12 +54,8 @@
                   <td style="width: 51px;">SDA1</td>
                   <td style="background-color: #cccccc;">3</td>
                   <td style="background-color: #cccccc;">4</td>
-                  <td>5V</td>
-                  <td>+<br>
-                  </td>
                   <td><br>
                   </td>
-                  <td>host pwr into pi</td>
                 </tr>
                 <tr>
                   <td><br>
@@ -225,13 +223,13 @@
                 <tr>
                   <td><br>
                   </td>
-                  <td><br>
+                  <td>0<br>
                   </td>
                   <td>ID_SD</td>
                   <td style="background-color: #cccccc;">27</td>
                   <td style="background-color: #cccccc;">28</td>
                   <td>ID_SC</td>
-                  <td><br>
+                  <td>1<br>
                   </td>
                   <td><br>
                   </td>
@@ -333,7 +331,7 @@
                   </td>
                 </tr>
                 <tr>
-                  <td colspan="9" rowspan="1">USB CONN</td>
+                  <td colspan="9" rowspan="1">END NEAREST USB CONNECTORS</td>
                 </tr>
               </tbody>
             </table>
@@ -347,11 +345,15 @@
                 Said pullups/or downs are supposed to persist through power cycles. <br>
                 The setting procedure is similar to programming eeprom.</li>
               <li>pwm1 and pwm0 are not fully independent, <br>
-                they share the timebase that gives them their update rate.
-              </li>
-              <li>ID_SC,ID_SD are an I2C interface that can be used with a bit of care.</li>
+                they share the timebase that gives them their update rate. </li>
+              <li>"ID_SC,ID_SD are reserved for a HAT ID EEPROM.<br>
+                At boot time this I2C interface is interrogated to look for an EEPROM that identifies the attached board and<br>
+                allows automagic setup of the GPIOs (and optionally, Linux drivers).<br>
+                DO NOT USE these pins for anything other than attaching an I2C ID EEPROM. <br>
+                Leave unconnected if ID EEPROM not required."<br>
+                Which means it is safe to use them as digital outputs if your load doesn't mind them being wiggled a bit at bootup.</li>
               <li>gclk1 and gclk2 are usually not documented. Don't know why.</li>
-              <li>There are other mappings possible. </li>
+              <li>There are other mappings possible.:</li>
             </ol>
           </td>
         </tr>

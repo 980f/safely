@@ -7,7 +7,7 @@
 template< typename Numeric > class StoredNumeric: public Stored {
 public:
   StoredNumeric(Storable &node,Numeric fallback=Numeric(0)): Stored(node) {
-    node.convertToNumber(false,detail<Numeric>());
+    node.convertToNumber(detail<Numeric>());
     setDefault(fallback);
   }
 

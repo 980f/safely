@@ -3,29 +3,13 @@
 
 #include "stdarg.h" //for relaying arg packs through layers
 
-#if LoggerManagement == 0
-#include "chained.h"
-#endif
-
 /** a minimalist logging facade */
-class Logger
-#if LoggerManagement == 1
-: public Chained<Logger> {
-  static ChainedAnchor<Logger> root;
-#else
-{
-#endif
-
+class Logger{
 public:
   /** must point to static text, is printed on the log before each message */
   const char *prefix;
   bool enabled;
   Logger(const char *location,bool enabled=true);
-#if LoggerManagement == 1
-  static void listLoggers(Logger &dbg);
-
-  virtual
-#endif
   ~Logger();
   /** makes usage look like a function */
   void operator() (const char *msg, ...);
@@ -33,6 +17,13 @@ public:
   //used for legacy in PosixWrapper
   void varg(const char *fmt, va_list &args);
   void dumpStack(const char *prefix);
+public:
+  struct Manager {
+    virtual void onCreation(Logger &logger)=0;
+    virtual void onDestruction(Logger &logger)=0;
+    virtual ~Manager()=default;
+  };
+  static Manager *manager;
 }; // class Logger
 
 /** you must instantiate these two objects somewhere in your project */

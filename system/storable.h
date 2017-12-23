@@ -141,9 +141,8 @@ public:
   void setEnumerizer(const Enumerated *enumerated);
   const Enumerated *getEnumerizer() const;
 
-  /** @returns whether the text value was converted to a number. @param ifPure is whether to restrict the conversion to strings that are just a number, or whether
-   * trailing text is to be ignored. */
-  bool convertToNumber(bool ifPure,NumericalValue::Detail numtype=NumericalValue::Detail::Floating);
+  /** @returns whether the text value was converted to a number.  */
+  bool convertToNumber(NumericalValue::Detail numtype=NumericalValue::Detail::Floating);
 /** convert an Unknown to either Numerical or Text depending upon purity, for other types @returns false */
   bool resolve(bool recursively);
 

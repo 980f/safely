@@ -11,6 +11,7 @@
 static const PathParser::Rules slasher('/',false,true);// '.' gives java property naming, '/' would allow use of filename classes. '|' was used for gtkwrappers access
 static const char PathSep = '/';
 /** global/shared root, the 'slash' node for findChild */
+__attribute__ ((init_priority (200)))
 Storable Storable::Slash("/");
 /** access for JsonSocket */
 Storable::Mirror *Storable::remote = nullptr;
@@ -199,29 +200,15 @@ const Enumerated *Storable::getEnumerizer() const {
 }
 
 //return whether node was altered
-bool Storable::convertToNumber(bool ifPure,NumericalValue::Detail subtype){
-  if(is(Storable::Numerical)) {
-    return number.changeInto(subtype);
-//    return false;//already a number
-  } else {//convert image to number,
-    //todo:0 refine detection
-    bool impure(true);
-    double ifNumber(toDouble(text.c_str(), &impure));
-
-    if(!ifPure || !impure) {//if we don't care if it is a pure number, or if it is pure
-      setType(Storable::Numerical);
-      number.changeInto(subtype);
-      setNumber(ifNumber, q);
-      return true;
-    } else {
-      return false;
-    }
-  }
+bool Storable::convertToNumber(NumericalValue::Detail subtype){
+  setType(Storable::Numerical);
+  return number.changeInto(subtype);
 } // Storable::convertToNumber
 
 bool Storable::resolve(bool recursively){
   if(is(Storable::Uncertain)) {
-    if(convertToNumber(true)) {//if is an image of a pure number (no units text)
+
+    if(false ) {//todo: if needed do a chr scan for numerical appearance.
       return true;
     } else {//it must be text
       setType(Storable::Textual);
