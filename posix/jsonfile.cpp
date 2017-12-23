@@ -6,6 +6,7 @@
 #include "charscanner.h"
 
 #include "stdio.h" //for printing until we apply our textFormatter
+#include "fcntlflags.h"
 
 JsonFile::JsonFile(Storable &node):root(node){
   //#nada
@@ -106,14 +107,15 @@ void printNode(unsigned tab, Storable &node, FILE *fp,bool showVolatiles){
 
 
 void JsonFile::printOn(Cstr somefile, unsigned indent, bool showVolatiles){
-  FILE *fout=fopen(somefile,"w");
-  if(fout){
-    printNode(indent,root,fout,showVolatiles);
+  Filer fout("JsonSave");
+
+  if(fout.openFile(somefile,O_CREAT|O_RDWR,true)){
+    printNode(indent,root,fout.getfp("w"),showVolatiles);
   }
 }
 
 Cstr JsonFile::originalFile(){
-  return root.child("#loadedFromFile").image().c_str();
+  return loadedFrom.empty()?root.child("#loadedFromFile").image().c_str(): loadedFrom.c_str();
 }
 
 

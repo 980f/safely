@@ -13,7 +13,7 @@
 #define POLLTimeout 0x8000
 
 
-static Logger bug("SEER:");
+static Logger bug("SEER");
 
 bool Socketeer::makeSocket(){
   if(!resolve()) {

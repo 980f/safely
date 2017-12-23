@@ -6,6 +6,15 @@ StoredLoggerManager::StoredLoggerManager(Storable &node):StoredGroup<StoredBoole
   Logger::manager=this;
 }
 
+void StoredLoggerManager::Set(Cstr name, bool enable){
+  StoredLoggerManager *me=static_cast<StoredLoggerManager*>(Logger::manager);
+  if(me){
+    StoredBoolean &logger=me->child(name);
+    logger=enable;
+  }
+}
+
+//before file load:LoadJSON,DBG,
 void StoredLoggerManager::onCreation(Logger &logger){
   dbg("Logger %s defaulted %sabled",logger.prefix,logger.enabled?"en":"dis");
   bool existed=false;
@@ -23,4 +32,5 @@ void StoredLoggerManager::onDestruction(Logger &logger){
   //sigctracker should take care of deregistering the updater.
   //we retain the setting for file storage.
 }
+
 

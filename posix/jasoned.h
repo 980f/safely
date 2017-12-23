@@ -18,6 +18,9 @@ template <class StoredThing> struct Jasoned {
     return file.loadFile(filename);
   }
 
+  void save(){
+    file.printOn(file.originalFile(),0);
+  }
 };
 
 
