@@ -34,12 +34,6 @@ Storable *StoreJsonConstructor::applyToChild(Storable *parent, Text &name, bool 
   if(nova){
     if(haveValue){//todo:00 if node already initialized change value according to type. i.e. preserve node.type
       nova->setImageFrom(value.c_str(),Storable::Parsed);
-//      if(valueQuoted){
-//        //keep the text type set by setImage.
-//      } else {//mark for further inspection by datum user.
-//        //might be 'true' 'false' 'null' or some custom token
-////if node is new this will be true, if not it already knows its type        nova->setType(Storable::Uncertain);//todo:0 too agressive, should preserve known types//mark for deferred interpretation
-//      }
     } else {//either a trivial value (a formal json defect) or a parent
       if(valueQuoted){//empty quotes were encountered
         nova->setType(Storable::Textual);//#_# all we really want to signal here is 'not a keyword'

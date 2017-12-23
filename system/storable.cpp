@@ -175,9 +175,9 @@ bool Storable::setQuality(Quality quality){
 }
 
 void Storable::setEnumerizer(const Enumerated *enumerated){
-  if(changed(Storable::enumerated, enumerated)) {
+  if(changed(this->enumerated, enumerated)) {
     if(enumerated) {
-      number.changeInto(NumericalValue::Detail::Counting);
+      number.changeInto(NumericalValue::Counting);//enumness is more important than textuality.
       if((q >= Parsed) && is(Storable::Textual)) { //if already has a text value
         number = enumerated->valueOf(text.c_str()); //reconcile numeric value
       } else {
@@ -188,7 +188,7 @@ void Storable::setEnumerizer(const Enumerated *enumerated){
         text = enumerated->token(number);
       }
     } else {
-      number.changeInto(NumericalValue::Detail::Counting);
+      number.changeInto(NumericalValue::Counting);//symbol-free enum, probably a programmer's error.
       //todo:1 should we do anything when the text is removed?
       setType(Storable::Numerical); //so booleans which were labeled solely for a gui are saved as canonical false/true
     }
@@ -334,18 +334,19 @@ void Storable::clone(const Storable&other){ //todo:2 try to not trigger false ch
   q = other.q; //# don't use setQuality()
   //  setName(other.name);
   enumerated = other.enumerated;
+  number = other.number;
+  text.copy(other.text);//want independent copy
   switch(other.type) {
   //trust compiler to bitch if case missing:--  default:
   case NotDefined:
     dbg("!Unknown node in tree being copied");
     return; //
-
   case Numerical:
-    number = other.number;
+    //already copied the value and subtype
     break;
   case Uncertain:
   case Textual:
-    text.copy(other.text);//want independent copy
+    //already copied the image.
     break;
   case Wad: //copy preserving order
     ForKidsConstly(list){
@@ -357,7 +358,7 @@ void Storable::clone(const Storable&other){ //todo:2 try to not trigger false ch
 
 void Storable::reparent(Storable &newparent){
   if(this!=nullptr) {
-    if(this->type==Wad) {
+    if(type==Wad) {
       while(Storable *kid = wad.takeNth(0)) {//must take in order in case order is important to caller.
         kid->parent = &newparent;
         newparent.wad.append(kid);
@@ -435,20 +436,38 @@ void Storable::setImageFrom(TextKey value, Storable::Quality quality){
     return;
   } else {//has been touched in some fashion
     bool notifeye = false;
-//    if(quality==Parsed) {//then retain type if it is known and set according to type
     if(type==Numerical) {
       text = value;   //#bypass change detect here, just recording for posterity
-      bool impure(true);  //true: 4 debug
-      setValue(toDouble(text.c_str(), &impure),quality);  //todo:0 refine subtype of number
+      Cstr units;
+      switch(number.is){
+      case NumericalValue::Truthy:
+        number=text.cvt<bool>(false,&units);
+        break;
+      case NumericalValue::Counting:
+        number=text.cvt<unsigned>(0,&units);
+        //todo:1 check for KMG units
+        break;
+      case NumericalValue::Whole:
+        number=text.cvt<int>(0,&units);
+        //todo:1 check for KMG units
+        break;
+      case NumericalValue::Floating:
+        number=text.cvt<double>(0.0,&units);
+        //todo:1 report nontrivial units.
+        break;
+      }
       return;  //already invoked change in setValue
     }
-//    }
+
     notifeye = changed(text, value);
     notifeye |= setQuality(quality);
-    //we could COA and check for Wadness here, but that would preclude surviving a particular trival json defect.
-    notifeye |= setType(Textual);
-    also(notifeye); //record changed, but only trigger on fresh change
-    if(notifeye) {
+    if(type==Uncertain) {//mostly if Parsed don't set type to text, it needs to be checked for keywords.
+      setType(Textual);
+      //don't need to notify if we just gained certainty, only if type changed nature.
+    }
+//    //we could COA and check for Wadness here, but that would preclude surviving a particular trivial json defect.
+    also(notifeye); //record changed,
+    if(notifeye) {//but only trigger on fresh change
       notify();
     }
   }
@@ -461,9 +480,7 @@ void Storable::setImage(const TextKey &value, Quality quality){
 Cstr Storable::image(void){
   switch(type) {
   case Uncertain:
-    resolve(false);
-    JOIN;
-  default:
+//  default:
   case Textual://#ignore warning, if we remove it we get a different warning.
     return text;
 
@@ -471,6 +488,7 @@ Cstr Storable::image(void){
     if(enumerated) {
       return enumerated->token(number.as<unsigned>());//don't update text, this is much more efficient since enumerated is effectively static.
     } else {
+      //set the internal image without triggering change detect
       char buffer[64 + 1];//enough for 64 bit boolean image
       CharFormatter formatter(buffer,sizeof(buffer));
       switch(number.is) {
@@ -485,7 +503,6 @@ Cstr Storable::image(void){
         formatter.printUnsigned(number.as<unsigned>());
         break;
       case NumericalValue::Floating:
-        //set the internal image without triggering change detect
         text.copy(NumberFormatter::makeNumber(number));
         break;
       } // switch

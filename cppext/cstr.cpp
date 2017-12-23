@@ -161,6 +161,27 @@ void Cstr::clear() noexcept{
   ptr = nullptr;
 }
 
+template<> bool Cstr::cvt(bool onNull, Cstr *units) const noexcept {
+  if(units){//COA
+    *units=ptr;
+  }
+  if(nonTrivial(ptr)){
+    if(length()==1){
+      if((*ptr|1)=='1'){//single decimal 1 or 0
+        if(units){
+          *units=nullptr;
+        }
+        return *ptr&1;
+      }
+      //todo: 't' or 'f'
+    }
+    return onNull;
+  } else {
+    return onNull;
+  }
+}
+
+
 template<> long Cstr::cvt(long onNull, Cstr *units) const noexcept {
   if(nonTrivial(ptr)){
     return strtol(ptr, units? const_cast<char **>(&units->ptr) : nullptr,10);

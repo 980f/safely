@@ -24,6 +24,7 @@ public:
   Detail is;
   /** @returns whether type is changed, and alters storage from old type to the new. */
   bool changeInto(Detail newis);
+
   /** @returns reference to value as if type Numeric */
   template <typename Numeric> Numeric &as() noexcept{
     return *reinterpret_cast<Numeric *>(&storage);
@@ -33,6 +34,7 @@ public:
   template <typename Numeric> operator Numeric &()noexcept{
     return as<Numeric>();
   }
+
   /** @returns reference to value as if type Numeric */
   template <typename Numeric> const Numeric &as()const noexcept{
     return *reinterpret_cast<Numeric *>(&storage);
@@ -42,6 +44,9 @@ public:
   template <typename Numeric> operator const Numeric &()const noexcept{
     return as<Numeric>();
   }
+
+  /** @returns value converted to given type, without altering this. */
+  template <typename Numeric> Numeric cast() const noexcept;
 
   /** @returns value as double, converting as needed */
   double value()const noexcept;
@@ -59,7 +64,7 @@ public:
   static void testUsage();
 };
 
-//explicit instantiations are made in numericalvalue.cpp, add for each type that gives you a linker error.
+//explicit instantiations are made in numericalvalue.cpp, add one for each type that gives you a linker error.
 template <typename Numeric> NumericalValue::Detail detail();
 
 #endif // UNIONIZER_H

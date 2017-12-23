@@ -40,7 +40,6 @@ int JsonFile::loadFile(Cstr thename){
   parser.parser.lookFor(StandardJSONFraming ";=");
 
   parser.parse();
-  root.resolve(false);//false: accessors set the type, not the appearance of the content
   loadedFrom=thename;//record after success
   //todo: stats?
   dbg("loaded %d nodes, %d levels, from %s",parser.stats.totalNodes,parser.stats.maxDepth.extremum,thename.c_str());

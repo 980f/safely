@@ -3,7 +3,7 @@
 #include "eztypes.h"
 #include "minimath.h" //nan
 #include "cheaptricks.h" //changed
-
+#include "index.h" //for 'unsigned' reasoning
 NumericalValue::NumericalValue(){
  storage.dee=0;//one way to get it to be all zeroes.
  is=Floating;//first use of class was replacing something that was float even when it didn't need to be.
@@ -131,6 +131,80 @@ void NumericalValue::operator =(double d){
   }
 
 }
+
+
+/** @returns whether value is non-zero */
+template <> bool NumericalValue::cast<bool>() const noexcept{
+  switch (is) {
+  default:
+  case Truthy:
+    return storage.bee;
+  case Whole:
+    return storage.eye!=0;
+  case Counting:
+    return storage.ewe!=0;
+  case Floating:
+    return storage.dee!=0.0&&::isNormal(storage.dee);
+  }
+}
+
+/** @returns whether value is non-zero */
+template <> double NumericalValue::cast<double>() const noexcept{
+  switch (is) {
+  case Truthy:
+    return storage.bee?1.0:0;
+  case Whole:
+    return double(storage.eye);
+  case Counting:
+    return storage.ewe!=BadIndex?double(storage.ewe):Nan;
+  default:
+  case Floating:
+    return storage.dee;
+  }
+}
+
+
+/** @returns whether value is non-zero */
+template <> unsigned NumericalValue::cast<unsigned>() const noexcept{
+  switch (is) {
+  case Truthy:
+    return storage.bee?1:0;
+  case Whole:
+    return storage.eye>=0?unsigned(storage.eye):BadIndex;
+  default:
+  case Counting:
+    return storage.ewe;
+  case Floating:
+    return ::isNormal(storage.dee)&&storage.dee>0.0&&storage.dee<double(BadIndex)?unsigned(storage.dee):BadIndex;
+  }
+}
+
+/** @returns whether value is non-zero */
+template <> int NumericalValue::cast<int>() const noexcept{
+  switch (is) {
+  case Truthy:
+    return storage.bee?1:0;
+  default:
+  case Whole:
+    return storage.eye;
+  case Counting:
+    return int(storage.ewe);
+  case Floating://todo: saturated return
+    if(storage.dee==0.0 || !::isNormal(storage.dee)){
+      return 0;
+    }
+    double maxint=double(1U<<31);//todo:0 std:: value for this.
+    if(storage.dee<=-(maxint)){
+      return -(maxint);
+    }
+    if(storage.dee>maxint){
+      return maxint;
+    }
+    return int(storage.dee);
+  }
+}
+
+
 
 template <> NumericalValue::Detail detail<double>(){ return NumericalValue::Detail::Floating;}
 template <> NumericalValue::Detail detail<int>(){ return NumericalValue::Detail::Whole;}

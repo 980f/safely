@@ -19,7 +19,7 @@ void StoredLoggerManager::onCreation(Logger &logger){
   dbg("Logger %s defaulted %sabled",logger.prefix,logger.enabled?"en":"dis");
   bool existed=false;
   StoredBoolean &controller= StoredGroup::child(logger.prefix,&existed);
-  if(!existed){//program defaults init file, but file is supreme.
+  if(!existed){//program defaults are used to init a file, but after that the file is supreme.
     controller=logger.enabled;
   }
   controller.onChangeUpdate(logger.enabled);
