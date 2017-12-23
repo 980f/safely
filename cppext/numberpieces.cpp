@@ -6,6 +6,7 @@
 #include "cheaptricks.h"
 #include "char.h"
 
+static const unsigned maxDigits=19; /*(floor(log10(2^64)*/
 static const double p19=::pow10(19);
 
 template <>double intbin<double,double>(double&);
@@ -93,32 +94,27 @@ void NumberPieces::decompose(double d){
     return;
   }
   if(isNormal(d)){
-    double fraction=d;
     double exp=log10(d);
     negativeExponent=signabs(exp)<0;
     exponent=int(exp);
 
     //todo:0 check against DecimalCutoff, intbin will truncate if d>than that.
-    u64 whole=intbin<u64,double>(fraction);
+    double fraction=d;
+    predecimal=intbin<u64,double>(fraction);
+    postdecimal=fraction * p19;//as many digits as we dare
 
-    if(negativeExponent){//number less than 1
-      div10=exponent-19;
-      postdecimal=fraction * p19;
-      //should loop or somesuch to deal with really small values.
-    } else if(exponent>19 /*(floor(log10(2^64)*/){
+//    if(negativeExponent){//number less than 1
+////todo: try to grab some extra digits      div10=exponent;
+////      postdecimal=fraction*::pow10(div10) * p19;
+//    } else
+    if(exponent>maxDigits){
       //divide by 10 until it fits
-      pow10=exponent-19;
-      fraction=d * ::pow10(pow10);
-      whole=intbin<u64,double>(fraction);
-      predecimal=unsigned(whole);
+      pow10=exponent-maxDigits;
+      fraction=d * ::pow10(-pow10);
+      predecimal=intbin<u64,double>(fraction);
       hasEterm=true;
-    } else {
-      pow10=0;
-      predecimal=unsigned(whole);
-      div10=0;
-      postdecimal=fraction * p19;//as many digits as we dare
     }
   } else {
-    //todo:wtf?
+    //todo:wtf do we do with deNorms?
   }
 }
