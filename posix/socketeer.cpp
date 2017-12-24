@@ -120,8 +120,7 @@ void Socketeer::flush(){
   u8 bytes[4096];
   ByteScanner toilet(bytes,sizeof(bytes));
 //can we stat a socket fd?
-  unsigned notforever = 10000;
-  while(notforever-- && read(toilet)&&toilet.freespace()==0) {
+  for(unsigned notforever = 10000;notforever-- && read(toilet)&&toilet.freespace()==0;) {
     toilet.rewind();//was defective until this was added, only flushed at most 4k bytes!
   }
 }

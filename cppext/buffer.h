@@ -102,11 +102,19 @@ public:
      buffer= other.buffer ;
     } else {
       buffer= (other.buffer + (other.pointer + clip));
-  }
+    }
   }
 
   /** simple copy constructor */
   Indexer(const Indexer &other)=default;
+
+  /** deallocate contents, set tracking to reflect that. This is NEVER called from within this class, only call it if you know the content was allocated for this object and not remembered elsewhere */
+  void freeContent(){
+    delete [] buffer;
+    buffer=nullptr;
+    length=0;
+    pointer=0;
+  }
 
   /** @returns whether this seems to be a useful object. Note that it might have no freespace(), but it will have content.
  It was created to detect buffers that were created around a malloc or the like return.*/

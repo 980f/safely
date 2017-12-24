@@ -92,7 +92,6 @@ bool Filer::readall(unsigned maxalloc){
       int read = fd.read(scanner);
       if(scanner.freespace()>0) {
         dbg("funky read in Filer::readall:%d of %d", read, size);
-//        read = size;
       }
       return true;
     }
