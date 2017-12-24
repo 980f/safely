@@ -13,18 +13,21 @@
 
 struct NumberParser : public PushedNumberParser  {
 
-  /** @param buf points after last char, prev() is terminator */
+  /** @param buf points to terminator */
   bool parseNumber(CharFormatter &buf){
-    while(buf.hasNext() && next(buf.next())) {
-      //#nada
+    while(buf.hasNext()) {
+      if(next(buf.peek())){
+        buf.skip(1);
+      } else {
+        break;
+      }
     }
     return seemsOk();
   }
 
   double getValue(CharFormatter &buf, double backup = 0.0){
     if(parseNumber(buf)) {
-      buf.unget();
-      return packed();
+      return lastParsed=packed();//track for debug
     } else {
       return backup;
     }
