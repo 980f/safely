@@ -29,20 +29,23 @@ public:
 
 
 /** replacing macro with real class */
-template <unsigned qty> class ArgBlock:public ArgSet {
+template<unsigned qty> class ArgBlock : public ArgSet {
   double argv[qty];
 
 public:
-  ArgBlock():ArgSet(argv,sizeof(argv)){}
+  ArgBlock() : ArgSet(argv,sizeof(argv)){
+  }
+
   /** @returns a reference to a value, the first if arg is bad. */
   double &operator [](unsigned which){
-    return argv[which<qty?which:0];
+    return argv[which<qty ? which : 0];
   }
 
   void reset(){
     wrap(argv,sizeof(argv));
   }
-};
+
+}; // class ArgBlock
 
 /** appears to be incomplete, need to look for usages */
 class ConstArgSet : public Indexer<const double> {
@@ -50,7 +53,7 @@ public:
   ConstArgSet(const double *d, int sizeofd);
   ConstArgSet(const ArgSet &other);
   ConstArgSet(const ConstArgSet &other);
-  ~ConstArgSet()=default;
+  ~ConstArgSet() = default;
 };
 
 

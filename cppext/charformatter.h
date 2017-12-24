@@ -58,7 +58,7 @@ public:
   bool printSigned(int value);
   bool printNumber(double d, int sigfig = 9);//9: 200 million is biggest number that we won't lose a bit of.
 
-  bool printNumber(double d, const NumberFormat &nf, bool addone=false);
+  bool printNumber(double d, const NumberFormat &nf, bool addone = false);
   /** printNUmber(double,int) prints significant figures, this prints fixedpoint*/
   bool printDecimals(double d, unsigned decimals);
 
@@ -70,25 +70,25 @@ public:
   /** Prints decimal representation of @param value, prepending it with spaces until the total length == @param width.
    *@returns false if there wasn't enough space. or if the number of digits is larger than the specified width in which latter case this function will fill the field
    * with asterisks */
-  bool printAtWidth(unsigned int value, unsigned width, char padding=' ');
+  bool printAtWidth(unsigned int value, unsigned width, char padding = ' ');
   /** print @param width least significant hex digits of @param value, @returns whether there were width positions available, if not then nothing is written */
   bool printHex(unsigned value, unsigned width);
-
-
 
 }; // class CharFormatter
 
 /** a class that wraps a raw buffer, and on destruction updates the raw buffer with the changes done via the wrapper.
- *  Typically only create as a local and don't mix using this wrapper with direct access to the raw buffer wrapped. */
-class Caster: public CharFormatter {
+*  Typically only create as a local and don't mix using this wrapper with direct access to the raw buffer wrapped. */
+class Caster : public CharFormatter {
   Indexer<u8>&rawref;
 public:
-  Caster(Indexer<u8>&raw):CharFormatter(reinterpret_cast<char *>(&raw.peek()),raw.freespace()),
+  Caster(Indexer<u8>&raw) : CharFormatter(reinterpret_cast<char *>(&raw.peek()),raw.freespace()),
     rawref(raw){
   }
+
   ~Caster(){
     rawref.skip(this->used());
   }
-};
+
+}; // class Caster
 
 #endif // CHARFORMATTER_H
