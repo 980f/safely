@@ -185,7 +185,7 @@ int fexp(double d){ //todo:1 remove dependence on cmath.
 }
 
 double dpow10(int exponent){
-  if(exponent>0){
+  if(exponent>=0){
     if(exponent<countof(Decimal1)){
       return double(Decimal1[exponent]);
     }

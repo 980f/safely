@@ -28,8 +28,7 @@ public:
 
   /** create and iterate. By the time this returns it holds the best ratio. */
   ContinuedFractionRatioGenerator(double ratio,unsigned limit=0){
-    ContinuedFractionRatioGenerator generator;
-    generator.restart(ratio,limit);
+    restart(ratio,limit);
     best();
   }
 
