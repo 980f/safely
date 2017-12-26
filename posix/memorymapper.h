@@ -24,8 +24,11 @@ public:
 
 /** wrapper class to ensure we unmap when we drop the pointer. */
 template <typename Any> class Mapped {
+  /** 0th Any */
   Any *ptr;
+  /** number of Any's, not number of bytes*/
   unsigned quantity;
+  /** is module is not init we allocate some ram */
   bool simulated;
 public:
   Mapped(unsigned physical,unsigned quantity):ptr(nullptr),quantity(quantity){

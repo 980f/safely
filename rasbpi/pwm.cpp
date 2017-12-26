@@ -18,15 +18,14 @@ static class PwmControl:public Peripheral {
   };
 
 public:
-  PwmControl():Peripheral( 0x20C000,0x28),
+  PwmControl():Peripheral( 0x20C000,10),
     zero(0),
     one(1){
     //don't touch anything quite yet.
   }
 
   void configureForSimple(bool which){
-    //todo: use bitField classes to implement 2nd pwm
-    reg[0]=which?0:0;
+    reg[0]&=~(bitMask(which?8:0,8));//zero the related byte.
   }
 
   void enable(bool which, bool onElseOff){
@@ -38,8 +37,9 @@ public:
   }
 
   void setRatio(bool which, unsigned leading, unsigned total){
-    reg[4+(which<<4)]=total;
-    reg[5+(which<<4)]=leading;
+    //the line below causes the rPi to lockup *after a little while* doing some crazy shit first.
+    reg[which?8:4]=total;
+    reg[which?9:5]=leading;
   }
 
   /** allocate all possible ones*/

@@ -1,28 +1,6 @@
 #include "clockgenerator.h"
 /*
- *  0x 7e10 1070 CM_GP0CTL
- *  0x 7e10 1074 CM_GP0DIV
- *
- *  0x 7e10 1078 CM_GP1CTL
- *  0x 7e10 107c CM_GP1DIV
- *
- *  0x 7e10 1080 CM_GP2CTL
- *  0x 7e10 1084 CM_GP2DIV
- *
- *
- *  mmFbxKessss
- *
- #define CLK_CTL_MASH(x)((x)<<9)
- #define CLK_CTL_BUSY    (1 <<7)
- #define CLK_CTL_KILL    (1 <<5)
- #define CLK_CTL_ENAB    (1 <<4)
- #define CLK_CTL_SRC(x) ((x)<<0)
- *
- #define CLK_SRCS 2
- *
- #define CLK_CTL_SRC_OSC  1
- #define CLK_CTL_SRC_PLLD 6
- *
+
  #define CLK_OSC_FREQ   19200000
  #define CLK_PLLD_FREQ 500000000
  *  reg[]:
@@ -51,7 +29,7 @@ enum ClockBit : unsigned {
 };
 
 ClockGenerator::ClockGenerator() :
-  Peripheral(0x00101000,0xA8){//2nd value is excessive, should compute from highest numbered clock
+  Peripheral(0x00101000,42){//2nd value is CLKJ_PWMDIV+1
 
 }
 
