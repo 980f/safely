@@ -29,6 +29,8 @@ public:
 if numerator>denominator then the output stays perpetually high */
   void setRatio(unsigned leading, unsigned total);
 
+  void setDutyCycle(double fraction);
+
   void enable(bool onElseOff)const ;
   void run() const {
     enable(true);

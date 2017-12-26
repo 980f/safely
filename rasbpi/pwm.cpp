@@ -3,6 +3,8 @@
 #include "bitbanger.h"
 #include "clockgenerator.h"
 
+#include "continuedfractionratiogenerator.h"
+
 static class PwmControl:public Peripheral {
   enum PwmControlBit{
     Enable ,
@@ -61,7 +63,12 @@ void Pwm::configure(bool lowActive){
 }
 
 void Pwm::setRatio(unsigned leading, unsigned total){
- ctl.setRatio(pwm1,leading,total);
+  ctl.setRatio(pwm1,leading,total);
+}
+
+void Pwm::setDutyCycle(double fraction){
+  ContinuedFractionRatioGenerator generator(fraction,bitMask(0,10));
+  setRatio(generator.numerator(),generator.denominator());
 }
 
 void Pwm::enable(bool onElseOff) const {
