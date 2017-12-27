@@ -71,7 +71,7 @@ void LibUsber::setDebugLevel(int lusbLevel){
   libusb_set_debug(ctx, lusbLevel); // set verbosity level
 }
 
-double LibUsber::doEvents(){
+MicroSeconds LibUsber::doEvents(){
   MicroSeconds tv;
   libusb_handle_events_timeout_completed(ctx, &tv,&completed);
 
@@ -88,6 +88,8 @@ double LibUsber::doEvents(){
 
 #include "onexit.h"
 bool LibUsber::find(uint16_t idVendor,uint16_t idProduct,unsigned nth){
+  devid.id.vendor = idVendor;
+  devid.id.product = idProduct;
   libusb_device **devs = nullptr;
 
   OnExit release([devs] (){
@@ -114,6 +116,7 @@ bool LibUsber::find(uint16_t idVendor,uint16_t idProduct,unsigned nth){
           devh = nullptr;//to be sure
           return false;//found but couldn't open
         } else {
+          ++reconnects;
           return true;
         }
       }
@@ -123,8 +126,15 @@ bool LibUsber::find(uint16_t idVendor,uint16_t idProduct,unsigned nth){
 } // LibUsber::find
 
 bool LibUsber::open(uint16_t idVendor, uint16_t idProduct){
+  devid.id.vendor = idVendor;
+  devid.id.product = idProduct;
   devh = libusb_open_device_with_vid_pid(ctx,idVendor,idProduct);
-  return devh!=nullptr;
+  if(devh!=nullptr) {//#spread for debug, do not optimize.
+    ++reconnects;
+    return true;
+  } else {
+    return false;
+  }
 }
 
 bool LibUsber::claim(int desiredInterfacenumber){
@@ -155,7 +165,7 @@ bool LibUsber::submit(libusb_transfer *xfer){
     xferInProgress = xfer;
 
     if(failure(libusb_submit_transfer(xfer))) {//#non-blocking call
-      if(xfer->last_errno!=0 && xfer->last_errno!=errornumber){
+      if(xfer->last_errno!=0 && xfer->last_errno!=errornumber) {
         failure(xfer->last_errno);//above 'hides' core errno. //22 invalid parameter
       }
       ack(xfer);
@@ -181,6 +191,58 @@ bool LibUsber::ack(libusb_transfer *xfer){
   } else {
     return xfer==nullptr;
   }
+}
+
+void LibUsber::releaseHandle(){
+  if(devh){
+    ++disconnects;
+  }
+  libusb_close(take(devh));//fail fast on use after close
+} // LibUsber::ack
+
+int LibUsber::onPlugEvent(libusb_hotplug_event event){
+  switch(event) {
+  case LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED:
+    dbg("Hotplug arrival:[%04X:%04X]",devid.id.vendor,devid.id.product);
+    if(devh){
+      wtf("Hotplug while still plugged");
+      releaseHandle();
+    }
+    if(open(devid.id.vendor,devid.id.product)){
+
+    }
+    break;
+  case LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT:
+    dbg("Hotplug departure: [%04X:%04X]",devid.id.vendor,devid.id.product);
+    releaseHandle();
+    break;
+  }
+  return 0;//keep ourselves around.
+} // LibUsber::onPlugEvent
+
+static int plugcallback(struct libusb_context */*ctx*/, struct libusb_device */*dev*/,libusb_hotplug_event event, void *user_data){
+  LibUsber &user(*reinterpret_cast<LibUsber*>(user_data));
+  //we only register for our context and our device so we can ignore those operands
+  return user.onPlugEvent(event);
+}
+
+void LibUsber::watchplug(){
+  if(failure(
+      libusb_hotplug_register_callback(
+        ctx,
+        libusb_hotplug_event( LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT),
+        LIBUSB_HOTPLUG_NO_FLAGS,   //other option is to get fired upon for existing connections. If that worked it would be any easy way to connect.
+        devid.id.vendor,
+        devid.id.product,
+        LIBUSB_HOTPLUG_MATCH_ANY,  //don't know our class
+        plugcallback,
+        this,
+        &hotplugger))) {
+    dbg("Failed to register hotplug watcher");
+  } else {
+    dbg("hotplug handle: %08X",hotplugger);
+  }
+
 } // LibUsber::ack
 
 LibUsber::~LibUsber(){
@@ -189,7 +251,7 @@ LibUsber::~LibUsber(){
       dbg("libusb_release_interface error %s\n", errorText());
       claimedInterface = ~0;//fail hard
     }
-    libusb_close(take(devh));//fail fast on use after free
+    releaseHandle();
   }
   libusb_exit(take(ctx));//fail faster on use after free.
 }

@@ -1,11 +1,12 @@
 #ifndef NANOSECONDS_H
 #define NANOSECONDS_H "(C) Andrew L. Heilveil, 2017"
 
+#include "microseconds.h" //existed in Posix before nanoseconds so we convert just one way.
+
 #include <time.h>
 /**
 wrapper around timespec struct
 */
-
 
 constexpr double from(const timespec &ts){
   return ts.tv_sec+1e-9*ts.tv_nsec;
@@ -20,7 +21,12 @@ struct NanoSeconds {
     this->operator= (seconds);
   }
 
-  NanoSeconds(const NanoSeconds &other)=default;\
+  NanoSeconds(const NanoSeconds &other)=default;
+
+  NanoSeconds(const MicroSeconds us){
+    ts.tv_sec=us.tv_sec;
+    ts.tv_nsec=1000*us.tv_usec;
+  }
 
   NanoSeconds& operator=(double seconds){
     parseTime (ts,seconds);

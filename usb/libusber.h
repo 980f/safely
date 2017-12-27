@@ -2,9 +2,9 @@
 #define LIBUSBER_H "(C) 2017 Andrew L. Heilveil"
 
 #include <libusb.h>
+#include <microseconds.h>
 #include "posixwrapper.h" //error returns are similar enough, just take care to call the correct errorText method.
 #include "cstr.h"
-
 
 /** use libusb without having to deal with allocation details. */
 class LibUsber : public PosixWrapper {
@@ -20,11 +20,23 @@ public:
   int completed=0;
   /** must be called periodically, or when related fd changes.
    * @returns seconds til next calback required. if Nan or < 0 then ignore value.*/
-  double doEvents();
+  MicroSeconds doEvents();
   /** last configuration explicitly set by methods of this class */
   int configuration=0;
 
   libusb_device_handle *devh=nullptr;
+  //4debug record these when devh is set.
+  union DeviceId {
+    unsigned xid;
+    struct pair {
+      u16 vendor;
+      u16 product;
+    } id;
+    DeviceId(){
+      xid=BadIndex;
+    }
+  } devid;
+
   /** record interface number if successfully claimed*/
   int claimedInterface=~0;
 
@@ -46,10 +58,15 @@ public:
   /** call when you are truly finished with xfer */
   bool ack(libusb_transfer *xfer);
 private:
+  void releaseHandle();
+
   libusb_transfer *xferInProgress=nullptr;
+  libusb_hotplug_callback_handle hotplugger;
+public:
+  void watchplug();
 
-
-
+public://for thunking
+  int onPlugEvent(libusb_hotplug_event event);
 };
 
 
