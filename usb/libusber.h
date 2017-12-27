@@ -46,20 +46,19 @@ public:
   /** connection counters, hopefully never excede one or two, no guard exists against rollover */
   unsigned reconnects=0;
   unsigned disconnects=0;
-public:
-  /** find by vid and pid, if more than one choose nth instance, open it. sets device handle and @returns success.
-  */
+public: //three ways to hook up with a device, depending upon your knowledge of it.
+  /** find by vid and pid, if more than one choose nth instance, open it. sets device handle and @returns success. */
   bool find(uint16_t idVendor, uint16_t idProduct, unsigned nth=1);
 
-  /** find by vid and pid, only works if there is only one . sets device handle and @returns success
-@deprecated untested */
+  /** find by vid and pid, only works if there is only one . sets device handle and @returns success */
   bool open(uint16_t idVendor, uint16_t idProduct);
 
+  /** open via hotplug mechanism, and automatically reopen it as events occur. */
+  bool watchplug(uint16_t idVendor, uint16_t idProduct,Hook<bool>hooker);
 
-  /** once you @see find the device you must claim an interface @returns success
-@deprecated untested */
+  /** once you @see find the device you must claim an interface @returns success */
   bool claim(int desiredInterfacenumber=0);
-/** initiate a xfer @deprecated untested */
+  /** initiate a xfer */
   bool submit(libusb_transfer *xfer);
   /** call when you are truly finished with xfer */
   bool ack(libusb_transfer *xfer);
@@ -67,10 +66,10 @@ private:
   void releaseHandle();
 
   libusb_transfer *xferInProgress=nullptr;
-  libusb_hotplug_callback_handle hotplugger;
-public:
+  //lib usb callback handle, will autorelease when we ditch the context.
+  libusb_hotplug_callback_handle hotplugger=0;
+  //who to inform on plug events.
   Hook<bool> plugWatcher;
-  bool watchplug(Hook<bool>hooker);
 
 public://for thunking
   int onPlugEvent(libusb_hotplug_event event);

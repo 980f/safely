@@ -86,10 +86,12 @@ MicroSeconds LibUsber::doEvents(){
   }
 } // LibUsber::doEvents
 
+
+#define RecordIds devid.id.vendor = idVendor; devid.id.product = idProduct
+
 #include "onexit.h"
 bool LibUsber::find(uint16_t idVendor,uint16_t idProduct,unsigned nth){
-  devid.id.vendor = idVendor;
-  devid.id.product = idProduct;
+  RecordIds;
   libusb_device **devs = nullptr;
 
   OnExit release([devs] (){
@@ -126,8 +128,7 @@ bool LibUsber::find(uint16_t idVendor,uint16_t idProduct,unsigned nth){
 } // LibUsber::find
 
 bool LibUsber::open(uint16_t idVendor, uint16_t idProduct){
-  devid.id.vendor = idVendor;
-  devid.id.product = idProduct;
+  RecordIds;
   devh = libusb_open_device_with_vid_pid(ctx,idVendor,idProduct);
   if(devh!=nullptr) {//#spread for debug, do not optimize.
     ++reconnects;
@@ -227,13 +228,14 @@ static int plugcallback(struct libusb_context */*ctx*/, struct libusb_device */*
   return user.onPlugEvent(event);
 }
 
-bool LibUsber::watchplug(Hook<bool> hooker){
-  if(failure(libusb_hotplug_register_callback(ctx,libusb_hotplug_event( LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT),LIBUSB_HOTPLUG_NO_FLAGS,devid.id.vendor, devid.id.product,LIBUSB_HOTPLUG_MATCH_ANY,  plugcallback, this, &hotplugger))) {
+bool LibUsber::watchplug(uint16_t idVendor, uint16_t idProduct,Hook<bool> hooker){
+  RecordIds;
+  plugWatcher=hooker;
+  if(failure(libusb_hotplug_register_callback(ctx,libusb_hotplug_event( LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT),LIBUSB_HOTPLUG_ENUMERATE,devid.id.vendor, devid.id.product,LIBUSB_HOTPLUG_MATCH_ANY,  plugcallback, this, &hotplugger))) {
     dbg("Failed to register hotplug watcher");
     return false;
   } else {
     dbg("hotplug handle: %08X",hotplugger);
-    plugWatcher=hooker;
     return true;
   }
 
