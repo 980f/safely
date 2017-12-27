@@ -5,6 +5,8 @@
 #include "posixwrapper.h" //error returns are similar enough, just take care to call the correct errorText method.
 #include "cstr.h"
 
+
+/** use libusb without having to deal with allocation details. */
 class LibUsber : public PosixWrapper {
   libusb_context * ctx=nullptr;
 public:
@@ -45,7 +47,12 @@ public:
   bool ack(libusb_transfer *xfer);
 private:
   libusb_transfer *xferInProgress=nullptr;
+
+
+
 };
+
+
 
 
 #endif // LIBUSB_H

@@ -153,8 +153,11 @@ bool LibUsber::submit(libusb_transfer *xfer){
     //  }
     //xfer->timeout=1011;//wag, will do stats
     xferInProgress = xfer;
+
     if(failure(libusb_submit_transfer(xfer))) {//#non-blocking call
-      failure(xfer->last_errno);//above 'hides' core errno. //22 invalid parameter
+      if(xfer->last_errno!=0 && xfer->last_errno!=errornumber){
+        failure(xfer->last_errno);//above 'hides' core errno. //22 invalid parameter
+      }
       ack(xfer);
       return false;
     } else {

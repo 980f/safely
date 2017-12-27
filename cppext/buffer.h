@@ -164,12 +164,6 @@ public:
     length = other.freespace();
   }
 
-  /** @returns an indexer that covers the freespace of this one. this one is not modified */
-  Indexer<Content> remainder() const {
-    Indexer<Content> rval;
-    rval.getTail(*this);
-    return rval;
-  }
 
   /** reduce length to be that used and reset pointer.
    * useful for converting from a write buffer to a read buffer, but note that the original buffer size is lost.*/
@@ -207,6 +201,11 @@ public:
   /** @returns an indexer which covers the leading part of this one. */
   Indexer<Content> getHead(){
     return view(0,pointer);
+  }
+
+  /** @returns an indexer which covers the trailing part of this one. once upon a time called 'remainder' */
+  Indexer<Content> getTail(){
+    return view(pointer,allocated());
   }
 
   /** reworks this to move start of buffer to be @param howmany past present start.
