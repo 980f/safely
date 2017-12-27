@@ -21,7 +21,7 @@ public:
   PwmControl():Peripheral( 0x20C000,10),
     zero(0),
     one(1){
-    //don't touch anything quite yet.
+    reg.fakeit();//setRatio crashes things so we kill the module here.
   }
 
   void configureForSimple(bool which){

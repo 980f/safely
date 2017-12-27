@@ -6,18 +6,17 @@
 
 MemoryMapper *MemoryMapper::Mmap=nullptr;
 
-//rather than have a compiler control create a regular file for simulation and link to /dev/gpiomem for rpi real operation.
+
 MemoryMapper::MemoryMapper():fd("MemoryMapper"){
   fd.open("/dev/gpiomem", O_RDWR | O_SYNC);
 }
 
-void *MemoryMapper::map(unsigned addr, unsigned len){//initMapMem
-  //for mbMapMem: PROT_READ|PROT_WRITE, MAP_SHARED
+void *MemoryMapper::map(unsigned addr, unsigned len){
   //MAP_SHARED may be gratuitous, for actual files is used to push the data to the file
   //MAP_LOCKED may be gratuitous, for actual files is triggers read ahead
-  void *peeker;//=mmap(0, len, PROT_READ|PROT_WRITE/*|PROT_EXEC*/,  MAP_SHARED|MAP_LOCKED,  fd, addr);
+  void *peeker;
 
-  if(fd.okValue(peeker, mmap(0, len, PROT_READ|PROT_WRITE/*|PROT_EXEC*/,  MAP_SHARED|MAP_LOCKED,  fd, addr))){
+  if(fd.okValue(peeker, mmap(0, len, PROT_READ|PROT_WRITE,  MAP_SHARED|MAP_LOCKED,  fd, addr))){
     return peeker;
   } else {
     return nullptr;
