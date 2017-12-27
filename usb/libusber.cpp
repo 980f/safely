@@ -214,6 +214,8 @@ int LibUsber::onPlugEvent(libusb_hotplug_event event){
     if(xferInProgress){
       libusb_cancel_transfer(xferInProgress);
       //which should call our callback which should clear xferInProgress
+      //but in case that fails
+      xferInProgress=nullptr;//forget all state related to device.
     }
     releaseHandle();
     plugWatcher(false);
