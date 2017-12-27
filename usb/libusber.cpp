@@ -78,11 +78,11 @@ MicroSeconds LibUsber::doEvents(){
   int hasTimeout = libusb_get_next_timeout(ctx,&tv );
   if(hasTimeout<0) {
     failure(hasTimeout);
-    return -Infinity;
+    return 0;
   } else if(hasTimeout==1) {
     return tv;
   } else {
-    return Nan;
+    return 0;
   }
 } // LibUsber::doEvents
 
@@ -131,6 +131,7 @@ bool LibUsber::open(uint16_t idVendor, uint16_t idProduct){
   devh = libusb_open_device_with_vid_pid(ctx,idVendor,idProduct);
   if(devh!=nullptr) {//#spread for debug, do not optimize.
     ++reconnects;
+    plugWatcher(true);
     return true;
   } else {
     return false;
@@ -149,19 +150,15 @@ bool LibUsber::claim(int desiredInterfacenumber){
 }
 
 bool LibUsber::submit(libusb_transfer *xfer){
+  if(devh==nullptr){
+    return false;//segv on power down.
+  }
   if(xferInProgress) {
     dbg("attempting to overlap submissions, not yet allowed");//did you forget to ack()?
     return false;
   }
   if(xfer) {
     xfer->dev_handle = devh;
-    //somewhere we need a timeout set:
-    //  if ((data_out[2] == PID1_REQ_SCOPE_MISC_TO) && data_out[3] == PID2_SEND_DIAGNOSTIC_DATA_TO) {
-    //    timeout = DP5_DIAGDATA_TIMEOUT;
-    //  } else {
-    //    timeout = DP5_USB_TIMEOUT;
-    //  }
-    //xfer->timeout=1011;//wag, will do stats
     xferInProgress = xfer;
 
     if(failure(libusb_submit_transfer(xfer))) {//#non-blocking call
@@ -198,6 +195,7 @@ void LibUsber::releaseHandle(){
     ++disconnects;
   }
   libusb_close(take(devh));//fail fast on use after close
+  plugWatcher(false);
 } // LibUsber::ack
 
 int LibUsber::onPlugEvent(libusb_hotplug_event event){
@@ -208,13 +206,16 @@ int LibUsber::onPlugEvent(libusb_hotplug_event event){
       wtf("Hotplug while still plugged");
       releaseHandle();
     }
-    if(open(devid.id.vendor,devid.id.product)){
-
-    }
+    open(devid.id.vendor,devid.id.product);
     break;
   case LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT:
     dbg("Hotplug departure: [%04X:%04X]",devid.id.vendor,devid.id.product);
+    if(xferInProgress){
+      libusb_cancel_transfer(xferInProgress);
+      //which should call our callback which should clear xferInProgress
+    }
     releaseHandle();
+    plugWatcher(false);
     break;
   }
   return 0;//keep ourselves around.
@@ -226,21 +227,14 @@ static int plugcallback(struct libusb_context */*ctx*/, struct libusb_device */*
   return user.onPlugEvent(event);
 }
 
-void LibUsber::watchplug(){
-  if(failure(
-      libusb_hotplug_register_callback(
-        ctx,
-        libusb_hotplug_event( LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT),
-        LIBUSB_HOTPLUG_NO_FLAGS,   //other option is to get fired upon for existing connections. If that worked it would be any easy way to connect.
-        devid.id.vendor,
-        devid.id.product,
-        LIBUSB_HOTPLUG_MATCH_ANY,  //don't know our class
-        plugcallback,
-        this,
-        &hotplugger))) {
+bool LibUsber::watchplug(Hook<bool> hooker){
+  if(failure(libusb_hotplug_register_callback(ctx,libusb_hotplug_event( LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT),LIBUSB_HOTPLUG_NO_FLAGS,devid.id.vendor, devid.id.product,LIBUSB_HOTPLUG_MATCH_ANY,  plugcallback, this, &hotplugger))) {
     dbg("Failed to register hotplug watcher");
+    return false;
   } else {
     dbg("hotplug handle: %08X",hotplugger);
+    plugWatcher=hooker;
+    return true;
   }
 
 } // LibUsber::ack

@@ -1,6 +1,7 @@
 #ifndef LIBUSBER_H
 #define LIBUSBER_H "(C) 2017 Andrew L. Heilveil"
 
+#include <hook.h>
 #include <libusb.h>
 #include <microseconds.h>
 #include "posixwrapper.h" //error returns are similar enough, just take care to call the correct errorText method.
@@ -17,6 +18,7 @@ public:
 
   bool init();
   void setDebugLevel(int lusbLevel= LIBUSB_LOG_LEVEL_WARNING);
+  /** an obscure item used by event poller, public solely for debug */
   int completed=0;
   /** must be called periodically, or when related fd changes.
    * @returns seconds til next calback required. if Nan or < 0 then ignore value.*/
@@ -25,7 +27,8 @@ public:
   int configuration=0;
 
   libusb_device_handle *devh=nullptr;
-  //4debug record these when devh is set.
+
+  /** device id, recorded when a handle is acquired, but kept around after close */
   union DeviceId {
     unsigned xid;
     struct pair {
@@ -40,6 +43,9 @@ public:
   /** record interface number if successfully claimed*/
   int claimedInterface=~0;
 
+  /** connection counters, hopefully never excede one or two, no guard exists against rollover */
+  unsigned reconnects=0;
+  unsigned disconnects=0;
 public:
   /** find by vid and pid, if more than one choose nth instance, open it. sets device handle and @returns success.
   */
@@ -63,7 +69,8 @@ private:
   libusb_transfer *xferInProgress=nullptr;
   libusb_hotplug_callback_handle hotplugger;
 public:
-  void watchplug();
+  Hook<bool> plugWatcher;
+  bool watchplug(Hook<bool>hooker);
 
 public://for thunking
   int onPlugEvent(libusb_hotplug_event event);
