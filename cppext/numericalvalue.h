@@ -38,12 +38,12 @@ public:
     return *reinterpret_cast<Numeric *>(&storage);
   }
 
-  /** @returns reference to value as if type Numeric */
+  /** @returns reference to value as if type Numeric, ignoring internal type indicator */
   template <typename Numeric> operator Numeric &()noexcept{
     return as<Numeric>();
   }
 
-  /** @returns reference to value as if type Numeric */
+  /** @returns reference to value as if type Numeric, ignoring internal type indicator */
   template <typename Numeric> const Numeric &as()const noexcept{
     return *reinterpret_cast<Numeric *>(&storage);
   }
@@ -70,13 +70,15 @@ public:
   }
 
   /** assign value from @param d converting if needed. */
-  NumericalValue &operator =(NumericalValue other);
+  NumericalValue &operator =(const NumericalValue &other);
+
+  bool setto(const NumericalValue &other);
 
   /** compare this value to other using cast<> */
-  bool operator ==(NumericalValue other)const noexcept;
+  bool operator ==(const NumericalValue &other)const noexcept;
 
   /** compare this value to other using cast<> */
-  bool operator >(NumericalValue other)const noexcept;
+  bool operator >(const NumericalValue &other)const noexcept;
 
 
   /** demo of essential syntax*/

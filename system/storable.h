@@ -137,6 +137,9 @@ public:
   bool setType(Type newtype);
   Type getType() const;
   bool setQuality(Quality q);
+protected:
+  bool noteQuality(Quality q,bool alreadyChanged);
+public:
   /** sets a labeling for a numeric value. NB: the pointer is cached in this class, the enumerizer better not be deletable! */
   void setEnumerizer(const Enumerated *enumerated);
   const Enumerated *getEnumerizer() const;
@@ -186,7 +189,9 @@ public:
 public:
   /** @deprecated, need use case.
    * make this node have same structure as givennode, but leave name and present children intact*/
-  void clone(const Storable &other);
+  void clone(const Storable &other);  /** set the value of a numerical node */
+  double setValue(double value, Quality quality = Edited);
+
 public://users of clone:
   /** replaces 'clone and remove'*/
   void reparent(Storable &newparent);
@@ -195,17 +200,23 @@ public:
    *  rhs is not constable due to image() mutating the text when not Textual */
   void assignFrom(Storable &other);
 
-  /** set the value of a numerical node */
-  double setValue(double value, Quality quality = Edited);
   /** sets numerical value, if node has an enumerated then the text is set to match, if no enumerated then node type is set to
    * numerical with gay disregard for its previous type. */
   template<typename Numeric=double> Numeric setNumber(Numeric value, Quality quality = Edited){
-    setValue(static_cast<double>(value), quality);
-    return number;
+    NumericalValue numbing(value);
+    setNumber(numbing,quality);
+    return getNumber<Numeric>();
   }
 
-  void setNumber(NumericalValue other){
-    number=other;
+  /** set value with change detection */
+  bool setNumber(NumericalValue other, Quality quality = Edited){
+    bool notifeye=number.setto(other);
+    if(notifeye){
+      if(enumerated){
+        text=enumerated->token(number.cast<unsigned>());
+      }
+    }
+    return noteQuality(quality,notifeye);
   }
 
   template<typename Numeric=double> Numeric getNumber() const {

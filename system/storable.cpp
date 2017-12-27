@@ -174,6 +174,16 @@ bool Storable::setQuality(Quality quality){
   return false;
 }
 
+bool Storable::noteQuality(Storable::Quality q, bool alreadyChanged){
+  alreadyChanged |= setQuality(q);
+//    //we could COA and check for Wadness here, but that would preclude surviving a particular trivial json defect.
+  also(alreadyChanged); //record changed,
+  if(alreadyChanged) {//but only trigger on fresh change
+    notify();
+  }
+  return alreadyChanged;
+}
+
 void Storable::setEnumerizer(const Enumerated *enumerated){
   if(changed(this->enumerated, enumerated)) {
     if(enumerated) {
@@ -408,22 +418,22 @@ void Storable::assignFrom(Storable&other){
   } /* switch */
 } // assignFrom
 
-double Storable::setValue(double value, Storable::Quality quality){
-  bool notifeye = number.setto(value);
+//double Storable::setValue(double value, Storable::Quality quality){
+//  bool notifeye = number.setto(value);
 
-  notifeye |= setQuality(quality);
-  if(enumerated) {
-    //if enumerized then leave the type as is and update text
-    text = enumerated->token(value);
-  } else {
-    notifeye |= setType(Numerical);//todo:0 refine subtype of number
-  }
-  also(notifeye); //record changed, but only trigger on fresh change
-  if(notifeye) {
-    notify();
-  }
-  return value;
-} // setValue
+//  notifeye |= setQuality(quality);
+//  if(enumerated) {
+//    //if enumerized then leave the type as is and update text
+//    text = enumerated->token(value);
+//  } else {
+//    notifeye |= setType(Numerical);//todo:0 refine subtype of number
+//  }
+//  also(notifeye); //record changed, but only trigger on fresh change
+//  if(notifeye) {
+//    notify();
+//  }
+//  return value;
+//} // setValue
 
 void Storable::setImageFrom(TextKey value, Storable::Quality quality){
 
@@ -439,7 +449,7 @@ void Storable::setImageFrom(TextKey value, Storable::Quality quality){
     if(type==Numerical) {
       text = value;   //#bypass change detect here, just recording for posterity
       Cstr units;
-      NumbericalValue formerly(number);
+      NumericalValue formerly(number);
       switch(number.is){
       case NumericalValue::Truthy:
         number=text.cvt<bool>(false,&units);
@@ -457,16 +467,11 @@ void Storable::setImageFrom(TextKey value, Storable::Quality quality){
         //todo:1 report nontrivial units.
         break;
       }
-      notifeye=number!=formerly;
+      notifeye=!(number==formerly);
     } else {
       notifeye = changed(text, value);
     }
-    notifeye |= setQuality(quality);
-//    //we could COA and check for Wadness here, but that would preclude surviving a particular trivial json defect.
-    also(notifeye); //record changed,
-    if(notifeye) {//but only trigger on fresh change
-      notify();
-    }
+    noteQuality(quality,notifeye);
   }
 } // setImageFrom
 
