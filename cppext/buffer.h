@@ -345,7 +345,7 @@ public:
   }
 
   /** needed to resolve between Sequence::skip and Ordinator::skip*/
-  virtual void skip(unsigned int amount){
+  virtual void skip(unsigned int amount=1){
     Ordinator::skip(amount);
   }
 

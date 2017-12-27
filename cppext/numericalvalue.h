@@ -20,8 +20,16 @@ struct NumericalValue {
   };
 
 public:
-  NumericalValue();
-  Detail is;
+  NumericalValue(bool bee);
+  NumericalValue(int eye);
+  NumericalValue(unsigned ewe);
+  //first use of class was replacing something that was float even when it didn't need to be, so this is default constructor
+  NumericalValue(double dee=0.0);
+
+  NumericalValue(const NumericalValue &other)=default;
+
+  Detail is;//left vulnerable, be careful.
+
   /** @returns whether type is changed, and alters storage from old type to the new. */
   bool changeInto(Detail newis);
 
@@ -50,15 +58,26 @@ public:
 
   /** @returns value as double, converting as needed */
   double value()const noexcept;
+
   /** @returns value as double, converting as needed */
   operator double()const noexcept {
     return value();
   }
 
   /** assign value from @param d converting if needed. */
-  bool setto(double d);
+  template <typename Numeric> NumericalValue &operator =(Numeric n){
+    return this->operator =(NumericalValue(n));
+  }
+
   /** assign value from @param d converting if needed. */
-  void operator =(double d);
+  NumericalValue &operator =(NumericalValue other);
+
+  /** compare this value to other using cast<> */
+  bool operator ==(NumericalValue other)const noexcept;
+
+  /** compare this value to other using cast<> */
+  bool operator >(NumericalValue other)const noexcept;
+
 
   /** demo of essential syntax*/
   static void testUsage();

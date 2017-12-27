@@ -439,6 +439,7 @@ void Storable::setImageFrom(TextKey value, Storable::Quality quality){
     if(type==Numerical) {
       text = value;   //#bypass change detect here, just recording for posterity
       Cstr units;
+      NumbericalValue formerly(number);
       switch(number.is){
       case NumericalValue::Truthy:
         number=text.cvt<bool>(false,&units);
@@ -456,15 +457,11 @@ void Storable::setImageFrom(TextKey value, Storable::Quality quality){
         //todo:1 report nontrivial units.
         break;
       }
-      return;  //already invoked change in setValue
+      notifeye=number!=formerly;
+    } else {
+      notifeye = changed(text, value);
     }
-
-    notifeye = changed(text, value);
     notifeye |= setQuality(quality);
-    if(type==Uncertain) {//mostly if Parsed don't set type to text, it needs to be checked for keywords.
-      setType(Textual);
-      //don't need to notify if we just gained certainty, only if type changed nature.
-    }
 //    //we could COA and check for Wadness here, but that would preclude surviving a particular trivial json defect.
     also(notifeye); //record changed,
     if(notifeye) {//but only trigger on fresh change
