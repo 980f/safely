@@ -61,6 +61,10 @@ public:
   char operator [](const Index &index) const noexcept;
 
   char at(const Index &index) const noexcept;
+
+  /** @returns whether the string was modified. NB: this violates constness of the original string, user beware*/
+  bool setAt(const Index&index,char see) const noexcept;
+
   /** needed by changed() template function */
   bool operator !=(TextKey other) const noexcept {
     return !is(other);
@@ -89,8 +93,11 @@ public:
    * If you know the origin of the string this is pointing to you can dare to const_cast<char *> the value here. */
   const char *chr(int chr) const noexcept;
 
-  /** @returns pointer to first character in this string which matches ch. @see chr() */
+  /** @returns pointer to last character in this string which matches ch. @see chr() */
   const char *rchr(int chr) const noexcept;
+
+  /** @returns an index that if nulled will remove useless '0' digits, and maybe a radix point. This is dumb and presumes the string is a reasonable representation of a number. */
+  Index trailingZeroes() const;
 
   /** strtod */
   double asNumber(Cstr *tail = nullptr) const noexcept;

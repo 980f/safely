@@ -7,8 +7,18 @@
 #include <storednumeric.h>
 #include"storable.h"
 
+/** todo:0 until we track loggers associated with a control we must statically allocate all Loggers!*/
+struct LoggerControl: public StoredBoolean {
+  Chain<Logger> myLoggers;
+  LoggerControl(Storable &node);
+
+  void updateLoggers(bool newlevel);
+
+
+};
+
 /** controls state of each logging stream. This will dominate over values set in Logger() constructor. */
-class StoredLoggerManager: public StoredGroup<StoredBoolean>,Logger::Manager {
+class StoredLoggerManager: public StoredGroup<LoggerControl>,Logger::Manager {
 public:
   StoredLoggerManager(Storable &node);
   void onCreation(Logger &logger);

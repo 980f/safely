@@ -10,6 +10,8 @@ class Cycler {
 public:
   Cycler(unsigned length);
   void setLength(unsigned length);
+  /**@returns whether @param index is within the defined cycle*/
+  bool contains(unsigned index)const;
   /** @returns the cycle length */
   unsigned cycle()const;
   /** @returns present phase in the cycle */

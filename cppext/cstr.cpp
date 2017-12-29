@@ -20,6 +20,9 @@ Cstr::Cstr(unsigned char *target) : ptr(reinterpret_cast<char *>(target)){
 //}
 
 TextKey Cstr::operator =(TextKey ptr){
+  if(ptr&&unsigned(ptr)<8){
+    ptr=nullptr;
+  }
   this->ptr = ptr;
   return ptr;
 }
@@ -69,11 +72,20 @@ bool Cstr::is(TextKey other) const noexcept {
 }
 
 char Cstr::operator [](const Index &index) const noexcept {
-  return (nonTrivial(ptr)&&isValid(index)) ? ptr[index] : 0;
+  return at(index);
 }
 
 char Cstr::at(const Index &index) const noexcept {
   return (nonTrivial(ptr)&&isValid(index)) ? ptr[index] : 0;
+}
+
+bool Cstr::setAt(const Index &index, char see) const noexcept{
+  if((nonTrivial(ptr)&&isValid(index))){
+    *const_cast<char *>(&ptr[index]) =see;
+    return true;
+  } else {
+    return false;
+  }
 }
 
 /** attempt to match the reasoning of the @see same() function with respect to comparing null strings and empty strings */
@@ -147,6 +159,30 @@ const char *Cstr::rchr(int chr) const noexcept {
   } else {
     return nullptr;
   }
+}
+
+Index Cstr::trailingZeroes() const{
+  unsigned p=length();
+  while(p-->0){
+    if(ptr[p]!='0'){
+      if(ptr[p]=='.'){
+        return Index(p);//#yes, p not dp. we also remove the dp
+      }
+      ++p;//point to last zero
+      if(p==length()){
+        return BadIndex;//no trailing zeroes.
+      }
+      //p is the last '0' and is preceded by something other than a '.'
+      for(unsigned dp=p;dp-->0;){
+        if(ptr[dp]=='.'){
+          //then the trailin zeroes were actually post decimal point
+          return Index(p);//#yes, p not dp. we also remove the dp
+        }
+      }
+      return BadIndex;
+    }
+  }
+  return BadIndex;
 }
 
 double Cstr::asNumber(Cstr *tail) const noexcept {

@@ -275,10 +275,7 @@ void HostInfo::clip(){
   }
 }
 
-HostInfo::HostInfo() :
-  gotten(false),
-  getError(0),
-  res(nullptr){
+HostInfo::HostInfo(){
   hint();
 }
 

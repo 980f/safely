@@ -23,6 +23,10 @@ void Cycler::setLength(unsigned length) {
   unwrap();
 }
 
+bool Cycler::contains(unsigned index) const{
+  return this->length>index;
+}
+
 unsigned Cycler::operator =(int force) {
   value = force;
   unwrap();

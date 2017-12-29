@@ -133,7 +133,7 @@ public:
     return onAnyChange(applyTo(functor),kickme);
   }
 
-  /** hook up to send changes to a simple variable. */
+  /** hook up to send changes to a simple variable. THIS IS DANGEROUS as you must manage the @return sigc::connection and disconnect it when the target gets deallocated. */
   sigc::connection onChangeUpdate(Numeric &target,bool kickme=false){
     if(kickme){
       target=native();
