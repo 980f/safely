@@ -40,10 +40,12 @@ int MemoryMapper::getError(){
 }
 
 bool MemoryMapper::init(bool refresh){
-  if(Mmap || refresh){
+  if(refresh){
     Obliterate(Mmap);
   }
-  Mmap=new MemoryMapper();
+  if(Mmap==nullptr){
+    Mmap=new MemoryMapper();
+  }
   return isOperational();
 }
 
