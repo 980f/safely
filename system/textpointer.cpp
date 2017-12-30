@@ -5,7 +5,11 @@
 #include <utility>
 
 #include "logger.h"
+#if DebugTextClass==1
 static Logger tbg("TextPointer",false);
+#else
+#define tbg(...)
+#endif
 
 Text::Text() : Cstr(){
   //all is well
@@ -110,9 +114,6 @@ void Text::take(TextKey &other){
 
 void Text::clear() noexcept {
   tbg("about to clear %p:%p",this,ptr);
-  if((unsigned(ptr)>8)){//while figuring out how memory is altered without data breakpoint triggering/
-    free(violate(ptr));
-  }
   release();
 }
 /////////////////

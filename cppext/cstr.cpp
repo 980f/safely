@@ -15,14 +15,7 @@ Cstr::Cstr(unsigned char *target) : ptr(reinterpret_cast<char *>(target)){
   //#nada
 }
 
-//Cstr::~Cstr(){
-//  //#need explicit instantiation for vtable to get emitted.
-//}
-
 TextKey Cstr::operator =(TextKey ptr){
-  if(ptr&&unsigned(ptr)<8){
-    ptr=nullptr;
-  }
   this->ptr = ptr;
   return ptr;
 }
