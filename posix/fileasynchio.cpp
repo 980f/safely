@@ -3,11 +3,10 @@
 #include "nanoseconds.h"
 #include "logger.h"
 
-static Logger faa("FSA",true);
+SafeLogger(FAA,true);
 
 FileAsyncAccess::FileAsyncAccess(bool reader, Fildes &fd, ByteScanner &buf):
-  IncrementalFileTransfer (reader,fd,buf)
-{
+  IncrementalFileTransfer (reader,fd,buf){
   //#nada
 }
 
@@ -39,14 +38,14 @@ bool FileAsyncAccess::block(double seconds){
 }
 
 void FileAsyncAccess::loiter(){
-  faa("waiting for about %d events",blocksexpected);
+  FAA("waiting for about %d events",blocksexpected);
   while(notDone()){
     if(block(1)){
       if(!isOk()){
-        faa("While waiting got: %d(%s)",errornumber,errorText());
+        FAA("While waiting got: %d(%s)",errornumber,errorText());
         if(errornumber==EINTR){//on read or block shorter than buffer.
           if(transferred==expected){
-            faa("...which is pointless, happens in last incompletely filled block");
+            FAA("...which is pointless, happens in last incompletely filled block");
           }
         }
       }
@@ -111,13 +110,14 @@ void FileAsyncAccess::notified(int code,int ernumber){
 bool FileAsyncAccess::onEachBlock(__ssize_t amount){
   if(amReader){
     buf.peek()=0;
-    faa("FSA:READ:[%d]:%s",amount,buf.internalBuffer());
+    FAA("READ:[%d]:%s",amount,buf.internalBuffer());
   } else {
-    faa("FSA:WRITE:[%d]: remaining=%ld",amount,buf.freespace());
+    FAA("WRITE:[%d]: remaining=%ld",amount,buf.freespace());
   }
   return true;
 }
 
 void FileAsyncAccess::onDone(){
-  faa("FSA:ONDONE: not overloaded");
+  FAA("ONDONE: not overloaded");
+
 }

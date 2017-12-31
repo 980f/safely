@@ -34,4 +34,8 @@ extern Logger dbg;
 extern Logger wtf;
 
 #define IgnoreGlib(err) dbg("%s ignoring %s",__PRETTY_FUNCTION__, err.what().c_str())
+
+//typical allocation of a managed logger
+#define SafeLogger(loggerName,deflevel) static Logger loggerName( #loggerName , deflevel )
+
 #endif // LOGGER_H

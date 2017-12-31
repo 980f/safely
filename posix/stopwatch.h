@@ -37,10 +37,12 @@ Most of the time 'real' makes more sense, but when debugging 'process' time is m
   /** make last 'elapsed' be a start, retroactively (without reading the system clock again.*/
   void rollit();
   /** @return seconds of absolute time of stop, or now if running*/
-  double absolute();
+  NanoSeconds absolute();
 
   /** @returns the number of cycles of frequency @param atHz that have @see elapsed() */
   unsigned cycles(double atHz, bool andRoll=true);
+  /** @returns how many intervals have passed, and if andRoll sets start module interval */
+  unsigned periods(NanoSeconds interval, bool andRoll=true);
   /** @return last clock value sampled, either as absolute (time since program start) or since stopwatch.start()*/
   double lastSnap(bool absolute) const;
 };

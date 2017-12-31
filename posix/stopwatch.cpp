@@ -42,7 +42,7 @@ bool StopWatch::isRunning() const {
   return running;
 }
 
-double StopWatch::absolute(){
+NanoSeconds StopWatch::absolute(){
   if(running) {
     readit(stopped);
   }
@@ -64,6 +64,14 @@ unsigned StopWatch::cycles(double atHz,bool andRoll){
     }
   }
   return cycles;
+}
+
+unsigned StopWatch::periods(NanoSeconds interval, bool andRoll){
+  NanoSeconds now=absolute();
+  unsigned modulo=now.modulated(interval);
+  if(andRoll){
+    started=now;
+  }
 }
 
 double StopWatch::lastSnap(bool absolute) const{

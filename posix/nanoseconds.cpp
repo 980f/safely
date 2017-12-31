@@ -44,8 +44,22 @@ NanoSeconds& NanoSeconds::operator -=(const NanoSeconds &lesser){
   return *this;
 }
 
-NanoSeconds NanoSeconds::operator >(const NanoSeconds &that){
+/* this implementation is optimized for returns of 0 and 1 and presumes non-negative this and positve interval */
+unsigned NanoSeconds::modulated(const NanoSeconds &interval){
+  unsigned cycles=0;
+  while(*this>=interval){
+    *this-=interval;
+    ++cycles;
+  }
+  return cycles;
+}
+
+bool NanoSeconds::operator >(const NanoSeconds &that) const{
   return (ts.tv_sec>that.ts.tv_sec) || ( (ts.tv_sec==that.ts.tv_sec)&&(ts.tv_nsec>that.ts.tv_nsec) );
+}
+
+bool NanoSeconds::operator >=(const NanoSeconds &that) const{
+  return (ts.tv_sec>=that.ts.tv_sec) || ( (ts.tv_sec==that.ts.tv_sec)&&(ts.tv_nsec>=that.ts.tv_nsec) );
 }
 
 int NanoSeconds::signabs(double *dub) const {
