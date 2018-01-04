@@ -72,6 +72,7 @@ unsigned StopWatch::periods(NanoSeconds interval, bool andRoll){
   if(andRoll){
     started=now;
   }
+  return modulo;
 }
 
 double StopWatch::lastSnap(bool absolute) const{
