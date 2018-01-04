@@ -1,14 +1,19 @@
 ##qtcreator project file for include libusb components
 
-DEPENDPATH += $$PWD
-INCLUDEPATH += $$PWD
+usbdir=$$PWD
+
+message("Including usb parts from $$usbdir")
+
+DEPENDPATH += $$usbdir
+INCLUDEPATH += $$usbdir
+
 SOURCES += \
-    $$PWD/libusber.cpp \
-    $$PWD/usbid.cpp
+    $$usbdir/libusber.cpp \
+    $$usbdir/usbid.cpp
 
 HEADERS += \
-    $$PWD/libusber.h \
-    $$PWD/usbid.h
+    $$usbdir/libusber.h \
+    $$usbdir/usbid.h
 
 
 #originally I included the package, but it swallows some useful error messages so I copied the essential files into this project.
@@ -17,7 +22,7 @@ HEADERS += \
 
 QMAKE_CFLAGS +=-std=c11
 
-usblibdir = $$PWD/libusb
+usblibdir = $$usbdir/libusb
 
 DEPENDPATH += $$usblibdir
 INCLUDEPATH += $$usblibdir

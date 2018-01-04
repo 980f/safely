@@ -5,6 +5,7 @@ CONFIG += console
 
 #curious as to why QT thinks there is web stuff in a console app.
 DEFINES -= QT_WEBKIT
+DEFINES -= QT_QML_DEBUG
 
 #best practices libraries:
 include("safely.pro")
