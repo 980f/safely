@@ -1,6 +1,7 @@
 ##raspberry pi components
 
 pidir = $$PWD
+message("Including raspberry pi hardware parts from $$pidir")
 
 DEPENDPATH += $$pidir
 INCLUDEPATH += $$pidir
@@ -11,7 +12,7 @@ SOURCES += \
     $$pidir/inputmonitor.cpp \
     $$pidir/pwm.cpp \
     $$pidir/clockgenerator.cpp \
-    $$pidir/peripheral.cpp 
+    $$pidir/peripheral.cpp
 
 
 HEADERS += \

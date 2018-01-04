@@ -9,7 +9,6 @@ INCLUDEPATH+=$$posixdir
 DEPENDPATH+=$$posixdir
 
 message("Including posix parts from $$posixdir")
-#message("$$INCLUDEPATH")
 
 SOURCES += \
     $$posixdir/fdset.cpp \
@@ -36,7 +35,8 @@ SOURCES += \
     $$posixdir/jsonfile.cpp \
     $$posixdir/serialdevice.cpp \
     $$posixdir/serveroptions.cpp \
-    $$posixdir/jasoned.cpp
+    $$posixdir/jasoned.cpp \
+    $$posixdir/filewatcher.cpp
 
 HEADERS += \
     $$posixdir/timerfd.h \
@@ -60,7 +60,8 @@ HEADERS += \
     $$posixdir/memorymapper.h \
     $$posixdir/microseconds.h \
     $$posixdir/serveroptions.h \
-    $$posixdir/jasoned.h
+    $$posixdir/jasoned.h \
+    $$posixdir/filewatcher.h
 
 
 #for async IO (aio_*), as used in filereader: rt:"glibc runtime"

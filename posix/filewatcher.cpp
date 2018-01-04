@@ -43,3 +43,5 @@ void FileWatcher::nextEvent(FileEventHandler *handler){
 Indexer<char> FileEvent::name(){
   return Indexer<char>(&namestartshere,len);
 }
+
+
