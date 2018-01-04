@@ -120,7 +120,9 @@ private:
 public:
   //had to change to Text vs saving a pointer when file loading comes first, else the file content gets ripped out from under us and we are pointing to reclaimable heap. It still is a good idea to not rename nodes, unless perhaps the name is empty.
   const Text name;
-  /** somehow rename the node, perhaps by clone and replace */
+  /** @deprecated we really want node names to be constant, it is bad practice to pass information via name instead of value.
+   * the node editor is the only entity which can justify doing that, as you are trying to fix a file. We can add launching nano to that gui, so that we know to reload the file over the node when nano returns.
+   * somehow rename the node, perhaps by clone and replace. This might lose its watchers. */
   void Rename(TextKey newname);
 public:
   /** @param isVolatile was added here to get it set earlier for debug convenience */

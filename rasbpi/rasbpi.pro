@@ -1,0 +1,24 @@
+##raspberry pi components
+
+pidir = $$PWD
+
+DEPENDPATH += $$pidir
+INCLUDEPATH += $$pidir
+SOURCES += \
+    $$pidir/gpio.cpp \
+    $$pidir/dout.cpp \
+    $$pidir/din.cpp \
+    $$pidir/inputmonitor.cpp \
+    $$pidir/pwm.cpp \
+    $$pidir/clockgenerator.cpp \
+    $$pidir/peripheral.cpp 
+
+
+HEADERS += \
+    $$pidir/gpio.h \
+    $$pidir/dout.h \
+    $$pidir/din.h \
+    $$pidir/inputmonitor.h \
+    $$pidir/pwm.h \
+    $$pidir/clockgenerator.h \
+    $$pidir/peripheral.h \

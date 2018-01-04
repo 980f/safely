@@ -7,12 +7,16 @@
 #include "segmentedname.h" //for debug reports
 #include "dottedname.h"
 
-//this is not a class member so that we don't force pathparser.h on all users:
-static const PathParser::Rules slasher('/',false,true);// '.' gives java property naming, '/' would allow use of filename classes. '|' was used for gtkwrappers access
+SafeLogger(storetree,false);
+
 static const char PathSep = '/';
+//this is not a class member so that we don't force pathparser.h on all users:
+static const PathParser::Rules slasher(PathSep,false,true);// '.' gives java property naming, '/' would allow use of filename classes. '|' was used for gtkwrappers
+                                                           // access
+
 /** global/shared root, the 'slash' node for findChild */
-__attribute__ ((init_priority (200)))
-Storable Storable::Slash("/");
+__attribute__((init_priority(200)))
+Storable Storable::Slash("/");//probably should tie this a bit harder into PathSep.
 /** access for JsonSocket */
 Storable::Mirror *Storable::remote = nullptr;
 
@@ -25,6 +29,7 @@ Storable &Storable::Groot(TextKey pathname){
     return *node;
   } else {
     //else a relative path that looked back past groot (or an independent tree's root)
+    storetree("Bad relative path given to Groot: %s",pathname);
     return Slash.child(pathname);//which most likely will be non-functional, but at least not null.
   }
 } // Storable::Groot
@@ -39,6 +44,7 @@ bool Storable::Delete(TextKey pathname){
       node->parent->removeChild(*node);
       return true;
     } else {
+      storetree("Attempt to delete undeletable node %s",pathname);
       //root or floating node, can't delete those. Should also not create them! There is no need for floating nodes except as local temps.
       return false;
     }
@@ -49,13 +55,13 @@ bool Storable::Delete(TextKey pathname){
 
 Storable *Storable::FindChild(TextKey pathname, bool autocreate){
   return Slash.findChild(pathname,autocreate);
-} // Storable::Delete
+}
 
 ////////////
 
 using namespace sigc;
 
-//the following are only usable within Storable
+//the following macros are only usable within Storable
 #define ForKidsConstly(list) for(ConstChainScanner<Storable> list(wad); list.hasNext(); )
 #define ForKids(list) for(ChainScanner<Storable> list(wad); list.hasNext(); )
 
@@ -82,28 +88,30 @@ Storable::Storable(TextKey name, bool isVolatile) :
   enumerated(nullptr),
   name(name){
   if(isVolatile) {
-    dbg("creating volatile node %s", fullName().c_str());
+    storetree("creating volatile node %s", fullName().c_str());
   }
 }
 
 //requires gcc >=4.7
 Storable::Storable(bool isVolatile) : Storable("", isVolatile){
+  //nada
 }
 
 Storable::~Storable(){
 //  --instances;
 //  if(!Index(instances).isValid ()) {
-//    wtf("freed more storables than we created!"); //which can happen if we double free.
+//    storetree("freed more storables than we created!"); //which can happen if we double free.
 //  }
 }
 
+SafeLogger(storableNotify,false);
 void Storable::notify() const {
   static int recursionCounter = 0;//4debug of notify.
   if(remote) {
     remote->alter(*this);
   }
   if(++recursionCounter>1) {
-    wtf("recursing %d in %s",recursionCounter,fullName().c_str());
+    storableNotify("recursing %d in %s",recursionCounter,fullName().c_str());
   }
   //todo:Omni send change
   //#we don't check isvolatile here as volatile nodes are often of singular interest, they just aren't of general interest (should not trigger group watch).
@@ -113,9 +121,7 @@ void Storable::notify() const {
 } // Storable::notify
 
 void Storable::recursiveNotify() const {
-  if(isVolatile) {//this check is one of the main reasons for existence of isVolatile, to indicate gratuitous or redundant nodes
-    return;
-  }
+  //removed volatility check since volatile nodes were getting added specifically for signalling.
   if(parent) {
     parent->childwatchers.send();
     parent->recursiveNotify();
@@ -127,13 +133,14 @@ Storable &Storable::precreate(TextKey name){
   if(q == Empty) {
     q = Defaulted;
   }
-  also(!isVolatile); //we altered the number of entities contained
+  also(true); //mark it as needing saving, but we don't notify. use a StoredGroup if you need that kind of behavior.
   Storable&noob(*new Storable(name, false)); //only parent needs volatile flag as that stops recursive looking at the children.
   noob.parent = this;
   return noob;
 }
 
 void Storable::Rename(TextKey newname){
+  storetree("Renaming a node from %s to %s",fullName().c_str(),newname);
 #if 0
   unsigned last = numChildren();
   Storable &noob = createChild(*this,newname);
@@ -418,25 +425,7 @@ void Storable::assignFrom(Storable&other){
   } /* switch */
 } // assignFrom
 
-//double Storable::setValue(double value, Storable::Quality quality){
-//  bool notifeye = number.setto(value);
-
-//  notifeye |= setQuality(quality);
-//  if(enumerated) {
-//    //if enumerized then leave the type as is and update text
-//    text = enumerated->token(value);
-//  } else {
-//    notifeye |= setType(Numerical);//todo:0 refine subtype of number
-//  }
-//  also(notifeye); //record changed, but only trigger on fresh change
-//  if(notifeye) {
-//    notify();
-//  }
-//  return value;
-//} // setValue
-
 void Storable::setImageFrom(TextKey value, Storable::Quality quality){
-
   if(isTrivial()) { //don't notify or detect change, no one is allowed to watch an uninitialized node
     text = value;
     if(quality==Edited) {//mostly if Parsed don't set type to text, it needs to be checked for keywords.
@@ -450,24 +439,24 @@ void Storable::setImageFrom(TextKey value, Storable::Quality quality){
       text = value;   //#bypass change detect here, just recording for posterity
       Cstr units;
       NumericalValue formerly(number);
-      switch(number.is){
+      switch(number.is) {
       case NumericalValue::Truthy:
-        number=text.cvt<bool>(false,&units);
+        number = text.cvt<bool>(false,&units);
         break;
       case NumericalValue::Counting:
-        number=text.cvt<unsigned>(0,&units);
+        number = text.cvt<unsigned>(0,&units);
         //todo:1 check for KMG units
         break;
       case NumericalValue::Whole:
-        number=text.cvt<int>(0,&units);
+        number = text.cvt<int>(0,&units);
         //todo:1 check for KMG units
         break;
       case NumericalValue::Floating:
-        number=text.cvt<double>(0.0,&units);
+        number = text.cvt<double>(0.0,&units);
         //todo:1 report nontrivial units.
         break;
-      }
-      notifeye=!(number==formerly);
+      } // switch
+      notifeye = !(number==formerly);
     } else {
       notifeye = changed(text, value);
     }
@@ -631,7 +620,7 @@ Storable *Storable::getChild(Sequence<Text> &progeny,bool autocreate){
       searcher = searcher->parent;
       if(!searcher) {
         //we can't autocreate a root, it would leak if we tried.
-        wtf("Storable::getChild asked to look above root");
+        storetree("Storable::getChild asked to look above root");
         return nullptr;//we do NOT autocreate in this case.
       }
       continue;//look for next child in path
@@ -673,7 +662,7 @@ Storable *Storable::findChild(TextKey path, bool autocreate){
   ChainScanner<Text> progeny(genealogy.indexer());
 
   if(genealogy.bracket.after) {
-    wtf("Storable findChild is ignoring trailing separator: [%s]",path);
+    storetree("Storable findChild is ignoring trailing separator: [%s]",path);
   }
 
   Storable *searcher = (genealogy.bracket.before) ? &getRoot() : this;
@@ -699,7 +688,7 @@ Storable&Storable::operator ()(TextKey name){
 
 Storable&Storable::operator [](unsigned ordinal){
   if(!has(ordinal)) {
-    wtf("nonexisting child of %s referenced by ordinal %d (out of %d).",fullName().c_str(), ordinal, numChildren());
+    storetree("nonexisting child of %s referenced by ordinal %d (out of %d).",fullName().c_str(), ordinal, numChildren());
     dbg.dumpStack("nth child doesn't exist");
     addChild(""); //better than an NPE so deep in the hierarchy that we don't know where it comes from.
     return *wad.last();
@@ -709,23 +698,22 @@ Storable&Storable::operator [](unsigned ordinal){
 
 const Storable &Storable::operator[](unsigned ordinal) const {
   if (!has(ordinal)) {
-    wtf("nonexisting child of %s referenced by ordinal %d (out of %d).", fullName().c_str(), ordinal, numChildren());
+    storetree("nonexisting child of %s referenced by ordinal %d (out of %d).", fullName().c_str(), ordinal, numChildren());
     dbg.dumpStack("nth child doesn't exist, null this returned");
   }
   return *wad.nth(ordinal);
 }
 
-
 const Storable&Storable::nth(unsigned ordinal) const {
   if(!has(ordinal)) {
-    wtf("nonexisting child referenced by ordinal %d (out of %d).", ordinal, numChildren());
+    storetree("nonexisting child referenced by ordinal %d (out of %d).", ordinal, numChildren());
   }
   return *wad.nth(ordinal);
 }
 
 Storable &Storable::nth(unsigned ordinal){
   if(!has(ordinal)) {
-    wtf("nonexisting child referenced by ordinal %d (out of %d).", ordinal, numChildren());
+    storetree("nonexisting child referenced by ordinal %d (out of %d).", ordinal, numChildren());
   }
   return *wad.nth(ordinal);
 }
@@ -821,7 +809,6 @@ void Storable::suicide(bool andDelete){
   }
 }
 
-
 ///////////////////////
 StoredListReuser::StoredListReuser(Storable&node, unsigned wadding) : node(node), wadding(wadding), pointer(0){
   //#nada
@@ -853,7 +840,10 @@ unsigned StoredListReuser::done(){
 }
 
 //////////////////////
-Storable::Freezer::Freezer(Storable&node, bool childrenToo, bool onlyChildren) : childrenToo(childrenToo), onlyChildren(onlyChildren), node(node){
+Storable::Freezer::Freezer(Storable&node, bool childrenToo, bool onlyChildren) :
+  childrenToo(childrenToo),
+  onlyChildren(onlyChildren),
+  node(node){
   freezeNode(node);
 }
 
