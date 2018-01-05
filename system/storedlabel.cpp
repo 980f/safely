@@ -70,3 +70,8 @@ sigc::connection StoredLabel::onChange(sigc::slot<void, TextKey> slotty){
 sigc::slot<void, TextKey> StoredLabel::setter(){
   return bind(mem_fun(node, &Storable::setImageFrom), Storable::Edited);
 }
+
+void StoredLabel::setFrom(double value, int decimals){
+  auto nf=NumberFormatter(decimals);
+  node.setImage(nf.format(value));
+}
