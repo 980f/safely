@@ -68,7 +68,11 @@ public:
   }
 
   SimpleSignal::iterator connect(const sigc::slot< void,Arg > &slot){
-    return GatedSignal::connect(sigc::bind(slot,ref(knownArg)));//use a seperate sigc::ref for each slot
+    return GatedSignal::connect(sigc::bind(slot,sigc::ref(knownArg)));//use a seperate sigc::ref for each slot
   }
 
 };
+<<<<<<< HEAD
+=======
+
+>>>>>>> dp5qcu

@@ -5,7 +5,11 @@
 
 #include "eztypes.h"
 #include "charformatter.h"
+<<<<<<< HEAD
 namespace Safely {
+=======
+
+>>>>>>> dp5qcu
 template<int Size> class SafeStr : public CharFormatter {
   char content[Size];
 public:
@@ -41,4 +45,8 @@ public:
   }
 
 }; // class SafeStr
+<<<<<<< HEAD
 }
+=======
+
+>>>>>>> dp5qcu

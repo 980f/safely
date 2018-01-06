@@ -22,6 +22,8 @@ public:
 
 ///////////////
 class SimpleTextWalker:public TextWalker{
+public:
+  SimpleTextWalker(const TextBlock &source, char comma=',');
   char comma;
   void seek()override;
 };

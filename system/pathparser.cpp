@@ -37,9 +37,9 @@ void PathParser::packInto(Indexer<char> &packer,ConstChainScanner<Text>feeder,co
 }
 
 Text PathParser::pack(const SegmentedName &pieces, const Rules &rule, Converter &&converter){
-  unsigned bytesNeeded=length(pieces.indexer(),rule,converter.forward());
+  unsigned bytesNeeded=length(pieces.cindexer(),rule,converter.forward());
   Indexer<char> packer=Indexer<char>::make(bytesNeeded,true);
-  packInto(packer,pieces.indexer(),rule,converter.forward());
+  packInto(packer,pieces.cindexer(),rule,converter.forward());
   return Text(packer.internalBuffer());//when you destroy the Text the data malloc'd above is freed
 }
 

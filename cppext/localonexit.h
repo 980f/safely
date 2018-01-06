@@ -1,8 +1,8 @@
 #pragma once
+
 /** helpers to make sure something gets done regardless of how the enclosing block exits.
  * This is C++'s answer to Java's "try with resources" and similar features in other languages.
 */
-
 
 template<typename Scalar> class ModifyOnExit {
 protected:
@@ -37,13 +37,14 @@ public:
 
 }; // class ClearOnExit
 
-#ifndef SETGUARD
+
 /** Clears a flag when destroyed */
 class AutoFlag : public ClearOnExit<bool> {
 public:
   AutoFlag(bool &toBeCleared);
 };
 
+#ifndef SETGUARD
 #define SETGUARD(boolvarb) AutoFlag coe_ ## boolvarb(boolvarb)
 #endif
 

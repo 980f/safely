@@ -34,7 +34,10 @@ public:
   bool differed(Settable const &other){
     return changed(other);
   }
+<<<<<<< HEAD
 
+=======
+>>>>>>> dp5qcu
   //formally required to allow use in heaped systems:
   virtual ~Settable();
 };

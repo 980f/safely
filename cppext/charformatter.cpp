@@ -16,18 +16,21 @@ using namespace Safely;
 
 struct NumberParser : public PushedNumberParser  {
 
-  /** @param buf points after last char, prev() is terminator */
+  /** @param buf points to terminator */
   bool parseNumber(CharFormatter &buf){
-    while(buf.hasNext() && next(buf.next())) {
-      //#nada
+    while(buf.hasNext()) {
+      if(next(buf.peek())){
+        buf.skip(1);
+      } else {
+        break;
+      }
     }
     return seemsOk();
   }
 
   double getValue(CharFormatter &buf, double backup = 0.0){
     if(parseNumber(buf)) {
-      buf.unget();
-      return packed();
+      return lastParsed=packed();//track for debug
     } else {
       return backup;
     }
@@ -169,37 +172,17 @@ bool CharFormatter::printChar(char ch, unsigned howMany){
   }
 }
 
-//bool CharFormatter::printAtWidth(unsigned int value, unsigned width){
-//  unsigned numDigits = value ? ilog10(value) + 1 : 1; //ilog10 gives -1 for zero, we lumpt that in with 1..9
-//  if(numDigits > width) {
-//    printChar('*', width);
-//    return false;
-//  }
-
-//  if(stillHas(width)) {
-//    printChar(' ', width - numDigits);
-//    while(numDigits--> 0) {
-//       printDigit(digitsAbove(value,numDigits));
-//    }
-//    return true;
-//  }
-//  return false;
-//} // CharFormatter::printAtWidth
 
 bool CharFormatter::printAtWidth(unsigned int value, unsigned width, char padding){
   unsigned numDigits = value? ilog10(value)+1 : 1; //ilog10 gives -1 for zero, here we lump zero in with 1..9
   if(numDigits > width) {//if you cant fit the whole thing don't put any digits into the field.
-    printChar('*', width);
+     printChar('*', width);
     return false;
   }
-//  //the following useless code truncated trailing digits, something that would never ever make any sense
-//  while(numDigits > width){
-//    value /= 10; //todo:0 this truncating of trailing digits seems like a horrible idea. just don't print anythign and return false!
-//    --numDigits;
-//  }
-  if(stillHas(width)){
+
+  if(stillHas(width)) {
     printChar(padding, width-numDigits);
-    while(numDigits --> 0){
+    while(numDigits--> 0) {
       printDigit(digitsAbove(value,numDigits));
     }
     return true;
@@ -366,30 +349,32 @@ bool CharFormatter::printNumber(double d, const NumberFormat &nf, bool addone){
       if(np.negative) {
         checker &= printChar('-');
       }
-
-      checker &= printUnsigned(np.predecimal);
-      if(nf.decimals>0 &&np.postdecimal>0) {
+      checker &= printUnsigned64(np.predecimal);
+      if(nf.decimals>0) {//if we want radix and digits
         checker &= printChar('.');//not doing locale's herein.
         unsigned stillwant = nf.decimals + addone;
-        if(np.postdecimal==0) {//frequent case, when number was actually an integer
+        if(np.postdecimal==0||np.postDigits==0) {//all zeros after radix, frequent case, when number was actually an integer
           checker &= printChar('0',stillwant);
+          //and we are done
         } else {
-          if(np.div10>0) {
-            //the number we have has been boosted by that many digits
-            if(np.div10>=stillwant) {
-              checker &= printChar('0',take(stillwant));
-            } else {
-              checker &= printChar('0',np.div10);
-              stillwant -= np.div10;
-            }
-          }
-          if(stillwant>0) {
-            u64 postdec = truncateDecimals(np.postdecimal,stillwant);
-            unsigned stillhave = 1 + ilog10(postdec);//double checking, unlike to left of radix we want 0 here to result in -1.
-            if(stillhave<stillwant) {
-              checker &= printChar('0',stillwant - stillhave);
-            }
-            checker &= printUnsigned(postdec);
+          //some of postdecimal's digits are zeroes.
+          unsigned digitsPresent=1+ilog10(np.postdecimal);
+          auto numZeroes=np.postDigits-digitsPresent;
+          if(numZeroes>=stillwant){
+             checker &= printChar('0',stillwant);
+             //and we are done
+          } else {
+             checker &= printChar('0',numZeroes);
+             stillwant-=numZeroes;
+
+             if(digitsPresent>=stillwant) {//have more than desired
+               u64 postdec = truncateDecimals(np.postdecimal,stillwant);
+               checker &= printUnsigned64(postdec);
+             } else {//neeed a few tailing zeroes
+               checker &= printUnsigned64(np.postdecimal);
+               //if fixed width ... which we have presumed before here.
+               checker &= printChar('0',stillwant -digitsPresent);
+             }
           }
         }
       }
@@ -414,7 +399,6 @@ bool CharFormatter::printString(TextKey s){
   return checker.commit();
 }
 
-
 int CharFormatter::cmp(const CharScanner&other) const {
   CharScanner me(*this); //this constructor gives us a pointer to the used part of the argument
   CharScanner him(other);
@@ -438,20 +422,6 @@ int CharFormatter::cmp(const CharScanner&other) const {
   }
 } /* cmp */
 
-//bool CharFormatter::addTerminator(){
-//  return printChar(EOL)&&printChar(0);
-//}
-
-//bool CharFormatter::removeTerminator(){
-//  if(hasPrevious()&&previous()==0) {
-//    rewind(1);
-//    if(hasPrevious()&&previous()==EOL) {
-//      rewind(1);
-//      return true;
-//    }
-//  }
-//  return false;
-//}
 
 CharFormatter CharFormatter::infer(char *content){
   Cstr wrap(content);

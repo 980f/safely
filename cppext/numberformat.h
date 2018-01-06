@@ -8,7 +8,7 @@
  * There is a feature 'usages' that causes it to reset to default values after a specified number of uses.@see onUse()
  *
  * when one of these is an arg... list we just store its attributes to another one, so copy-assign must be cheap. */
-namespace Safely {
+
 struct NumberFormat {
   /** number of digits after radix, if negative then add zeroes before the radix point */
   int decimals;
@@ -35,4 +35,3 @@ struct NumberFormat {
   /** every time this is used to actuall process a number someone should call this method*/
   void onUse();
 };
-}

@@ -6,6 +6,7 @@
 #include "charscanner.h"
 
 #include "stdio.h" //for printing until we apply our textFormatter
+#include "fcntlflags.h"
 
 JsonFile::JsonFile(Storable &node):root(node){
   //#nada
@@ -16,8 +17,8 @@ int JsonFile::reload(){
 }
 
 int JsonFile::loadFile(Cstr thename){
-  root.child("#loadedFromFile").setImage(thename.c_str());//record where we try to load from.
   Filer optionFile("LoadJSON");
+  loadedFrom=thename;//mark intended file name
   if(! optionFile.openFile(thename)){
     dbg("Couldn't open \"%s\", error:[%d]%s",thename.c_str(),optionFile.errornumber,optionFile.errorText());
     return optionFile.errornumber;
@@ -26,6 +27,7 @@ int JsonFile::loadFile(Cstr thename){
     dbg("Couldn't read all of \"%s\", error:[%d]%s",thename.c_str(),optionFile.errornumber,optionFile.errorText());
     return optionFile.errornumber;
   }
+  //maydo: set loadedFrom to absolute canonical pathname.
   //free up options file for external editing (in case we ever open_exclusive)
   optionFile.close();//this does not lose the data already read.
   CharScanner optsText(optionFile.contents());
@@ -39,11 +41,9 @@ int JsonFile::loadFile(Cstr thename){
   parser.parser.lookFor(StandardJSONFraming ";=");
 
   parser.parse();
-  //todo: import this functionality: root.resolve(false);//false: accessors set the type, not the appearance of the content
-  loadedFrom=thename;//record after success
-  //todo: stats?
+
   dbg("loaded %d nodes, %d levels, from %s",parser.stats.totalNodes,parser.stats.maxDepth.extremum,thename.c_str());
-  return 0;
+  return 0;//#an errno
 }
 
 bool indent(FILE *fp, unsigned tab){
@@ -88,7 +88,7 @@ void printNode(unsigned tab, Storable &node, FILE *fp,bool showVolatiles){
     fprintf(fp,"%g ",node.getNumber<double>());
     break;
   case Storable::Uncertain:
-  case Storable::NotKnown:
+  case Storable::NotDefined:
     fprintf(fp,"%s ",node.image().c_str());
     break;
   case Storable::Textual:
@@ -106,16 +106,17 @@ void printNode(unsigned tab, Storable &node, FILE *fp,bool showVolatiles){
 
 
 void JsonFile::printOn(Cstr somefile, unsigned indent, bool showVolatiles){
-  FILE *fout=fopen(somefile,"w");
-  if(fout){
-    printNode(indent,root,fout,showVolatiles);
+  Filer fout("JsonSave");
+  if(fout.openFile(somefile,O_CREAT|O_RDWR,true)){
+    printNode(indent,root,fout.getfp("w"),showVolatiles);
   }
 }
 
 Cstr JsonFile::originalFile(){
-  return root.child("#loadedFromFile").image().c_str();
+  return loadedFrom.c_str();
 }
 
 void JsonFile::printOn(Fildes &alreadyOpened, unsigned indent, bool showVolatiles){
-  printNode(indent,root,alreadyOpened.getfp("w"),showVolatiles);
+  auto fp=alreadyOpened.getfp("w");
+  printNode(indent,root,fp,showVolatiles);
 }

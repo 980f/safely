@@ -37,4 +37,13 @@ public:
   sigc::connection onChange(sigc::slot<void, TextKey> slotty);
   /** a slot that will set the value of this */
   sigc::slot<void, TextKey> setter();
+<<<<<<< HEAD:system/storedtext.h
 };
+=======
+
+  /** set from a double, rendering with @param decimals. if decimals==0 render as integer, if <0 then with that many zeroes. ie -1 is the nearest multuple of 10.  */
+  void setFrom(double value, int decimals);
+}; // class StoredLabel
+
+#endif // STOREDLABEL_H
+>>>>>>> dp5qcu:system/storedlabel.h

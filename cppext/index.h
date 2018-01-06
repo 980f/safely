@@ -7,6 +7,8 @@
  * index>=0 && index < quantity with a simple index<quantity, less runtime code.
  *
  * The only risk here is that someone might use -1 as a quantity value indicating that there is not even a container to have a quantity of items in. Just don't do that, return a quantity of 0 for 'not a valid question', that will almost always yield the expected behavior.
+
+todo: need to check for overflow on additi9ve operations and set to badIndex if that occurs.
 */
 /** the magic value, it is all ones */
 constexpr unsigned BadIndex=~0U;
@@ -40,7 +42,8 @@ struct Index {
     return raw!=BadIndex;//replace this with ~raw!=0 if compiler can't figure that out on its own.  Or load/inc/ inspect Z bit of status.
   }
 
-  void clear() noexcept {
+  /** set to the canonical invalid value. */
+  void invalidate() noexcept {//the name 'clear' was ambiguous given that take() sets raw to the valid value of zero.
     raw=BadIndex;
   }
 
@@ -59,7 +62,7 @@ struct Index {
     return isValid()? raw+=other: BadIndex;
   }
 
-  /** decrement IF valid and can take the whole decrement */
+  /** decrement IF valid, if decrement is of greater magnitude then set to Invalid */
   unsigned operator -= (unsigned other) noexcept {
     if(isValid()){
       return raw>=other?raw-=other:raw=BadIndex;
@@ -77,7 +80,7 @@ struct Index {
     return ++raw;
   }
 
-  /** liken += but sets if was invalid instead of ignoring the argument */
+  /** like += but sets if was invalid instead of ignoring the argument */
   unsigned up(unsigned more=1){
     return isValid()? raw+=more: raw=more;
   }
@@ -93,7 +96,7 @@ struct Index {
     }
   }
 
-/** set this to the max of itself and other */
+  /** set this to the max of itself and other */
   void elevate(unsigned other){
     if(isValid()&&other<=raw){
       return;
@@ -101,7 +104,7 @@ struct Index {
     raw=other;
   }
 
-   /** set this to the greater of this and other depending upon validity */
+  /** set this to the greater of this and other depending upon validity */
   void elevate(Index other){
     if(isValid()){
       if(other.isValid() && raw<other.raw) {
@@ -112,7 +115,7 @@ struct Index {
     }
   }
 
-  /** @returns present value, then sets it to zero. */
+  /** @returns present value, then sets it to zero. NB it is set to 0 not invalidated. */
   unsigned take() noexcept {
     return take(raw);
   }

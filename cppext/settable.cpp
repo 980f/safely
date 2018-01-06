@@ -1,14 +1,16 @@
 #include "settable.h"
 
+#include "art.h"
+
 bool Settable::blockCheck(Settable &desired) const{
   return differs(desired);
 }
 
 bool Settable::differs(const Settable &other)const{
-  MessageArgs;
-  other.getParams(args);
-  MessageArgs2;
+  ArgBlock<MAXARGS> args;
+  ArgBlock<MAXARGS> args2;
 
+  other.getParams(args);
   this->getParams(args2);
   return !args2.equals(args);
 }
@@ -17,7 +19,7 @@ void Settable::copy(const Settable &other){
   if(!&other){//compiler generated an operator = with a null 'other'
     return;
   }
-  MessageArgs;
+  ArgBlock<MAXARGS> args;
   other.getParams(args);
   args.freeze();
   this->setParams(args);

@@ -14,8 +14,8 @@
 #include "nanoseconds.h"
 #include "cheaptricks.h" //take()
 
-bool Application::setQuickCheck(unsigned soonish){
-  if(quickCheck==0 || soonish<quickCheck){
+bool Application::setQuickCheck(NanoSeconds soonish){
+  if(soonish.signabs()>0 && (quickCheck.isZero() || quickCheck>soonish)){
     quickCheck=soonish;
     return true;
   } else {
@@ -31,10 +31,10 @@ bool Application::keepAlive(){
 
 Application::Application(unsigned argc, char *argv[]):PosixWrapper ("APP"),//todo:1 name from arg0 last member
   arglist(const_cast<const char **>(argv),argc*sizeof (const char *)),
+  hz(1000.0), //start with epoll's value
   looper(32), //maydo: figure out size of maximum reasonable poll set.
-  period(100), //millisecond timing, default here is slow
-  beRunning(false)//startup idle.
-{
+  period(NanoSeconds(0.1)), //start at 10 Hz, a rather slow value.
+  beRunning(false){//startup idle.
   dbg("Application base initialized");
 }
 
@@ -55,9 +55,9 @@ void Application::logCwd(){
 int Application::run(){
   beRunning=true;
   while(beRunning){
-    int nextPeriod=period;
+    NanoSeconds nextPeriod=period;
     //first use: libusb sometimes wants us to get back to it perhaps sooner than our period is set for.
-    if(quickCheck>0){
+    if(quickCheck.signabs()>0){
       if(quickCheck<period){
         nextPeriod=take(quickCheck);
       } else {
@@ -65,12 +65,7 @@ int Application::run(){
       }
     }
     if(justTime){ //added to deal with corruption of callbacks on raspberry pi, ignore callbacks.
-      NanoSeconds sleeper;
-      NanoSeconds dregs;
-      dregs.setMillis(nextPeriod);
-      do {
-        sleeper=dregs;
-      } while(nanosleep(&sleeper.ts,&dregs.ts));//returns 0 on normal completion, else errno is set and dregs is timeremaining
+      while(nextPeriod.sleep());//returns 0 on normal completion, else errno is set and dregs is timeremaining
       looper.elapsed=looper.eventTime.roll();//emulate looper's wait.
       beRunning=keepAlive();
     } else {
@@ -98,6 +93,8 @@ int Application::run(){
   return looper.errornumber;
 }
 
+
+
 Text Application::hostname(){
   char maxname[512];
   if(ok(gethostname(maxname,512))){
@@ -108,9 +105,10 @@ Text Application::hostname(){
 }
 
 bool Application::writepid(TextKey pidname){
+  pid_t pid = getpid();
+  //todo: global debugger- dbg("pid: %ld\n", long(pid));//coercing type for platform portability
   FILE* pidler(fopen(pidname,"w"));//want exclusive access
   if(pidler){
-    pid_t pid=getpid();
     fprintf(pidler,"%ld\n", long(pid));//coercing type for platform portability
     fflush(pidler);
     fclose(pidler);//to get it to flush asap

@@ -109,6 +109,15 @@ public:
   /** simple copy constructor */
   Indexer(const Indexer &other)=default;
 
+  /** deallocate contents, set tracking to reflect that. This is NEVER called from within this class, only call it if you know the content was allocated for this object and not remembered elsewhere */
+  void freeContent(){
+    delete [] buffer;
+    buffer=nullptr;
+    length=0;
+    pointer=0;
+
+  }
+
   /** @returns whether this seems to be a useful object. Note that it might have no freespace(), but it will have content.
  It was created to detect buffers that were created around a malloc or the like return.*/
   bool isUseful() const {
@@ -157,12 +166,6 @@ public:
     length = other.freespace();
   }
 
-  /** @returns an indexer that covers the freespace of this one. this one is not modified */
-  Indexer<Content> remainder() const {
-    Indexer<Content> rval;
-    rval.getTail(*this);
-    return rval;
-  }
 
   /** reduce length to be that used and reset pointer.
    * useful for converting from a write buffer to a read buffer, but note that the original buffer size is lost.*/
@@ -202,6 +205,11 @@ public:
     return view(0,pointer);
   }
 
+  /** @returns an indexer which covers the trailing part of this one. once upon a time called 'remainder' */
+  Indexer<Content> getTail(){
+    return view(pointer,allocated());
+  }
+
   /** reworks this to move start of buffer to be @param howmany past present start.
    * does sensible things if you trim past the current pointer, wipes the whole thing if you trim all of it.
    */
@@ -215,9 +223,7 @@ public:
       pointer = 0;//make it valid
       length -= howmany;
     } else {//kill the whole thing
-      buffer = nullptr;
-      pointer = 0;
-      length = 0;
+     forget();
     }
   } // trimLeading
 
@@ -304,7 +310,7 @@ public:
   }
 
   //syntactic sugar:
-  operator bool() const {
+  operator bool()  {
     return hasNext();
   }
 
@@ -340,7 +346,7 @@ public:
   }
 
   /** needed to resolve between Sequence::skip and Ordinator::skip*/
-  virtual void skip(unsigned int amount){
+  virtual void skip(unsigned int amount=1){
     Ordinator::skip(amount);
   }
 
@@ -371,7 +377,7 @@ public:
 
   /** remove bytes from the start of the allocation, actually moving data.
  This method does NOT alter the allocation. This only makes sense for a receive buffer as you peel items off the front. */
-  Indexer &removeFirst(unsigned amount){
+  Indexer &removeHead(unsigned amount){
     if(amount>=pointer){//remove all
       pointer=0;//simple ignore what we had
     } else {
@@ -380,15 +386,19 @@ public:
     return *this;
   }
 
-  /** if you lookedahead and instead of just skipping you want to move data in the buffer  */
-  bool removeNext(unsigned amount){
-    //data start is pointer+amount
-    unsigned start=pointer+amount;
+  /** use: if you lookedahead and instead of just skipping you want to move data in the buffer.
+   @returns whether the move was done, which will only happen if the @param amount is reasonable.
+ @param andShrink tells whether the buffer should be shrunk to reflect removed content. */
+  bool removeNext(unsigned amount,bool andShrink=true){
+    unsigned start=pointer+amount;//what should be next when we are done.
     if(canContain(start)){//don't pull from past end
       //data quantity is freespace-amount being removed since we are removing from the freespace
       unsigned quantity=freespace()-amount;
       if(canContain(quantity)){//slightly bogus, but a negative quantity will fail this test.
         movem(start,pointer,quantity);
+        if(andShrink){
+          length-=quantity;
+        }
         return true;
       }
     }
@@ -397,8 +407,8 @@ public:
 
   /** seeks in head of buffer for something that operator=='s @param item.
 @deprecated untested */
-  unsigned findFirst(const Content &item){
-    for(int peek=0;peek<pointer;++peek){
+  unsigned findInHead(const Content &item){
+    for(unsigned peek=0;peek<pointer;++peek){
       if(item==buffer[peek]){
         return peek;
       }
@@ -409,7 +419,7 @@ public:
   /** seeks in tail of buffer for something that operator=='s @param item.
    * pointer is not moved, typically you will skip in some fashion.
 @deprecated untested */
-  unsigned findNext(const Content &item){
+  unsigned findInTail(const Content &item){
     for(unsigned peek=pointer;peek<allocated();++peek){
       if(item==buffer[peek]){
         return peek;
@@ -443,7 +453,7 @@ public:
   /** append @param other 's pointer through length-1 to this, but will append all or none.
    * Suitable for picking up the end of a partially copied buffer */
   Indexer appendRemaining(Indexer<Content> &other){
-    int qty = other.emptySpace();
+    int qty = other.freespace();
     if(stillHas(qty)) {
       catFrom(other, qty);
     }
@@ -493,15 +503,20 @@ public:
     }
   }
 
+  /** */
+  void forget(){
+    length=0;
+    pointer=0;
+    buffer=nullptr;
+  }
+
   //free contents and forget them. Only safe todo if you know this buffer is created from a malloc.
   void destroy(){
     if(length){//# testing for debug, delete[] can handle a zero.
       delete []buffer;
     }
     //and now forget we ever saw those
-    length=0;
-    pointer=0;
-    buffer=nullptr;
+    forget();
   }
 
   /** YOU must arrange to delete the contents of what this function returns. The @see destroy() method is handy for that.
@@ -534,6 +549,8 @@ public:
 
 //raw (bytewise) access to object
 #define IndexBytesOf(indexer, thingy) Indexer<u8> indexer(reinterpret_cast<u8 *>(&thingy), sizeof(thingy))
+
+//do we still need these?:
 
 #define BytesOf(thingy) IndexBytesOf(, thingy)
 

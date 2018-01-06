@@ -27,20 +27,15 @@ Storable *StoreJsonConstructor::applyToChild(Storable *parent, Text &name, bool 
       nova=parent->findChild(name,true);
     }
   } else {
-    root = new Storable(name);
+    root = &Storable::Groot(name);
     nova=root;
   }
   if(nova){
-    if(haveValue){//todo: if node already initialized change value according to type. i.e. preserve node.type
+    if(haveValue){//todo:00 if node already initialized change value according to type. i.e. preserve node.type
       nova->setImageFrom(value.c_str(),Storable::Parsed);
-      if(valueQuoted){
-        //keep the text type set by setImage.
-      } else {//mark for further inspection by datum user.
-        //might be 'true' 'false' 'null' or some custom token
-        nova->setType(Storable::Uncertain);//todo:0 too agressive, should preserve known types//mark for deferred interpretation
-      }
     } else {//either a trivial value (a formal json defect) or a parent
-      if(valueQuoted){
+      if(valueQuoted){//empty quotes were encountered
+
         nova->setType(Storable::Textual);//#_# all we really want to signal here is 'not a keyword'
       } else {      //inferring wad node
         nova->setType(Storable::Wad);

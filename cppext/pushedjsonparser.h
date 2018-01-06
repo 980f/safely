@@ -22,6 +22,7 @@ struct JsonStats {
   SimpleExtremer<unsigned> maxDepth;
   /** number of unmatched braces at end of parsing. If massive then more closes than opens. */
   unsigned nested = 0;
+
   /** call when you push to a child */
   void nest();
   /** call when you complete a child */
@@ -86,9 +87,10 @@ public://extended return value
 
 private:
   void recordName();
-  void endToken(unsigned mark);
+//todo: when did this go away?  void endToken(unsigned mark);
 }; // class Parser
 
+// standard punctuation of json.
 #define StandardJSONFraming ":{,}[]"
 
 } // namespace PushedJSON

@@ -6,7 +6,9 @@
 
 #include "minimath.h"
 
-TimerFD::TimerFD():PosixWrapper ("TimerFD"),fd("TimerFD"){
+TimerFD::TimerFD(bool phaseLock):PosixWrapper ("TimerFD"),
+  fd("TimerFD"),
+  phaseLock(phaseLock){
   int tfd=timerfd_create(CLOCK_MONOTONIC,TFD_NONBLOCK);
   fd.preopened(tfd,true);
   period=getPeriod();
@@ -19,17 +21,17 @@ double TimerFD::setPeriod(double seconds){
     parseTime(u.it_value,seconds);//set initial delay to same as period
 
     itimerspec old;
-    timerfd_settime(fd.asInt(),0,&u,&old);//0: not TFD_TIMER_ABSTIME, todo: add option for absolute time.
+    timerfd_settime(fd.asInt(),phaseLock?TFD_TIMER_ABSTIME:0,&u,&old);//0: not TFD_TIMER_ABSTIME, todo: add option for absolute time.
     return period=from(old.it_interval);
   }
   return Nan;
 }
 
 bool TimerFD::ack(){
-  u64 expirations=~0;//type here is chosen by timer fd stuff, not us.
+  u64 expirations=~0U;//type here is chosen by timer fd stuff, not us.
   ByteScanner discard(reinterpret_cast<u8*>(&expirations),sizeof(expirations));
   fd.read(discard);
-  if(sizeof(expirations)==fd.lastRead){//todo:1 why does fd.read return 0 even when it read 8 bytes?
+  if(sizeof(expirations)==fd.lastRead){
     return true;
   } else {
     //then we shouldn't have been called.

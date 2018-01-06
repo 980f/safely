@@ -2,16 +2,23 @@
 #include "roundrobiner.h"
 #include "cheaptricks.h"
 #include "minimath.h" //fill's clear's
+<<<<<<< HEAD
+=======
+
+>>>>>>> dp5qcu
 #include "index.h"  //badIndex
 
 RoundRobiner::RoundRobiner(unsigned quantity) :  quantity(quantity){
-
   markAll(0);
   last = BadIndex;
 }
 
 BitReference RoundRobiner::bit(unsigned id){
+<<<<<<< HEAD
   return BitReference(reinterpret_cast<unsigned*>(&bits),id);
+=======
+  return BitReference(&bits,id);
+>>>>>>> dp5qcu
 }
 
 bool RoundRobiner::bit(unsigned id) const {

@@ -172,7 +172,7 @@ public:
     if(has(ordinal)) {
       return *pod[ordinal];
     }
-    if(autocreate) { //this is a debug feature, when we have to many problems to fix this right now.
+    if(autocreate) { //this is a debug feature, when we have too many problems to fix this right now.
       create("autocreated"); //todo:M periodically try to get rid of this crutch.
       return last();
     } else {
@@ -395,9 +395,11 @@ public:
   /** @returns node by internal name, creates one if it doesn't exist.
    * useful for legacy upgrades of known entities within a group, which is pretty much limited to factory defined files, never user
    * stuff */
-  Groupie &child(const char *key){
+  Groupie &child(const char *key,bool*isNoob=nullptr){
     Groupie *child = existing(key);
-
+    if(isNoob){
+      *isNoob= (child==nullptr);
+    }
     if(child) {
       return *child;
     } else {
@@ -417,7 +419,7 @@ public:
   }
 
   /** @deprecated need to get rid of these as they generate warnings:*/
-  void forEach(const sigc::slot<void, const NodeName &, const Groupie &, unsigned> &action) const {
+  void forEach(const sigc::slot<void, const TextKey &, const Groupie &, unsigned> &action) const {
     ForValues(list){
       Groupie &item(list.next());
 

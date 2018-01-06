@@ -6,7 +6,11 @@
 
 /** fifo wrapper around data allocated elsewise*/
 
+<<<<<<< HEAD
 template <typename Content> class CircularBuffer : public CircularIndexer <Content>/*, public PeekableSequence <Content>*/ {
+=======
+template <typename Content> class CircularBuffer : public CircularIndexer <Content>{
+>>>>>>> dp5qcu
 private:
   bool full;
   bool empty;
@@ -73,6 +77,7 @@ public:
     return *this;
   }
 
+<<<<<<< HEAD
 //  virtual bool hasPrevious(void) const {
 //    return false; //todo:2 try to implement this
 //  }
@@ -84,6 +89,8 @@ public:
 //  Content&previous(void){
 //    return CircularIndexer <Content>::previous();
 //  }
+=======
+>>>>>>> dp5qcu
 };
 
 #endif // CIRCULARBUFFER_H

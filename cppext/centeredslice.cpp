@@ -11,7 +11,11 @@ int CenteredSlice::operator [](int i) const{
   if(i<-hwidth){
     return 0;
   }
+<<<<<<< HEAD
   if(i>hwidth){
+=======
+  if(i > hwidth){
+>>>>>>> dp5qcu
     return 0;
   }
   return data[i];
@@ -65,5 +69,9 @@ CenteredSlice CenteredSlice::Half(bool upper)const{
 
 CenteredSlice CenteredSlice::Endpoint(bool upper,int newwidth)const{
   constrainClip(newwidth);
+<<<<<<< HEAD
   return subslice((upper?hwidth:-hwidth),newwidth);
+=======
+  return subslice(upper ? hwidth : -hwidth, newwidth);
+>>>>>>> dp5qcu
 }

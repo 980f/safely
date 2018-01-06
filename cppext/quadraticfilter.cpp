@@ -39,9 +39,14 @@ int QuadraticFilter::signA1() const {//same as linear
 double QuadraticFilter::amplitude() const {
   return amplitude(Y[0]);
 }
+<<<<<<< HEAD
 
 double QuadraticFilter::amplitude(int datum) const {
   return ratio(double(S4 * datum - S2 * Y[2]),D4);
+=======
+double QuadraticFilter::amplitude(int datum) const {
+  return ratio(S4 * datum - S2 * Y[2], D4);
+>>>>>>> dp5qcu
 }
 
 
@@ -72,8 +77,8 @@ void QuadraticFilter::recordInflection(PolyFilter::Interpolation &flect) const {
 
 void QuadraticFilter::init(const CenteredSlice &slice){
   //accumulators
-  Y[2] = 0.0;
-  Y[1] = 0.0;
+  Y[2] = 0;
+  Y[1] = 0;
   Y[0] = slice[0];
   for(int fi = 1; fi<=hw; ++fi) {
     int high = slice[fi];
@@ -87,7 +92,11 @@ void QuadraticFilter::init(const CenteredSlice &slice){
 } // QuadraticFilter::init
 
 void QuadraticFilter::step(CenteredSlice &slice){
+<<<<<<< HEAD
 
+=======
+#if 0 //optimal
+>>>>>>> dp5qcu
   int low = slice.lowest();//amplitude of point leaving view
   slice.step(true);
   int high = slice.highest();//amplitude of point entering view

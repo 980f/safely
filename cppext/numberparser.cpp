@@ -110,7 +110,7 @@ bool PushedNumberParser::next(char u){
     if(isdigit(u)){
       if(pow10==0){//if we dropped digits then we ignore the AfterDecimal content
         if (applydigit(postdecimal,u)){
-          ++div10;
+          ++postDigits;
         }
       }
       return true;

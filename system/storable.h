@@ -3,7 +3,7 @@
 
 //#include "safely.h"
 
-#include "argset.h" //for arrays to mate to hardware structs
+//#include "argset.h" //for arrays to mate to hardware structs
 
 #include "chain.h" //wrap std::vector to cover its sharp pointy sticks.
 #include "changemonitored.h"
@@ -18,9 +18,6 @@
 
 #include "textpointer.h"
 #include "numericalvalue.h"
-
-//class used for communicating keys, once was also for the actual storage.
-typedef TextKey NodeName;
 
 //class for text value storage.
 typedef Text TextValue;
@@ -44,21 +41,23 @@ class Storable : public ChangeMonitored, SIGCTRACKABLE {
   friend class Stored; //access to q and the like.
   friend class StoredLabel; //ditto
   friend class StoredEnum;
-  //needed to be a template, not worth figuring out the syntax friend class StoredGroup;
+
+  friend class StorageWalker;
+
+  //needed to be a template to befriend any StoredGroup
   template<typename> friend class StoredGroup;
 public:
-  /** allow value sets to a wad create and delete children */
-//  static bool AllowRemoteWadOperations;
-
-  enum Type {  //referring to the type of data in the node
-    NotKnown,   //construction error, parse error
-    Numerical, //asked to be a number, converts image to number when this is set
-    Uncertain, //parsed, not yet evaluated as to type (defering a step of the original parser to lazyinit code in setType.
+  /** the type of data in the node */
+  enum Type { //#ordered for certain tests
+    NotDefined,   //construction error, parse error
+    Uncertain, //parsed, not yet evaluated as to type (defering a step of the original parser to lazyinit code in setType).
     Textual,   //asked to be text, or was found quoted during parse
+    Numerical, //asked to be a number, converts image to number when this is set
     Wad,  //any node that has children is a wad
   };
 
-  enum Quality { //will use this during diffs
+  /** for debugging application logic, e.g. if Edited then it has changed since loaded by a file or set by default. */
+  enum Quality {
     Empty, //constructed but never referenced
     Defaulted, //created by attempted access
     Parsed, //parsed from stream
@@ -82,9 +81,9 @@ private: //#the watchers must be mutable because sigc needs to be able to cull d
   /** sent when any child's value changes, allows setting a watch on children that may not exist at the time of registration of the watcher. */
   mutable GatedSignal childwatchers; //# mutable, see @watchers.
 public: //needed only by StoredGroup, but that being a template made friending it difficult.
-  /** bool remove (else add at end) , int which
-   * called when an item is added or removed.
-   * This only matters to StoredGroup and was first needed by socket access for remote editing of StoredGroups.
+  /** bool remove (else add at end) , unsigned which
+   * called after an item is added or before it is removed.
+   * First needed by socket access for remote editing of StoredGroups.
    */
   mutable  sigc::signal<void, bool, unsigned> wadWatchers;
 
@@ -97,7 +96,7 @@ protected:
   NumericalValue number;
   /** value if type is textual or enum, also used for class diagnostics */
   TextValue text;
-public:   //made public for sibling access, could hide it with some explicit sibling methods.
+protected: //if you need access add a method
   /** used primarily for debugging, don't have to unwind stack to discover source of a wtf herein. */
   Storable *parent;
 protected:
@@ -113,22 +112,26 @@ protected:
   /** calls watchers */
   void notify() const;
   void recursiveNotify() const;
-private:
+public://publicly proclaim not accessible, priority of error messsages changed over time.
   /* non-copyable */
-  Storable(const Storable &noncopyable)=delete; // non construction-copyable
-  Storable &operator =(const Storable &noncopyable)=delete; // non copyable
-  /**a piece of constructor. @param name is node name */
-  Storable &precreate(NodeName name);
+  Storable(const Storable &noncopyable)=delete;
+  Storable &operator =(const Storable &noncopyable)=delete;
+private:
+  /** a piece of constructor. @param name is node name */
+  Storable &precreate(TextKey name);
 public:
-  const TextValue name;
-  /** somehow rename the node, perhaps by clone and replace */
+  //had to change to Text vs saving a pointer when file loading comes first, else the file content gets ripped out from under us and we are pointing to reclaimable heap. It still is a good idea to not rename nodes, unless perhaps the name is empty.
+  const Text name;
+  /** @deprecated we really want node names to be constant, it is bad practice to pass information via name instead of value.
+   * the node editor is the only entity which can justify doing that, as you are trying to fix a file. We can add launching nano to that gui, so that we know to reload the file over the node when nano returns.
+   * somehow rename the node, perhaps by clone and replace. This might lose its watchers. */
   void Rename(TextKey newname);
 public:
   /** @param isVolatile was added here to get it set earlier for debug convenience */
-  Storable(NodeName name, bool isVolatile = false);
-  Storable(bool isVolatile = false);
+  explicit Storable(TextKey name, bool isVolatile = false);
+  explicit Storable(bool isVolatile = false);
 
-  //todo: why is this virtual? does sigc need that? we shouldn't derive from Storable, we wrap it.
+  //virtual for sigc
   virtual ~Storable();
 
   /** @returns untyped pointer to this, handy for gtk gui access.*/
@@ -138,13 +141,15 @@ public:
   bool setType(Type newtype);
   Type getType() const;
   bool setQuality(Quality q);
+protected:
+  bool noteQuality(Quality q,bool alreadyChanged);
+public:
   /** sets a labeling for a numeric value. NB: the pointer is cached in this class, the enumerizer better not be deletable! */
   void setEnumerizer(const Enumerated *enumerated);
   const Enumerated *getEnumerizer() const;
 
-  /** @returns whether the text value was converted to a number. @param ifPure is whether to restrict the conversion to strings that are just a number, or whether
-   * trailing text is to be ignored. */
-  bool convertToNumber(bool ifPure,NumericalValue::Detail numtype=NumericalValue::Detail::Floating);
+  /** @returns whether the text value was converted to a number.  */
+  bool convertToNumber(NumericalValue::Detail numtype=NumericalValue::Detail::Floating);
 /** convert an Unknown to either Numerical or Text depending upon purity, for other types @returns false */
   bool resolve(bool recursively);
 
@@ -152,20 +157,19 @@ public:
   bool isTrivial() const;
   bool is(Type ty) const;
   bool is(Quality q) const;
-  bool isModified() const;
+  bool isModified() const override;
   // more involved functions
-  bool wasModified();
+  bool wasModified() override;
 
-#if StorableDebugStringy
-  /** @return number of changes */
-  unsigned listModified(sigc::slot<void, Ustring> textViewer) const;
-#endif
   Text fullName() const;
 
   /** the index is often not meaningful, but always is valid. It is -1 for a root node.*/
   unsigned ownIndex() const {
     return index;
   }
+  /** parent (0) is self, return own index ,if a member of a StoredGroup then this is index within group
+   *  parent (1) is node containing the node of interest*/
+  unsigned parentIndex(int generations) const; // parentIndex
 
   /** watch this node's value, if wad the only change here is adds and removes. */
   sigc::connection addChangeWatcher(const SimpleSlot &watcher, bool kickme = false) const;
@@ -179,7 +183,7 @@ public:
     bool onlyChildren;
     Storable &node;
 public:
-    Freezer(Storable &node, bool childrenToo = true, bool onlyChildren = false);
+    explicit Freezer(Storable &node, bool childrenToo = true, bool onlyChildren = false);
     ~Freezer();
     /** permenently freeze a node, such as when we are going to chop one up for export then discard it.*/
     static void freezeNode(Storable &node, bool childrenToo = true, bool onlyChildren = false);
@@ -188,8 +192,10 @@ public:
 
 public:
   /** @deprecated, need use case.
-   * make this node have same structure as givennode, but leave name and such alone */
-  void clone(const Storable &other);
+   * make this node have same structure as givennode, but leave name and present children intact*/
+  void clone(const Storable &other);  /** set the value of a numerical node */
+  double setValue(double value, Quality quality = Edited);
+
 public://users of clone:
   /** replaces 'clone and remove'*/
   void reparent(Storable &newparent);
@@ -198,17 +204,23 @@ public:
    *  rhs is not constable due to image() mutating the text when not Textual */
   void assignFrom(Storable &other);
 
-  /** set the value of a numerical node */
-  double setValue(double value, Quality quality = Edited);
   /** sets numerical value, if node has an enumerated then the text is set to match, if no enumerated then node type is set to
    * numerical with gay disregard for its previous type. */
   template<typename Numeric=double> Numeric setNumber(Numeric value, Quality quality = Edited){
-    setValue(static_cast<double>(value), quality);
-    return number;
+    NumericalValue numbing(value);
+    setNumber(numbing,quality);
+    return getNumber<Numeric>();
   }
 
-  void setNumber(NumericalValue other){
-    number=other;
+  /** set value with change detection */
+  bool setNumber(NumericalValue other, Quality quality = Edited){
+    bool notifeye=number.setto(other);
+    if(notifeye){
+      if(enumerated){
+        text=enumerated->token(number.cast<unsigned>());
+      }
+    }
+    return noteQuality(quality,notifeye);
   }
 
   template<typename Numeric=double> Numeric getNumber() const {
@@ -241,7 +253,9 @@ public:
   void setImage(const TextKey &value, Quality quality = Edited);
 
   /** this method is not const as we lazily reuse text for image of non-text instances */
-  Cstr image(void);
+  Cstr image();
+ /** this uses whatever the text presently is, if stale then you will have to find out why. */
+ Cstr getText() const;
 
   /** this uses whatever the text presently is, if stale then you will have to find out why. */
   Cstr getText(void)const;
@@ -266,6 +280,9 @@ public:
   /** @returns an iterator over the children, in ascending order*/
   ConstChainScanner<Storable> kinder() const;
 
+  /** experimental, to see if syntax is tolerable: */
+  void forChildren(sigc::slot<void, Storable &> action);
+
   bool has(unsigned ordinal) const {
     return ordinal < numChildren();
   }
@@ -276,7 +293,7 @@ public:
   /** @see existingChild() non const version */
   const Storable *existingChild(NodeName childName) const;
 
-  /** find nameless nodes, starting at &param l  astFound. Pass BadIndex for 'beginning`.
+  /** find nameless nodes, starting at &param lastFound. Pass BadIndex for 'beginning`.
    * To walk the list:
    * for(Storable *nemo=node.findNameless();nemo;nemo=node.findNameless(nemo.ownIndex())) dosomething(nemo); //nemo will not be null
    * @deprecated untested
@@ -294,8 +311,9 @@ public:
   /** creates node if not present.*/
   Storable &child(NodeName childName);
 
-  /** syntactic sugar for @see child(NodeName) */
-  Storable &operator ()(NodeName name);
+  /** syntactic sugar for @see child(TextKey) */
+  Storable &operator ()(TextKey name);
+
   //these give nth child
   Storable &operator [](unsigned ordinal);
 
@@ -315,9 +333,10 @@ public:
   Storable &createChild(const Storable &other, TextKey altname=nullptr);
 
   //combined presize and addChild to stifle trivial debug spew when adding a row to a table.
-  Storable &addWad(unsigned qty, Storable::Type type = NotKnown, NodeName name = "");
+  Storable &addWad(unsigned qty, Storable::Type type = NotDefined, TextKey name = "");
+
   /** add a bunch of null-named children of the given type to this node. Probably not good to use outside of this class cloning an object.*/
-  void presize(unsigned qty, Storable::Type type = NotKnown);
+  void presize(unsigned qty, Storable::Type type = NotDefined);
 
   /** remove a child of the wad, only makes sense for use with StoredGroup (or legacy cleanup) */
   bool remove(unsigned which);
@@ -326,18 +345,15 @@ public:
 
   /** remove all children */
   void filicide(bool notify = false);
-  /** packs child values into the given @param args, if purify is true then argset entries in excess of the number of this node's
-   * children are zeroed, else they are left unmodified  */
-  void getArgs(ArgSet &args, bool purify = false);
-  /** overwrite child nodes setting them to the given values, adding nodes as necessary to store all of the args.*/
-  void setArgs(ArgSet &args);
+  /** remove from parent */
+  void suicide(bool andDelete=false);//don't normally delete as someone is looking for the removal and they do the delete.
+  /** @returns rootnode of this node, 'this' if 'this' is a root node. (i.e a root is its own parent using this method) */
 
-  /** @returns rootnode of this node, 'this' if 'this' is a root node.*/
   Storable &getRoot();
   /** force size of wad. */
   unsigned setSize(unsigned qty);
   /** find/create from an already parsed path. Honors '#3' notation for child [3]*/
-  Storable *getChild(ChainScanner<Text> &progeny, bool autocreate);
+  Storable *getChild(Sequence<Text> &progeny, bool autocreate);
 private:
   Storable &finishCreatingChild(Storable &noob);
 ///////////////////////////////////
@@ -356,12 +372,49 @@ public:
     virtual void add(const Storable &noob) = 0;
     /** value changed */
     virtual void alter(const Storable &noob) = 0;
-    /** impementor must copy over any members, noob will shortly be destructed. */
+    /** implementor must copy over any members, noob will shortly be destructed. */
     virtual void remove(const Storable &noob) = 0;
   };
   static Mirror *remote;
-//  ArtString fullName() const;
+
 }; // class Storable
+
+
+struct StorageWalker {
+  Storable *p;
+
+  explicit StorageWalker(Storable *p) : p(p) {
+  }
+
+  explicit operator Storable *() {
+    return p;
+  }
+
+  //todo: findChild variations.
+  void push(Storable *child) {
+    p = child;
+  }
+
+  void pop() {
+    p = p->parent;
+  }
+
+  Storable *findChild(Text name, bool autocreate = true) {
+    return p->findChild(name, autocreate);
+  }
+
+  bool empty() {
+    return p == nullptr;
+  }
+
+  void pushChild(Text path, bool autocreate = true) {
+    p = findChild(path, autocreate);
+  }
+
+  void setType(Storable::Type type) {
+    p->setType(type);
+  }
+};
 
 /** iterate over the children of given node (kinder is german  plural for child, like kindergarten) */
 #define ForKinder(node) for(auto list(node.kinder()); list.hasNext(); )
@@ -375,7 +428,7 @@ class StoredListReuser {
   unsigned wadding;
   unsigned pointer;
 public:
-  StoredListReuser(Storable &node, unsigned wadding = 0);
+  explicit StoredListReuser(Storable &node, unsigned wadding = 0);
   Storable &next();
   unsigned done();
 };

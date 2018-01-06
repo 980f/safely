@@ -9,7 +9,11 @@ double polysum(double x,const double *a,int degree,unsigned prime=0);
 unsigned effectiveDegree(const double *a,unsigned degree);
 
 template <unsigned degree> class Polynomial:public Settable {
+<<<<<<< HEAD
 
+=======
+  
+>>>>>>> dp5qcu
 protected:
   double a[degree + 1];
 public:
@@ -18,12 +22,18 @@ public:
       a[ai]=0;
     }
   }
+<<<<<<< HEAD
   ~Polynomial(){}  //the compiler made me do it
 
+=======
+  ~Polynomial() = default;  //the compiler made me do it
+  
+>>>>>>> dp5qcu
   /** @returns whether the assignment changed this object.*/
 
   bool operator =(const Polynomial<degree>&other){
     for(unsigned ai = 0;ai <= degree;++ai) {
+<<<<<<< HEAD
       set(a[ai], ai<=other.degree?other[ai]:0);
     }
     return isModified();
@@ -33,6 +43,17 @@ public:
     return which <=degree;
   }
 
+=======
+      set(a[ai], ai<=degree?other[ai]:0);//todo:1 template a different degree for 2nd argument.
+    }
+    return isModified();
+  }
+  
+  bool validIndex(unsigned which)const{
+    return which <=degree;
+  }
+  
+>>>>>>> dp5qcu
   double &operator[](unsigned which){
     if(validIndex(which)){
       return a[which];
@@ -40,7 +61,11 @@ public:
       return a[0];
     }
   }
+<<<<<<< HEAD
 
+=======
+  
+>>>>>>> dp5qcu
   unsigned numParams()const override{
     return degree+1;
   }
@@ -64,7 +89,11 @@ argument list is 0 to higher order*/
   double y(double x, unsigned prime=0)const{
     return polysum(x,a,degree,prime);
   }
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> dp5qcu
   unsigned effectiveDegree()const{
     return ::effectiveDegree(a,degree);
   }

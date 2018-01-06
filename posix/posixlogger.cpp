@@ -5,13 +5,7 @@
 #include <execinfo.h> //backtrace
 #include "cstr.h" //nonTrivial
 
-//implements what system/logger.h externs:
-#if LoggerManagement == 1
-ChainedAnchor<Logger> Logger::root(nullptr,false);//most will be either static (never delete) or auto (delete by compiler on exit of scope)
-//todo: return logger by name
-//todo: how do we access the list without a gui?
-#endif
-
+__attribute__ ((init_priority (202))) //after manager is created, but before much of anything else
 Logger dbg("DBG");
 Logger wtf("WTF");
 
@@ -29,7 +23,8 @@ void logmessage(const char *prefix,const char *msg,va_list &args){
 
 void dumpStack(const char *prefix){
   dbg("StackTrace requested by %s",prefix);
-  //todo:0 ++ restore this functionality raise(SIGUSR1);
+  //todo:0 ++ restore this functionality
+  raise(SIGUSR1);
 }
 
 
@@ -48,10 +43,13 @@ void fatalHandler(int signal, siginfo_t *signalInfo, void *data){//#don't hide '
   void *stack[100];
   int stackSize = backtrace(stack, 100);
   // Recover the address where the exception happened
-#if defined(__i386__)
+#if defined(__i386__)   //smaller intel systems?
   ucontext_t *context = static_cast< ucontext_t* >(data);
   void *addr = reinterpret_cast< void* >(context->uc_mcontext.gregs[REG_EIP]);
-#elif defined(__ARM_EABI__)
+#elif defined(__x86_64__)  //Andy's dev PC
+  ucontext_t *context = static_cast< ucontext_t* >(data);
+  void *addr = reinterpret_cast< void* >(context->uc_mcontext.gregs[REG_RIP]);
+#elif defined(__ARM_EABI__)  //Ti Dm series, raspberry pi?
   ucontext_t *context = static_cast< ucontext_t* >(data);
   void *addr = reinterpret_cast< void* >(context->uc_mcontext.arm_pc);
 #else

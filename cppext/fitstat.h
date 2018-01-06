@@ -1,5 +1,5 @@
 #ifndef FITSTAT_H
-#define FITSTAT_H
+#define FITSTAT_H   "(C) 2017 Andy Heilveil"
 /**
   * report on a fit (regression) operation
   */
@@ -10,6 +10,6 @@ struct FitStat {
   FitStat();
   void init(int df = 0);
   void apply(double deviation);
-  FitStat&operator = (FitStat & other);
+  FitStat &operator=(const FitStat &&other);
 };
 #endif // FITSTAT_H

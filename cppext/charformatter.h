@@ -6,7 +6,7 @@
  *  next layer down tries to preserve a terminating null, but you have to ask it to do so.
  */
 #include "numberformat.h"
-namespace Safely {
+
 class CharFormatter : public CharScanner {
 public:
   /** unsafe version, uses strlen */
@@ -55,14 +55,6 @@ public:
   bool printUnsigned32(unsigned int value);
   /** our parser handles these, our printer should too. Just beware that u64's might not be atomic. */
   bool printUnsigned64(u64 value);
-  //todo:1 template to disambiguate printUnsigned(u8,u16,u32,u64)
-  bool printUnsigned(unsigned int value){
-    return printUnsigned32(value);
-  }
-//  template <typename signless> bool printUnsigned(signless thing){
-//    return printUnsigned32(thing);
-//  }
-//  template<> bool printUnsigned(u64 thing);
 
   bool printSigned(int value);
   bool printNumber(double d, int sigfig = 9);//9: 200 million is biggest number that we won't lose a bit of.
@@ -73,23 +65,20 @@ public:
 
   bool printString(TextKey s);
 
-//  void printArgs(ArgSet&args,bool master);
   /** useful for collation sequence, -1: this before other, +1: this after other, 0: this same as other*/
   int cmp(const CharScanner&other) const;
 
-  /** Prints decimal representation of @param value, prepending it with @param padding (default spaces) until the total length == @param width.
-   * @returns false if there wasn't enough space. or if the number of digits is larger than the specified width in which latter case this function will fill the field with asterisks */
-//  bool printAtWidth(unsigned int value, unsigned width);
-  bool printAtWidth(unsigned int value, unsigned width, char padding=' ');
+  /** Prints decimal representation of @param value, prepending it with spaces until the total length == @param width.
+   *@returns false if there wasn't enough space. or if the number of digits is larger than the specified width in which latter case this function will fill the field
+   * with asterisks */
+  bool printAtWidth(unsigned int value, unsigned width, char padding = ' ');
   /** print @param width least significant hex digits of @param value, @returns whether there were width positions available, if not then nothing is written */
   bool printHex(unsigned value, unsigned width);
-
-
 
 }; // class CharFormatter
 
 /** a class that wraps a raw buffer, and on destruction updates the raw buffer with the changes done via the wrapper.
- *  Typically only create as a local and don't mix using this wrapper with direct access to the raw buffer wrapped. */
+*  Typically only create as a local and don't mix using this wrapper with direct access to the raw buffer wrapped. */
 class Caster : public CharFormatter {
   Indexer<u8>&rawref;
 public:
@@ -100,6 +89,5 @@ public:
   ~Caster(){
     rawref.skip(this->used());
   }
-
 }; // class Caster
-}
+

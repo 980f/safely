@@ -3,81 +3,121 @@
 #include "eztypes.h"
 #include "minimath.h" //nan
 #include "cheaptricks.h" //changed
+#include "index.h" //for 'unsigned' reasoning
 
-NumericalValue::NumericalValue(){
- storage.dee=0;//one way to get it to be all zeroes.
- is=Floating;//first use of class was replacing something that was float even when it didn't need to be.
+
+
+/** @returns value converted to bool */
+template <> bool NumericalValue::cast<bool>() const noexcept{
+  switch (is) {
+  default:
+  case Truthy:
+    return storage.bee;
+  case Whole:
+    return storage.eye!=0;
+  case Counting:
+    return storage.ewe!=0;
+  case Floating:
+    return storage.dee!=0.0&&::isNormal(storage.dee);
+  }
+}
+
+/** @returns value converted to double */
+template <> double NumericalValue::cast<double>() const noexcept{
+  switch (is) {
+  case Truthy:
+    return storage.bee?1.0:0;
+  case Whole:
+    return double(storage.eye);
+  case Counting:
+    return storage.ewe!=BadIndex?double(storage.ewe):Nan;
+  default:
+  case Floating:
+    return storage.dee;
+  }
+}
+
+
+/** @returns value saturatedly converted to unsigned */
+template <> unsigned NumericalValue::cast<unsigned>() const noexcept{
+  switch (is) {
+  case Truthy:
+    return storage.bee?1:0;
+  case Whole://int to unsigned with saturation, all negatives are ~0
+    return storage.eye>=0?unsigned(storage.eye):BadIndex;
+  default:
+  case Counting:
+    return storage.ewe;
+  case Floating://todo:1 find stdlib saturating conversion function.
+    return ::isNormal(storage.dee)&&storage.dee>0.0&&storage.dee<double(BadIndex)?unsigned(storage.dee):BadIndex;
+  }
+}
+
+/** @returns value saturatedly converted to int */
+template <> int NumericalValue::cast<int>() const noexcept{
+  switch (is) {
+  case Truthy:
+    return storage.bee?1:0;
+  default:
+  case Whole:
+    return storage.eye;
+  case Counting:
+    return int(storage.ewe);
+  case Floating://todo: saturated return
+    if(storage.dee==0.0 || !::isNormal(storage.dee)){
+      return 0;
+    }
+    double maxint=double(1U<<31);//todo:0 std:: value for this.
+    if(storage.dee<=-(maxint)){
+      return -(maxint);
+    }
+    if(storage.dee>maxint){
+      return maxint;
+    }
+    return int(storage.dee);
+  }
+}
+
+
+NumericalValue::NumericalValue(bool bee){
+  storage.dee=0;//4debug
+  is=Truthy;
+  storage.bee=bee;
+}
+
+NumericalValue::NumericalValue(unsigned ewe){
+  storage.dee=0;//4debug
+  is=Counting;
+  storage.ewe=ewe;
+}
+
+NumericalValue::NumericalValue(int eye){
+  storage.dee=0;//4debug
+  is=Whole;
+  storage.eye=eye;
+}
+
+NumericalValue::NumericalValue(double d){
+ is=Floating;
+ storage.dee=d;
 }
 
 bool NumericalValue::changeInto(NumericalValue::Detail newis){
   if(newis!=is){//expedite frequent case
-    switch (newis) {
+    NumericalValue was(*this);//copy
+    is=newis;
+    switch (is) {
     case Truthy:
-      switch (is) {
-      case Truthy:
-        //#nada
-        break;
-      case Whole:
-        storage.bee=storage.eye!=0 ;
-        break;
-      case Counting:
-        storage.bee=storage.ewe!=0 ;
-        break;
-      case Floating:
-        storage.bee=storage.dee !=0.0;
-        break;
-      }
-
+      storage.bee=was.cast<bool>();
       break;
     case Whole:
-      switch (is) {
-      case Truthy:
-        storage.eye=storage.bee;
-        break;
-      case Whole:
-        //#nada
-        break;
-      case Counting:
-        storage.eye=storage.ewe;
-        break;
-      case Floating:
-        storage.eye=storage.dee;
-        break;
-      }
-
+      storage.eye=was.cast<int>();
       break;
     case Counting:
-      switch (is) {
-      case Truthy:
-        storage.ewe=storage.bee ;
-        break;
-      case Whole:
-        storage.ewe=storage.eye ;
-        break;
-      case Counting:
-        //#nada
-        break;
-      case Floating:
-        storage.ewe=storage.dee ;
-        break;
-      }
-
+      storage.ewe=was.cast<unsigned>();
       break;
     case Floating:
-      switch (is) {
-      case Truthy:
-        storage.dee=storage.bee?1.0:0.0 ;
-        break;
-      case Whole:
-        storage.dee=storage.eye ;
-        break;
-      case Counting:
-        storage.dee=storage.ewe ;
-        break;
-      case Floating:
-        //#nada
-        break;
-      }
+      storage.dee=was.cast<double>();
       break;
     }
     return true;
@@ -87,49 +127,60 @@ bool NumericalValue::changeInto(NumericalValue::Detail newis){
 }
 
 double NumericalValue::value() const noexcept {
-  switch (is) {
-  case Truthy:
-    return storage.bee;
-  case Whole:
-    return storage.eye;
-  case Counting:
-    return storage.ewe;
-  case Floating:
-    return storage.dee;
-  }
-  return Nan;
+  return this->cast<double>();
 }
 
-bool NumericalValue::setto(double d){
+bool NumericalValue::setto(const NumericalValue &other){
+  NumericalValue formerly(*this);
+  *this=other;
+  return !(*this==formerly);
+}
+
+bool NumericalValue::operator ==(const NumericalValue &other) const noexcept{
   switch (is) {
   case Truthy:
-    return changed(storage.bee,d!=0.0);
+    return storage.bee==other.cast<bool>();
   case Whole:
-    return changed(storage.eye,int(d));
+    return storage.eye==other.cast<int>();
   case Counting:
-    return changed(storage.ewe,unsigned(d));
+    return storage.ewe==other.cast<unsigned>();
   case Floating:
-    return changed(storage.dee,d);
+    return storage.dee==other.cast<double>();
   }
   return false;
 }
 
-void NumericalValue::operator =(double d){
+bool NumericalValue::operator >(const NumericalValue &other) const noexcept {
   switch (is) {
   case Truthy:
-    storage.bee=d!=0.0;
+    return storage.bee>other.cast<bool>();
+  case Whole:
+    return storage.eye>other.cast<int>();
+  case Counting:
+    return storage.ewe>other.cast<unsigned>();
+  case Floating:
+    return storage.dee>other.cast<double>();
+  }
+  return false;
+}
+
+
+NumericalValue &NumericalValue::operator =(const NumericalValue &other){
+  switch (is) {
+  case Truthy:
+    storage.bee=other.cast<bool>();
     break;
   case Whole:
-    storage.eye=int(d);
+    storage.eye=other.cast<int>();
     break;
   case Counting:
-    storage.ewe=unsigned(d);
+    storage.ewe=other.cast<unsigned>();
     break;
   case Floating:
-    storage.dee=d;
+    storage.dee=other.cast<double>();
     break;
   }
-
+  return *this;
 }
 
 template <> NumericalValue::Detail detail<double>(){ return NumericalValue::Detail::Floating;}

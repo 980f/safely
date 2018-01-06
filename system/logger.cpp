@@ -8,27 +8,19 @@
 extern void logmessage(const char *prefix,const char *msg,va_list &args);
 extern void dumpStack(const char *prefix);
 
+Logger::Manager *Logger::manager=nullptr;
+//LoadJSON,DBG,Filewriter,IFT,WTF,FSA,FileReader,FileWriter
 Logger::Logger(const char *location,bool enabled):prefix(location),enabled(enabled){
-#if LoggerManagement == 1
-  root.append(this);
-#endif
-}
-
-#if LoggerManagement == 1
-void Logger::listLoggers(Logger &dbg){
-  Chained<Logger> *scan=Logger::root.root;
-  while(scan->peer){
-    scan=scan->peer;
-    Logger *log=dynamic_cast<Logger *>(scan);
-    dbg("Logger.%s=%d",log->prefix,log->enabled);
+  if(manager){
+    manager->onCreation(*this);
   }
 }
-#endif
+
 
 Logger::~Logger(){
-#if LoggerManagement == 1
-  root.remove(this);
-#endif
+  if(manager){
+    manager->onDestruction(*this);
+  }
 }
 
 void Logger::operator() (const char *fmt, ...){

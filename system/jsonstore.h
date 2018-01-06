@@ -25,7 +25,7 @@ class JsonStore {
     /** we are parsing a wad, unless node is null in which case we are parsing the root item of a tree.
     ArtTree needs to be reworked to use a pointer unless we can invoke this parser in its constructor.
     Note:  if node->parent == null and node->numChildren() == 0, this is the root and we should not create a wad  child upon seeing an open brace.*/
-    Storable *node;
+    StorageWalker node;
     /** stores the name of the current node */
     Text name;
     /** Adds child by current name and sets value */
@@ -82,9 +82,13 @@ public:
     void printText(const char *p, bool forceQuote = false);
 
     /** we recurse via the parent pointer of the Storable*/
-    Storable *node;
+    StorageWalker node;
     /** @returns whether a 'name:' was emitted == name is not empty.*/
     bool printName();
+<<<<<<< HEAD
+=======
+
+>>>>>>> dp5qcu
     /** print children */
     void printWad();
 

@@ -19,7 +19,7 @@ public:
   unsigned remaining()const;
 private:
   /* on incremental write complete */
-  bool onWrite(__ssize_t ret);
+//todo: where did code go?  bool onWrite(__ssize_t ret);
 };
 
 #endif

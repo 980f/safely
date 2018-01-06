@@ -10,15 +10,17 @@
 class Application: public PosixWrapper {
 protected:
   Indexer<TextKey> arglist;
+  double hz;
+  /** event manager */
   Epoller looper;
-  /** ticks in logic driver period */
-  unsigned period;
-private:
+  /** time until next keepalive/sampling */
+  NanoSeconds period;
   /** if greater than zero and less than period it replaces period for one cycle */
-  unsigned quickCheck=0;
+  NanoSeconds quickCheck;
+
 protected:
   /** set quickCheck if @param soonish is sooner than a prior setting */
-  bool setQuickCheck(unsigned soonish);
+  bool setQuickCheck(NanoSeconds soonish);
   /** clear this to try to get app to exit gracefully */
   bool beRunning;
   /** called with each event, especially when period is up. Not harmonic */
@@ -29,6 +31,7 @@ protected:
 public:
   /** doesn't do much, but someday we may mate this to gnu getargs */
   Application(unsigned argc, char *argv[]);
+  virtual ~Application()=default;
   /** show argv */
   void logArgs();
   /** show cwd */

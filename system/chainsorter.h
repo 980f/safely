@@ -15,7 +15,7 @@ template< typename T > class ChainSorter {
   typedef  sigc::slot<int,const T*,const T*> Sortation;
   Sortation comparator;
   /** whether a newly inserted item should follow an existing item */
-  bool laterAfter;
+  bool laterAfter=false;
 public:
   ChainSorter(Chain<T> &list,Sortation comparator) :
     list(list),
@@ -26,7 +26,7 @@ public:
   /** @returns where to insert @param thing based on comparator. A value less than 0 indicates where a matching element has been found.
    *  this method relies upon the list being sorted, see lastIndex if you are probing a not-yet-sorted list. */
   int sortIndex(const T*thing) const {
-    int imax = ChainWrapper<T>::list.quantity() - 1;
+    int imax = list.quantity() - 1;
     int imin = 0;
     while (imax > imin) {
       int imid = (imin + imax) / 2;//rounding down, imid might equal imin, imax never will
@@ -72,7 +72,7 @@ public:
     }
     int location = sortIndex(thing);
     if(location>=0) {
-      return list.insert(thing,location);
+      return list.insert(thing,location);//#~cast
     } else {//we have a duplicate
       return list.insert(thing,~location + laterAfter ? 1 : 0);//newer follows older
     }
@@ -87,9 +87,9 @@ public:
     }
     int location = sortIndex(thing);
     if(location>=0) {//not in list, returns proper location for it
-      return list.insert(thing,location);
+      return list.insert(thing,location);//#~cast
     } else {//we have a duplicate, unless there is nothing yet present
-      if(list.v.size()==0) {
+      if(list.quantity()==0) {
         return list.insert(thing,0);
       } else {
         return nullptr;

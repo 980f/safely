@@ -40,9 +40,6 @@ char Char::slashee() const noexcept {
   }
 }
 
-char Char::asUpper() const noexcept {
-  return  toupper(raw);
-}
 
 
 ////////////////////////////////////
@@ -55,8 +52,24 @@ bool Char::startsName() const noexcept {
   return isalpha(raw);
 }
 
-bool Char::isDigit() const noexcept{
+bool Char::isDigit() const noexcept {
   return isdigit(raw);
+}
+
+bool Char::isLower() const noexcept {
+  return islower(raw);
+}
+
+char Char::asLower() const noexcept {
+  return static_cast<char>(tolower(raw));
+}
+
+bool Char::isUpper()const noexcept {
+  return isupper(raw);
+}
+
+char Char::asUpper() const noexcept {
+  return static_cast<char>(toupper(raw));
 }
 
 bool Char::isControl() const noexcept{
@@ -91,4 +104,8 @@ unsigned Char::hexDigit() const noexcept {
 char Char::hexNibble(unsigned sb) const noexcept {
   unsigned char nib= 15&(raw>>(sb*4)); //push to low nib
   return nib>9? 'A'+nib-10: '0'+nib;
+}
+
+bool Char::startsNumber() const noexcept {
+  return isDigit()||is('-')||is('+');//todo: ?how did this disappear
 }

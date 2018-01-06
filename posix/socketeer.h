@@ -16,10 +16,10 @@ struct SockAddress {
 
 /** wrapper to make sure we free any we fetch*/
 class HostInfo {
-  bool gotten;
-  int getError;
+  bool gotten=false;
+  int getError=0;
 public: //
-  int lastErrno;//like posixwrapper, migth refactor to use it.
+  int lastErrno=0;//like posixwrapper, migth refactor to use it.
 public:
   Index lastipv4;//which res member is an ipv4, -1 if none
   bool haveIpv4(){
@@ -28,7 +28,7 @@ public:
 
   addrinfo *anIpv4();
 
-  addrinfo *res;
+  addrinfo *res=nullptr;
   addrinfo hints;
 
   /** the only part of addrinfo that we need to hold on to */
@@ -70,6 +70,7 @@ private:
 
 public:
   Socketeer ();
+  Socketeer(const Socketeer &other)=delete;
   /** build one around a client that a server has accepted */
   Socketeer (int newfd,SockAddress &sadr);
   /** record connection parameters but don't do anything with them. @returns this */

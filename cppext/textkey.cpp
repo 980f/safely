@@ -61,7 +61,7 @@ unsigned toIndex(TextKey rawText, bool *impure){
     if(rawText==end){
       return BadIndex;
     }
-    return d>BadIndex?BadIndex:unsigned(d);
+    return d>BadIndex?BadIndex:unsigned(d);//saturating truncation
   } else {
     if(impure) {
       *impure = false;
