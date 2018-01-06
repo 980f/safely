@@ -119,7 +119,7 @@ void TextFormatter::substitute(u64 value){
   width = Zguard(1 + ilog10(value));
   CharFormatter workspace = makeWorkspace();
   if(workspace.isUseful()) {
-    if(!workspace.printUnsigned(value)) {  //if failed to insert anything
+    if(!workspace.printUnsigned64(value)) {  //if failed to insert anything
       onFailure(workspace);
     }
     reclaimWaste(workspace);

@@ -1,5 +1,4 @@
-#ifndef FILENAME_H
-#define FILENAME_H "(C) 2017 Andrew Heilveil"
+#pragma once // "(C) 2017 Andrew Heilveil"
 
 #include "dottedname.h"  //dotted with '/'
 #include "filenameconverter.h"
@@ -10,16 +9,16 @@
  * this approach maintains the path as an array of pieces, not assembled into a proper string until pack is called, which generates an independent chunk of text.
  * this has an advantage that intentional path separators aren't url encoded, only ones embedded in data appended to the path.
  */
-class FileName : public Chain<DottedName> {
+class FileNamer : public Chain<DottedName> {
 public:
   PathParser::Rules bracket;//outer rules
-  FileName();
+  FileNamer();
   /** parses into first path element*/
-  FileName(TextKey simple);
+  FileNamer(TextKey simple);
   /** parses, which copies */
-  FileName(const Text &simple);
+  FileNamer(const Text &simple);
   /** copies elements */
-  FileName(const FileName &other);
+  FileNamer(const FileNamer &other);
 
   /** @returns whether filename is trivial. Note: "/" is trivial, we make it hard to pass 'whole filesystem' to anything */
   bool empty() const{
@@ -27,19 +26,19 @@ public:
   }
   /** removes the last path element, similar to the dirname unix command
    * @returns this as reference */
-  FileName &dirname(void);
+  FileNamer &dirname(void);
 
   /** modifies last path member, add a dot if one isn't present then add given text. creates one if empty
  @returns this as reference */
-  FileName &ext(const Text &s);
+  FileNamer&ext(const Text &s);
 /** reset to be just our globally enforced root directory.
 @returns this as reference */
-  FileName &erase();
+  FileNamer&erase();
 
 public:
   /** parses appending.
  @returns this as reference */
-  FileName &parse(const char *rawpath);
+  FileNamer&parse(const char *rawpath);
   unsigned length(Converter &&cvt=FileNameConverter())const;
   /** assemble string to pass to normal code. @param cvt is for escaping special charaacters */
   Text pack(Converter &&cvt=FileNameConverter(), unsigned bytesNeeded=BadIndex);
@@ -48,11 +47,11 @@ public:
 
 /** useful for managing a recursively named file set.*/
 class NameStacker {
-  FileName &path;
+  FileNamer&path;
   unsigned mark;
 public:
-  NameStacker(FileName &path);
-  NameStacker(FileName &path, const Text &pushsome);
+  NameStacker(FileNamer&path);
+  NameStacker(FileNamer&path, const Text &pushsome);
 //  NameStacker(NameStacker&path);
 //  NameStacker(NameStacker&path, const Text &pushsome);
   /** remove what was added by constructor */
@@ -60,5 +59,3 @@ public:
   /** access to embedded @see FileName::pack */
   Text pack();
 };
-
-#endif // FILENAME_H

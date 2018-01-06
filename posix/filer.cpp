@@ -4,6 +4,7 @@
 #include "sys/types.h" //mkdir
 #include "errno.h"
 #include <cstdlib>
+#include "filenamer.h"
 #include <segmentedname.h>
 
 #include "logger.h"
@@ -18,7 +19,7 @@ Filer::~Filer(){
 }
 
 bool Filer::mkDirDashP(const char *path, bool itsparent){
-  FileName dirpath(path);
+  FileNamer dirpath(path);
   dirpath.bracket.after=true;//build in trailing slash
 
   if(itsparent) {
@@ -104,8 +105,8 @@ bool Filer::readall(unsigned maxalloc){
 } /* readall */
 
 bool Filer::cp(const char *src, const char *target, bool dashf, bool dashr){
-  FileName from(src);
-  FileName to(target);
+  FileNamer from(src);
+  FileNamer to(target);
 
   SegmentedName command;
   command.prefix("cp");
@@ -130,7 +131,7 @@ bool Filer::cp(const char *src, const char *target, bool dashf, bool dashr){
 /** the implementation below strips leading and trailing slashes, we can't remove absolutely named files here. */
 int Filer::rm(const char *name, bool dashf, bool dashr){
   if(nonTrivial(name)) {
-    FileName full(name);
+    FileNamer full(name);
     if(dashf || dashr) { //must use Shell
       SegmentedName command;
       command.suffix("rm");
@@ -143,7 +144,7 @@ int Filer::rm(const char *name, bool dashf, bool dashr){
       command.suffix(full.pack().c_str());
       return system(PathParser::pack(command,' '));
     } else { //do it the simple way
-      return remove(full.pack());//running it through FileName purifies the string by our rules, which might be nicer than the OS.
+      return remove(full.pack());//running it through FileNamer purifies the string by our rules, which might be nicer than the OS.
     }
   } else { //trivial name
     return 0; //success! we removed nothing!
