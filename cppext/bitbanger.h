@@ -137,7 +137,8 @@ inline unsigned mergeInto(unsigned *target, unsigned source, unsigned mask){
 /** @returns bits @param msb through @param lsb set to 1.
  * Default arg allows one to pass a width for lsb aligned mask of that many bits */
 constexpr unsigned fieldMask(unsigned msb,unsigned lsb=0){
-  return (1 << (msb+1)) - (1<<lsb);
+  //for msb=32 compiler computed 1<< (32+1) as 1<<1 == 2, not 0 as it should be! (i.e. it applied modulo(32) to the arg before using it as a shift count.
+  return  ((msb>=31)? 0:(1 << (msb+1))) -(1<<lsb);
 }
 
 /** use the following when offset or width are NOT constants, else you should be able to define bit fields in a struct and let the compiler to any inserting*/

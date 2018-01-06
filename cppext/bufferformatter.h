@@ -32,13 +32,31 @@ private:
   bool insert(const char *stringy,unsigned length);
 
   void substitute(Cstr stringy);
+  void substitute(TextKey stringy);
 
   void substitute(Indexer<char> buf);
+  void substitute(CharFormatter buf);
 
   void substitute(double value);
+  void substitute(u64 value);
 
-  /** templated printf:
-   *  each argument is pulled out of the pack from left to right.
+  void substitute(u32 value);
+  void substitute(u16 value);
+  void substitute(u8 value);
+
+  void substitute(s32 value);
+  void substitute(s16 value);
+  void substitute(s8 value);
+
+  void substitute(bool value);
+
+  void substitute(char value);
+
+  /** compiler insists we have this, needed in case the format string references this non-printable item.*/
+  void substitute( const NumberFormat &item);
+
+
+  /** each argument is pulled out of the pack from left to right.
    *  if the argument is a format spec then we alter state and proceed.
    *  for arguments that have a substitute method that will get called.
    *  Each substitue method eventually calls substitute (TextKey) which inserts a string.
@@ -55,15 +73,18 @@ private:
   }
 
 //if it is a number format then record it and apply to following items, no substition takes place..
-  template<typename ... Args> void compose_item( NumberFormat &item, const Args& ... args){
+  template<typename ... Args> void compose_item(const NumberFormat &item, const Args& ... args){
     nf = item;
     next(args ...);
   }
 
-  template<typename NextArg, typename ... Args> void compose_item( NextArg&item, const Args& ... args){
+  template<typename NextArg, typename ... Args> void compose_item(const NextArg&item, const Args& ... args){
     body.rewind();
     while(body.hasNext()) {
       char c = body.next();
+      if(c==0){//short the loop, saves time.
+        break;
+      }
       if(c == '$'&&body.hasNext()) {
         spec.lowest=body.ordinal()-1;// -1 is to overwrite the '$'
         UTF8 d = body.next();
@@ -84,7 +105,7 @@ public:
 
   /** */
   template<typename ... Args> static void composeInto(CharFormatter target,TextKey format, const Args ... args){
-    BufferFormatter worker(target,format); //a zero size formatter computes required length via a dry run at formatting
+    BufferFormatter worker(target,format);
     worker.compose_item(args ...);
   }
 
