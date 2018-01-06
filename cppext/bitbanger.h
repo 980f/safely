@@ -3,7 +3,15 @@
 
 /** bit and bitfield setting and getting.*/
 
-//#include "eztypes.h"
+#include <limits> //for number of bits in unsigned
+
+constexpr unsigned numBitsInUnsigned(){
+  return std::numeric_limits<unsigned>::digits;
+}
+
+constexpr unsigned msbOfUnsigned(){
+  return std::numeric_limits<unsigned>::digits-1;
+}
 
 constexpr bool bit(unsigned patter, unsigned bitnumber){
   return (patter & (1 << bitnumber)) != 0;
@@ -44,7 +52,7 @@ constexpr unsigned* atAddress(unsigned address){
 
 inline bool setBitAt(unsigned addr, unsigned bitnumber){
   return setBit(*atAddress(addr),bitnumber);
-}
+}//now it is an aligned 32 bit entity
 
 inline bool clearBitAt(unsigned addr, unsigned bitnumber){
   return clearBit(*atAddress(addr),bitnumber);
@@ -80,9 +88,8 @@ struct BitReference {
 
   /** naive constructor, code will work if @param bits isn't aligned, but will be inefficient.*/
   BitReference(unsigned *bits,unsigned bitnumber):
-    word(*bits),  //drop 2 lsbs, i.e. point at xxx00
-    mask(1<<(31& bitnumber)){//try to make bit pointer point at correct thing.
-    //now it is an aligned 32 bit entity
+    word(*bits),  //drop 2 lsbs of address , i.e. point at xxx00
+    mask(1<<(msbOfUnsigned()& bitnumber)){//try to make bit pointer point at correct thing.
   }
 
 #if 0 //mcu
@@ -138,7 +145,7 @@ inline unsigned mergeInto(unsigned *target, unsigned source, unsigned mask){
  * Default arg allows one to pass a width for lsb aligned mask of that many bits */
 constexpr unsigned fieldMask(unsigned msb,unsigned lsb=0){
   //for msb=32 compiler computed 1<< (32+1) as 1<<1 == 2, not 0 as it should be! (i.e. it applied modulo(32) to the arg before using it as a shift count.
-  return  ((msb>=31)? 0:(1 << (msb+1))) -(1<<lsb);
+  return  ((msb>= msbOfUnsigned())? 0:(1 << (msb+1))) -(1<<lsb);
 }
 
 /** use the following when offset or width are NOT constants, else you should be able to define bit fields in a struct and let the compiler to any inserting*/
@@ -245,8 +252,8 @@ public:
 /** for hard coded absolute (known at compile time) address and bit number */
 template <unsigned memoryAddress,unsigned bitnumber> struct KnownBit {
   enum {
-    word= memoryAddress&~3,
-    mask=(1<<(31& ((memoryAddress<<3)|bitnumber)))
+    word= memoryAddress&~(numBytesInUnsigned()-1),
+    mask=(1<<(msbOfUnsigned()& ((memoryAddress<<2)|bitnumber)))
   };
 
   bool operator =(bool set)const{
