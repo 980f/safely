@@ -14,5 +14,25 @@ QMAKE_CFLAGS += -funsigned-char
 
 #safely projects put their application specific library altering includes above the module src path.
 INCLUDEPATH += $$PWD
+DEPENDPATH += $$PWD
+
+doitSafely {
+  include("$$safelydir/sigc.pro")
+  include("$$safelydir/cppext/cppext.pro")
+  include("$$safelydir/system/system.pro")
+  include("$$safelydir/posix/posix.pro")
+
+  #project specific code
+  DEPENDPATH += $$prjdir
+  INCLUDEPATH += $$prjdir
+}
+
+usbSafely {
+  include("$$safelydir/usb/usblibs.pro")
+}
+
+rpiSafely {
+  include("$$safelydir/rasbpi/rasbpi.pro")
+}
 
 #any headers or source declarations following this line are a user-error via qtcreator, move to appropriate pro file.
