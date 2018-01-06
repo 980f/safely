@@ -49,6 +49,10 @@ void BufferFormatter::substitute(Cstr stringy){
   insert(stringy,stringy.length());
 }
 
+void BufferFormatter::substitute(TextKey stringy){
+  substitute(Cstr(stringy));
+}
+
 void BufferFormatter::substitute(Indexer<char> buf){
   insert(buf.internalBuffer(),buf.used());
 }
@@ -112,6 +116,10 @@ void BufferFormatter::substitute(s16 value){
 
 void BufferFormatter::substitute(s8 value){
   substitute(s32(value));//need this to distinguish char * from implied char &
+}
+
+void BufferFormatter::substitute(bool value){
+  substitute(u8(value));
 } // TextFormatter::substitute
 
 
