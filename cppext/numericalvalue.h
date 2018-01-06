@@ -83,9 +83,10 @@ public:
 
   /** demo of essential syntax*/
   static void testUsage();
+
 };
 
 //explicit instantiations are made in numericalvalue.cpp, add one for each type that gives you a linker error.
 template <typename Numeric> NumericalValue::Detail detail();
-
+template <> unsigned NumericalValue::cast<unsigned>() const noexcept;
 #endif // UNIONIZER_H

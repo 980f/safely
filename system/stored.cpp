@@ -54,9 +54,12 @@ sigc::slot<unsigned> Stored::liveindex() const {
   return mem_fun(node, &Storable::ownIndex); //faster
 }
 
+bool Stored::isNamed(TextKey name){
+  return node.name.is(name);
+}
+
 bool Stored::isEmpty() const {
-  //first two terms avert NPE's on horribly bad code, should never fire. (they were added due to gtk using void *'s and occasionally a null leaking into those).
-  return this == nullptr || &node == nullptr || node.q == Storable::Empty;
+  return this == nullptr || &node == nullptr || node.q == Storable::Empty;//#first two terms avert NPE's on horribly bad code, should never fire. (they were added due to gtk using void *'s and occasionally a null leaking into those).
 }
 
 void Stored::triggerWatchers(){

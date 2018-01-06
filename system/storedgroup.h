@@ -172,7 +172,7 @@ public:
     if(has(ordinal)) {
       return *pod[ordinal];
     }
-    if(autocreate) { //this is a debug feature, when we have to many problems to fix this right now.
+    if(autocreate) { //this is a debug feature, when we have too many problems to fix this right now.
       create("autocreated"); //todo:M periodically try to get rid of this crutch.
       return last();
     } else {

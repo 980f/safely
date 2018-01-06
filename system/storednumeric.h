@@ -133,6 +133,12 @@ public:
     return onAnyChange(applyTo(functor),kickme);
   }
 
+  /** hook up to send changes to the @param given functor, and if @param kickme call that functor now*/
+  sigc::connection sendChanges(Stored &thing,bool kickme=false){
+    return onAnyChange(applyTo(sigc::hide_return(sigc::bind(sigc::mem_fun(thing.node,&Storable::setNumber<Numeric>),Storable::Edited))),kickme);
+  }
+
+
   /** hook up to send changes to a simple variable. THIS IS DANGEROUS as you must manage the @return sigc::connection and disconnect it when the target gets deallocated. */
   sigc::connection onChangeUpdate(Numeric &target,bool kickme=false){
     if(kickme){

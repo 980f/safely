@@ -49,6 +49,9 @@ public:
   bool indexIs(unsigned index) const;
   /** @returns a functor that when called returns the present index of this item.*/
   sigc::slot<unsigned> liveindex() const;
+/** @returns whether underlying storage node is named per @param name */
+  bool isNamed(TextKey name);
+
 
   /** The next stuff is used by stored group refresh operations, to track no-longer relevent items */
 protected:
