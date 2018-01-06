@@ -7,8 +7,6 @@
 
 #include "numberpieces.h"
 
-using namespace Safely;
-
 NumberFormat::NumberFormat(){
   clear();
 }

@@ -7,5 +7,7 @@ CONFIG += console
 DEFINES -= QT_WEBKIT
 DEFINES -= QT_QML_DEBUG
 
+safelydir=$$PWD
+
 #best practices libraries:
-include("safely.pro")
+include("$$safelydir/safely.pro")

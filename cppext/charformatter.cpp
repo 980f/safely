@@ -12,8 +12,6 @@
 #include "cstr.h"
 #include "cheaptricks.h" //take()
 
-using namespace Safely;
-
 struct NumberParser : public PushedNumberParser  {
 
   /** @param buf points to terminator */
@@ -239,9 +237,9 @@ bool CharFormatter::printHex(unsigned value, unsigned width){
 
 bool CharFormatter::printSigned(int value){
   if(value < 0) {
-    return printChar('-') & printUnsigned(unsigned(-value));
+    return printChar('-') & printUnsigned32(unsigned(-value));
   } else {
-    return printUnsigned(unsigned(value));
+    return printUnsigned32(unsigned(value));
   }
 }
 
@@ -267,7 +265,7 @@ bool CharFormatter::printNumber(double d, int sigfig){
   double dint = floor(d);//print integer part of value
   bool is32 = (d == dint && d < _2gig);//todo:1 much better detection of fixed point versus scientific format.
   if(is32) {//try to preserve integers that were converted to double.
-    checker &= printUnsigned(u32(d));
+    checker &= printUnsigned32(u32(d));
   } else {
     double logd = log10(d);
     int div = 1 + logd - sigfig;
@@ -277,10 +275,10 @@ bool CharFormatter::printNumber(double d, int sigfig){
         div += sigfig - 9;
       }
       d /= pow10(div);
-      checker &= printUnsigned(u32(d));
+      checker &= printUnsigned32(u32(d));
       if(div>3) {
         checker &= printChar('E');
-        checker &= printUnsigned(u32(div));
+        checker &= printUnsigned32(u32(div));
       } else {
         while(div-->0) {
           checker &= printChar('0');
@@ -288,14 +286,14 @@ bool CharFormatter::printNumber(double d, int sigfig){
       }
     } else if(div==0) { //exact number of desired digits to left of .
       if(sigfig<=9) {
-        checker &= printUnsigned(u32(d));
+        checker &= printUnsigned32(u32(d));
       } else {
         //todo:1 print first 9 digits then a decimal point then struggle.
         //struggle: add 10^excess, print that then replace the leading 1 with a '.'
       }
     } else { // 'div' decimals will be needed
       if(dint>0) { //we have some to the left of the dp
-        checker &= printUnsigned(u32(dint));
+        checker &= printUnsigned32(u32(dint));
         d -= dint;
         logd = log10(d);
       } else {
@@ -314,7 +312,7 @@ bool CharFormatter::printNumber(double d, int sigfig){
         while(numzeros-->0) {
           checker &= printChar('0');
         }
-        checker &= printUnsigned(u32(d));
+        checker &= printUnsigned32(u32(d));
         //todo:2 trim trailing zeroes here stop at DP  and if you see that add one back on.
       }
     }

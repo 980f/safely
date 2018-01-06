@@ -82,7 +82,7 @@ void BufferFormatter::substitute(u32 value){
   char maxprintable[19+1];//19 digits , null
   CharFormatter workspace(maxprintable,sizeof(maxprintable));
   workspace.zguard();//insert failsafe null
-  if(workspace.printUnsigned(value)) {  //if formatted ok
+  if(workspace.printUnsigned32(value)) {  //if formatted ok
     insert(maxprintable,workspace.used());
   }
 }

@@ -9,7 +9,6 @@ INCLUDEPATH += $$systemdir
 
 SOURCES += \
     $$systemdir/logger.cpp \
-    $$systemdir/numberformatter.cpp \
     $$systemdir/storable.cpp \
     $$systemdir/storedipv4address.cpp \
     $$systemdir/storednumeric.cpp \
@@ -24,10 +23,12 @@ SOURCES += \
     $$systemdir/gatedsignal.cpp \
     $$systemdir/stored.cpp \
     $$systemdir/dottedname.cpp \
-    $$systemdir/filename.cpp \
+    $$systemdir/filenamer.cpp \
     $$systemdir/filenameconverter.cpp \
-    $$systemdir/textformatter.cpp  \
+    $$systemdir/textformatter.cpp \
+    $$systemdir/numberformatter.cpp \
     $$systemdir/storedargs.cpp
+
 
 HEADERS += \
     $$systemdir/chain.h \
@@ -47,7 +48,7 @@ HEADERS += \
     $$systemdir/storedlabel.h \
     $$systemdir/pathparser.h \
     $$systemdir/stored.h \
-    $$systemdir/filename.h \
+    $$systemdir/filenamer.h \
     $$systemdir/dottedname.h \
     $$systemdir/allocatedindexer.h \
     $$systemdir/storedargs.h
