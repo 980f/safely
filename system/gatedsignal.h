@@ -1,7 +1,9 @@
 #pragma once
 
 #include "sigcuser.h"
-/** Provides for invoking an operation once even though multiple rules might invoke it. Create a Freezer at the beginning of a block of code that might trigger the signal multiple times. It will only run at most once when the Freezer is deleted.
+/** Provides for invoking an operation once even though multiple rules might invoke it.
+ * @see Storable::Freezer for usage.
+ * Create a Freezer at the beginning of a block of code that might trigger the signal multiple times. It will only run at most once when the Freezer is deleted.
  *
  *  Wraps a SimpleSignal and provides for multiple entities to defer triggering of the signal.
  *  A counter tracks unbalanced gate() and ungate() calls. When the count is zero send() will emit the signal.
@@ -64,15 +66,11 @@ protected:
 
 public:
   GatedSignalBound(Arg &knownArg) : knownArg(knownArg){
-
+    //#nada
   }
 
-  SimpleSignal::iterator connect(const sigc::slot< void,Arg > &slot){
+  SimpleSignal::iterator connect(const sigc::slot< void, Arg > &slot){
     return GatedSignal::connect(sigc::bind(slot,sigc::ref(knownArg)));//use a seperate sigc::ref for each slot
   }
 
 };
-<<<<<<< HEAD
-=======
-
->>>>>>> dp5qcu

@@ -1,10 +1,6 @@
 #ifndef STORABLE_H
 #define STORABLE_H
 
-//#include "safely.h"
-
-//#include "argset.h" //for arrays to mate to hardware structs
-
 #include "chain.h" //wrap std::vector to cover its sharp pointy sticks.
 #include "changemonitored.h"
 
@@ -254,17 +250,12 @@ public:
 
   /** this method is not const as we lazily reuse text for image of non-text instances */
   Cstr image();
- /** this uses whatever the text presently is, if stale then you will have to find out why. */
- Cstr getText() const;
-
   /** this uses whatever the text presently is, if stale then you will have to find out why. */
-  Cstr getText(void)const;
-
-
-  void setDefault(NodeName value);
+  Cstr getText() const;
+  void setDefault(TextKey value);
 
   /** @return whether text value of node textually equals @param zs (at one time a null terminated string) */
-  bool operator ==(NodeName zs);
+  bool operator ==(TextKey zs);
 
   /** @returns number of child nodes. using unsigned rather than size_t to reduce number of casts required */
   unsigned numChildren() const { //useful with array-like nodes.
@@ -288,10 +279,10 @@ public:
   }
 
   /** @returns null pointer if no child by given name exists, else pointer to the child*/
-  Storable *existingChild(NodeName childName);
+  Storable *existingChild(TextKey childName);
 
   /** @see existingChild() non const version */
-  const Storable *existingChild(NodeName childName) const;
+  const Storable *existingChild(TextKey childName) const;
 
   /** find nameless nodes, starting at &param lastFound. Pass BadIndex for 'beginning`.
    * To walk the list:
@@ -306,10 +297,10 @@ public:
    * While ".." is specially treated as the parent of where you are in the path, "." is not implemented which means a child named "." will be looked for.
    * The ".." is honored anywhere in the path, although that is usually not sensible.
    * */
-  Storable *findChild(NodeName path, bool autocreate = true); //# true as the default is legacy from the method this replaced.*/
+  Storable *findChild(TextKey path, bool autocreate = true); //# true as the default is legacy from the method this replaced.*/
 
   /** creates node if not present.*/
-  Storable &child(NodeName childName);
+  Storable &child(TextKey childName);
 
   /** syntactic sugar for @see child(TextKey) */
   Storable &operator ()(TextKey name);
@@ -327,7 +318,7 @@ private:
   unsigned indexOf(const Storable &node) const;
 public:
   /** add a new empty node */
-  Storable &addChild(NodeName childName);//removed default, nameless nodes are rare, make them stand out.
+  Storable &addChild(TextKey childName);//removed default, nameless nodes are rare, make them stand out.
 
   /** add a new node with content copied from existing one, created to clean up storedGroup entity copy, added altname to rename child since names are now const and sometimes must be unique (roles).*/
   Storable &createChild(const Storable &other, TextKey altname=nullptr);

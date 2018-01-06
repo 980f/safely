@@ -6,7 +6,7 @@
 /** print number into string. */
 struct NumberTextifier {
   /** meaning of @see precision field */
-  Safely::NumberFormat nf;
+  NumberFormat nf;
   /** commonly used for unit-of-measure or SI multiplier. Note: this does not automatically add a space between the digits and this text, do that yourself. */
   Text postfix;
 

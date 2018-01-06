@@ -7,7 +7,6 @@
 #include "segmentedname.h" //for debug reports
 #include "dottedname.h"
 #include "numbertextifier.h"
-using namespace Safely;
 
 SafeLogger(storetree,false);
 
@@ -496,7 +495,7 @@ Cstr Storable::image(void){
         text.copy(buffer);
         break;
       case NumericalValue::Counting:
-        formatter.printUnsigned(number.as<unsigned>());
+        formatter.printUnsigned32(number.as<unsigned>());
         break;
       case NumericalValue::Floating:
         text.copy(NumberFormatter::makeNumber(number));
@@ -688,7 +687,7 @@ Storable&Storable::child(TextKey childName){
   }
 } // Storable::child
 
-Storable&Storable::operator ()(NodeName name){
+Storable&Storable::operator ()(TextKey name){
   return child(name);
 }
 
@@ -728,7 +727,7 @@ unsigned Storable::indexOf(const Storable&node) const {
   return wad.indexOf(&node);
 }
 
-Storable&Storable::addChild(NodeName childName){
+Storable&Storable::addChild(TextKey childName){
   Storable&noob(precreate(childName));
 
   return finishCreatingChild(noob);
@@ -751,7 +750,7 @@ Storable&Storable::finishCreatingChild(Storable&noob){
   return noob;
 }
 
-Storable&Storable::addWad(unsigned qty, Storable::Type type, NodeName name){
+Storable&Storable::addWad(unsigned qty, Storable::Type type, TextKey name){
   Storable&noob(precreate(name));
 
   noob.presize(qty, type);
