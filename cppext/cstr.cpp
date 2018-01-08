@@ -156,6 +156,9 @@ const char *Cstr::rchr(int chr) const noexcept {
 
 Index Cstr::trailingZeroes() const{
   unsigned p=length();
+  if(p==1){
+    return BadIndex;//easiest way to deal with a single '0' character.
+  }
   while(p-->0){
     if(ptr[p]!='0'){
       if(ptr[p]=='.'){
