@@ -3,7 +3,8 @@
 
 #include "nanoseconds.h"
 
-/** an interval timer */
+/** an interval timer.
+ todo:1 elapsed additional return as NanoSeconds, not just double. */
 class StopWatch {
 
 private:
@@ -25,14 +26,15 @@ Most of the time 'real' makes more sense, but when debugging 'process' time is m
   StopWatch(bool beRunning=true,bool realElseProcess=false);//defaults are for performance timing.
 
   /** @returns elasped time and restarts interval. Use this for cyclic sampling. @param absolutely if not null gets the absolute time reading used in the returned value.*/
-  double roll(double *absolutely=nullptr);
+  NanoSeconds roll(double *absolutely=nullptr);
   /** use start and stop for non-periodic purposes*/
   void start();
+  /** stops acquiring (if not already stopped) and @returns REFERENCE to stopped tracker. You probably want elapsed() or rollit(), this guy is only needed for some time critical timing situations */
   void stop();
   /** convenient for passing around 'timeout pending' state */
   bool isRunning() const;
   /** updates 'stop' if running then @returns time between start and stop as seconds. @param absolutely if not null gets the absolute time reading used in the returned value.*/
-  double elapsed(double *absolutely=nullptr);
+  NanoSeconds elapsed(double *absolutely=nullptr);
 
   /** make last 'elapsed' be a start, retroactively (without reading the system clock again.*/
   void rollit();
@@ -44,7 +46,7 @@ Most of the time 'real' makes more sense, but when debugging 'process' time is m
   /** @returns how many intervals have passed, and if andRoll sets start module interval */
   unsigned periods(NanoSeconds interval, bool andRoll=true);
   /** @return last clock value sampled, either as absolute (time since program start) or since stopwatch.start()*/
-  double lastSnap(bool absolute) const;
+  NanoSeconds lastSnap(bool absolute=false) const;
 };
 
 #endif // STOPWATCH_H

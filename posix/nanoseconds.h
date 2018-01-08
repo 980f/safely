@@ -48,12 +48,8 @@ struct NanoSeconds {
   unsigned ms() const noexcept;
 
   /** @returns microsecond where rounder=0 for truncation aka 'floor', 500 for nearest 'round', 999 for 'ceil'*/
-  MicroSeconds us(unsigned rounder=999){
-    MicroSeconds us;
-    us.tv_sec=ts.tv_sec;
-    us.tv_usec=(ts.tv_nsec+rounder)/1000;
-    return us;
-  }
+  MicroSeconds us(unsigned rounder=999);
+
   /** @returns this minus @param lesser. NB: this is not java, the object is on the stack not new'd */
   NanoSeconds operator -(const NanoSeconds &lesser) const;
   /** @returns this after subtracting @param lesser */
@@ -92,6 +88,11 @@ public: //logical operations that might surprise some people
     return *this;
   }
 
+  /** @return this after setting it to an invalidly large value. */
+  NanoSeconds &Never();
+
+  /** @returns whether this is the value that Never would set it to */
+  bool isNever();
 
 public: //system services
   /** wraps posix nanosleep. @returns the usual posix nonsense. 0 OK/-1 -> see errno

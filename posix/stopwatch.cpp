@@ -19,8 +19,8 @@ StopWatch::StopWatch(bool beRunning,bool realElseProcess) :
   running = beRunning;
 }
 
-double StopWatch::roll(double *absolutely){
-  double retval = elapsed(absolutely);//must be running to roll.
+NanoSeconds StopWatch::roll(double *absolutely){
+  NanoSeconds retval = elapsed(absolutely);//must be running to roll.
   if(running) {
     started = stopped;//#do NOT start(), want to read the clock just once with each roll.
   }
@@ -67,15 +67,15 @@ unsigned StopWatch::cycles(double atHz,bool andRoll){
 }
 
 unsigned StopWatch::periods(NanoSeconds interval, bool andRoll){
-  NanoSeconds now=absolute();
+  NanoSeconds now=elapsed();
   unsigned modulo=now.modulated(interval);
   if(andRoll){
-    started=now;
+    started=stopped;
   }
   return modulo;
 }
 
-double StopWatch::lastSnap(bool absolute) const{
+NanoSeconds StopWatch::lastSnap(bool absolute) const{
   if(absolute){
     return stopped;
   } else {
@@ -83,14 +83,14 @@ double StopWatch::lastSnap(bool absolute) const{
   }
 }
 
-double StopWatch::elapsed(double *absolutely){
-  double diff = absolute();
+NanoSeconds StopWatch::elapsed(double *absolutely){
+  NanoSeconds diff = absolute();//updates 'stopped'
   if(absolutely) {
     *absolutely = diff;
   }
   diff -= started;
   if(diff<0) {//clock rolled over
-    diff += 0.0;//todo:1 proper value before 2038 happens
+    diff.Never();//todo:1 proper value before 2038 happens
   }
   return diff;
 }

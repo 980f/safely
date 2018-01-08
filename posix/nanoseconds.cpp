@@ -27,6 +27,13 @@ unsigned NanoSeconds::ms() const noexcept {
   return millis;
 }
 
+MicroSeconds NanoSeconds::us(unsigned rounder){
+  MicroSeconds us;
+  us.tv_sec=ts.tv_sec;
+  us.tv_usec=(ts.tv_nsec+rounder)/1000;
+  return us;
+}
+
 NanoSeconds NanoSeconds::operator -(const NanoSeconds &lesser) const{
   NanoSeconds diff;
   diff=*this;
@@ -62,7 +69,7 @@ bool NanoSeconds::operator >(const NanoSeconds &that) const{
 }
 
 bool NanoSeconds::operator >=(const NanoSeconds &that) const{
-  return (ts.tv_sec>=that.ts.tv_sec) || ( (ts.tv_sec==that.ts.tv_sec)&&(ts.tv_nsec>=that.ts.tv_nsec) );
+  return ts.tv_sec>that.ts.tv_sec ||((ts.tv_sec==that.ts.tv_sec) && ts.tv_nsec>=that.ts.tv_nsec);
 }
 
 int NanoSeconds::signabs(double *dub) const {
@@ -82,6 +89,16 @@ int NanoSeconds::signabs(double *dub) const {
     *dub=from(ts);
   }
   return 1;
+}
+
+NanoSeconds &NanoSeconds::Never(){
+  ts.tv_sec=~0U;//this is legal
+  ts.tv_nsec=~0U;//this is not.
+  return *this;
+}
+
+bool NanoSeconds::isNever(){
+  return ts.tv_sec==~0U && ts.tv_nsec==~0U;
 }
 
 bool NanoSeconds::isZero() const noexcept{
