@@ -71,7 +71,7 @@ struct NanoSeconds {
 
 public: //logical operations that might surprise some people
   /** @returns this after setting it to other if other is larger. This only makes sense when computing a maximum interval, one that is large enough to contain all items presented to it. */
-  NanoSeconds& operator |= (const NanoSeconds &other){
+  NanoSeconds& operator |= (const NanoSeconds &other){//todo:1 named function instead of operator
     if(*this<other){
       *this=other;
     }
@@ -79,7 +79,7 @@ public: //logical operations that might surprise some people
   }
 
   /** @returns this after setting it to other if this is zero or other is smaller. This only makes sense when computing a minimum interval. */
-  NanoSeconds& operator &= (const NanoSeconds &other){
+  NanoSeconds& operator &= (const NanoSeconds &other){//todo:1 named function instead of operator
     if(isZero()){
       *this=other;
     } else if(*this>other){
