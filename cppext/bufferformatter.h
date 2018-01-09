@@ -104,9 +104,10 @@ private:
 public:
 
   /** */
-  template<typename ... Args> static void composeInto(CharFormatter target,TextKey format, const Args ... args){
+  template<typename ... Args> static void composeInto(CharFormatter &target,TextKey format, const Args ... args){
     BufferFormatter worker(target,format);
     worker.compose_item(args ...);
+    target.skip(worker.body.used());
   }
 
   template<typename ... Args> void print( const Args ... args){
