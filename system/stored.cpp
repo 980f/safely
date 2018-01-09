@@ -19,7 +19,11 @@ TextKey Stored::rawText() const {
 }
 
 sigc::connection Stored::onAnyChange(SimpleSlot slotty, bool kickme){
-  return node.is(Storable::Wad) ? node.addChangeMother(slotty, kickme) : node.addChangeWatcher(slotty, kickme);
+  if (node.is(Storable::Wad)){
+    return node.addChangeMother(slotty, kickme);
+  } else {
+    return node.addChangeWatcher(slotty, kickme);
+  }
 }
 
 void Stored::markTrivial(){

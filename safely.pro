@@ -1,4 +1,5 @@
 ## QT project file fragment with things common to libraries  and applications using the 'safely' project
+safelydir=$$PWD
 
 CONFIG -= app_bundle
 CONFIG -= qt

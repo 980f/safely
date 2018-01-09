@@ -245,7 +245,7 @@ bool Storable::isTrivial() const {
 }
 
 bool Storable::is(Type ty) const {
-  return q != Empty && type == ty;
+  return type == ty;//changed to meet expectation of function name. Emptiness should not have ever been a qualifier, probably a left over from when type was mostly guessed.
 }
 
 bool Storable::is(Storable::Quality q) const {
@@ -739,7 +739,7 @@ Storable&Storable::finishCreatingChild(Storable&noob){
   noob.index = wad.quantity();
   wad.append(&noob);
   wadWatchers(false,noob.index);//especially used by stored group to create when remote posts into this node.
-  if(remote) {
+  if(remote) {//note: StoredGroup has completed creation of wrapped object by the time we get here.
     remote->add(noob);
   }
   return noob;

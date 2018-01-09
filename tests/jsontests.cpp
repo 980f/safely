@@ -60,7 +60,7 @@ void printNode(unsigned tab,Storable &node){
     printf("%g ",node.getNumber<double>());
     break;
   case Storable::Uncertain:
-  case Storable::NotKnown:
+  case Storable::NotDefined:
     printf("%s ",node.image().c_str());
     break;
   case Storable::Textual:

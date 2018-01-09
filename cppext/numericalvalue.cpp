@@ -145,7 +145,7 @@ bool NumericalValue::operator ==(const NumericalValue &other) const noexcept{
   case Counting:
     return storage.ewe==other.cast<unsigned>();
   case Floating:
-    return storage.dee==other.cast<double>();
+    return storage.dee==other.cast<double>();//# exact compare intended,might use 'nearly' if group agrees to it.
   }
   return false;
 }
