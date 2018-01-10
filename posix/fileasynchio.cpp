@@ -3,7 +3,7 @@
 #include "nanoseconds.h"
 #include "logger.h"
 
-SafeLogger(FAA,true);
+SafeLogger(FAA,false);
 
 FileAsyncAccess::FileAsyncAccess(bool reader, Fildes &fd, ByteScanner &buf):
   IncrementalFileTransfer (reader,fd,buf){

@@ -43,7 +43,8 @@ public:
   void stop(){
     beRunning=false;
   }
-
+  /** "renice" */
+  bool setpriority(int niceness);
 public: //utilities
   /** @returns a copy of the hostname, not a static function as it records errors from the attempt */
   Text hostname();//not static as we record errors

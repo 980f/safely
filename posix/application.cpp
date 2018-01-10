@@ -7,6 +7,7 @@
 
 #include "fcntlflags.h"
 #include "unistd.h"
+#include "sys/resource.h"  //setpriority
 
 #include "textpointer.h" //Text class
 
@@ -91,6 +92,15 @@ int Application::run(){
     }
   }
   return looper.errornumber;
+}
+
+bool Application::setpriority(int niceness){
+  if(ok(::setpriority(PRIO_PGRP,0,niceness))){//the middle 0 is "us".
+    return true;
+  } else {
+    dbg("Failed to setpriority to %d",niceness);
+    return false;
+  }
 }
 
 
