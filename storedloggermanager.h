@@ -11,10 +11,8 @@
 struct LoggerControl: public StoredBoolean {
   Chain<Logger> myLoggers;
   LoggerControl(Storable &node);
-
+  /** set @param newlevel on all loggers sharing this controller's name. */
   void updateLoggers(bool newlevel);
-
-
 };
 
 /** controls state of each logging stream. This will dominate over values set in Logger() constructor. */
