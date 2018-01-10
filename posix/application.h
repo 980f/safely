@@ -15,7 +15,8 @@ protected:
   Epoller looper;
   /** time until next keepalive/sampling */
   NanoSeconds period;
-
+  /** pid read on object creation */
+  pid_t startup_pid;
 private:
   /** if greater than zero and less than period it replaces period for one cycle */
   NanoSeconds quickCheck;
@@ -44,7 +45,8 @@ public:
     beRunning=false;
   }
   /** "renice" */
-  bool setpriority(int niceness);
+  bool setPriority(int niceness);
+  bool setScheduler(bool fast);
 public: //utilities
   /** @returns a copy of the hostname, not a static function as it records errors from the attempt */
   Text hostname();//not static as we record errors

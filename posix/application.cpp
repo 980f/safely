@@ -7,8 +7,8 @@
 
 #include "fcntlflags.h"
 #include "unistd.h"
-#include "sys/resource.h"  //setpriority
-
+#include "sys/resource.h"  //setPriority
+#include "sched.h" //setSched
 #include "textpointer.h" //Text class
 
 #include "time.h" //for epoll override
@@ -36,7 +36,8 @@ Application::Application(unsigned argc, char *argv[]):PosixWrapper ("APP"),//tod
   looper(32), //maydo: figure out size of maximum reasonable poll set.
   period(NanoSeconds(0.1)), //start at 10 Hz, a rather slow value.
   beRunning(false){//startup idle.
-  dbg("Application base initialized");
+  startup_pid = getpid();
+  dbg("Application base initialized, pid:%lu",static_cast<unsigned long>(startup_pid));//coerce type cause printf is dumb
 }
 
 void Application::logArgs(){
@@ -94,8 +95,11 @@ int Application::run(){
   return looper.errornumber;
 }
 
-bool Application::setpriority(int niceness){
-  if(ok(::setpriority(PRIO_PGRP,0,niceness))){//the middle 0 is "us".
+bool Application::setPriority(int niceness){
+  if(niceness<-19){
+    return setScheduler(true);
+  }
+  if(ok(setpriority(PRIO_PGRP,0,niceness))){//the middle 0 is "us".
     return true;
   } else {
     dbg("Failed to setpriority to %d",niceness);
@@ -103,7 +107,17 @@ bool Application::setpriority(int niceness){
   }
 }
 
-
+bool Application::setScheduler(bool fast){
+  int policy=fast?SCHED_FIFO:SCHED_OTHER;
+  sched_param param;
+  param.__sched_priority=95;//number cadged from audio
+  if(ok(sched_setscheduler(startup_pid,policy,&param))){
+    return true;
+  } else {
+    dbg("Failed to setscheduler to %d",policy);
+    return false;
+  }
+}
 
 Text Application::hostname(){
   char maxname[512];
@@ -115,8 +129,8 @@ Text Application::hostname(){
 }
 
 bool Application::writepid(TextKey pidname){
-  pid_t pid = getpid();
-  //todo: global debugger- dbg("pid: %ld\n", long(pid));//coercing type for platform portability
+  pid_t pid=getpid();//get calling thread's pid
+  ::dbg("pid: %ld\n", long(pid));//coercing type for platform portability
   FILE* pidler(fopen(pidname,"w"));//want exclusive access
   if(pidler){
     fprintf(pidler,"%ld\n", long(pid));//coercing type for platform portability
