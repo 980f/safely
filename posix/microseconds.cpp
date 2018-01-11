@@ -4,7 +4,7 @@
 #include "minimath.h"
 
 
-static const unsigned OneMeg = 1000000;
+static const int OneMeg = 1000000;
 
 void parseTime(timeval &ts, double seconds){
   if(seconds==0.0) {//frequent case
@@ -77,13 +77,13 @@ unsigned MicroSeconds::modulated(const MicroSeconds &interval){
 } // MicroSeconds::modulated
 
 MicroSeconds &MicroSeconds::Never(){
-  tv_sec = ~0U;//this is legal
-  tv_usec = ~0U;//this is not.
+  tv_sec = ~0;//this is legal
+  tv_usec = ~0;//this is not.
   return *this;
 }
 
 bool MicroSeconds::isNever() const {
-  return tv_sec==~0U && tv_usec==~0U;
+  return tv_sec==~0 && tv_usec==~0;
 }
 
 MicroSeconds &MicroSeconds::atLeast(const MicroSeconds &other){

@@ -2,8 +2,8 @@
 #include "nanoseconds.h"
 #include "minimath.h"
 
-static const unsigned OneGig = 1000000000;
-static const unsigned OneMeg = 1000000;
+static const int OneGig = 1000000000;
+static const int OneMeg = 1000000;
 
 void parseTime(timespec &ts, double seconds){
   if(seconds==0.0) {//frequent case
@@ -135,13 +135,13 @@ NanoSeconds &NanoSeconds::atMost(const NanoSeconds &other){//todo:1 named functi
 }
 
 NanoSeconds &NanoSeconds::Never(){
-  this->tv_sec = ~0U;//this is legal
-  this->tv_nsec = ~0U;//this is not.
+  this->tv_sec = ~0;//this is legal
+  this->tv_nsec = ~0;//this is not.
   return *this;
 }
 
 bool NanoSeconds::isNever(){
-  return this->tv_sec==~0U && this->tv_nsec==~0U;
+  return this->tv_sec==~0 && this->tv_nsec==~0;
 }
 
 bool NanoSeconds::isZero() const noexcept {
