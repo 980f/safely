@@ -14,8 +14,7 @@ constexpr double from(const timespec &ts){
 
 void parseTime(timespec &ts,double seconds);
 
-struct NanoSeconds {
-  timespec ts;
+struct NanoSeconds : public timespec {
 
   NanoSeconds(double seconds=0.0){
     this->operator= (seconds);
@@ -24,23 +23,19 @@ struct NanoSeconds {
   NanoSeconds(const NanoSeconds &other)=default;
 
   NanoSeconds(const MicroSeconds us){
-    ts.tv_sec=us.tv_sec;
-    ts.tv_nsec=1000*us.tv_usec;
+    this->tv_sec=us.tv_sec;
+    this->tv_nsec=1000*us.tv_usec;
   }
 
   NanoSeconds& operator=(double seconds){
-    parseTime (ts,seconds);
+    parseTime (*this,seconds);
     return *this;
   }
 
   //allow default assignment to work
 
   operator double()const{
-    return from(ts);
-  }
-
-  operator timespec &(){
-    return ts;
+    return from(*this);
   }
 
   void setMillis(unsigned ms);
@@ -49,6 +44,11 @@ struct NanoSeconds {
 
   /** @returns microsecond where rounder=0 for truncation aka 'floor', 500 for nearest 'round', 999 for 'ceil'*/
   MicroSeconds us(unsigned rounder=999);
+
+  /** @returns whether this is zero */
+  bool isZero()const noexcept;
+  /** @returns whether this is definitely positive (>0) */
+  bool inFuture() const;
 
   /** @returns this minus @param lesser. NB: this is not java, the object is on the stack not new'd */
   NanoSeconds operator -(const NanoSeconds &lesser) const;
@@ -63,36 +63,23 @@ struct NanoSeconds {
   /** @returns whether this comes after @param that */
   bool operator >=(const NanoSeconds &that)const;
   /** operator == doesn't make much sense, like for doubles */
-  /** @returns whether this is zero */
-  bool isZero()const noexcept;
-
+  bool operator ==(const NanoSeconds &that)const;
   /** @returns 1,0,-1,  if @param dub is not null then it is the absolute value of the time in seconds. */
   int signabs(double *dub=nullptr)const;
-
-public: //logical operations that might surprise some people
-  /** @returns this after setting it to other if other is larger. This only makes sense when computing a maximum interval, one that is large enough to contain all items presented to it. */
-  NanoSeconds& operator |= (const NanoSeconds &other){//todo:1 named function instead of operator
-    if(*this<other){
-      *this=other;
-    }
-    return *this;
-  }
-
-  /** @returns this after setting it to other if this is zero or other is smaller. This only makes sense when computing a minimum interval. */
-  NanoSeconds& operator &= (const NanoSeconds &other){//todo:1 named function instead of operator
-    if(isZero()){
-      *this=other;
-    } else if(*this>other){
-      *this=other;
-    }
-    return *this;
-  }
 
   /** @return this after setting it to an invalidly large value. */
   NanoSeconds &Never();
 
   /** @returns whether this is the value that Never would set it to */
   bool isNever();
+
+public: //logical operations that might surprise some people
+  /** @returns this after setting it to other if other is larger. This only makes sense when computing a maximum interval, one that is large enough to contain all items presented to it. */
+  NanoSeconds& atLeast(const NanoSeconds &other);
+
+  /** @returns this after setting it to other if this is zero or other is smaller. This only makes sense when computing a minimum interval. */
+  NanoSeconds& atMost(const NanoSeconds &other);
+
 
 public: //system services
   /** wraps posix nanosleep. @returns the usual posix nonsense. 0 OK/-1 -> see errno
@@ -103,6 +90,8 @@ public: //system services
  if dregs is not null then it is set to dregs of nanosleep (amount by which the sleep returned early) */
   int sleep(NanoSeconds *dregs)const;
 
+  NanoSeconds operator +(const NanoSeconds &lesser) const;
+  NanoSeconds &operator +=(const NanoSeconds &lesser);
 };
 
 #endif // NANOSECONDS_H

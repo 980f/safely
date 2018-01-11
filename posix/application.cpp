@@ -16,8 +16,8 @@
 #include "cheaptricks.h" //take()
 
 bool Application::setQuickCheck(NanoSeconds soonish){
-  if(soonish.signabs()>0 && (quickCheck.isZero() || quickCheck>soonish)){
-    quickCheck=soonish;
+  if(soonish.inFuture()){
+    quickCheck.atMost(soonish);
     return true;
   } else {
     return false;//user might want to try to set it again later.

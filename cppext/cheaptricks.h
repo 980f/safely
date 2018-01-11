@@ -9,11 +9,6 @@
  */
 
 
-/** @returns whether assigning @param newvalue to @param target changes the latter. the compare is for nearly @param bits, not an exact number. If nearly the same then
- * the assignment does not occur.
- *  This is handy when converting a value to ascii and back, it tells you whether that was significantly corrupting.
- */
-bool changed(double&target, double newvalue,int bits = 32);
 
 /** atomisable compare and assign
  * @returns whether assigning @param newvalue to @param target changes the latter */
@@ -26,6 +21,13 @@ template<typename Scalar1, typename Scalar2 = Scalar1> bool changed(Scalar1 &tar
     return false;
   }
 }
+
+/** @returns whether assigning @param newvalue to @param target changes the latter. the compare is for nearly @param bits, not an exact number. If nearly the same then
+ * the assignment does not occur.
+ *  This is handy when converting a value to ascii and back, it tells you whether that was significantly corrupting.
+ */
+bool changed(double&target, double newvalue,int bits = 32);
+
 
 /** marker for potential atomic value shift
  * assign new value but return previous, kinda like value++

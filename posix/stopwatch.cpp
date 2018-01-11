@@ -14,7 +14,7 @@ StopWatch::StopWatch(bool beRunning,bool realElseProcess) :
   CLOCK_something(realElseProcess ? CLOCK_MONOTONIC : CLOCK_THREAD_CPUTIME_ID){
   epoch=0;
   readit(started);
-  epoch = take(started.ts.tv_sec);
+  epoch = take(started.tv_sec);
   stopped = started;
   running = beRunning;
 }
@@ -70,7 +70,7 @@ unsigned StopWatch::periods(NanoSeconds interval, bool andRoll){
   NanoSeconds now=elapsed();
   unsigned modulo=now.modulated(interval);
   if(andRoll){
-    started=stopped;
+    started=stopped-now;//now at this point is fraction of an interval
   }
   return modulo;
 }

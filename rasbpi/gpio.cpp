@@ -33,12 +33,7 @@ void GPIO::operator =(bool value) const noexcept {
 
 
 bool GPIO::readpin() const noexcept {
-//  auto address= &gpioBase[offset + Read];
-//  auto bitset=gpioBase[offset + Read];
-//  auto forsure=*address;
-//  if(forsure==bitset)
   return (base.reg[offset + Read] & mask)!=0;
-//  else return false;
 }
 
 GPIO& GPIO::configure(unsigned af){
@@ -80,7 +75,7 @@ struct pwmPinMapping {
   unsigned altcode;
 };
 
-
+#if 0  //built the essential cases into a switch vs these arrays which can handle all cases.
 static const pwmPinMapping pwm0pins[] = {
   {12,0},
   {18,5},
@@ -99,4 +94,4 @@ static const pwmPinMapping pwm1pins[] = {
   {53,1},
   {0,0}
 };
-
+#endif
