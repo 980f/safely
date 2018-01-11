@@ -22,12 +22,17 @@ private:
     return was;
   }
 
-  RetType operator () (Args ... args){
+  RetType operator () (Args ... args) const{
     if(pointer){
       return pointer(args ...);
     } else {
       return defaultReturn;
     }
+  }
+
+  /** @returns whether there is any point in calling this hook. (can distinguish between return of default and return that happens to match default)*/
+  operator bool() const {
+    return bool(pointer);
   }
 
 };
@@ -53,10 +58,15 @@ public:
     return was;
   }
 
-  void operator () (Args ... args){
+  void operator () (Args ... args) const{
     if(pointer){
       pointer(args ...);
     }
+  }
+
+  /** @returns whether there is any point in calling this hook. (can distinguish between return of default and return that happens to match default)*/
+  operator bool() const {
+    return bool(pointer);
   }
 
 };

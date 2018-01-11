@@ -3,7 +3,7 @@
 #include "string.h"
 
 //defaults set for production.
-SafeLogger(perfTimer,false);
+SafeLogger(perfTimer,true);//todo:00 why doesn't loggermanager set this.
 bool PerfTimer::showStarts = false;
 
 PerfTimer::PerfTimer(TextKey note, bool enabled) :
