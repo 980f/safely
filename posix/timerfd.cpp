@@ -28,7 +28,7 @@ double TimerFD::setPeriod(double seconds){
 }
 
 bool TimerFD::ack(){
-  u64 expirations=~0U;//type here is chosen by timer fd stuff, not us.
+  u64 expirations=~0UL;//type here is chosen by timer fd stuff, not us.
   ByteScanner discard(reinterpret_cast<u8*>(&expirations),sizeof(expirations));
   fd.read(discard);
   if(sizeof(expirations)==fd.lastRead){
