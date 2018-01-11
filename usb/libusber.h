@@ -28,6 +28,9 @@ public:
 
   libusb_device_handle *devh=nullptr;
 
+  /** routines that return things have a tendency to hide the errors they encountered. alh has added code to poke that value where it can be found */
+  int buriedError() const;
+
   /** device id, recorded when a handle is acquired, but kept around after close */
   union DeviceId {
     unsigned xid;

@@ -19,6 +19,12 @@ StopWatch::StopWatch(bool beRunning,bool realElseProcess) :
   running = beRunning;
 }
 
+void StopWatch::lap(const StopWatch &other){
+  started=other.stopped;
+  running = true;
+}
+
+
 NanoSeconds StopWatch::roll(double *absolutely){
   NanoSeconds retval = elapsed(absolutely);//must be running to roll.
   if(running) {

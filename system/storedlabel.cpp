@@ -27,7 +27,7 @@ bool StoredLabel::isTrivial() const {
 }
 
 void StoredLabel::operator =(const StoredLabel&other){
-  if(&other) {//yes, we can get null references.
+  if(&other) {//#yes, we did get null references from gui editor
     node.setImage(other.node.image());
   } else {
     wtf("null rhs in StoredLabel operator =");
@@ -63,8 +63,8 @@ void StoredLabel::applyTo(sigc::slot<void, TextKey> slotty){
   slotty(c_str());
 }
 
-sigc::connection StoredLabel::onChange(sigc::slot<void, TextKey> slotty){
-  return node.addChangeWatcher(bind(MyHandler(StoredLabel::applyTo), slotty));
+sigc::connection StoredLabel::onChange(sigc::slot<void, TextKey> slotty, bool kickme){
+  return node.addChangeWatcher(bind(MyHandler(StoredLabel::applyTo), slotty),kickme);
 }
 
 sigc::slot<void, TextKey> StoredLabel::setter(){

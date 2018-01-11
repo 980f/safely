@@ -84,6 +84,14 @@ MicroSeconds LibUsber::doEvents(){
   } else {
     return 0;
   }
+}
+
+int LibUsber::buriedError() const {
+//  if(ctx){ //too hidden at the moment.
+//    return ctx->debug_fixed;
+//  } else {
+    return 0;
+//  }
 } // LibUsber::doEvents
 
 
@@ -135,6 +143,7 @@ bool LibUsber::open(uint16_t idVendor, uint16_t idProduct){
     plugWatcher(true);
     return true;
   } else {
+    this->errornumber=buriedError();
     return false;
   }
 }

@@ -36,7 +36,7 @@ public:
   /** calls the given slot with this.c_str() as its argument */
   void applyTo(sigc::slot<void, TextKey> slotty);
   /** on a change to the value will call applyTo with the given slot */
-  sigc::connection onChange(sigc::slot<void, TextKey> slotty);
+  sigc::connection onChange(sigc::slot<void, TextKey> slotty, bool kickme=false);
   /** a slot that will set the value of this */
   sigc::slot<void, TextKey> setter();
 

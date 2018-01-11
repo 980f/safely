@@ -36,7 +36,8 @@ SOURCES += \
     $$posixdir/serialdevice.cpp \
     $$posixdir/serveroptions.cpp \
     $$posixdir/jasoned.cpp \
-    $$posixdir/filewatcher.cpp
+    $$posixdir/filewatcher.cpp \
+    $$posixdir/worstcase.cpp
 
 HEADERS += \
     $$posixdir/timerfd.h \
@@ -61,7 +62,8 @@ HEADERS += \
     $$posixdir/microseconds.h \
     $$posixdir/serveroptions.h \
     $$posixdir/jasoned.h \
-    $$posixdir/filewatcher.h
+    $$posixdir/filewatcher.h \
+    $$posixdir/worstcase.h
 
 
 #for async IO (aio_*), as used in filereader: rt:"glibc runtime"
