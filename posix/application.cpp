@@ -110,7 +110,7 @@ bool Application::setPriority(int niceness){
 bool Application::setScheduler(bool fast){
   int policy=fast?SCHED_FIFO:SCHED_OTHER;
   sched_param param;
-  param.__sched_priority=95;//number cadged from audio
+  param.sched_priority=95;//number cadged from audio
   if(ok(sched_setscheduler(startup_pid,policy,&param))){
     return true;
   } else {

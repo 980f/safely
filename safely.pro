@@ -5,7 +5,7 @@ CONFIG -= app_bundle
 CONFIG -= qt
 #we want the same language in use everywhere:
 CONFIG += c++14
-#rpi gcc is 4.9, needs a kick in the std:
+#rpi gcc is now 6.x, the following may be redundant
 QMAKE_CXXFLAGS += -std=c++14
 QMAKE_CXXFLAGS += -funsigned-char
 
