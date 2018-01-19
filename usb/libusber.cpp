@@ -206,7 +206,7 @@ void LibUsber::releaseHandle(){
   }
   libusb_close(take(devh));//fail fast on use after close
   plugWatcher(false);
-} // LibUsber::ack
+}
 
 int LibUsber::onPlugEvent(libusb_hotplug_event event){
   switch(event) {
@@ -252,13 +252,20 @@ bool LibUsber::watchplug(uint16_t idVendor, uint16_t idProduct,Hook<bool> hooker
 
 } // LibUsber::ack
 
-LibUsber::~LibUsber(){
+bool LibUsber::close(){
   if (devh) {
     if(failure(libusb_release_interface(devh, claimedInterface))) {
       dbg("libusb_release_interface error %s\n", errorText());
       claimedInterface = ~0;//fail hard
     }
     releaseHandle();
+    return true;
+  } else {
+    return false;
   }
-  libusb_exit(take(ctx));//fail faster on use after free.
+}
+
+LibUsber::~LibUsber(){
+  close();
+  libusb_exit(take(ctx));//take():fail faster on use after free.
 }

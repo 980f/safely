@@ -76,6 +76,8 @@ private:
 
 public://for thunking
   int onPlugEvent(libusb_hotplug_event event);
+  /** @returns whether it actually did anything */
+  bool close();
 };
 
 
