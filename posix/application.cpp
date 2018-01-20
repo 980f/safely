@@ -1,4 +1,4 @@
-//"(C) Andrew L. Heilveil, 2017"
+//"(C) Andrew L. Heilveil, 2017-2018"
 #include "application.h"
 #include "errno.h"
 
@@ -56,7 +56,7 @@ void Application::logCwd(){
 
 int Application::run(){
   beRunning=true;
-  while(beRunning){
+  while(beRunning){//this is what some people call "the event loop"
     NanoSeconds nextPeriod=period;
     //first use: libusb sometimes wants us to get back to it perhaps sooner than our period is set for.
     if(quickCheck.signabs()>0){

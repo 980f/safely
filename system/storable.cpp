@@ -11,8 +11,12 @@ SafeLogger(storetree,false);
 
 static const char PathSep = '/';
 //this is not a class member so that we don't force pathparser.h on all users:
-static const PathParser::Rules slasher(PathSep,false,true);// '.' gives java property naming, '/' would allow use of filename classes. '|' was used for gtkwrappers
-                                                           // access
+static const PathParser::Rules slasher(PathSep,false,true);// '.' gives java property naming, '/' would allow use of filename classes. '|' was used for gtkwrappers' access
+
+#define ONNULLTHIS(arg) if(!this){return arg;}
+#define ONNULLREF(ref, arg) if(!&ref){return arg;}
+
+
 
 /** global/shared root, the 'slash' node for findChild */
 __attribute__((init_priority(200)))
@@ -105,6 +109,7 @@ Storable::~Storable(){
 }
 
 SafeLogger(storableNotify,false);
+
 void Storable::notify() const {
   static int recursionCounter = 0;//4debug of notify.
   if(remote) {
@@ -121,7 +126,6 @@ void Storable::notify() const {
 } // Storable::notify
 
 void Storable::recursiveNotify() const {
-  //removed volatility check since volatile nodes were getting added specifically for signalling.
   if(parent) {
     parent->childwatchers.send();
     parent->recursiveNotify();
@@ -374,23 +378,21 @@ void Storable::clone(const Storable&other){ //todo:2 try to not trigger false ch
 } // Storable::clone
 
 void Storable::reparent(Storable &newparent){
-  if(this!=nullptr) {
-    if(type==Wad) {
-      while(Storable *kid = wad.takeNth(0)) {//must take in order in case order is important to caller.
-        kid->parent = &newparent;
-        newparent.wad.append(kid);
-      }
-      parent->remove(ownIndex());
-    } else {
-      dbg("Tried to reparent a scalar node:%s to %s",fullName().c_str(),newparent.fullName().c_str());
+  ONNULLTHIS()
+  if(type==Wad) {
+    while(Storable *kid = wad.takeNth(0)) {//must take in order in case order is important to caller.
+      kid->parent = &newparent;
+      newparent.wad.append(kid);
     }
+    parent->remove(ownIndex());
+  } else {
+    dbg("Tried to reparent a scalar node:%s to %s",fullName().c_str(),newparent.fullName().c_str());
   }
+
 } // Storable::reparent
 
 void Storable::assignFrom(Storable&other){
-  if(&other == nullptr) {
-    return;                     //breakpoint, probably a pathological case.
-  }
+  ONNULLREF(other,)
   switch(type) {
 //  default:
   case Uncertain:
@@ -608,9 +610,7 @@ unsigned Storable::setSize(unsigned qty){
 } // Storable::setSize
 
 Storable *Storable::getChild(Sequence<Text> &progeny,bool autocreate){
-  if(this==nullptr) {
-    return nullptr;//detect recursion gone bad
-  }
+  ONNULLTHIS(nullptr)//detect recursion gone bad
 
   Storable *searcher = this;
 
@@ -655,9 +655,8 @@ Storable *Storable::getChild(Sequence<Text> &progeny,bool autocreate){
 } // Storable::getChild
 
 Storable *Storable::findChild(TextKey path, bool autocreate){
-  if(this==nullptr) {
-    return nullptr;
-  }
+  ONNULLTHIS(nullptr)//detect recursion gone bad
+
   DottedName genealogy(slasher.slash,path);
   ChainScanner<Text> progeny(genealogy.indexer());
 

@@ -1,4 +1,4 @@
-//"(C) Andrew L. Heilveil, 2017"
+//"(C) Andrew L. Heilveil, 2017-2018"
 #include "epoller.h"
 
 #include "sys/epoll.h"
@@ -9,9 +9,9 @@
 
 #include "time.h"
 
-constexpr unsigned evlistsize(unsigned number){
-  return sizeof (epoll_event)*number;
-}
+//constexpr unsigned evlistsize(unsigned number){
+//  return sizeof (epoll_event)*number;
+//}
 
 Epoller::Epoller(unsigned maxreport):PosixWrapper ("Epoller"),
   epfd(~0),
@@ -23,7 +23,7 @@ Epoller::Epoller(unsigned maxreport):PosixWrapper ("Epoller"),
 }
 
 Epoller::~Epoller(){
-  waitlist.destroy();
+  waitlist.destroy();//BuildIndexer uses malloc.
   close();
 }
 

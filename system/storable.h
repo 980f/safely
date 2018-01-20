@@ -1,9 +1,4 @@
-#ifndef STORABLE_H
-#define STORABLE_H
-
-//#include "safely.h"
-
-//#include "argset.h" //for arrays to mate to hardware structs
+#pragma once //(C) Andrew L. Heilveil, 2017-2018
 
 #include "chain.h" //wrap std::vector to cover its sharp pointy sticks.
 #include "changemonitored.h"
@@ -422,5 +417,3 @@ public:
   Storable &next();
   unsigned done();
 };
-
-#endif // STORABLE_H

@@ -1,5 +1,4 @@
-#ifndef APPLICATION_H
-#define APPLICATION_H "(C) Andrew L. Heilveil, 2017"
+#pragma once //"(C) Andrew L. Heilveil, 2017-2018"
 
 /** startup and eventloop */
 #include "buffer.h"
@@ -54,4 +53,3 @@ public: //utilities
   static bool writepid(TextKey pidname);
 };
 
-#endif // APPLICATION_H

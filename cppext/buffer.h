@@ -1,5 +1,4 @@
-#ifndef BUFFER_H
-#define BUFFER_H
+#pragma once //"(C) Andrew L. Heilveil, 2017-2018 "
 
 #include "eztypes.h"
 #include "minimath.h"
@@ -511,7 +510,7 @@ public:
 
   //free contents and forget them. Only safe todo if you know this buffer is created from a malloc.
   void destroy(){
-    if(length){//# testing for debug, delete[] can handle a zero.
+    if(length){//# testing 4debug, delete[] can handle a zero.
       delete []buffer;
     }
     //and now forget we ever saw those
@@ -551,5 +550,3 @@ public:
 #define BytesOf(thingy) IndexBytesOf(, thingy)
 
 #define ForIndexed(classname, indexer) for(Indexer<classname> list(indexer); list.hasNext(); )
-
-#endif // bufferH

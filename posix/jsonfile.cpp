@@ -1,4 +1,4 @@
-//"(C) Andrew L. Heilveil, 2017"
+//"(C) Andrew L. Heilveil, 2017-2018"
 #include "jsonfile.h"
 
 #include "filer.h"
@@ -17,7 +17,8 @@ int JsonFile::reload(){
 }
 
 int JsonFile::loadFile(Cstr thename){
-//did crazy thing when the node being loaded is a StoredGroup<StoredNumeric>  root.child("#loadedFromFile").setImage(thename.c_str());
+  //#_# this did a crazy thing when the node being loaded is a StoredGroup<StoredNumeric>  root.child("#loadedFromFile").setImage(thename.c_str());
+  //... we dare not inject nodes into other people's trees.
   Filer optionFile("LoadJSON");
   loadedFrom=thename;//mark intended file name
   if(! optionFile.openFile(thename)){
