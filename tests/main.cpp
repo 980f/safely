@@ -8,11 +8,14 @@
 
 #include "unistd.h" //getcwd
 
-
+#include "storable.h"
 #include "numericalvalue.h" //union + type enum
 #include "stddef.h"
 /** test harness for qtcreator debugger helper*/
 void testPrettyPrinter(){
+  Text forlabelling;
+  forlabelling="hi dad!";
+
   NumericalValue en;
   en.setto(12.34);
 
@@ -28,6 +31,13 @@ void testPrettyPrinter(){
   en.setto(false);
   en.changeInto(NumericalValue::Floating);
   en.setto(3.14159);
+
+  Storable node("hi mom!");
+  node.setType(Storable::Textual);
+  node.setType(Storable::Numerical);
+  node.setNumber(en);
+
+
 }
 
 

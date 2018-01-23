@@ -10,3 +10,24 @@ def qdump__NumericalValue(d, value):
     else:
         img = val.extractSomething('d', 64)
     d.putValue('%s[%d] %s' % (["Truthy", "Whole", "Counting", "Floating"][iss], iss, img))
+
+def qdump__Text(d, value):
+    d.putValue('%s' % value['ptr'].display())
+
+def StorableTypeEnum(code):
+    return ["NotDefined", "Uncertain", "Textual", "Numerical", "Wad"][code]
+
+
+def StorableQualityEnum(code):
+    return ["Empty", "Defaulted", "Parsed", "Edited"][code]
+
+
+def qdump__Storable(d, value):
+    iss = value['type'].integer()
+    if iss == 4:
+        onion = value['wad']
+    elif iss == 3:
+        onion = value['number']
+    else:
+        onion = value['text']
+    d.putValue("%s" % value['name'])
