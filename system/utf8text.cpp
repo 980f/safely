@@ -18,7 +18,6 @@ Text Utf8Text::encode(Cstr utf8s, Index presized){
   ex(utf8s.c_str(),packer);
   return retval;
 }
-
 Index Utf8Text::encodedLength(Cstr utf8s){
   return Utf8ConverterOut().length(utf8s);
 } // Utf8Text::encodedLength
@@ -41,4 +40,6 @@ Text Utf8Text::decode(Cstr utf8s, Index presized){
   dx(utf8s.c_str(),packer);
   return retval;
 }
+
+
 

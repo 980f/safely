@@ -8,6 +8,29 @@
 
 #include "unistd.h" //getcwd
 
+
+#include "numericalvalue.h" //union + type enum
+#include "stddef.h"
+/** test harness for qtcreator debugger helper*/
+void testPrettyPrinter(){
+  NumericalValue en;
+  en.setto(12.34);
+
+  dbg("is:%u for %u, storage:%u len:%u",offsetof(NumericalValue,is),sizeof(NumericalValue::is),offsetof(NumericalValue,storage),sizeof(NumericalValue::storage));
+
+  en.changeInto(NumericalValue::Counting);
+  en.setto(43);
+  en.changeInto(NumericalValue::Whole);
+  en.setto(-1234);
+  en.changeInto(NumericalValue::Counting);
+  en.changeInto(NumericalValue::Whole);
+  en.changeInto(NumericalValue::Truthy);
+  en.setto(false);
+  en.changeInto(NumericalValue::Floating);
+  en.setto(3.14159);
+}
+
+
 SafeStr<14> fortnight;
 
 //simply compiling the following is a demanding thing:
@@ -78,7 +101,7 @@ void extremely(){
   MinDoubleFinder minish;
   Extremer<double,true,true> lastish;
 
-  int which = 0;
+  unsigned which = 0;
   for(auto x:{1.0,4.2,-2.71828,3.7,8.9,-2.71828,9.5,3.4}) {
     minish.inspect(which,x);
     lastish.inspect(which,x);
@@ -112,12 +135,15 @@ void testBufferFormatter(){
 }
 
 #include "fildes.h"
-#include  <functional>
+#include <functional>
 void showSizes(){
   dbg("Size of fildes: %d",sizeof (Fildes));
   std::function<void()> *nullfunctor;
   dbg("Size of minimal functor: %d",sizeof (nullfunctor));
 }
+
+
+
 
 extern void testJ(unsigned which);
 #include "unicodetester.h"
@@ -126,12 +152,16 @@ extern void testJ(unsigned which);
 #include "filereadertester.h"
 #include "filewritertester.h"
 #include "application.h"
+
+
+
+
+
 int main(int argc, char *argv[]){
   Text cwd(getcwd(nullptr,0));//we use Text class because it will free what getcwd allocated. Not so critical unless we are using this program to look for memory leaks in the functions it tests.
   dbg("Working directory is: %s",cwd.c_str());
 //  dbg("Static loggers list:");
 //  Logger::listLoggers(dbg);
-  //display PID, later will use application class to write it to a file.
   Application::writepid("tests.pid");
   while(argc-->0) {
     const char*tes=argv[argc];
@@ -139,6 +169,9 @@ int main(int argc, char *argv[]){
     char group=(*tes++);
     unsigned which=atoi(tes);
     switch(group){
+    case '%':
+      testPrettyPrinter();
+      break;
     case 'z':
       showSizes();
       break;

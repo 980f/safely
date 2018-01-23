@@ -2,6 +2,7 @@
 #define BIDISETTING_H
 
 #include "hassettings.h"
+#include "settable.h"
 
 #define BidiParameterString "T"
 enum BidiParam {BDT};
