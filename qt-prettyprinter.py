@@ -1,3 +1,6 @@
+import dumper
+
+
 def qdump__NumericalValue(d, value):
     iss = value['is'].integer()
     val = value['storage']
@@ -11,8 +14,11 @@ def qdump__NumericalValue(d, value):
         img = val.extractSomething('d', 64)
     d.putValue('%s[%d] %s' % (["Truthy", "Whole", "Counting", "Floating"][iss], iss, img))
 
+
 def qdump__Text(d, value):
-    d.putValue('%s' % value['ptr'].display())
+    d.putItem(value['ptr'])
+    d.putBetterType("char *")
+
 
 def StorableTypeEnum(code):
     return ["NotDefined", "Uncertain", "Textual", "Numerical", "Wad"][code]
@@ -30,4 +36,11 @@ def qdump__Storable(d, value):
         onion = value['number']
     else:
         onion = value['text']
-    d.putValue("%s" % value['name'])
+        # if not d.isExpanded():
+        #    with SubItem(d):
+        #        d.putName("name")
+        d.putItem(value['name'])
+#    with SubItem(d):
+#        d.putName("value")
+#        d.putItem(onion)
+# d.putItem("%s" % value['name'])

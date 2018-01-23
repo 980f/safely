@@ -12,34 +12,51 @@
 #include "numericalvalue.h" //union + type enum
 #include "stddef.h"
 /** test harness for qtcreator debugger helper*/
-void testPrettyPrinter(){
-  Text forlabelling;
-  forlabelling="hi dad!";
+void testPrettyPrinter(unsigned which){
+  switch(which) {
+  case BadIndex:
+    for(which=2;which-->0;){
+      testPrettyPrinter(which);
+    }
+    break;
+  case 2: {
+    Text forlabelling;
+    forlabelling = "hi dad!";
 
-  NumericalValue en;
-  en.setto(12.34);
+  }
+  break;
+  case 1: {
+    NumericalValue en;
+    en.setto(12.34);
 
-  dbg("is:%u for %u, storage:%u len:%u",offsetof(NumericalValue,is),sizeof(NumericalValue::is),offsetof(NumericalValue,storage),sizeof(NumericalValue::storage));
+    dbg("is:%u for %u, storage:%u len:%u",offsetof(NumericalValue,is),sizeof(NumericalValue::is),offsetof(NumericalValue,storage),sizeof(NumericalValue::storage));
 
-  en.changeInto(NumericalValue::Counting);
-  en.setto(43);
-  en.changeInto(NumericalValue::Whole);
-  en.setto(-1234);
-  en.changeInto(NumericalValue::Counting);
-  en.changeInto(NumericalValue::Whole);
-  en.changeInto(NumericalValue::Truthy);
-  en.setto(false);
-  en.changeInto(NumericalValue::Floating);
-  en.setto(3.14159);
+    en.changeInto(NumericalValue::Counting);
+    en.setto(43);
+    en.changeInto(NumericalValue::Whole);
+    en.setto(-1234);
+    en.changeInto(NumericalValue::Counting);
+    en.changeInto(NumericalValue::Whole);
+    en.changeInto(NumericalValue::Truthy);
+    en.setto(false);
+    en.changeInto(NumericalValue::Floating);
+    en.setto(3.14159);
+  }
+  break;
+  case 0: {
+    NumericalValue en;
+    en.setto(12.34);
 
-  Storable node("hi mom!");
-  node.setType(Storable::Textual);
-  node.setType(Storable::Numerical);
-  node.setNumber(en);
+    Storable node("hi mom!");
+    node.setType(Storable::Textual);
+    node.setType(Storable::Numerical);
+    node.setNumber(en);
+  }
+  break;
 
+  } // switch
 
-}
-
+} // testPrettyPrinter
 
 SafeStr<14> fortnight;
 
@@ -123,7 +140,6 @@ void extremely(){
 
 } // extremely
 
-
 #include "bufferformatter.h"
 
 void testBufferFormatter(){
@@ -132,17 +148,17 @@ void testBufferFormatter(){
   CharFormatter buffer(bigenough,sizeof (bigenough));
   //nonzero number less than 400 with sigfic 0 printed all 000's
   buffer.clearUnused();//the printers don't presume to know where the end of the string is.
-  for(int ipow=4;ipow-->-4;){
+  for(int ipow = 4; ipow-->-4; ) {
     buffer.rewind();
-    double d=pow10(ipow);
-    auto ok=buffer.printNumber(d,0);
-    buffer.next()=0;
+    double d = pow10(ipow);
+    auto ok = buffer.printNumber(d,0);
+    buffer.next() = 0;
     dbg("CF[10^%d]->%d:%s",ipow,ok,bigenough);
   }
   buffer.rewind();
   BufferFormatter::composeInto(buffer,"One $1",1984);
   dbg("\nShould be <One 1984>:<%s>",bigenough);
-}
+} // testBufferFormatter
 
 #include "fildes.h"
 #include <functional>
@@ -151,9 +167,6 @@ void showSizes(){
   std::function<void()> *nullfunctor;
   dbg("Size of minimal functor: %d",sizeof (nullfunctor));
 }
-
-
-
 
 extern void testJ(unsigned which);
 #include "unicodetester.h"
@@ -164,33 +177,31 @@ extern void testJ(unsigned which);
 #include "application.h"
 
 
-
-
-
 int main(int argc, char *argv[]){
-  Text cwd(getcwd(nullptr,0));//we use Text class because it will free what getcwd allocated. Not so critical unless we are using this program to look for memory leaks in the functions it tests.
+  Text cwd(getcwd(nullptr,0));//we use Text class because it will free what getcwd allocated. Not so critical unless we are using this program to look for memory leaks
+                              // in the functions it tests.
   dbg("Working directory is: %s",cwd.c_str());
 //  dbg("Static loggers list:");
 //  Logger::listLoggers(dbg);
   Application::writepid("tests.pid");
   while(argc-->0) {
-    const char*tes=argv[argc];
+    const char*tes = argv[argc];
     dbg("%d: %s",argc,tes);
-    char group=(*tes++);
-    unsigned which=atoi(tes);
-    switch(group){
+    char group = (*tes++);
+    unsigned which = atoi(tes);
+    switch(group) {
     case '%':
-      testPrettyPrinter();
+      testPrettyPrinter(which);
       break;
     case 'z':
       showSizes();
       break;
-    case 'w':{
-        FileWriterTester().run(which);
-      } break;
-    case 'f':{
-        FileReaderTester().run(which);
-      } break;
+    case 'w': {
+      FileWriterTester().run(which);
+    } break;
+    case 'f': {
+      FileReaderTester().run(which);
+    } break;
     case 'b'://buffer formatting
       testBufferFormatter();
       break;
@@ -218,7 +229,7 @@ int main(int argc, char *argv[]){
         dbg("coe: %d should be 0",coedata);
       }
       break;
-    }
+    } // switch
   }
   dbg("tests completed \n");
   return 0;
