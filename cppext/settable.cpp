@@ -1,6 +1,9 @@
 #include "settable.h"
 
-#include "art.h"
+//#include "art.h"
+#ifndef MAXARGS
+#define MAXARGS 10
+#endif
 
 bool Settable::blockCheck(Settable &desired) const{
   return differs(desired);

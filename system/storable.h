@@ -96,7 +96,7 @@ protected: //if you need access add a method
   Storable *parent;
 protected:
   /** cached coordinate of this item in its parent's wad, updated by parent when that parent reorganizes its wad.*/
-  unsigned index;
+  Index index;
   /** children of this node */
   Chain<Storable> wad;
   /** set by StoredEnum when one is created, maintains parallel text.*/

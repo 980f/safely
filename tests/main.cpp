@@ -61,8 +61,8 @@ void testPrettyPrinter(unsigned which){
     Storable &mom=node.child("mommy");
     Storable &dad=node.child("daddy");
     for(unsigned ci=3;ci-->0;){
-      mom.addChild("girls");
-      dad.addChild("boys");
+      mom.addChild("girls").presize(3,Storable::Numerical);
+      dad.addChild("boys").presize(ci,Storable::Numerical);
     }
 
   }
