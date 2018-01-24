@@ -15,10 +15,17 @@
 void testPrettyPrinter(unsigned which){
   switch(which) {
   case BadIndex:
-    for(which=2;which-->0;){
+    for(which=4;which-->0;){
       testPrettyPrinter(which);
     }
     break;
+  case 3: {
+    Index eye;
+    eye=3;
+    eye=BadIndex;
+    eye++;
+    dbg("printing eye so that compiler doesn't drop it before we can see it with the debugger: %u",eye.raw);
+  } break;
   case 2: {
     Text forlabelling;
     forlabelling = "hi dad!";
@@ -47,10 +54,17 @@ void testPrettyPrinter(unsigned which){
     NumericalValue en;
     en.setto(12.34);
 
-    Storable node("hi mom!");
+    Storable node("grandma");
     node.setType(Storable::Textual);
     node.setType(Storable::Numerical);
     node.setNumber(en);
+    Storable &mom=node.child("mommy");
+    Storable &dad=node.child("daddy");
+    for(unsigned ci=3;ci-->0;){
+      mom.addChild("girls");
+      dad.addChild("boys");
+    }
+
   }
   break;
 

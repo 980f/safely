@@ -15,10 +15,23 @@ def qdump__NumericalValue(d, value):
     d.putValue('%s[%d] %s' % (["Truthy", "Whole", "Counting", "Floating"][iss], iss, img))
 
 
+
+def qdump__Cstr(d, value):
+    d.putItem(value['ptr'])
+    d.putBetterType("char *")
+
 def qdump__Text(d, value):
     d.putItem(value['ptr'])
     d.putBetterType("char *")
 
+
+def qdump__Index(d, value):
+    raw=value['raw']
+    if raw.integer() == 4294967295:
+        d.putValue("BadIndex")
+    else :
+        d.putItem(raw)
+        d.putBetterType("unsigned")
 
 def StorableTypeEnum(code):
     return ["NotDefined", "Uncertain", "Textual", "Numerical", "Wad"][code]
