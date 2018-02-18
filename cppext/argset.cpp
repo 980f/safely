@@ -5,9 +5,8 @@ ArgSet::ArgSet(double* d, unsigned sizeofd) : Indexer<double>(d, sizeofd){
   //#nada
 }
 
-ArgSet::ArgSet(const ArgSet &other, int portion):Indexer<double>(other,portion)
-{
-
+ArgSet::ArgSet(const ArgSet &other, int portion) : Indexer<double>(other,portion){
+  //#nada
 }
 
 /**@return whether @param changed*/
@@ -55,18 +54,24 @@ bool ArgSet::equals(const ArgSet &args, int bits) const {
       return false;
     }
   }
+  if(cf.hasNext()||others.hasNext()) {//todo:1 ensure all users agree with this or add a boolean for this test.//was buggy before safely@desktop
+    return false;//a mismatch in numargs.
+  }
   return true;
-}
+} // ArgSet::equals
 
 ArgSet::~ArgSet(){
- //#nada, we wrap data, we don't own it.
+  //#nada, we wrap data, we don't own it.
 }
 
 ConstArgSet::ConstArgSet(const double* d, int sizeofd) : Indexer<const double>(d, sizeofd){
+  //#nada
 }
 
 ConstArgSet::ConstArgSet(const ArgSet &other) : Indexer<const double>(other.internalBuffer(),other.allocated() * sizeof(double)){
+  //#nada
 }
 
 ConstArgSet::ConstArgSet(const ConstArgSet &other) : Indexer<const double>(other){
+  //#nada
 }
