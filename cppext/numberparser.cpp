@@ -9,6 +9,7 @@ void PushedNumberParser::reset(){
   NumberPieces::reset();
   processed = 0;
   phase=Start;
+  lastParsed=Nan;//don't reset until after you have saved this away.
 }
 
 bool PushedNumberParser::applydigit(u64 &accum,char ch){

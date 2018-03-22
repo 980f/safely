@@ -7,7 +7,7 @@
 #include "char.h"
 
 static const unsigned maxDigits=19; /*(floor(log10(2^64)*/
-static const double p19=::pow10(19);
+static const double p19=::pow10(maxDigits);
 
 template <>double intbin<double,double>(double&);
 
@@ -29,7 +29,7 @@ double NumberPieces::packed() const {
   } else {
     //have to figure out how many digits the fractional part had
     double fract = postdecimal;
-    fract /= p19;
+    fract /= dpow10(postDigits);
     number += fract;
   }
   if(hasEterm){
@@ -39,7 +39,7 @@ double NumberPieces::packed() const {
       exp = -exp;
     }
 //      exp is now the scientific notation exponent
-    number *= ::pow10(exp);//and apply user provide power
+    number *= dpow10(exp);//and apply user provide power
   }
   return negative ? -number : number;
 }

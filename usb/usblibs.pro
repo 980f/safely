@@ -20,7 +20,7 @@ HEADERS += \
 #CONFIG += link_pkgconfig
 #PKGCONFIG += libusb-1.0
 
-QMAKE_CFLAGS +=-std=c11
+#this overrode c14 flags set in earlier .pro file: QMAKE_CFLAGS +=-std=c11
 
 usblibdir = $$usbdir/libusb
 
