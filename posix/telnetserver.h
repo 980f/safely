@@ -18,7 +18,7 @@ public:
   static Socketeer *simpleFactory(int newfd,SockAddress &sadr);
 
   TelnetServer(Factory aFactory=simpleFactory);
-  void start();
+//  void start();
   bool isStarted();
 
   using TelnetAction = std::function<void(Socketeer&)>;
