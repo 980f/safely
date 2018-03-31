@@ -18,6 +18,7 @@ void UsbDevice::addWatch(int fd, short events){
   }
 } // UsbDevice::addWatch
 
+
 void UsbDevice::removeWatch(int fd){
   dbg("Stop watching file number %d",fd);
   //check chain for existing IOsource for fd, but don't create one.
@@ -30,10 +31,10 @@ void UsbDevice::pollfd_added(int fd, short events, void *user_data){
 void UsbDevice::pollfd_removed(int fd, void *user_data){
   reinterpret_cast<UsbDevice *>(user_data)->removeWatch(fd);
 }
-
 #endif // if 0
 
 static const char * errormessages[] {
+
   "Success",
   "Input/output error",
   "Invalid parameter",
@@ -61,6 +62,7 @@ LibUsber::LibUsber() : PosixWrapper("UsbLib"){
 
 bool LibUsber::init(){
   if(!ctx) {
+
     return !failure(libusb_init(&ctx));
   } else {
     return true; //todo: is there a 'ok to use' member?
@@ -175,6 +177,7 @@ bool LibUsber::submit(libusb_transfer *xfer){
       if(xfer->last_errno!=0 && xfer->last_errno!=errornumber) {
         failure(xfer->last_errno);//above 'hides' core errno. //22 invalid parameter
       }
+
       ack(xfer);
       return false;
     } else {
@@ -185,6 +188,7 @@ bool LibUsber::submit(libusb_transfer *xfer){
     //todo:1 cancel current xfer, presently not allowed
     return false;
   }
+
 } // LibUsber::submit
 
 bool LibUsber::ack(libusb_transfer *xfer){
@@ -269,3 +273,4 @@ LibUsber::~LibUsber(){
   close();
   libusb_exit(take(ctx));//take():fail faster on use after free.
 }
+

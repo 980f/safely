@@ -49,9 +49,9 @@ public:
   bool indexIs(unsigned index) const;
   /** @returns a functor that when called returns the present index of this item.*/
   sigc::slot<unsigned> liveindex() const;
+
 /** @returns whether underlying storage node is named per @param name */
   bool isNamed(TextKey name);
-
 
   /** The next stuff is used by stored group refresh operations, to track no-longer relevent items */
 protected:
@@ -115,7 +115,6 @@ public:
 
 //This seems to be a legacy thing, if you find a good reason to use it please document that here.
 #define ConnectSibling(varname, ...) varname(node.parent->child( # varname ), ## __VA_ARGS__)
-
 //use this to construct an object which is not a member of a Stored:
 #define ConnectGroot(varname,...)  varname(Storable::Groot( # varname ), ## __VA_ARGS__)
 

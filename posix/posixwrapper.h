@@ -1,5 +1,5 @@
 #ifndef POSIXWRAPPER_H
-#define POSIXWRAPPER_H
+#define POSIXWRAPPER_H "(C) Andrew L. Heilveil 2017-2018"
 
 #include "errno.h" //because we templated a function that needs it
 #include "logger.h"
@@ -49,8 +49,6 @@ public:
   /** @param prefix is used for logging. */
   PosixWrapper(const char *prefix);
   Logger dbg;
-//  /** @deprecated  use dbg instead. This will be retained awhile for legacy code */
-//  void logmsg(const char *fmt, ...);
   /** like @see strerror() but with our stored value, not tied to errno */
   const char *errorText()const;
 
@@ -61,13 +59,5 @@ public:
   bool setFailed(bool passthrough);
 }; // class PosixWrapper
 
-
-///** free data and clear the pointer so that an attempted double-free doesn't occur. */
-//template <typename ObjType> void Free(ObjType **pointer){
-//  if(pointer){//checking 4 debug
-//    delete *pointer;
-//    *pointer=nullptr;
-//  }
-//}
 
 #endif // POSIXWRAPPER_H

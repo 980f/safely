@@ -87,19 +87,31 @@ struct BitReference {
   unsigned mask;
 
   /** naive constructor, code will work if @param bits isn't aligned, but will be inefficient.*/
+<<<<<<< HEAD
   BitReference(unsigned *bits,unsigned bitnumber):
     word(*bits),  //drop 2 lsbs of address , i.e. point at xxx00
     mask(1<<(msbOfUnsigned()& bitnumber)){//try to make bit pointer point at correct thing.
   }
 
 #if 0 //mcu
+=======
+  BitReference(unsigned &bits,unsigned bitnumber):
+    word(bits),  //drop 2 lsbs, i.e. point at xxx00
+    mask(1<<(31& bitnumber)){//try to make bit pointer point at correct thing.
+    //now it is an aligned 32 bit entity
+  }
+
+>>>>>>> 837a9b93ad15a4fea3691d4fb74b589bee7d5518
   /** initialize from a memory address and bit therein. If address isn't aligned then evil things may happen.  */
   BitReference(unsigned memoryAddress,unsigned bitnumber):
     word(*atAddress(memoryAddress&~3)),  //drop 2 lsbs, i.e. point at xxx00
     mask(1<<(31& ((memoryAddress<<3)|bitnumber))){//try to make bit pointer point at correct thing.
     //now it is an aligned 32 bit entity
   }
+<<<<<<< HEAD
 #endif
+=======
+>>>>>>> 837a9b93ad15a4fea3691d4fb74b589bee7d5518
 
   bool operator =(bool set)const{
     if(set){

@@ -301,6 +301,7 @@ addrinfo *HostInfo::anIpv4() {
 }
 // HostInfo::hint
 
+
 unsigned SockAddress::getPort(){
   if(address.sa_family==AF_INET) {
     sockaddr_in &sin(*reinterpret_cast<sockaddr_in*>(&address));

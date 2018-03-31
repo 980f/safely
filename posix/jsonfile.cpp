@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 //"(C) Andrew L. Heilveil, 2017-2018"
+=======
+//"(C) Andrew L. Heilveil, 2017"
+>>>>>>> 837a9b93ad15a4fea3691d4fb74b589bee7d5518
 #include "jsonfile.h"
 
 #include "filer.h"
@@ -21,6 +25,7 @@ int JsonFile::loadFile(Cstr thename){
   //... we dare not inject nodes into other people's trees.
   Filer optionFile("LoadJSON");
   loadedFrom=thename;//mark intended file name
+
   if(! optionFile.openFile(thename)){
     dbg("Couldn't open \"%s\", error:[%d]%s",thename.c_str(),optionFile.errornumber,optionFile.errorText());
     return optionFile.errornumber;
@@ -43,7 +48,6 @@ int JsonFile::loadFile(Cstr thename){
   parser.parser.lookFor(StandardJSONFraming ";=");
 
   parser.parse();
-
   dbg("loaded %d nodes, %d levels, from %s",parser.stats.totalNodes,parser.stats.maxDepth.extremum,thename.c_str());
   return 0;//#an errno
 }
@@ -119,8 +123,8 @@ Cstr JsonFile::originalFile(){
   return loadedFrom.c_str();
 }
 
-
 void JsonFile::printOn(Fildes &alreadyOpened, unsigned indent, bool showVolatiles){
   auto fp=alreadyOpened.getfp("w");
   printNode(indent,root,fp,showVolatiles);
+
 }

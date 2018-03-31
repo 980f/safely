@@ -176,6 +176,7 @@ enum ftdi_module_detach_mode
 #define SIO_RESET_PURGE_RX 1
 #define SIO_RESET_PURGE_TX 2
 
+<<<<<<< HEAD
 #define SIO_DISABLE_FLOW_CTRL 0
 #define SIO_RTS_CTS_HS (1 << 8)
 #define SIO_DTR_DSR_HS (1 << 9)
@@ -193,6 +194,25 @@ enum ftdi_module_detach_mode
 /* marker for unused usb urb structures
    (taken from libusb) */
 #define FTDI_URB_USERCONTEXT_COOKIE ((void *)0x01)
+=======
+#define SIO_DISABLE_FLOW_CTRL 0x0
+#define SIO_RTS_CTS_HS (0x1 << 8)
+#define SIO_DTR_DSR_HS (0x2 << 8)
+#define SIO_XON_XOFF_HS (0x4 << 8)
+
+#define SIO_SET_DTR_MASK 0x1
+#define SIO_SET_DTR_HIGH ( 1 | ( SIO_SET_DTR_MASK  << 8))
+#define SIO_SET_DTR_LOW  ( 0 | ( SIO_SET_DTR_MASK  << 8))
+#define SIO_SET_RTS_MASK 0x2
+#define SIO_SET_RTS_HIGH ( 2 | ( SIO_SET_RTS_MASK << 8 ))
+#define SIO_SET_RTS_LOW ( 0 | ( SIO_SET_RTS_MASK << 8 ))
+
+#define SIO_RTS_CTS_HS (0x1 << 8)
+
+/* marker for unused usb urb structures
+   (taken from libusb) */
+#define FTDI_URB_USERCONTEXT_COOKIE ((void *)0x1)
+>>>>>>> 837a9b93ad15a4fea3691d4fb74b589bee7d5518
 
 #ifdef __GNUC__
 #define DEPRECATED(func) func __attribute__ ((deprecated))

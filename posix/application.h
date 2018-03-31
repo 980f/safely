@@ -1,4 +1,9 @@
+<<<<<<< HEAD
 #pragma once //"(C) Andrew L. Heilveil, 2017-2018"
+=======
+#ifndef APPLICATION_H
+#define APPLICATION_H "(C) Andrew L. Heilveil, 2017"
+>>>>>>> 837a9b93ad15a4fea3691d4fb74b589bee7d5518
 
 /** startup and eventloop */
 #include "buffer.h"
@@ -12,16 +17,19 @@ protected:
     double hz;
   /** event manager */
   Epoller looper;
+
   /** time until next keepalive/sampling */
   NanoSeconds period;
   /** pid read on object creation */
   pid_t startup_pid;
+
 private:
   /** if greater than zero and less than period it replaces period for one cycle */
   NanoSeconds quickCheck;
 protected:
   /** set quickCheck if @param soonish is sooner than a prior setting */
   bool setQuickCheck(NanoSeconds soonish);
+
   /** clear this to try to get app to exit gracefully */
   bool beRunning;
   /** called with each event, especially when period is up. Not harmonic */

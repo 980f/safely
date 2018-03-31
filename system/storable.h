@@ -143,6 +143,7 @@ public:
 
   /** @returns whether the text value was converted to a number.  */
   bool convertToNumber(NumericalValue::Detail numtype=NumericalValue::Detail::Floating);
+
 /** convert an Unknown to either Numerical or Text depending upon purity, for other types @returns false */
   bool resolve(bool recursively);
 
@@ -153,7 +154,6 @@ public:
   bool isModified() const override;
   // more involved functions
   bool wasModified() override;
-
   Text fullName() const;
 
   /** the index is often not meaningful, but always is valid. It is -1 for a root node.*/

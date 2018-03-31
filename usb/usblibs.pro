@@ -42,6 +42,6 @@ SOURCES += \
 
 #//no HEADERS here as the ones needed are all in the same directory as the .c files.
 
-#usb lib uses this so's
+#usb lib uses these so's
 LIBS += -lpthread -ludev
 

@@ -9,6 +9,7 @@
 
 struct SerialConfiguration:public Stored {
   ~SerialConfiguration()=default;
+
   StoredLabel device;//:"/dev/serial/by-id/usb-FTDI_FT232R_USB_UART_A1000pPj-if00-port0",
   StoredCount baud;//  baud:115200,
   StoredCount parity;//todo: enumerize 0:"none", 1:odd 2:even 3:mark 4:space
@@ -24,6 +25,7 @@ public:
   SerialDevice();
   bool connect(const SerialConfiguration &cfg);
   void close();
+
   class Pin {
   public:
     enum Which {
@@ -59,6 +61,7 @@ class SPIO: public AbstractPin {
 public:
   SPIO(SerialDevice::Pin &raw);
   virtual ~SPIO()=default;
+
 public:// AbstractPin interface
   void operator =(bool value)  noexcept override;
   operator bool() noexcept override;
