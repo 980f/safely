@@ -38,16 +38,14 @@ Storable &Storable::Groot(TextKey pathname){
   }
 } // Storable::Groot
 
+
 bool Storable::Delete(TextKey pathname){
   if(Cstr(pathname).empty()) {
     return false;
   }
   Storable *node = FindChild(pathname,false);
   if(node) {
-    if(node->parent) {
-      node->parent->removeChild(*node);
-      return true;
-    } else {
+    if(!node->suicide(true)) {
       storetree("Attempt to delete undeletable node %s",pathname);
       //root or floating node, can't delete those. Should also not create them! There is no need for floating nodes except as local temps.
       return false;
@@ -799,13 +797,15 @@ void Storable::filicide(bool notify){
   }
 }
 
-void Storable::suicide(bool andDelete){
+bool Storable::suicide(bool andDelete){
   if(parent) {
     parent->remove(ownIndex());
     if(andDelete) {
       delete this;
     }
+    return true;
   }
+  return false;
 }
 
 ///////////////////////
