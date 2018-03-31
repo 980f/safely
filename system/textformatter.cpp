@@ -85,7 +85,7 @@ void TextFormatter::reclaimWaste(const CharFormatter &workspace){
   dataend-=substWidth;
   //pull data back down over unused stuff
   unsigned excess = workspace.freespace();
-  body.removeNext(excess);
+  body.removeNext(excess,false/* do not clip allocation*/);
 }
 
 CharFormatter TextFormatter::makeWorkspace(){
@@ -102,7 +102,7 @@ void TextFormatter::onFailure(CharFormatter workspace){
 }
 
 void TextFormatter::substitute(double value){
-  width = Zguard(nf.needs());
+  width = Zguard(nf.needs());//todo: value sensitive computation, this presently is worst case.
   CharFormatter workspace = makeWorkspace();
   if(workspace.isUseful()) {
     if( !workspace.printNumber(value,nf)) {   //if failed to insert anything
@@ -125,6 +125,14 @@ void TextFormatter::substitute(u64 value){
     reclaimWaste(workspace);
   }
 }
+
+void TextFormatter::substitute(u32 value){
+  substitute(u64(value));//need this to distinguish char * from implied char &
+} //
+
+void TextFormatter::substitute(u16 value){
+  substitute(u64(value));//need this to distinguish char * from implied char &
+} //
 
 void TextFormatter::substitute(u8 value){
   substitute(u64(value));//need this to distinguish char * from implied char &

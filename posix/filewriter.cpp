@@ -4,7 +4,7 @@
 #include "fcntlflags.h"
 #include "logger.h"
 
-static Logger bug("FileWriter",true);
+static Logger bug("FileWriter",false);
 
 FileWriter::FileWriter():
   fd("FileWriter"),

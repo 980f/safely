@@ -26,7 +26,7 @@ public:
   /** makes a copy of the @param given content */
   Text(TextKey other);
 
-  /** calloc's a block of data. */
+  /** calloc's a block of data 1 byte greater than @param size and puts a null in every byte including the extra one. */
   Text(unsigned size);
 
   /** enforce that a const can't have its resource taken away from it. */
@@ -88,4 +88,6 @@ public:
 
 }; // class TextPointer
 
+//pre-safely name:
+typedef Text TextPointer;
 #endif // TEXTPOINTER_H

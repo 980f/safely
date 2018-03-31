@@ -5,7 +5,11 @@
 #include <utility>
 
 #include "logger.h"
+#if DebugTextClass==1
 static Logger tbg("TextPointer",false);
+#else
+#define tbg(...)
+#endif
 
 Text::Text() : Cstr(){
   //all is well
@@ -45,6 +49,8 @@ Text::Text(TextKey other, const Span &span):Cstr(TextKey(nullptr)){
       this->ptr=ptr;
       tbg("construct by span %p:%p",this,ptr);
     }
+  } else {
+      tbg("construct by span is null");
   }
 
 }
@@ -88,7 +94,7 @@ void Text::copy(TextKey other){
   if(ptr && ptr != other) { //# if not passed self as a pointer to this' storage.
     clear();
   }
-  if(nonTrivial(other)) {//definitely same data
+  if(nonTrivial(other)) {//definitely some data
     ptr = strdup(other);//don't delete!
   }
   tbg("copied by cstr %p:%p  <-%p",this,ptr,other);
@@ -108,7 +114,6 @@ void Text::take(TextKey &other){
 
 void Text::clear() noexcept {
   tbg("about to clear %p:%p",this,ptr);
-  free(violate(ptr));
   release();
 }
 /////////////////

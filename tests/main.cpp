@@ -8,6 +8,70 @@
 
 #include "unistd.h" //getcwd
 
+#include "storable.h"
+#include "numericalvalue.h" //union + type enum
+#include "stddef.h"
+/** test harness for qtcreator debugger helper*/
+void testPrettyPrinter(unsigned which){
+  switch(which) {
+  case BadIndex:
+    for(which=4;which-->0;){
+      testPrettyPrinter(which);
+    }
+    break;
+  case 3: {
+    Index eye;
+    eye=3;
+    eye=BadIndex;
+    eye++;
+    dbg("printing eye so that compiler doesn't drop it before we can see it with the debugger: %u",eye.raw);
+  } break;
+  case 2: {
+    Text forlabelling;
+    forlabelling = "hi dad!";
+
+  }
+  break;
+  case 1: {
+    NumericalValue en;
+    en.setto(12.34);
+
+    dbg("is:%u for %u, storage:%u len:%u",offsetof(NumericalValue,is),sizeof(NumericalValue::is),offsetof(NumericalValue,storage),sizeof(NumericalValue::storage));
+
+    en.changeInto(NumericalValue::Counting);
+    en.setto(43);
+    en.changeInto(NumericalValue::Whole);
+    en.setto(-1234);
+    en.changeInto(NumericalValue::Counting);
+    en.changeInto(NumericalValue::Whole);
+    en.changeInto(NumericalValue::Truthy);
+    en.setto(false);
+    en.changeInto(NumericalValue::Floating);
+    en.setto(3.14159);
+  }
+  break;
+  case 0: {
+    NumericalValue en;
+    en.setto(12.34);
+
+    Storable node("grandma");
+    node.setType(Storable::Textual);
+    node.setType(Storable::Numerical);
+    node.setNumber(en);
+    Storable &mom=node.child("mommy");
+    Storable &dad=node.child("daddy");
+    for(unsigned ci=3;ci-->0;){
+      mom.addChild("girls").presize(3,Storable::Numerical);
+      dad.addChild("boys").presize(ci,Storable::Numerical);
+    }
+
+  }
+  break;
+
+  } // switch
+
+} // testPrettyPrinter
+
 SafeStr<14> fortnight;
 
 //simply compiling the following is a demanding thing:
@@ -78,7 +142,7 @@ void extremely(){
   MinDoubleFinder minish;
   Extremer<double,true,true> lastish;
 
-  int which = 0;
+  unsigned which = 0;
   for(auto x:{1.0,4.2,-2.71828,3.7,8.9,-2.71828,9.5,3.4}) {
     minish.inspect(which,x);
     lastish.inspect(which,x);
@@ -90,7 +154,6 @@ void extremely(){
 
 } // extremely
 
-
 #include "bufferformatter.h"
 
 void testBufferFormatter(){
@@ -99,20 +162,20 @@ void testBufferFormatter(){
   CharFormatter buffer(bigenough,sizeof (bigenough));
   //nonzero number less than 400 with sigfic 0 printed all 000's
   buffer.clearUnused();//the printers don't presume to know where the end of the string is.
-  for(int ipow=4;ipow-->-4;){
+  for(int ipow = 4; ipow-->-4; ) {
     buffer.rewind();
-    double d=pow10(ipow);
-    auto ok=buffer.printNumber(d,0);
-    buffer.next()=0;
+    double d = pow10(ipow);
+    auto ok = buffer.printNumber(d,0);
+    buffer.next() = 0;
     dbg("CF[10^%d]->%d:%s",ipow,ok,bigenough);
   }
   buffer.rewind();
   BufferFormatter::composeInto(buffer,"One $1",1984);
   dbg("\nShould be <One 1984>:<%s>",bigenough);
-}
+} // testBufferFormatter
 
 #include "fildes.h"
-#include  <functional>
+#include <functional>
 void showSizes(){
   dbg("Size of fildes: %d",sizeof (Fildes));
   std::function<void()> *nullfunctor;
@@ -126,28 +189,33 @@ extern void testJ(unsigned which);
 #include "filereadertester.h"
 #include "filewritertester.h"
 #include "application.h"
+
+
 int main(int argc, char *argv[]){
-  Text cwd(getcwd(nullptr,0));//we use Text class because it will free what getcwd allocated. Not so critical unless we are using this program to look for memory leaks in the functions it tests.
+  Text cwd(getcwd(nullptr,0));//we use Text class because it will free what getcwd allocated. Not so critical unless we are using this program to look for memory leaks
+                              // in the functions it tests.
   dbg("Working directory is: %s",cwd.c_str());
 //  dbg("Static loggers list:");
 //  Logger::listLoggers(dbg);
-  //display PID, later will use application class to write it to a file.
   Application::writepid("tests.pid");
   while(argc-->0) {
-    const char*tes=argv[argc];
+    const char*tes = argv[argc];
     dbg("%d: %s",argc,tes);
-    char group=(*tes++);
-    unsigned which=atoi(tes);
-    switch(group){
+    char group = (*tes++);
+    unsigned which = atoi(tes);
+    switch(group) {
+    case '%':
+      testPrettyPrinter(which);
+      break;
     case 'z':
       showSizes();
       break;
-    case 'w':{
-        FileWriterTester().run(which);
-      } break;
-    case 'f':{
-        FileReaderTester().run(which);
-      } break;
+    case 'w': {
+      FileWriterTester().run(which);
+    } break;
+    case 'f': {
+      FileReaderTester().run(which);
+    } break;
     case 'b'://buffer formatting
       testBufferFormatter();
       break;
@@ -175,7 +243,7 @@ int main(int argc, char *argv[]){
         dbg("coe: %d should be 0",coedata);
       }
       break;
-    }
+    } // switch
   }
   dbg("tests completed \n");
   return 0;

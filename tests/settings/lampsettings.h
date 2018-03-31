@@ -18,7 +18,7 @@ struct LampReport:public Settable {
     linear() {
   }
 
-  int numParams()const{
+  unsigned numParams()const{
     return 2;
   }
   bool setParams(ArgSet&args);

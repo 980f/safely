@@ -36,6 +36,7 @@ public:
 class Twiddler:public IntegerTwiddler {
 public:
   using IntegerTwiddler::IntegerTwiddler;
+  using IntegerTwiddler::setRatio;//this was supposed to give access to setRatio(unsigned,unsigned,..._) but that quit working.
   void setRatio(double ratio);
   /**@return amount of time that twiddler is 'true' */
   double getRatio(void);

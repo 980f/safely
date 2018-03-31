@@ -29,7 +29,7 @@ bool FileWatcher::hasEvent(){
 void FileWatcher::nextEvent(FileEventHandler *handler){
   u8 buffer[sizeof (FileEvent)+NAME_MAX]  __attribute__ ((aligned(__alignof__(struct FileEvent))));
   Indexer<u8> stuff(buffer,sizeof(buffer));
-  if(fd.read(stuff)>=sizeof (FileEvent)){
+  if(fd.read(stuff)&& fd.lastRead>=sizeof (FileEvent)){//#sign mismatch OK
     FileEvent &fe(*reinterpret_cast<FileEvent*>(buffer));
     if(stuff.used()>sizeof (FileEvent)+fe.len){
       //now we know fe is a sane FileEvent
@@ -43,3 +43,5 @@ void FileWatcher::nextEvent(FileEventHandler *handler){
 Indexer<char> FileEvent::name(){
   return Indexer<char>(&namestartshere,len);
 }
+
+

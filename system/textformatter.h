@@ -45,8 +45,12 @@ private:
   void substitute(Cstr stringy);
   void substitute(TextKey stringy);
   void substitute(double value);
+
   void substitute(u64 value);
+  void substitute(u32 value);
+  void substitute(u16 value);
   void substitute(u8 value);
+  //todo: signed ints as well
   void substitute(bool value);
 
 

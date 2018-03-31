@@ -82,13 +82,14 @@ Text FileName::pack(Converter &&cvt,unsigned bytesNeeded){
   if(!Index(bytesNeeded).isValid()){
     bytesNeeded=length(cvt.forward());
   }
-  Indexer<char> packer=Indexer<char>::make(bytesNeeded,true);
+  Indexer<char> packer=Indexer<char>::make(bytesNeeded,true);//todo:0 local char[maxpath] or pass buffer
 
   for(ChainScanner<DottedName> feeder(*this);feeder.hasNext();) {
     if(feeder.ordinal()>0 || bracket.before){//if not first or if put before first
       packer.next() = bracket.slash;
     }
-
+    DottedName &pathelement=feeder.next();
+    packer.cat(pathelement.pack(cvt.forward()).c_str());
   }
   if(bracket.after && packer.used()>0) {//only append trailing slash if there is something ahead of it
     packer.next() = bracket.slash;

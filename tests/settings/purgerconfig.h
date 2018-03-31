@@ -15,7 +15,7 @@ struct Diffuser :public Settable {
     threshold() {
   }
 
-  int numParams()const{
+  unsigned numParams()const{
     return 2;
   }
   bool setParams(ArgSet&args);
@@ -41,7 +41,7 @@ struct PurgerReport :public Settable {
 
   }
 
-  int numParams()const {
+  unsigned numParams()const {
     return 4;
   }
   bool setParams(ArgSet&args);

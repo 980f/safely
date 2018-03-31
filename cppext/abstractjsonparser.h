@@ -43,7 +43,9 @@ public:
 
   /** process the block */
   void parse(){
-    parseChild(data.root);
+    while(parseChild(data.root)){
+      //todo: added looping here to deal with the given node already having seen its opening brace.
+    }
   }
 
   /** some useless info about the parsed data */

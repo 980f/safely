@@ -22,13 +22,13 @@ protected://we are a base class
 
 public:
   Cstr();
-  Cstr(TextKey target);
-  Cstr(unsigned char *target);
+  Cstr(TextKey target);//# we desire implicit conversions
+  Cstr(unsigned char *target);//# we desire implicit conversions
 
   //virtual destructor as this is a base for classes which may do smart things with the pointer on destruction.
-  virtual ~Cstr();
+  virtual ~Cstr() = default;//we never take ownership of ptr, see class Text for such a beast.
   /** change internal pointer */
-  virtual TextKey operator =(TextKey ptr);
+  virtual TextKey operator =(TextKey ptr);//# we desire passthrough on argument
 
   /** @returns pointer member, allowing you to bypass the checks of this class.  */
   operator TextKey() const;
@@ -56,17 +56,22 @@ public:
   bool endsWith(char isit) const noexcept;
 
   /** @returns whether @param other exactly matches this' content, with nullptr matching the same or "" */
-  bool is(TextKey other) const  noexcept;
+  bool is(TextKey other) const noexcept;
 
   char operator [](const Index &index) const noexcept;
 
+  char at(const Index &index) const noexcept;
+
+  /** @returns whether the string was modified. NB: this violates constness of the original string, user beware*/
+  bool setAt(const Index&index,char see) const noexcept;
+
   /** needed by changed() template function */
-  bool operator !=(TextKey other) const  noexcept{
+  bool operator !=(TextKey other) const noexcept {
     return !is(other);
   }
 
   /** needed by changed() template function if we kill the != one */
-  bool operator ==(TextKey other) const  noexcept{
+  bool operator ==(TextKey other) const noexcept {
     return is(other);
   }
 
@@ -88,20 +93,26 @@ public:
    * If you know the origin of the string this is pointing to you can dare to const_cast<char *> the value here. */
   const char *chr(int chr) const noexcept;
 
-  /** @returns pointer to first character in this string which matches ch. @see chr() */
+  /** @returns pointer to last character in this string which matches ch. @see chr() */
   const char *rchr(int chr) const noexcept;
 
-  /** strtod */
-  double asNumber(Cstr *tail=nullptr)const noexcept;
+  /** @returns an index that if nulled will remove useless '0' digits, and maybe a radix point. This is dumb and presumes the string is a reasonable representation of a number. */
+  Index trailingZeroes() const;
 
-  template <typename Numeric> Numeric cvt(Numeric onNull, Cstr *units=nullptr)const noexcept;
+  /** strtod */
+  double asNumber(Cstr *tail = nullptr) const noexcept;
+
+  /** for bool: 1,0,true, false have definite values.
+   * to distinguish onNull from the same value being parsed inspect units.
+   */
+  template<typename Numeric> Numeric cvt(Numeric onNull, Cstr *units = nullptr) const noexcept;
   /** forget the target */
   virtual void clear() noexcept;
 
   /** marker for tedious syntax const_cast<char *>()
    * this should only be used when passing the pointer to old stdlib functions, and only when you have verified the string is null terminated.
    */
-  static char *violate(TextKey violatus) noexcept{
+  static char *violate(TextKey violatus) noexcept {
     return const_cast<char *>(violatus);
   }
 
@@ -112,6 +123,17 @@ public:
     return const_cast<char *>(ptr);
   }
 
+  unsigned char *casted(){
+    return const_cast<unsigned char *>(reinterpret_cast<const unsigned char *>(ptr));
+  }
+
 }; // class Cstr
+
+//versions implemented in cstr.cpp. You should probably add others here if the type is intrinsic or already known to this module.
+template<> bool Cstr::cvt(bool onNull, Cstr *units) const noexcept;
+template<> long Cstr::cvt(long onNull, Cstr *units) const noexcept;
+template<> unsigned Cstr::cvt(unsigned onNull, Cstr *units) const noexcept;
+template<> int Cstr::cvt(int onNull, Cstr *units) const noexcept;
+template<> double Cstr::cvt(double onNull, Cstr *units) const noexcept;
 
 #endif // CSTR_H

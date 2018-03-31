@@ -18,7 +18,7 @@ const char *Enumerizer::token(unsigned ordinal) const {
   return "Undefined";
 }
 
-int Enumerizer::ordinal(const char *token){
+unsigned Enumerizer::ordinal(const char *token){
   Enumerizer scanner(*this);
   while(scanner.hasNext()) {
     const char *canonicalText = scanner.next();
@@ -26,7 +26,7 @@ int Enumerizer::ordinal(const char *token){
       return scanner.used() - 1; //next() bumped the ordinal.
     }
   }
-  return -1;
+  return BadIndex;
 } /* ordinal */
 
 //end of file

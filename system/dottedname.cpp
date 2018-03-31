@@ -24,7 +24,7 @@ unsigned DottedName::length(Converter &&cvt)const{
   }
   unsigned bytesNeeded =pieces-1+bracket.before+bracket.after;//number of seperators
 
-  for(auto index(indexer());index.hasNext();){
+  for(auto index(cindexer());index.hasNext();){
     bytesNeeded += cvt.length(index.next());
   }
   return bytesNeeded;

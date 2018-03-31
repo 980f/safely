@@ -3,15 +3,13 @@
 
 #include "nanoseconds.h"
 
-/** an interval timer */
+/** an interval timer.
+ todo:1 elapsed additional return as NanoSeconds, not just double. */
 class StopWatch {
+
 private:
-  /** first time of interest in this run of the application.
-   * At the moment that is when the first StopWatch is created, even if it is later destroyed.
-   * This is used to reduce the 'number of seconds' used in some calculations to make sure nanoseconds don't get discarded when added to seconds.
-*/
-  static __time_t epoch;
-private:
+  NanoSeconds epoch;//saves time of construction
+
   bool readit(timespec &ts);
   const int CLOCK_something;
 protected:
@@ -28,24 +26,28 @@ Most of the time 'real' makes more sense, but when debugging 'process' time is m
   StopWatch(bool beRunning=true,bool realElseProcess=false);//defaults are for performance timing.
 
   /** @returns elasped time and restarts interval. Use this for cyclic sampling. @param absolutely if not null gets the absolute time reading used in the returned value.*/
-  double roll(double *absolutely=nullptr);
+  NanoSeconds roll(double *absolutely=nullptr);
   /** use start and stop for non-periodic purposes*/
   void start();
+  /** stops acquiring (if not already stopped) and @returns REFERENCE to stopped tracker. You probably want elapsed() or rollit(), this guy is only needed for some time critical timing situations */
   void stop();
   /** convenient for passing around 'timeout pending' state */
   bool isRunning() const;
   /** updates 'stop' if running then @returns time between start and stop as seconds. @param absolutely if not null gets the absolute time reading used in the returned value.*/
-  double elapsed(double *absolutely=nullptr);
+  NanoSeconds elapsed(double *absolutely=nullptr);
 
   /** make last 'elapsed' be a start, retroactively (without reading the system clock again.*/
   void rollit();
   /** @return seconds of absolute time of stop, or now if running*/
-  double absolute();
+  NanoSeconds absolute();
 
   /** @returns the number of cycles of frequency @param atHz that have @see elapsed() */
   unsigned cycles(double atHz, bool andRoll=true);
+  /** @returns how many intervals have passed, and if andRoll sets start modulo interval */
+  unsigned periods(NanoSeconds interval, bool andRoll=true);
   /** @return last clock value sampled, either as absolute (time since program start) or since stopwatch.start()*/
-  double lastSnap(bool absolute) const;
+  NanoSeconds lastSnap(bool absolute=false) const;
+  void lap(const StopWatch &other);
 };
 
 #endif // STOPWATCH_H

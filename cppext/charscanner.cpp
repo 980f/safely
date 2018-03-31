@@ -6,17 +6,18 @@
 //this one is sharable, with care! You should never be calling wrap or clone on a reference.
 CharScanner CharScanner::Null;
 
-//note: we check for null termination here, so if the length is too long, we bail
 int ourStrncmp(const char *one, const char *two, unsigned length){
-  for(unsigned i = 0; i<length; ++i) {
-    if(one[i] == '\0' || two[i] == '\0') {
-      return 0; //???? the function encountered a null and assumes it's a terminator.
-    }
+  for(unsigned i = 0; i<length; ++i) {//# in order
+    //formerly returned 'equal' when either was equal to the start of the other, now returns the approprite mismatch where longer string is > shorter.
     if(one[i] > two[i]) {
       return 1;
     }
     if(one[i] < two[i]) {
       return -1;
+    }
+    //char are equal to get here. If they are null then we return equal, if not then we already returned.
+    if(one[i] == 0){//only need to test one here.
+      return 0;
     }
   }
   return 0;
@@ -89,11 +90,9 @@ ByteScanner::ByteScanner(const CharScanner&other ) : //choices herein are for fi
   //#nada
 }
 
-ByteScanner::~ByteScanner(){
-}
 
 u16 ByteScanner ::getU16(u16 def){
-  return getU(2, def);
+  return u16(getU(2, def));
 }
 
 u32 ByteScanner ::getU24(u32 def){
@@ -132,7 +131,7 @@ bool ByteScanner::chuckSpaces(){
 }
 
 ///////////////////
-CharScanner::CharScanner(void) : Indexer<char >(){
+CharScanner::CharScanner() : Indexer<char>() {
   //#nada
 }
 
@@ -143,10 +142,6 @@ CharScanner CharScanner::infer(TextKey content){
 
 CharScanner::CharScanner(char  *content, unsigned size ) : Indexer<char >(content, size){
   //#nada
-}
-
-CharScanner::~CharScanner(){
-
 }
 
 CharScanner::CharScanner(const CharScanner&other, int clip ) : Indexer<char >(other, clip){
@@ -178,7 +173,7 @@ CharScanner::CharScanner(const Indexer<u8> &other):
  * maydo: return null if we can't put a null at the end
  * maydo: add argument for 'urgent' or not, and if not urgent see if there is a null before the end, not just at the end
  */
-TextKey CharScanner::asciiz(void){
+TextKey CharScanner::asciiz() {
   if(length == 0) { //then we don't have a place for a terminating null
     return ""; //so point to a universal empty string.
   }
@@ -213,7 +208,7 @@ bool CharScanner::operator == (const CharScanner &rhs) const {
 } // ==
 
 /** for use with trusted rhs strings */
-#include "string.h"
+//#include "string.h"
 bool CharScanner::operator == (const char *literal) const {
   if(!literal) {
     return used()==0; //null pointer matches empty string
@@ -222,7 +217,7 @@ bool CharScanner::operator == (const char *literal) const {
   if(0==ourStrncmp(internalBuffer(),literal,used())) {//then we MIGHT have a match
     //strncmp stops at first null in either string, or after 'used' items
     if(buffer[pointer - 1]) {//no null terminator
-      return literal[pointer]==0;
+      return literal[pointer]==0;//
     } else {
       return literal[pointer - 1]==0;
     }
@@ -257,8 +252,6 @@ void CharScanner::trimNulls(void){
   }
 }
 
-#include "cheaptricks.h"
-#include "cstr.h"
 bool CharScanner::isBlank(){
   if(length==0) {
     return true;
@@ -277,14 +270,21 @@ bool CharScanner::isBlank(){
 }
 
 CharScanner CharScanner::cut(char separator){
-  Index termlocation(findNext(separator));
-  if(termlocation.isValid()){//return from pointer to termlocation
-    buffer[termlocation]=0;
+  if(hasNext()){
+    Index termlocation(findInTail(separator));
+    if(termlocation.isValid()){//return from pointer to termlocation
+      AssignOnExit<unsigned> aoe(pointer,termlocation+1);//move past terminator, but not until we've grabbed our reference
+      buffer[termlocation]=0;
+      unsigned pallocated=termlocation-pointer;//if pointer was the separator then termlocation ==separator and we pass back a zero length buffer point at a null, should the caller forget to check the length.
+      return CharScanner(&peek(),pallocated);
+    } else {
+      AssignOnExit<unsigned> aoe(pointer,allocated());//consume remainder
+      return CharScanner(&peek(),freespace());
+    }
   } else {
-    termlocation=allocated();//and creator better have used zguard()
+    //todo: 000 termlocation=allocated();//and creator better have used zguard()
+    return CharScanner();
   }
-  AssignOnExit<unsigned> aoe(pointer,termlocation+1);//move past terminator, but not until we've grabbed our reference
-  return CharScanner(&peek(),termlocation-pointer);
 }
 
 bool CharScanner ::putBytes(unsigned value, unsigned numBytes){

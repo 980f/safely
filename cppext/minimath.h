@@ -6,6 +6,7 @@ math related functions that either had platform/compiler variations or have plat
 */
 
 
+#include <cmath>
 #include "eztypes.h"
 
 //portable nan etc. symbols, our compilers don't seem to agree on these guys, or the syntax is horrible.
@@ -59,10 +60,15 @@ template< typename mathy > int signof(mathy x) {
   if(x < 0) {
     return -1;
   }
-  if(x != 0) {
+  if(x != 0) {//using != instead of > makes NaN's positive instead of 0
     return +1;
   }
   return 0;
+}
+
+/** legacy */
+inline int signum(int anint) {
+  return signof(anint);
 }
 
 /** @returns positivity as a multiplier */
@@ -114,10 +120,10 @@ inline double ratio(double num, double denom) {
   return num / denom;
 }
 
-/** protect against garbage in (divide by zero) note: 0/0 is 1*/
+/** protect against garbage in (divide by zero) note: 0/0 is 0, at one time this returned 1 for that.*/
 inline float ratio(float num, float denom) {
   if(denom == 0) { //pathological case
-    return num;// == 0 ? 1 : 0; //may someday return signed inf.
+    return num;//may someday return signed inf.
   }
   return num / denom;
 }
@@ -186,9 +192,12 @@ template <typename floating> bool nearly(floating value, floating other, int bit
  * For zero this returns -1, most logic will have problems if you don't check that. */
 int ilog10(u32 value);
 int ilog10(u64 value);
+int ilog10(double value);
 
 /** an integer power of 10. out of bounds arg gets you nothing but trouble ... */
 u32 i32pow10(unsigned power);
+
+unsigned digitsAbove(unsigned int value, unsigned numDigits);
 
 /** an integer power of 10. out of bounds arg gets you nothing but trouble ... */
 u64 i64pow10(unsigned power);
@@ -201,7 +210,7 @@ u64 keepDecimals(u64 p19,unsigned digits);
 @returns a truncated int that has those digits of interest, but you may need to pad with leading zeroes. */
 u64 truncateDecimals(u64 p19,unsigned digits);
 /** filtering in case we choose to optimize this */
-double pow10(int exponent);
+double dpow10(int exponent);
 
 template <typename mathy> double squared(mathy x) {
   return x * x;
@@ -281,11 +290,13 @@ template< typename Scalar > void swap(Scalar &a, Scalar &b) {
 }
 
 
-/** Things that are coded in assembler on some platforms, due to efficiency concerns. In 2009 one version of the GCC compiler for ARM often produced horrible and sometimes incorrect code. Time permitting these should be compiled from the C equivalents and compared to the hand coded assembler to see if we can abandon the assembler due to compiler improvements. */
+/** Things that are coded in assembler on some platforms, due to efficiency concerns. In 2009 one version of the GCC compiler for ARM often produced horrible and sometimes incorrect code. Time permitting these should be compiled from the C equivalents and compared to the hand coded assembler to see if we can abandon the assembler source due to compiler improvements. */
 extern "C" {
 /* @returns integer part of d, modify d to be its fractional part.
 */
   int splitter(double &d);
+  /** like splitter but has an extra bit of output range by presuming input is non-negative. */
+  unsigned splitter2(double &d);
 
   /** the time delay given by ticks is ambiguous, it depends upon processor clock. @72MHz 1000 ticks is roughly one microsecond.*/
   void nanoSpin(unsigned ticks); //fast spinner, first used in soft I2C.

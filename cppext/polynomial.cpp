@@ -19,13 +19,13 @@ double polysum(double x,const double *a,int degree, unsigned prime){
   return acc;
 }
 
-int effectiveDegree(const double *a,int degree){
+unsigned effectiveDegree(const double *a,unsigned degree){
   for(int eff=degree;eff>=0;--eff){
     if(a[eff]!=0){
       return eff;
     }
   }
-  return -1;//indicates poly will always return 0;
+  return BadIndex;//indicates poly will always return 0;
 }
 
 

@@ -184,7 +184,16 @@ int fexp(double d){ //todo:1 remove dependence on cmath.
   return ret;
 }
 
-double pow10(int exponent){
+double dpow10(int exponent){
+  if(exponent>=0){
+    if(exponent<countof(Decimal1)){
+      return double(Decimal1[exponent]);
+    }
+    if(exponent<countof(Decimal2)+countof(Decimal1)){
+       return double(Decimal2[exponent-countof(Decimal1)]);
+    }
+  }
+  //todo: see if std lib uses RPE to compute this.
   return pow(double(10), exponent);
 }
 
@@ -373,6 +382,13 @@ int splitter(double &d){
   return int(eye);
 }
 
+unsigned splitter2(double &d){
+  double eye;
+  d = modf(d,&eye);  //todo:2 this can be done very efficiently via bit twiddling. "modf()" has an inconvenient argument order and return type.
+  return unsigned(eye);
+}
+
+
 } //end extern C for potentially assembly coded routines.
 
 
@@ -387,3 +403,13 @@ int splitter(double &d){
 //template <> int intbin<int,double>(double &d);
 //template <> long intbin<long,double>(double &d);
 //template <> u64 intbin<u64,double>(double &d);
+
+unsigned digitsAbove(unsigned int value, unsigned numDigits){
+  unsigned digit = value/i32pow10(numDigits);
+  value -= digit * i32pow10(numDigits);
+  return digit;
+}
+
+int ilog10(double value){
+  return ilog10(u64(fabs(value)));
+}

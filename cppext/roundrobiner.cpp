@@ -3,15 +3,15 @@
 #include "cheaptricks.h"
 #include "minimath.h" //fill's clear's
 
+#include "index.h"  //badIndex
 
 RoundRobiner::RoundRobiner(unsigned quantity) :  quantity(quantity){
-
   markAll(0);
-  last = BadLength;
+  last = BadIndex;
 }
 
 BitReference RoundRobiner::bit(unsigned id){
-  return BitReference(reinterpret_cast<u64>(&bits),id);
+  return BitReference(&bits,id);
 }
 
 bool RoundRobiner::bit(unsigned id) const {

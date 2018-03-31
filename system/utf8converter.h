@@ -37,7 +37,7 @@ public:
   /** for @param rewind see Indexer class, ~0 if accessing already used, 0 for the whole thing 1 for backup and then remainder of @param utf8 */
   UnicharScanner(const Indexer<const char>&utf8, int rewind = 0);
   /** @returns whether there is another unicode char available to be read via @see next() */
-  bool hasNext(void) const override;
+  bool hasNext(void) override;
   /** @returns unicode char, consumeing */
   Unichar next(void) override;
 };
@@ -52,7 +52,7 @@ class UnicharReader:public ReadonlySequence<Unichar> {
   // ReadonlySequence interface
 public:
   virtual ~UnicharReader()=default;
-  bool hasNext() const override;
+  bool hasNext() override;
   Unichar next() override;
 };
 

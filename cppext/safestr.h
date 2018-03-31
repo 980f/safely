@@ -1,11 +1,11 @@
-#ifndef SAFESTR_H
-#define SAFESTR_H
+#pragma once //(C) 2017 Andrew Heilveil
 /** a string that it is hard to go past the end of.
  * allocate a buffer and a pointer manager for it.
  */
 
 #include "eztypes.h"
 #include "charformatter.h"
+
 template<int Size> class SafeStr : public CharFormatter {
   char content[Size];
 public:
@@ -42,4 +42,3 @@ public:
 
 }; // class SafeStr
 
-#endif // SAFESTR_H

@@ -1,21 +1,21 @@
 #include "storedenum.h"
 
 
-StoredEnum::StoredEnum(Storable &node, const Enumerated &enumerated, int def) :
+StoredEnum::StoredEnum(Storable &node, const Enumerated &enumerated, unsigned def) :
   Stored(node){
   node.setEnumerizer(&enumerated);//has a side efect of converting stored text to number, but leaves node marked 'textual'
   node.setDefault(def);
 }
 
-StoredEnum::operator int() const {
-  return node.getNumber< int >();
+StoredEnum::operator unsigned() const {
+  return node.getNumber< unsigned >();
 }
 
-int StoredEnum::native() const {
-  return node.getNumber< int >();
+unsigned StoredEnum::native() const {
+  return node.getNumber< unsigned >();
 }
 
-int StoredEnum::setto(int newnum){
+unsigned StoredEnum::setto(unsigned newnum){
   return node.setNumber(newnum);
 }
 
@@ -23,23 +23,23 @@ Cstr StoredEnum::toString(){
   return node.image();
 }
 
-SimpleSlot StoredEnum::setLater(int value){
-  return sigc::hide_return(sigc::bind(sigc::mem_fun< int, int >(this, &StoredEnum::operator =), value));
+SimpleSlot StoredEnum::setLater(unsigned value){
+  return sigc::hide_return(sigc::bind(sigc::mem_fun< unsigned, unsigned >(this, &StoredEnum::operator =), value));
 }
 
-sigc::slot<void, int> StoredEnum::setter(){
+sigc::slot<void, unsigned> StoredEnum::setter(){
   return sigc::hide_return( MyHandler(StoredEnum::setto));
 }
 
-sigc::slot<int> StoredEnum::getLater(){
+sigc::slot<unsigned> StoredEnum::getLater(){
   return MyHandler(StoredEnum::native);
 }
 
-SimpleSlot StoredEnum::applyTo(sigc::slot<void, int> functor){
+SimpleSlot StoredEnum::applyTo(sigc::slot<void, unsigned> functor){
   return sigc::compose(functor,getLater());
 }
 
-sigc::connection StoredEnum::sendChanges(sigc::slot<void, int> functor, bool kickme){
+sigc::connection StoredEnum::sendChanges(sigc::slot<void, unsigned> functor, bool kickme){
   return onAnyChange(applyTo(functor),kickme);
 }
 

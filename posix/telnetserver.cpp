@@ -62,6 +62,12 @@ void TelnetServer::purge(){
   });
 }
 
+void TelnetServer::close(){
+  forEach([](Socketeer &sock){sock.close();});//close clients
+  Socketeer::close();//close server itself
+  //don't need to purge, destructor will automatically do that.
+}
+
 Socketeer *TelnetServer::newest(){
   return clients.last();
 }

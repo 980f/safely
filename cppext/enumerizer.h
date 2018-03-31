@@ -10,7 +10,7 @@ public:
   Enumerizer(TextKey tokenSet[], int quantity);
   Enumerizer(const Enumerizer &other);
   TextKey token(unsigned ordinal) const;
-  int ordinal(TextKey token) /*const */;
+  unsigned ordinal(TextKey token) /*const */;
 };
 
 

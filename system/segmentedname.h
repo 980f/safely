@@ -44,7 +44,7 @@ public://this is a utility class, adding better named functions to its base.
   ChainScanner<Text> indexer();
 
   /** @returns an indexer, that can only view this, note that the individual pieces are still mutable. */
-  ConstChainScanner<Text> indexer() const;
+  ConstChainScanner<Text> cindexer() const;
 }; // class SegmentedName
 
 #endif // SEGMENTEDNAME_H

@@ -50,14 +50,14 @@ template<class Groupie> class StoredGroup : public Stored {
   /** for removal we want to have already destroyed object before calling some of the change watchers.
    * so this tells you the number of the one that has already been removed. The object is already deleted and ordinals adjusted.
    */
-  sigc::signal<void, int> onremoval;
+  sigc::signal<void, unsigned> onremoval;
 
 
-  /** bool remove (else add at end) , int
+  /** bool remove (else add at end) , unsigned which
    * called *after* a creation or a removal
    * this doesn't reference the item as often the watcher just wants to find a sibling
    */
-  sigc::signal<void, bool, int> dependents;
+  sigc::signal<void, bool, unsigned> dependents;
 
 
 public:
@@ -148,8 +148,8 @@ public:
     return pod.quantity();
   }
 
-  bool has(int ordinal) const {
-    return unsigned(ordinal) < unsigned(quantity()); //#cute trick, comparing unsigned makes negative be really big
+  bool has(unsigned ordinal) const {
+    return ordinal < quantity();
   }
 
   /** first created for sake of 'created' notification handlers*/
@@ -168,11 +168,11 @@ public:
     return *pod.last();
   }
 
-  Groupie &operator [](int ordinal){
+  Groupie &operator [](unsigned ordinal){
     if(has(ordinal)) {
       return *pod[ordinal];
     }
-    if(autocreate) { //this is a debug feature, when we have to many problems to fix this right now.
+    if(autocreate) { //this is a debug feature, when we have too many problems to fix this right now.
       create("autocreated"); //todo:M periodically try to get rid of this crutch.
       return last();
     } else {
@@ -185,7 +185,7 @@ public:
     }
   } // []
 
-  const Groupie &operator [](int ordinal) const {
+  const Groupie &operator [](unsigned ordinal) const {
     if(has(ordinal)) {
       return *pod[ordinal];
     }
@@ -220,9 +220,9 @@ public:
     return oncreation.connect(action);
   }
 
-  sigc::connection onRemoval(sigc::slot<void, int> action, bool doAllNow = false){
+  sigc::connection onRemoval(sigc::slot<void, unsigned> action, bool doAllNow = false){
     if(doAllNow) {
-      for(int i = quantity(); i-- > 0; ) {
+      for(unsigned i = quantity(); i-- > 0; ) {
         action(i);
       }
     }
@@ -243,8 +243,8 @@ public:
 
   /** add a copy of an existing node, build a new thing from it and hence a copy of that thing.
    * generally that existing node is from some other instance of a group of the same type as this group*/
-  Groupie &clone(const Groupie &extant){
-    wrapNode(node.createChild(extant.node));
+  Groupie &clone(const Groupie &extant,TextKey altname=nullptr){
+    wrapNode(node.createChild(extant.node,altname));
     return last();
   }
 
@@ -275,7 +275,7 @@ public:
   } // setSize
 
   /** remove something from given place in list. This DELETES the item, beware of use-after-free.*/
-  virtual bool remove(int which){
+  virtual bool remove(unsigned which){
     if(has(which)) { //#while the pod and node can take care of bad indexes locally we don't want to do the notifies if the index is
                      // bad. And now preremoval depends on this check.
       if(preremoval(operator [](which))) {//if not vetoed
@@ -312,7 +312,7 @@ public:
     for(unsigned which = quantity(); which-- > 0; ) { //#keep reverse iteration, can do remove's with it.
       Groupie &victim(*pod[which]);
       if(killit( victim)) {
-        deaths+=remove(which); //#works well because we reverse iterate.
+        deaths+=remove(which); //#works well because we reverse iterate.(see bug #369)
       }
     }
     return deaths;
@@ -395,9 +395,11 @@ public:
   /** @returns node by internal name, creates one if it doesn't exist.
    * useful for legacy upgrades of known entities within a group, which is pretty much limited to factory defined files, never user
    * stuff */
-  Groupie &child(const char *key){
+  Groupie &child(const char *key,bool*isNoob=nullptr){
     Groupie *child = existing(key);
-
+    if(isNoob){
+      *isNoob= (child==nullptr);
+    }
     if(child) {
       return *child;
     } else {
@@ -417,7 +419,7 @@ public:
   }
 
   /** @deprecated need to get rid of these as they generate warnings:*/
-  void forEach(const sigc::slot<void, const NodeName &, const Groupie &, int> &action) const {
+  void forEach(const sigc::slot<void, const TextKey &, const Groupie &, unsigned> &action) const {
     ForValues(list){
       Groupie &item(list.next());
 

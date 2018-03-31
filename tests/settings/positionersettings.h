@@ -37,7 +37,7 @@ public:
   bool validIndex(unsigned index)const;
   TrayGeometry(void);
 
-  int numParams()const;
+  unsigned numParams()const;
   bool setParams(ArgSet &args);
   void getParams(ArgSet &args)const;
 };
@@ -82,7 +82,7 @@ struct PositionerReport :public Settable{
     targetPosition() {
   }
 
-  int numParams()const {
+  unsigned numParams()const {
     return 3;
   }
   bool setParams(ArgSet&args);

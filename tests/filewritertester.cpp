@@ -42,7 +42,7 @@ void FileWriterTester::run(unsigned which){
     ByteScanner data(testdata.contents());
 
 // can't use  FILE *tfile=tmpfile(); as it is near impossible to access the filename to pass to a check routine.
-    Text fname(tempnam(nullptr,nullptr));
+    Text fname(tempnam(nullptr,nullptr));//#tempnam is good enough for testing, ignore any warning about using it.
     info("will write to: %s",fname.c_str());
     if(process(fname,data)){
       fmover.loiter();

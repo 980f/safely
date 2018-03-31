@@ -1,97 +1,74 @@
-# // *INDENT-OFF*  in case we run uncrustify on this flie
+## qtcreator project file for things that need a posix system.
 
-#magic for making a static lib
-include ("../staticlib.pro")
-#our sibling with heapless code
-include("../cppext/lib.pro")
-#our sibling with mallocating code, but no OS per se:
-include("../system/lib.pro")
+##todo: confirm sigc is used directly herein
+#include("../sigc.pro")
 
-#sigc in filer/jsonfile
-include("../sigc.pro")
+posixdir=$$PWD
 
+INCLUDEPATH+=$$posixdir
+DEPENDPATH+=$$posixdir
 
-##for async IO add to your executable project:
-#LIBS += -lrt
-
-#include("posix.files")
-#I put the above back in this file as qtcreator wouldn't text search them without some finesse
-
-DEPENDPATH += ../posix
-INCLUDEPATH += ../posix
-
-#for async IO (aio_*), as used in filereader:
-LIBS += -lrt
-
+message("Including posix parts from $$posixdir")
 
 SOURCES += \
-    fdset.cpp \
-    fildes.cpp \
-    posixwrapper.cpp \
-    perftimer.cpp \
-    stopwatch.cpp \
-    filer.cpp \
-    posixlogger.cpp \
-    streamprintf.cpp \
-    streamformatter.cpp \
-    nanoseconds.cpp \
-    fileasynchio.cpp \
-    fileinfo.cpp \
-    filereader.cpp \
-    filewriter.cpp \
-    epoller.cpp \
-    application.cpp \
-    incrementalfiletransfer.cpp \
-    memorymapper.cpp \
-    directory.cpp \
-    timerfd.cpp \
-    microseconds.cpp \
-    threader.cpp \
-    jsonfile.cpp \
-    performancetimer.cpp \
-    activityperformance.cpp \
-    socketeer.cpp \
-    tcpserver.cpp \
-    tcpsocket.cpp \
-    tcptester.cpp \
-    telnetserver.cpp
-
-
+    $$posixdir/fdset.cpp \
+    $$posixdir/fildes.cpp \
+    $$posixdir/posixwrapper.cpp \
+    $$posixdir/perftimer.cpp \
+    $$posixdir/stopwatch.cpp \
+    $$posixdir/activityperformance.cpp \
+    $$posixdir/filer.cpp \
+    $$posixdir/posixlogger.cpp \
+    $$posixdir/nanoseconds.cpp \
+    $$posixdir/fileasynchio.cpp \
+    $$posixdir/fileinfo.cpp \
+    $$posixdir/filereader.cpp \
+    $$posixdir/filewriter.cpp \
+    $$posixdir/epoller.cpp \
+    $$posixdir/application.cpp \
+    $$posixdir/incrementalfiletransfer.cpp \
+    $$posixdir/memorymapper.cpp \
+    $$posixdir/timerfd.cpp \
+    $$posixdir/microseconds.cpp \
+    $$posixdir/telnetserver.cpp \
+    $$posixdir/socketeer.cpp \
+    $$posixdir/jsonfile.cpp \
+    $$posixdir/serialdevice.cpp \
+    $$posixdir/serveroptions.cpp \
+    $$posixdir/jasoned.cpp \
+    $$posixdir/filewatcher.cpp \
+    $$posixdir/worstcase.cpp \
+    $$PWD/threader.cpp
 
 HEADERS += \
-    timerfd.h \
-    fdset.h \
-    fildes.h \
-    filer.h \
-    posixwrapper.h \
-    perftimer.h \
-    stopwatch.h \
-    posixlogger.h \
-    streamprintf.h \
-    streamformatter.h \
-    nanoseconds.h \
-    fcntlflags.h \
-    fileasynchio.h \
-    fileinfo.h \
-    filereader.h \
-    filewriter.h \
-    epoller.h \
-    application.h \
-    incrementalfiletransfer.h \
-    memorymapper.h \
-    directory.h \
-    filenameconverter.h \
-    microseconds.h \
-    threader.h \
-    jsonfile.h \
-    performancetimer.h \
-    activityperformance.h \
-    socketeer.h \
-    tcpserver.h \
-    tcpsocket.h \
-    tcptester.h \
-    telnetserver.h
+    $$posixdir/timerfd.h \
+    $$posixdir/fdset.h \
+    $$posixdir/fildes.h \
+    $$posixdir/serialdevice.h \
+    $$posixdir/filer.h \
+    $$posixdir/posixwrapper.h \
+    $$posixdir/perftimer.h \
+    $$posixdir/stopwatch.h \
+    $$posixdir/posixlogger.h \
+    $$posixdir/nanoseconds.h \
+    $$posixdir/fcntlflags.h \
+    $$posixdir/fileasynchio.h \
+    $$posixdir/fileinfo.h \
+    $$posixdir/filereader.h \
+    $$posixdir/filewriter.h \
+    $$posixdir/epoller.h \
+    $$posixdir/application.h \
+    $$posixdir/incrementalfiletransfer.h \
+    $$posixdir/memorymapper.h \
+    $$posixdir/microseconds.h \
+    $$posixdir/serveroptions.h \
+    $$posixdir/jasoned.h \
+    $$posixdir/filewatcher.h \
+    $$posixdir/worstcase.h \
+    $$PWD/threader.h
 
-DISTFILES += \
-    posixgroup.ld
+
+#for async IO (aio_*), as used in filereader: rt:"glibc runtime"
+LIBS += -lrt
+
 

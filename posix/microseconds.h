@@ -9,6 +9,7 @@ constexpr double from(const timeval &ts){
 
 void parseTime(timeval &ts,double seconds);
 
+/** manages time as used by older POSIX systems */
 struct MicroSeconds: public timeval{
 
   MicroSeconds(double seconds=0.0){
@@ -27,6 +28,26 @@ struct MicroSeconds: public timeval{
     return asSeconds();
   }
 
+  MicroSeconds &Never();
+
+  bool isNever() const;
+
+  bool isZero() const noexcept {
+    return tv_sec==0 && tv_usec==0;
+  }
+
+
+public: //compares and math
+  bool operator >(const MicroSeconds &that) const;
+  bool operator >=(const MicroSeconds &that) const;
+  bool operator ==(const MicroSeconds &that) const;
+  unsigned modulated(const MicroSeconds &interval);
+  MicroSeconds operator -(const MicroSeconds &lesser) const;
+  MicroSeconds &operator -=(const MicroSeconds &lesser);
+  MicroSeconds &operator +=(const MicroSeconds &lesser);
+  MicroSeconds operator +(const MicroSeconds &lesser) const;
+  MicroSeconds &atLeast(const MicroSeconds &other);
+  MicroSeconds &atMost(const MicroSeconds &other);
 };
 
 #endif // MICROSECONDS_H

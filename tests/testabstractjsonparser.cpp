@@ -16,7 +16,7 @@ Text TestAbstractJsonConstructor::extract(Span &span) {
   return Text(data.internalBuffer(),span);
 }
 
-Storable *TestAbstractJsonConstructor::insertNewChild(Storable *parent, Text &name, bool haveValue, Text &value, bool valueQuoted) {
+Storable *TestAbstractJsonConstructor::applyToChild(Storable *parent, Text &name, bool haveValue, Text &value, bool valueQuoted) {
   Storable *nova=parent? &parent->addChild(name): (root = new Storable(name));
   if(nova){
     if(haveValue){

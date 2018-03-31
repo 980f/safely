@@ -1,7 +1,7 @@
 #include "storedipv4address.h"
 #include "stdlib.h" //strtol
 
-#include "textformatter.h"
+#include "textformatter.h" //todo:1 replace with bufferformatter
 
 StoredIPV4Address::StoredIPV4Address(Storable &node) : Stored(node),
   ConnectChild(resolved),

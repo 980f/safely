@@ -3,7 +3,6 @@
 
 #include <functional>
 /** hook with a return value.
-1st attempt used simple typedef'd pointer, but that didn't mate easily to member functions, so <functional> is used.
 */
 template<typename RetType, typename ... Args> class Hooker {
 public://expose function's type for use in arguments to be passed to this guy
@@ -12,6 +11,7 @@ private:
   Pointer pointer;
   RetType defaultReturn;
  public:
+  /** can set function to call, must set what to return if no function is set. */
   Hooker(RetType nullAction,Pointer fn=nullptr):pointer(fn),defaultReturn(nullAction){}
   /** set the function pointer.
    * Note that the default value remains unchanged. This makes sense as the default is what the owner of the hook chooses, not the individual hoping to use the hook.
@@ -22,12 +22,17 @@ private:
     return was;
   }
 
-  RetType operator () (Args ... args){
+  RetType operator () (Args ... args) const{
     if(pointer){
       return pointer(args ...);
     } else {
       return defaultReturn;
     }
+  }
+
+  /** @returns whether there is any point in calling this hook. (can distinguish between return of default and return that happens to match default)*/
+  operator bool() const {
+    return bool(pointer);
   }
 
 };
@@ -53,15 +58,18 @@ public:
     return was;
   }
 
-  void operator () (Args ... args){
+  void operator () (Args ... args) const{
     if(pointer){
       pointer(args ...);
     }
   }
 
+  /** @returns whether there is any point in calling this hook. (can distinguish between return of default and return that happens to match default)*/
+  operator bool() const {
+    return bool(pointer);
+  }
+
 };
 
-
-//todo: equivalent of sigc hideReturn() and whatever they called supplyReturn()
 
 #endif // HOOK_H
