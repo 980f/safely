@@ -53,11 +53,7 @@ public:
   ConstArgSet(const double *d, int sizeofd);
   ConstArgSet(const ArgSet &other);
   ConstArgSet(const ConstArgSet &other);
-<<<<<<< HEAD
   ~ConstArgSet() = default;
-=======
-  ~ConstArgSet()=default;
->>>>>>> 837a9b93ad15a4fea3691d4fb74b589bee7d5518
 };
 
 

@@ -1,8 +1,4 @@
-<<<<<<< HEAD
 //"(C) Andrew L. Heilveil, 2017-2018"
-=======
-//"(C) Andrew L. Heilveil, 2017"
->>>>>>> 837a9b93ad15a4fea3691d4fb74b589bee7d5518
 #include "jsonfile.h"
 
 #include "filer.h"
