@@ -18,7 +18,6 @@ void UsbDevice::addWatch(int fd, short events){
   }
 } // UsbDevice::addWatch
 
-
 void UsbDevice::removeWatch(int fd){
   dbg("Stop watching file number %d",fd);
   //check chain for existing IOsource for fd, but don't create one.
@@ -31,6 +30,7 @@ void UsbDevice::pollfd_added(int fd, short events, void *user_data){
 void UsbDevice::pollfd_removed(int fd, void *user_data){
   reinterpret_cast<UsbDevice *>(user_data)->removeWatch(fd);
 }
+
 #endif // if 0
 
 static const char * errormessages[] {
@@ -62,7 +62,6 @@ LibUsber::LibUsber() : PosixWrapper("UsbLib"){
 
 bool LibUsber::init(){
   if(!ctx) {
-
     return !failure(libusb_init(&ctx));
   } else {
     return true; //todo: is there a 'ok to use' member?
@@ -86,16 +85,15 @@ MicroSeconds LibUsber::doEvents(){
   } else {
     return 0;
   }
-}
+} // LibUsber::doEvents
 
 int LibUsber::buriedError() const {
 //  if(ctx){ //too hidden at the moment.
 //    return ctx->debug_fixed;
 //  } else {
-    return 0;
+  return 0;
 //  }
 } // LibUsber::doEvents
-
 
 #define RecordIds devid.id.vendor = idVendor; devid.id.product = idProduct
 
@@ -106,7 +104,7 @@ bool LibUsber::find(uint16_t idVendor,uint16_t idProduct,unsigned nth){
 
   OnExit release([devs] (){
     libusb_free_device_list(devs, 1);//libusb_open ++'s the ref count for the one we keep a ref to.
-  });
+    });
   ssize_t devcnt = libusb_get_device_list(nullptr, &devs);
 
   if (devcnt < 0) {
@@ -145,10 +143,10 @@ bool LibUsber::open(uint16_t idVendor, uint16_t idProduct){
     plugWatcher(true);
     return true;
   } else {
-    this->errornumber=buriedError();
+    this->errornumber = buriedError();
     return false;
   }
-}
+} // LibUsber::open
 
 bool LibUsber::claim(int desiredInterfacenumber){
   //we are trusting that there is only one configuration and that it has our desiredInterfacenumber
@@ -162,7 +160,7 @@ bool LibUsber::claim(int desiredInterfacenumber){
 }
 
 bool LibUsber::submit(libusb_transfer *xfer){
-  if(devh==nullptr){
+  if(devh==nullptr) {
     return false;//segv on power down.
   }
   if(xferInProgress) {
@@ -202,10 +200,10 @@ bool LibUsber::ack(libusb_transfer *xfer){
   } else {
     return xfer==nullptr;
   }
-}
+} // LibUsber::ack
 
 void LibUsber::releaseHandle(){
-  if(devh){
+  if(devh) {
     ++disconnects;
   }
   libusb_close(take(devh));//fail fast on use after close
@@ -216,7 +214,7 @@ int LibUsber::onPlugEvent(libusb_hotplug_event event){
   switch(event) {
   case LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED:
     dbg("Hotplug arrival:[%04X:%04X]",devid.id.vendor,devid.id.product);
-    if(devh){
+    if(devh) {
       wtf("Hotplug while still plugged");
       releaseHandle();
     }
@@ -224,16 +222,16 @@ int LibUsber::onPlugEvent(libusb_hotplug_event event){
     break;
   case LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT:
     dbg("Hotplug departure: [%04X:%04X]",devid.id.vendor,devid.id.product);
-    if(xferInProgress){
+    if(xferInProgress) {
       libusb_cancel_transfer(xferInProgress);
       //which should call our callback which should clear xferInProgress
       //but in case that fails
-      xferInProgress=nullptr;//forget all state related to device.
+      xferInProgress = nullptr;//forget all state related to device.
     }
     releaseHandle();
     plugWatcher(false);
     break;
-  }
+  } // switch
   return 0;//keep ourselves around.
 } // LibUsber::onPlugEvent
 
@@ -245,7 +243,7 @@ static int plugcallback(struct libusb_context */*ctx*/, struct libusb_device */*
 
 bool LibUsber::watchplug(uint16_t idVendor, uint16_t idProduct,Hook<bool> hooker){
   RecordIds;
-  plugWatcher=hooker;
+  plugWatcher = hooker;
   if(failure(libusb_hotplug_register_callback(ctx,libusb_hotplug_event( LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT),LIBUSB_HOTPLUG_ENUMERATE,devid.id.vendor, devid.id.product,LIBUSB_HOTPLUG_MATCH_ANY,  plugcallback, this, &hotplugger))) {
     dbg("Failed to register hotplug watcher");
     return false;
@@ -267,10 +265,9 @@ bool LibUsber::close(){
   } else {
     return false;
   }
-}
+} // LibUsber::close
 
 LibUsber::~LibUsber(){
   close();
   libusb_exit(take(ctx));//take():fail faster on use after free.
 }
-

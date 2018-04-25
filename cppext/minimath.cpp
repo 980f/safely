@@ -101,14 +101,13 @@ u64 i64pow10(unsigned power){
   }
 } // i64pow10
 
-
 u64 keepDecimals(u64 p19,unsigned digits){
-  return rate(p19,i64pow10(19-digits));
+  return rate(p19,i64pow10(19 - digits));
 }
 
 u64 truncateDecimals(u64 p19,unsigned digits){
-  if(digits<=19){
-    return p19/i64pow10(19-digits);
+  if(digits<=19) {
+    return p19 / i64pow10(19 - digits);
   }
   return 0;
 }
@@ -185,17 +184,18 @@ int fexp(double d){ //todo:1 remove dependence on cmath.
 }
 
 double dpow10(int exponent){
-  if(exponent>=0){
-    if(exponent<countof(Decimal1)){
+  if(exponent>=0) {
+    unsigned uexp = unsigned(exponent);//just to eliminate compiler warnings
+    if(uexp<countof(Decimal1)) {
       return double(Decimal1[exponent]);
     }
-    if(exponent<countof(Decimal2)+countof(Decimal1)){
-       return double(Decimal2[exponent-countof(Decimal1)]);
+    if(uexp<countof(Decimal2) + countof(Decimal1)) {
+      return double(Decimal2[uexp - countof(Decimal1)]);
     }
   }
   //todo: see if std lib uses RPE to compute this.
   return pow(double(10), exponent);
-}
+} // dpow10
 
 //linux has this, firmware doesn't have ANY coeffs in its math.h
 #ifndef M_PI
@@ -388,7 +388,6 @@ unsigned splitter2(double &d){
   return unsigned(eye);
 }
 
-
 } //end extern C for potentially assembly coded routines.
 
 
@@ -405,7 +404,7 @@ unsigned splitter2(double &d){
 //template <> u64 intbin<u64,double>(double &d);
 
 unsigned digitsAbove(unsigned int value, unsigned numDigits){
-  unsigned digit = value/i32pow10(numDigits);
+  unsigned digit = value / i32pow10(numDigits);
   value -= digit * i32pow10(numDigits);
   return digit;
 }

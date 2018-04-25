@@ -5,7 +5,7 @@
 #include <execinfo.h> //backtrace
 #include "cstr.h" //nonTrivial
 
-__attribute__ ((init_priority (202))) //after manager is created, but before much of anything else
+__attribute__((init_priority(202)))   //after manager is created, but before much of anything else
 Logger dbg("DBG");
 Logger wtf("WTF");
 
@@ -26,7 +26,6 @@ void dumpStack(const char *prefix){
   //todo:0 ++ restore this functionality
   raise(SIGUSR1);
 }
-
 
 /** a signal handler */
 void fatalHandler(int signal, siginfo_t *signalInfo, void *data){//#don't hide 'data', some platforms access it.
@@ -67,7 +66,6 @@ void fatalHandler(int signal, siginfo_t *signalInfo, void *data){//#don't hide '
   }
 } // fatalHandler
 
-
 void PosixLoggerInit(bool trapSignals){
   if(trapSignals) {
     struct sigaction sa;
@@ -82,4 +80,3 @@ void PosixLoggerInit(bool trapSignals){
     sigignore(SIGPIPE);
   }
 } // Logger::ClassInit
-

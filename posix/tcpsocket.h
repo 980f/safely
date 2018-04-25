@@ -64,13 +64,13 @@ protected:
   bool autoConnect;
   /** pointer into actual sending buffer, which is NOT part of this object. */
   ByteScanner sendbuf;
-//  /** called by glib when there is something to read (after startReception has once been called) */
+  /** called by glib when there is something to read (after startReception has once been called) */
   bool readable();
-//  /** called by glib when remote disconnects (after startReception has once been called) */
+  /** called by glib when remote disconnects (after startReception has once been called) */
   bool hangup();
-//  /** call this when you would like to write something, get called back for the data inside writeable*/
-//  void writeInterest();
-//  /** called by glib when data can be written (after writeInterest has recently been called) */
+  /** call this when you would like to write something, get called back for the data inside writeable*/
+  void writeInterest();
+  /** called by glib when data can be written (after writeInterest has recently been called) */
   bool writeable();
 public:
   virtual ~TcpSocket();
@@ -114,58 +114,60 @@ struct SocketAddress{
   bool connect(int fd);
 };
 
-// Class to provide "blocking" effect in connect.
+/** Class to provide "blocking" effect in connect. */
 class BlockingConnectSocket : public TcpSocketBase {
 public:
 protected:
-  // create from an fd of an open (connected) socket or use the default arg and call connect()
+  /** create from an fd of an open (connected) socket or use the default arg and call connect() */
   BlockingConnectSocket(int fd=~0,u32 remoteAddress=0,int port=0);
 
-  // enables attempts to reconnect
+  /** enables attempts to reconnect */
   bool autoConnect;
 
-  // pointer into actual sending buffer, which is NOT part of this object.
+  /** pointer into actual sending buffer, which is NOT part of this object. */
   ByteScanner sendbuf;
 
-//  // called by glib when there is something to read (after startReception has once been called)
+  /** called by glib when there is something to read (after startReception has once been called) */
   bool readable();
 
-//  // called by glib when remote disconnects (after startReception has once been called)
+  /** called by glib when remote disconnects (after startReception has once been called) */
   bool hangup();
 
-//  // call this when you would like to write something, get called back for the data inside writeable
+//  /** call this when you would like to write something, get called back for the data inside writeable */
 //  void writeInterest();
 
-//  // called by glib when data can be written (after writeInterest has recently been called)
+  /** called by glib when data can be written (after writeInterest has recently been called) */
   bool writeable();
 
 public:
   virtual ~BlockingConnectSocket();
 
-  // @returns isConnected()
+  /** @returns isConnected()*/
   bool connect(unsigned ipv4, unsigned port);
 
-  // disconnect and release socket, if @param andNotify then call 'onConnectionChange' actions
+  /** disconnect and release socket, if @param andNotify then call 'onConnectionChange' actions */
   void disconnect(bool andNotify);
 
-  // throw away all pending input, best effort-some bytes might sneak in right after it returns.
-  // this is BLOCKING, but due to the way Glib works it will leave in a finite amount of time.
-  // added to dump the qchardware incoming queue when the logic is way behind
+  /** throw away all pending input, best effort-some bytes might sneak in right after it returns.
+  * this is BLOCKING, but due to the way Glib works it will leave in a finite amount of time.
+  * added to dump the qchardware incoming queue when the logic is way behind */
   void flush();
 
 protected:
   BooleanSignal notifyConnected;
 
-  // called when some data has arrived. You MUST copy the data, the underlying pointer of @param raw is to a piece of the stack.
+  /** called when some data has arrived. You MUST copy the data, the underlying pointer of @param raw is to a piece of the stack. */
   virtual void reader(ByteScanner&raw)=0;
 
-  // called when can write, should set ByteScanner to point to data, and return true if should be sent.
-  //The data YOU point to by modifying @param raw must stay allocated until the next call to writer(). You could poll the TcpSocket to see if it is done with the write,
-  //  we should probably add a callback for 'transmit buffer empty'.
+  /** called when can write, should set ByteScanner to point to data, and return true if should be sent.
+   The data YOU point to by modifying @param raw must stay allocated until the next call to writer(). You could poll the TcpSocket to see if it is done with the write,
+    we should probably add a callback for 'transmit buffer empty'. */
   virtual bool writer(ByteScanner&raw)=0;
 
 public:
+  /** register for connection change signals */
   sigc::connection whenConnectionChanges(const BooleanSlot &nowConnected, bool kickme=false);
+
   bool reconnect();
   void startReception();
 };
