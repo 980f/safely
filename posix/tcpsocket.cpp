@@ -41,9 +41,15 @@ bool TcpSocketBase::disconnect(){
 
 bool TcpSocket::connect(unsigned ipv4, unsigned port){
   connectArgs.ipv4 = ipv4;
-  connectArgs.port = port;
+  connectArgs.port = u16(port);
   autoConnect = connectArgs.isPossible();
   return autoConnect&&reconnect();
+}
+
+bool TcpSocket::setNodelay(){
+//  if(?.setTCPopt(TCP_NODELAY, 1)){
+//    dbg("Set TCP no delay returned %d",errno);
+//  }
 }
 
 void TcpSocket::startReception(){
@@ -67,11 +73,6 @@ bool TcpSocket::reconnect(){
   } else {
     return false;
   }
-
-  //#setting the following should probaby be optional.
-//  if(sock.setTCPopt(TCP_NODELAY, 1)){
-//    dbg("Set TCP no delay returned %d",errno);
-//  }
 
   //todo:1 research whether the default so_linger is false, we'd like a reset() rather than a gentle close() when we disconnect.
   SocketAddress sad(connectArgs);
@@ -312,10 +313,6 @@ bool BlockingConnectSocket::reconnect(){
     ++socketStats.disconnects;//failure to make socket, so number in diags grows if problem persists.
     notifyConnected(false);
   }
-  //#setting the following should probaby be optional.
-  //  if(sock.setTCPopt(TCP_NODELAY, 1)){
-  //    dbg("Set TCP no delay returned %d",errno);
-  //  }
 
   //todo:1 research whether the default so_linger is false, we'd like a reset()
   // rather than a gentle close() when we disconnect.
