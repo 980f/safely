@@ -50,6 +50,7 @@ bool TcpSocket::setNodelay(){
 //  if(?.setTCPopt(TCP_NODELAY, 1)){
 //    dbg("Set TCP no delay returned %d",errno);
 //  }
+  return false;
 }
 
 void TcpSocket::startReception(){

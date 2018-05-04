@@ -150,9 +150,12 @@ int modulus(int value, unsigned cycle){
   return value;
 } // modulus
 
-u16 saturated(unsigned quantity, float fractionThereof){
+unsigned saturated(unsigned quantity, double fractionThereof){
   double dee(quantity * fractionThereof);
-  unsigned rawbins(dee);//todo:2 is truncating rather than rounding
+  if(dee<0) {
+    return 0;
+  }
+  unsigned rawbins(dee + 0.5);
 
   if(rawbins >= quantity) {
     return quantity - 1;
