@@ -66,7 +66,7 @@ bool ContinuedFractionRatioGenerator::split(){
 
   double inverse = 1.0 / fraction;
 
-  an = splitter2(inverse);
+  an = splitteru(inverse);
   fraction = inverse;
   return true;
 } // ContinuedFractionRatioGenerator::split

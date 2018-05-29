@@ -385,7 +385,7 @@ int splitter(double &d){
   return int(eye);
 }
 
-unsigned splitter2(double &d){
+unsigned splitteru(double &d){
   double eye;
   d = modf(d,&eye);  //todo:2 this can be done very efficiently via bit twiddling. "modf()" has an inconvenient argument order and return type.
   return unsigned(eye);

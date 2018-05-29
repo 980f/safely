@@ -294,7 +294,7 @@ extern "C" {
  */
 int splitter(double &d);
 /** like splitter but has an extra bit of output range by presuming input is non-negative. */
-unsigned splitter2(double &d);
+unsigned splitteru(double &d);
 
 /** the time delay given by ticks is ambiguous, it depends upon processor clock. @72MHz 1000 ticks is roughly one microsecond.*/
 void nanoSpin(unsigned ticks);   //fast spinner, first used in soft I2C.
