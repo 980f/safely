@@ -6,6 +6,8 @@
 struct FDset;//forward reference, we may be relocating this logic elsewhere as we purge select() in favor of poll() #include "fdset.h"
 #include "stdio.h"  //FILE
 
+#include <textpointer.h>
+
 /** wrapper around file descriptors, especially noteworthy is that it closes the file on destruction, so best use is to create and use locally.*/
 class Fildes : public PosixWrapper {
 public:
@@ -88,6 +90,11 @@ public:
 
   /** close it then forget which it was */
   static void Close(int &somefd);
+protected:
+  Text name;//not always valid, call getName to ensure.
+public:
+  /** recover name from OS. Uses linux PROC file system specific routine, and is not cheap. */
+  Text &getName();
 }; // class Fildes
 
 #endif // FILDES_H

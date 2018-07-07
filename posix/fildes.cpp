@@ -5,6 +5,10 @@
 #include <sys/ioctl.h>
 #include "fdset.h"
 
+//just for name research
+#include "charformatter.h"
+
+
 Fildes::Fildes(const char *whatfor) : PosixWrapper(whatfor){
   errornumber = 0;
   lastRead = lastWrote = 0;
@@ -14,6 +18,7 @@ Fildes::Fildes(const char *whatfor) : PosixWrapper(whatfor){
 
 Fildes::Fildes(const Fildes &other) : Fildes(other.dbg.prefix){
   this->fd = other.fd;
+  this->name.copy(other.name);//need independent copy for safety.
 }
 
 bool Fildes::assignFd(int anFD){
@@ -37,6 +42,7 @@ bool Fildes::open(const char *devname, int O_stuff){ //todo:3 expose 3rd argumen
   int maybefd;
   if (okValue(maybefd, ::open(devname, O_stuff, 0777))) {//3rd arg is only relevant if O_stuff includes O_Creat. The (3) 7's lets umask provide the argument.)
     assignFd(maybefd);
+    name = devname;//there's a strdup in here.
     return true;
   } else {
     dbg("Failed to open %s", devname);
@@ -71,6 +77,29 @@ void Fildes::Close(int &somefd){
   ::close(somefd);
   somefd = BADFD;
 }
+
+Text &Fildes::getName(){
+//proc/self/fdastext resolve link
+  char seeker[100];
+  CharFormatter procself(seeker,sizeof seeker);
+  procself.cat("/proc/self/");
+  procself.printNumber(fd);
+  procself.next() = 0;
+
+  char temp [512];//todo: symbol for max path
+  CharScanner response(temp,sizeof (temp));
+  response.zguard();
+  auto target = procself.internalBuffer();//4 debug
+  auto actualsize = readlink(target,response.internalBuffer(),response.freespace());
+  if(actualsize>0) {//always get -1 here, errno:0
+    response.skip(unsigned(actualsize));
+    response.next() = 0;
+    name = response.internalBuffer();//should strdup.
+  } else {
+    //name is still what 'open' was given.
+  }
+  return name;
+} // Fildes::getName
 
 bool Fildes::setSingleFlag(int bitfield, bool one){
   if (!isOpen()) {

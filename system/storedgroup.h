@@ -127,7 +127,7 @@ public:
 
   /** someone has just deleted the node one of our members is connected to, it must die quickly or there will be use-after-free faults.*/
   void backdoored(bool removed,unsigned which){
-    if(removed){
+    if(removed) {
       //we can't use remove(which) as it asks for permission and it is too late to stop the process.
       pod.removeNth(which); //deletes Stored entity
       onremoval(which);   //high priority notifications
@@ -194,6 +194,12 @@ public:
     return *pod[0]; //which will still blow if there are no entities at all.
   }
 
+  /** @returns entity with underlying name, creating it with defaults if it didn't exist.
+   * NB: Usually group entities aren't named (name is empty). */
+  Groupie &operator()(TextKey name){
+    return operator[](child(name).node.ownIndex());
+  }
+
   /** tableeditor needs this syntax */
   StoredGroup<Stored> *basecast(){
     return reinterpret_cast<StoredGroup<Stored> *>(this); //#compiler cannot see that all template args must be derived from Stored.
@@ -243,7 +249,7 @@ public:
 
   /** add a copy of an existing node, build a new thing from it and hence a copy of that thing.
    * generally that existing node is from some other instance of a group of the same type as this group*/
-  Groupie &clone(const Groupie &extant,TextKey altname=nullptr){
+  Groupie &clone(const Groupie &extant,TextKey altname = nullptr){
     wrapNode(node.createChild(extant.node,altname));
     return last();
   }
@@ -292,7 +298,7 @@ public:
 
   /** remove something from given place in list. This DELETES the item, beware of use-after-free.*/
   bool removeItem(Groupie &member){
-    if(&member!=nullptr){
+    if(&member!=nullptr) {
       return remove(ordinalOf(&member));
     }
     return false;
@@ -312,7 +318,7 @@ public:
     for(unsigned which = quantity(); which-- > 0; ) { //#keep reverse iteration, can do remove's with it.
       Groupie &victim(*pod[which]);
       if(killit( victim)) {
-        deaths+=remove(which); //#works well because we reverse iterate.(see bug #369)
+        deaths += remove(which); //#works well because we reverse iterate.(see bug #369)
       }
     }
     return deaths;
@@ -337,6 +343,7 @@ public:
     return BadIndex;
   }
 
+  /** a predicate for finding an object that might be in this storedgroup */
   static bool byObject(const Groupie &child, const Groupie *unit){
     return &child == unit;
   }
@@ -345,6 +352,7 @@ public:
     return first(sigc::bind(&byObject, unit));
   }
 
+  /** a predicate for finding a child by its node */
   static bool byNode(const Groupie &child, const Storable &childnode){
     return &child.node == &childnode;
   }
@@ -353,6 +361,7 @@ public:
     return first(sigc::bind(&byNode, sigc::ref(childnode)));
   }
 
+  /** @returns nullptr or first entity that positively meets the predicate */
   Groupie *findFirst(const sigc::slot<bool, Groupie &> &predicate){
     ForValues(list){
       Groupie &item(list.next());
@@ -364,6 +373,7 @@ public:
     return nullptr;
   }
 
+  /** @returns nullptr or first entity that positively meets the predicate */
   const Groupie *findFirst(const sigc::slot<bool, const Groupie &> &predicate) const {
     ForValuesConstly(list){
       const Groupie &item(list.next());
@@ -375,6 +385,7 @@ public:
     return nullptr;
   }
 
+  /** @returns nullptr or first entity who wraps the @param given node */
   Groupie *find(const Storable &childnode){
     return findFirst(sigc::bind(&byNode, sigc::ref(childnode)));
   }
@@ -395,17 +406,17 @@ public:
   /** @returns node by internal name, creates one if it doesn't exist.
    * useful for legacy upgrades of known entities within a group, which is pretty much limited to factory defined files, never user
    * stuff */
-  Groupie &child(const char *key,bool*isNoob=nullptr){
+  Groupie &child(const char *key,bool*isNoob = nullptr){
     Groupie *child = existing(key);
-    if(isNoob){
-      *isNoob= (child==nullptr);
+    if(isNoob) {
+      *isNoob = (child==nullptr);
     }
     if(child) {
       return *child;
     } else {
       return create(key);
     }
-  }
+  } // child
 
   virtual bool wasModified(){
     return node.wasModified();
