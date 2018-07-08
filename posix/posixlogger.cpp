@@ -11,20 +11,25 @@ Logger wtf("WTF");
 
 #define stdf stderr
 
-void logmessage(const char *prefix,const char *msg,va_list &args){
+void logmessage(const char *prefix,const char *msg,va_list &args,bool moretocome){
+  if(msg==nullptr) {//for Logger.flushline, need to implement logging provider.
+    fputc('\n', stdf);
+    fflush(stdf);
+  }
   if(nonTrivial(prefix)) {
     fputs(prefix,stdf);
     fputs("::",stdf);
   }
   vfprintf(stdf, msg, args);
-  fputc('\n', stdf);
-  fflush(stdf); //else debug messages from just before croaking aren't seen.
-}
+  if(!moretocome) {
+    fputc('\n', stdf);
+    fflush(stdf); //else debug messages from just before croaking aren't seen.
+  }
+} // logmessage
 
 void dumpStack(const char *prefix){
   dbg("StackTrace requested by %s",prefix);
-  //todo:0 ++ restore this functionality
-  raise(SIGUSR1);
+//gdb no longer is sane with respect to signals:   raise(SIGUSR1);
 }
 
 /** a signal handler */
