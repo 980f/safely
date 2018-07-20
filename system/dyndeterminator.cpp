@@ -28,7 +28,7 @@ unsigned LLSQcomputer::numParams() const {
 } // LLSQcomputer::numParams
 
 bool LLSQcomputer::include(double Y, const Column &correlate){
-  if(!isNormal(Y)) {
+  if(Y!=0.0 && !isNormal(Y)) {
     return false;
   }
   if(correlate.size()<size) {//allow oversized input, allows users to tack on tracer info.
