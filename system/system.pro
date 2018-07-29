@@ -1,4 +1,6 @@
 ##qtcreator project file for functions that need heap
+##there are items in the associated folder that aren't in this list as they haven't been tested.
+##todo: chunk this in groups such as "stored" and "paths" and add conditional build flags.
 
 systemdir=$$PWD
 
@@ -27,7 +29,9 @@ SOURCES += \
     $$systemdir/filename.cpp \
     $$systemdir/filenameconverter.cpp \
     $$systemdir/textformatter.cpp  \
-    $$systemdir/storedargs.cpp
+    $$systemdir/storedargs.cpp \
+    $$systemdir/dyndeterminator.cpp \
+    $$systemdir/matrixinverter.cpp
 
 HEADERS += \
     $$systemdir/chain.h \
@@ -50,6 +54,8 @@ HEADERS += \
     $$systemdir/filename.h \
     $$systemdir/dottedname.h \
     $$systemdir/allocatedindexer.h \
-    $$systemdir/storedargs.h
+    $$systemdir/storedargs.h \
+    $$systemdir/dyndeterminator.cpp \
+    $$systemdir/matrixinverter.cpp
 
 

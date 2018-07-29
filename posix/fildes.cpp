@@ -5,18 +5,23 @@
 #include <sys/ioctl.h>
 #include "fdset.h"
 
-Fildes::Fildes(const char *whatfor) : PosixWrapper(whatfor) {
+//just for name research
+#include "charformatter.h"
+
+
+Fildes::Fildes(const char *whatfor) : PosixWrapper(whatfor){
   errornumber = 0;
   lastRead = lastWrote = 0;
   fd = BADFD;
   amOwner = false;
 }
 
-Fildes::Fildes(const Fildes &other) : Fildes(other.dbg.prefix) {
+Fildes::Fildes(const Fildes &other) : Fildes(other.dbg.prefix){
   this->fd = other.fd;
+  this->name.copy(other.name);//need independent copy for safety.
 }
 
-bool Fildes::assignFd(int anFD) {
+bool Fildes::assignFd(int anFD){
   this->fd = anFD;
   lastRead = lastWrote = 0;
   //no, might call another member which generates an error while generating the fd: errornumber=0;
@@ -24,52 +29,79 @@ bool Fildes::assignFd(int anFD) {
 }
 
 /** since we close on going out of scope if you share an fd you must take care to use pointer or reference*/
-Fildes::~Fildes() {
+Fildes::~Fildes(){
   if (amOwner) {
     close();
   }
 }
 
-bool Fildes::open(const char *devname, int O_stuff) {//todo:3 expose 3rd argument
+bool Fildes::open(const char *devname, int O_stuff){ //todo:3 expose 3rd argument
   close();//is a smart close, ignore any errors
 
   amOwner = true;
   int maybefd;
-  if (okValue(maybefd, ::open(devname, O_stuff,
-                              0777))) {//3rd arg is only relevant if O_stuff includes O_Creat. The (3) 7's lets umask provide the argument.)
+  if (okValue(maybefd, ::open(devname, O_stuff, 0777))) {//3rd arg is only relevant if O_stuff includes O_Creat. The (3) 7's lets umask provide the argument.)
     assignFd(maybefd);
+    name = devname;//there's a strdup in here.
     return true;
   } else {
     dbg("Failed to open %s", devname);
     return false;
   }
-}
+} // Fildes::open
 
-FILE *Fildes::getfp(const char *fargs) {
+FILE *Fildes::getfp(const char *fargs){
   return ::fdopen(fd, fargs ? fargs : "r");//todo:2 make string to match present state of fd's flags
 }
 
-unsigned Fildes::available() const {
-  return unsigned(ioctl(fd, FIONREAD));
-//  FIONREAD ioctl(2)
+unsigned Fildes::available(){ //was buggy prior to 25apr2018
+  unsigned bytesAvailable = 0;
+  if(failure(ioctl(fd, FIONREAD,&bytesAvailable))) {//missing third arg did amazing damage to caller
+    return 0;//a place to breakpoint
+  } else {
+    return bytesAvailable;
+  }
 }
 
-bool Fildes::preopened(int fd, bool urit) {
+bool Fildes::preopened(int fd, bool urit){
   close();
   amOwner = urit;
   return assignFd(fd);
 }
 
-bool Fildes::setBlocking(bool block) {
+bool Fildes::setBlocking(bool block){
   return setSingleFlag(O_NONBLOCK, !block);
 }
 
-void Fildes::Close(int &somefd) {
+void Fildes::Close(int &somefd){
   ::close(somefd);
   somefd = BADFD;
 }
 
-bool Fildes::setSingleFlag(int bitfield, bool one) {
+Text &Fildes::getName(){
+//proc/self/fdastext resolve link
+  char seeker[100];
+  CharFormatter procself(seeker,sizeof seeker);
+  procself.cat("/proc/self/");
+  procself.printNumber(fd);
+  procself.next() = 0;
+
+  char temp [512];//todo: symbol for max path
+  CharScanner response(temp,sizeof (temp));
+  response.zguard();
+  auto target = procself.internalBuffer();//4 debug
+  auto actualsize = readlink(target,response.internalBuffer(),response.freespace());
+  if(actualsize>0) {//always get -1 here, errno:0
+    response.skip(unsigned(actualsize));
+    response.next() = 0;
+    name = response.internalBuffer();//should strdup.
+  } else {
+    //name is still what 'open' was given.
+  }
+  return name;
+} // Fildes::getName
+
+bool Fildes::setSingleFlag(int bitfield, bool one){
   if (!isOpen()) {
     return false;
   }
@@ -89,9 +121,9 @@ bool Fildes::setSingleFlag(int bitfield, bool one) {
   } else {
     return false;
   }
-}
+} // Fildes::setSingleFlag
 
-bool Fildes::getSingleFlag(int bitfield, bool &bit) {
+bool Fildes::getSingleFlag(int bitfield, bool &bit){
   if (!isOpen()) {
     return false;
   }
@@ -102,9 +134,9 @@ bool Fildes::getSingleFlag(int bitfield, bool &bit) {
   } else {
     return false;
   }
-}
+} // Fildes::getSingleFlag
 
-int Fildes::close(void) {
+int Fildes::close(void){
   if (amOwner && isOpen()) {
     amOwner = false;
     return ::close(postAssign(fd, BADFD));//when we close an fd someone else can claim it.
@@ -125,17 +157,16 @@ bool Fildes::isMarked(const FDset &fdset) const {
   return isOpen() && fdset.includes(fd);
 }
 
-
-bool Fildes::read(u8 *buf, unsigned len) {
+bool Fildes::read(u8 *buf, unsigned len){
   if (isOpen()) {
     if (okValue(lastRead, ::read(fd, buf, len))) {
-      if(traceRead){
+      if(traceRead) {
         return true;
       }
       return true;
     } else {
-      if(isWaiting()){
-        lastRead=0;
+      if(isWaiting()) {
+        lastRead = 0;
         return true;
       } else {
         return false;
@@ -145,63 +176,74 @@ bool Fildes::read(u8 *buf, unsigned len) {
     lastRead = BadSize;//todo:2 ensure errno is 'file not open'
     return false;
   }
-}
+} // Fildes::read
 
-bool Fildes::read(Indexer<u8> &p) {
+bool Fildes::read(Indexer<u8> &p){
   if (read(&p.peek(), p.freespace())) {
-    if(lastRead>=0) p.skip(lastRead);
+    if(lastRead>=0) {
+      p.skip(lastRead);
+    }
     return true;
   } else {
     return false;
   }
 } // Fildes::read
 
-bool Fildes::read(Indexer<char> &p) {
+bool Fildes::read(Indexer<char> &p){
   if (read(reinterpret_cast<u8 *>(&p.peek()), p.freespace())) {
-    if(lastRead>=0) p.skip(lastRead);
+    if(lastRead>=0) {
+      p.skip(lastRead);
+    }
     return true;
   } else {
     return false;
   }
 } // Fildes::read
 
-
-bool Fildes::write(Indexer<u8> &p) {
+bool Fildes::write(Indexer<u8> &p){
   if (write(&p.peek(), p.freespace())) {
-    if(lastWrote>=0) p.skip(lastWrote);
+    if(lastWrote>=0) {
+      p.skip(lastWrote);
+    }
     return true;
   }
   return false;
 }
 
-bool Fildes::write(Indexer<u8> &&p) {
+bool Fildes::write(Indexer<u8> &&p){
   if (write(&p.peek(), p.freespace())) {
-    if(lastWrote>=0) p.skip(lastWrote);
+    if(lastWrote>=0) {
+      p.skip(lastWrote);
+    }
     return true;
   }
   return false;
 }
 
-bool Fildes::write(Indexer<char> &p) {
+bool Fildes::write(Indexer<char> &p){
   if (write(reinterpret_cast<const u8 *>(&p.peek()), p.freespace())) {
-    if(lastWrote>=0) p.skip(lastWrote);
+    if(lastWrote>=0) {
+      p.skip(lastWrote);
+    }
     return true;
   }
   return false;
 }
 
-bool Fildes::write(Indexer<char> &&p) {
+bool Fildes::write(Indexer<char> &&p){
   if (write(reinterpret_cast<const u8 *>(&p.peek()), p.freespace())) {
-    if(lastWrote>=0) p.skip(lastWrote);
+    if(lastWrote>=0) {
+      p.skip(lastWrote);
+    }
     return true;
   }
   return false;
 }
 
-bool Fildes::write(const u8 *buf, unsigned len) {
+bool Fildes::write(const u8 *buf, unsigned len){
   if (isOpen()) {
     if (okValue(lastWrote, ::write(fd, buf, len))) {
-      if(traceWrite){
+      if(traceWrite) {
         return true;
       }
       return true;
@@ -211,9 +253,9 @@ bool Fildes::write(const u8 *buf, unsigned len) {
     lastWrote = BadSize;
     return false;
   }
-}
+} // Fildes::write
 
-bool Fildes::writeChars(char c, unsigned repeats) {
+bool Fildes::writeChars(char c, unsigned repeats){
   if (repeats <= 4096) {
     u8 reps[repeats];
     fillObject(reps, sizeof(reps), u8(c));
@@ -226,7 +268,7 @@ bool Fildes::writeChars(char c, unsigned repeats) {
 //todo:3 configuration parameter for how much we are willing to transfer before checking other channels
 #define CHUNK 3000
 
-int Fildes::moveto(Fildes &other) {
+int Fildes::moveto(Fildes &other){
   // This presumes that write copies to an internal buffer before returning.
   u8 localbuffer[CHUNK];
 
@@ -249,6 +291,6 @@ int Fildes::moveto(Fildes &other) {
     }
   }
   return 0;
-}
+} // Fildes::moveto
 
 //end of file

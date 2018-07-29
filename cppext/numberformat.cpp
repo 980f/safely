@@ -61,8 +61,8 @@ unsigned NumberFormat::needs(double value, NumberPieces *preprint) const {
     } else {
       if(preprint->postDigits>0 && (necessary-preprint->postDigits)<fieldWidth){
         //truncate precision since we can
-        int trunc=necessary-fieldWidth;
-        preprint->postdecimal/= pow10(trunc);
+        unsigned trunc=necessary-fieldWidth;
+        preprint->postdecimal/= i64pow10(trunc);
         preprint->postDigits-=trunc;
       }
     }

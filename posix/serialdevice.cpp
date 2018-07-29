@@ -160,9 +160,10 @@ SerialDevice::Pin::Pin(Fildes &fd, SerialDevice::Pin::Which one, bool invert) :
     break;
   case Ri:
     pattern = TIOCM_RI;
-  default:
-    pattern = 0;
-    break;
+    break; //this break was missing for quite some time.
+//  default:
+//    pattern = 0;
+//    break;
   } // switch
 }
 

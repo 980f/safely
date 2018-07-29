@@ -10,7 +10,7 @@
 /** trapping signals is made conditional in case the application has its own handler.*/
 void PosixLoggerInit(bool trapSignals = false);
 
-void logmessage(const char *prefix,const char *msg,va_list &args);
+void logmessage(const char *prefix, const char *msg, va_list &args, bool moretocome = false);
 void dumpStack(const char *prefix);
 
 /** how to record an error from glib that you are ignoring. Useful in catch phrases. */

@@ -3261,7 +3261,7 @@ int ftdi_eeprom_build(struct ftdi_context *ftdi)
     /* First address without use */
     free_start = 0;
     switch (ftdi->type)
-    {
+    {//#! this looks suspicious, unless they are being cute by adding the new rev's additional value to older revs.
         case TYPE_230X:
             free_start += 2;
         case TYPE_232H:
