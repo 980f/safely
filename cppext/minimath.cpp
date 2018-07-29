@@ -114,7 +114,7 @@ u64 truncateDecimals(u64 p19,unsigned digits){
 
 //uround and sround are coded to be like they will in optimized assembly
 u16 uround(float scaled){
-  if(scaled < 0.5f) { //fp compares are the same cost as integer.
+  if(scaled < 0.5F) { //fp compares are the same cost as integer.
     return 0;
   }
   scaled *= 2; //expose rounding bit

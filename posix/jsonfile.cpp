@@ -21,7 +21,6 @@ int JsonFile::loadFile(Cstr thename){
   //... we dare not inject nodes into other people's trees.
   Filer optionFile("LoadJSON");
   loadedFrom=thename;//mark intended file name
-
   if(! optionFile.openFile(thename)){
     dbg("Couldn't open \"%s\", error:[%d]%s",thename.c_str(),optionFile.errornumber,optionFile.errorText());
     return optionFile.errornumber;
@@ -122,5 +121,4 @@ Cstr JsonFile::originalFile(){
 void JsonFile::printOn(Fildes &alreadyOpened, unsigned indent, bool showVolatiles){
   auto fp=alreadyOpened.getfp("w");
   printNode(indent,root,fp,showVolatiles);
-
 }

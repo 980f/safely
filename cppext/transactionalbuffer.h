@@ -75,7 +75,6 @@ public:
   }
 
   /** user must call this instead of the wrapped buffer's next or this class is in vain.*/
-
   Content& next(void){
     failed |= !Indexer <Content>::hasNext();
     return Indexer <Content>::next();

@@ -20,7 +20,6 @@ struct NumericalValue {
   };
 
 public:
-
   NumericalValue(bool bee);
   NumericalValue(int eye);
   NumericalValue(unsigned ewe);
@@ -34,7 +33,6 @@ public:
   /** @returns whether type is changed, and alters storage from old type to the new. */
   bool changeInto(Detail newis);
 
-
   /** @returns reference to value as if type Numeric */
   template <typename Numeric> Numeric &as() noexcept{
     return *reinterpret_cast<Numeric *>(&storage);
@@ -46,7 +44,6 @@ public:
   }
 
   /** @returns reference to value as if type Numeric, ignoring internal type indicator */
-
   template <typename Numeric> const Numeric &as()const noexcept{
     return *reinterpret_cast<Numeric *>(&storage);
   }
@@ -68,7 +65,6 @@ public:
   }
 
   /** assign value from @param d converting if needed. */
-
   template <typename Numeric> NumericalValue &operator =(Numeric n){
     return this->operator =(NumericalValue(n));
   }
@@ -93,5 +89,4 @@ public:
 //explicit instantiations are made in numericalvalue.cpp, add one for each type that gives you a linker error.
 template <typename Numeric> NumericalValue::Detail detail();
 template <> unsigned NumericalValue::cast<unsigned>() const noexcept;
-
 #endif // UNIONIZER_H

@@ -18,14 +18,14 @@ public:
   /** number of */
   unsigned numParams()const;
   /**  N*sum x[i]^2 - sq(sum xp[])*/
-  double Lxx(int which);
-  double Lxy(int which);
+  double Lxx(unsigned which);
+  double Lxy(unsigned which);
   /** N * sum(Y squared) - square (sum Y) */
   double Lyy();
   /** std of y data*/
   double varY();
-  double Rsquared(int which);
-  double crossCorr(int i,int j);
+  double Rsquared(unsigned which);
+  double crossCorr(unsigned i,unsigned j);
   double multiRsquared();
 
 public:

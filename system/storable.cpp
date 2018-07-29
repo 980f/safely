@@ -197,7 +197,6 @@ void Storable::setEnumerizer(const Enumerated *enumerated){
   if(changed(this->enumerated, enumerated)) {
     if(enumerated) {
       number.changeInto(NumericalValue::Counting);//enumness is more important than textuality.
-
       if((q >= Parsed) && is(Storable::Textual)) { //if already has a text value
         number = enumerated->valueOf(text.c_str()); //reconcile numeric value
       } else {
@@ -856,7 +855,7 @@ Storable::Freezer::~Freezer(){
   }
 }
 
-void Storable::Freezer::freezeNode(Storable & node, bool childrenToo, bool onlyChildren){
+void Storable::Freezer::freezeNode(Storable &node, bool childrenToo, bool onlyChildren){
   if(!onlyChildren) {
     node.watchers.gate();
   }

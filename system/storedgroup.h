@@ -400,7 +400,7 @@ public:
   /** @returns node by internal name, creates one if it doesn't exist.
    * useful for legacy upgrades of known entities within a group, which is pretty much limited to factory defined files, never user
    * stuff */
-  Groupie &child(const char *key,bool*isNoob = nullptr){
+  Groupie &child(const char *key, bool *isNoob = nullptr){
     Groupie *child = existing(key);
     if(isNoob) {
       *isNoob = (child==nullptr);

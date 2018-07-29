@@ -362,7 +362,6 @@ public:
     virtual void remove(const Storable &noob) = 0;
   };
   static Mirror *remote;
-
 }; // class Storable
 
 

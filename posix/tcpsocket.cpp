@@ -11,6 +11,7 @@ TcpSocketBase::TcpSocketBase(int fd, u32 remoteAddress, int port) :
 }
 
 TcpSocketBase::~TcpSocketBase(){
+  //#done
 }
 
 bool TcpSocketBase::isConnected() const {
@@ -189,6 +190,7 @@ bool TcpSocket::ConnectArgs::isPossible(){
 TcpSocket::ConnectArgs::ConnectArgs(int ipv4, int port) :
   ipv4(ipv4),
   port(port){
+  //#done
 }
 
 void TcpSocket::ConnectArgs::erase(){

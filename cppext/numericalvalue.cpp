@@ -3,7 +3,6 @@
 #include "eztypes.h"
 #include "minimath.h" //nan
 #include "cheaptricks.h" //changed
-
 #include "index.h" //for 'unsigned' reasoning
 
 
@@ -101,12 +100,10 @@ NumericalValue::NumericalValue(int eye){
 NumericalValue::NumericalValue(double d){
  is=Floating;
  storage.dee=d;
-
 }
 
 bool NumericalValue::changeInto(NumericalValue::Detail newis){
   if(newis!=is){//expedite frequent case
-
     NumericalValue was(*this);//copy
     is=newis;
     switch (is) {
@@ -166,7 +163,6 @@ bool NumericalValue::operator >(const NumericalValue &other) const noexcept {
   }
   return false;
 }
-
 
 
 NumericalValue &NumericalValue::operator =(const NumericalValue &other){

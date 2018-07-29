@@ -1,5 +1,4 @@
-#ifndef NUMBERFORMAT_H
-#define NUMBERFORMAT_H "(C) Andrew L. Heilveil, 2017"
+#pragma once // "(C) Andrew L. Heilveil, 2017-2018"
 
 #include "countdown.h"
 #include "numberpieces.h"
@@ -38,4 +37,3 @@ struct NumberFormat {
 };
 
 
-#endif

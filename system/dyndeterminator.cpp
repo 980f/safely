@@ -42,7 +42,8 @@ bool LLSQcomputer::include(double Y, const Column &correlate){
   }
 //now we can add sample into the set, don't want to touch any values if any others are unusable.
   sumy2 += squared(Y);
-  forSize(rw){
+  //correlates size must match this size
+  forSize(rw) {
     double x = correlate[rw];
     ys[rw] += Y * x;
     forTriangle(cl){
@@ -97,13 +98,15 @@ unsigned LLSQcomputer::compute(){
         forSize(cl){
           if(!ignore[cl]) {
             product += ys[cl] * inv[cl][rw]; //left multiply causes apparent swap of index order of matrix
+//or is it that when we dropped the pivoting we effectiveley transposed the inverse.?
           }
         }
         if(isNormal(product) || product == 0.0) {
           ++numFit;
           solution[rw] = product;
         } else {
-          dbg("failed to fit %dth coeff",rw);
+          //where do we report on failed coefficient?
+          dbg("failed to fit %d coeff",rw);
         }
       }
     }
@@ -115,11 +118,11 @@ double LLSQcomputer::sumx(unsigned which){
   return xs[0][which];
 }
 
-double LLSQcomputer::Lxx(int which){
+double LLSQcomputer::Lxx(unsigned which){
   return numSamples * xs[which][which] - squared(sumx(which));
 }
 
-double LLSQcomputer::Lxy(int which){
+double LLSQcomputer::Lxy(unsigned which){
   return numSamples * ys[which] - (sumx(which) * ys[0]);
 }
 
@@ -127,7 +130,7 @@ double LLSQcomputer::Lyy(){
   return numSamples * sumy2 - squared(ys[0]);
 }
 
-double LLSQcomputer::Rsquared(int which){  //todo:3 cache these and compute at time of inverse.
+double LLSQcomputer::Rsquared(unsigned which){  //todo:3 cache these and compute at time of inverse.
   if(which == 0) {
     //naive formula would return sum of Y
     return Nan;//need some investigation, no real meaning for this!
@@ -142,7 +145,7 @@ double LLSQcomputer::varY(){
   return ratio(Lyy(), numSamples);
 }
 
-double LLSQcomputer::crossCorr(int i, int j){
+double LLSQcomputer::crossCorr(unsigned i, unsigned j){
   return ratio(squared(numSamples * xs[i][j] - sumx(i) * sumx(j)), Lxx(i) * Lxx(j));
 }
 

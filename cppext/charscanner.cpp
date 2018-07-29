@@ -282,7 +282,6 @@ CharScanner CharScanner::cut(char separator){
       return CharScanner(&peek(),freespace());
     }
   } else {
-    //todo: 000 termlocation=allocated();//and creator better have used zguard()
     return CharScanner();
   }
 }

@@ -62,7 +62,6 @@ GPIOpin::GPIOpin(GPIO &raw) : raw(raw){
 
 void GPIOpin::operator =(bool value) noexcept {
   raw = value;
-
 }
 
 GPIOpin::operator bool() noexcept {
@@ -95,4 +94,3 @@ static const pwmPinMapping pwm1pins[] = {
   {0,0}
 };
 #endif
-

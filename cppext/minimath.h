@@ -308,13 +308,14 @@ unsigned saturated(unsigned quantity, double fractionThereof);
 
 //fraction is a fractional multiplier, with numbits stating how many fractional bits it has.
 u16 fractionallyScale(u16 number, u16 fraction, u16 numbits);
+
 /** 1 + the integer part of log base 2 of the given number, pretty much is just "count the leading zeroes".
  * Note well that this will give 0 as the log of 0 rather than negative infinity, precheck the argument if you can't live with that.
  * mathematical definition: "number of right shifts necessary for an unsigned number to become 0"
  */
 u32 log2Exponent(u32 number);
 
-/** return eff * 2^pow2  where pow2 is signed. This can be done rapidly via bitfiddling*/
+/** @returns eff * 2^pow2  where pow2 is signed. This can be done rapidly via bitfiddling*/
 float shiftScale(float eff, int pow2);
 
 double flog(u32 number);
