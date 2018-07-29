@@ -114,7 +114,7 @@ u64 truncateDecimals(u64 p19,unsigned digits){
 
 //uround and sround are coded to be like they will in optimized assembly
 u16 uround(float scaled){
-  if(scaled < 0.5) { //fp compares are the same cost as integer.
+  if(scaled < 0.5f) { //fp compares are the same cost as integer.
     return 0;
   }
   scaled *= 2; //expose rounding bit
@@ -126,14 +126,14 @@ u16 uround(float scaled){
 } /* uround */
 
 s16 sround(float scaled){ //#this would be so much cleaner and faster in asm!
-  if(scaled > 32766.5) {
+  if(scaled > 32766.5F) {
     return 32767;
   }
-  if(scaled < -32767.5) {
+  if(scaled < -32767.5F) {
     return -32768;
   }
   scaled += scaled >= 0 ? 0.5 : -0.5; //round away from 0. aka round the magnitude.
-  return int(scaled);
+  return s16(scaled);
 }
 
 int modulus(int value, unsigned cycle){
@@ -186,15 +186,19 @@ int fexp(double d){ //todo:1 remove dependence on cmath.
   return ret;
 }
 
+double dpow10(unsigned uexp){
+  if(uexp<countof(Decimal1)) {
+    return double(Decimal1[uexp]);
+  }
+  if(uexp<countof(Decimal2) + countof(Decimal1)) {
+    return double(Decimal2[uexp - countof(Decimal1)]);
+  }
+  return 0;
+}
+
 double dpow10(int exponent){
   if(exponent>=0) {
-    unsigned uexp = unsigned(exponent);//just to eliminate compiler warnings
-    if(uexp<countof(Decimal1)) {
-      return double(Decimal1[exponent]);
-    }
-    if(uexp<countof(Decimal2) + countof(Decimal1)) {
-      return double(Decimal2[uexp - countof(Decimal1)]);
-    }
+     dpow10(unsigned(exponent));
   }
   //todo: see if std lib uses RPE to compute this.
   return pow(double(10), exponent);

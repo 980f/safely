@@ -210,6 +210,7 @@ u64 keepDecimals(u64 p19,unsigned digits);
 u64 truncateDecimals(u64 p19,unsigned digits);
 /** filtering in case we choose to optimize this */
 double dpow10(int exponent);
+double dpow10(unsigned uexp);
 
 template<typename mathy> double squared(mathy x){
   return x * x;
