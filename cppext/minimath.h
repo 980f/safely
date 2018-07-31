@@ -197,22 +197,24 @@ int ilog10(double value);
 /** an integer power of 10. out of bounds arg gets you nothing but trouble ... */
 u32 i32pow10(unsigned power);
 
+/** @returns the truncated divide of @param value by 10 to the @param numdigits */
 unsigned digitsAbove(unsigned int value, unsigned numDigits);
 
 /** an integer power of 10. out of bounds arg gets you nothing but trouble ... */
 u64 i64pow10(unsigned power);
 
-/** @param p19 is 1-^19 times a fractional value. @param digits is the number of digits past the virtual radix point you are interested in.
+/** @param p19 is 10^19 times a fractional value. @param digits is the number of digits past the virtual radix point you are interested in.
  *  @returns a properly rounded int that has those digits of interest, but you may need to pad with leading zeroes. */
 u64 keepDecimals(u64 p19,unsigned digits);
 
-/** @param p19 is 1-^19 times a fractional value. @param digits is the number of digits past the virtual radix point you are interested in.
+/** @param p19 is 10^19 times a fractional value. @param digits is the number of digits past the virtual radix point you are interested in.
  *  @returns a truncated int that has those digits of interest, but you may need to pad with leading zeroes. */
 u64 truncateDecimals(u64 p19,unsigned digits);
 /** filtering in case we choose to optimize this */
 double dpow10(int exponent);
 double dpow10(unsigned uexp);
 
+/** useful for when the argument is an expensive to compute expression */
 template <typename mathy> double squared(mathy x) {
   return x * x;
 }
