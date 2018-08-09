@@ -13,9 +13,8 @@ static const char PathSep = '/';
 //this is not a class member so that we don't force pathparser.h on all users:
 static const PathParser::Rules slasher(PathSep,false,true);// '.' gives java property naming, '/' would allow use of filename classes. '|' was used for gtkwrappers' access
 
-#define ONNULLTHIS(arg) if(!this){return arg;}
-#define ONNULLREF(ref, arg) if(!&ref){return arg;}
-
+#define ONNULLTHIS(arg) if(!this) {return arg;}
+#define ONNULLREF(ref, arg) if(!&ref) {return arg;}
 
 
 /** global/shared root, the 'slash' node for findChild */
@@ -44,8 +43,7 @@ bool Storable::Delete(TextKey pathname){
   }
   Storable *node = FindChild(pathname,false);
   if(node) {
-    if(node->parent) {
-      node->parent->removeChild(*node);
+    if(node->suicide(true)) {
       return true;
     } else {
       storetree("Attempt to delete undeletable node %s",pathname);
@@ -799,13 +797,15 @@ void Storable::filicide(bool notify){
   }
 }
 
-void Storable::suicide(bool andDelete){
+bool Storable::suicide(bool andDelete){
   if(parent) {
     parent->remove(ownIndex());
     if(andDelete) {
       delete this;
     }
+    return true;
   }
+  return false;
 }
 
 ///////////////////////
@@ -855,7 +855,7 @@ Storable::Freezer::~Freezer(){
   }
 }
 
-void Storable::Freezer::freezeNode(Storable&node, bool childrenToo, bool onlyChildren){
+void Storable::Freezer::freezeNode(Storable &node, bool childrenToo, bool onlyChildren){
   if(!onlyChildren) {
     node.watchers.gate();
   }

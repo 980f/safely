@@ -43,7 +43,6 @@ int JsonFile::loadFile(Cstr thename){
   parser.parser.lookFor(StandardJSONFraming ";=");
 
   parser.parse();
-
   dbg("loaded %d nodes, %d levels, from %s",parser.stats.totalNodes,parser.stats.maxDepth.extremum,thename.c_str());
   return 0;//#an errno
 }
@@ -118,7 +117,6 @@ void JsonFile::printOn(Cstr somefile, unsigned indent, bool showVolatiles){
 Cstr JsonFile::originalFile(){
   return loadedFrom.c_str();
 }
-
 
 void JsonFile::printOn(Fildes &alreadyOpened, unsigned indent, bool showVolatiles){
   auto fp=alreadyOpened.getfp("w");

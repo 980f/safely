@@ -57,8 +57,24 @@ unsigned Cstr::length() const noexcept {
 }
 
 bool Cstr::endsWith(char isit) const noexcept {
-  return *this[length() - 1]==isit;
+  return empty() ? isit==0 : *this[length() - 1]==isit;
 }
+
+bool Cstr::endsWith(TextKey ext) const noexcept {
+  Cstr lookfor(ext);
+  if(empty()&&lookfor.empty()) {
+    return true;
+  }
+  int offset = length() - lookfor.length();
+  if(offset<0) {
+    return false;
+  }
+  if(offset==0) {
+    return *this==lookfor;
+  }
+  Cstr thisend(ptr + offset);
+  return thisend ==(lookfor);
+} // Cstr::endsWith
 
 bool Cstr::is(TextKey other) const noexcept {
   return same(this->ptr,other);
@@ -72,9 +88,9 @@ char Cstr::at(const Index &index) const noexcept {
   return (nonTrivial(ptr)&&isValid(index)) ? ptr[index] : 0;
 }
 
-bool Cstr::setAt(const Index &index, char see) const noexcept{
-  if((nonTrivial(ptr)&&isValid(index))){
-    *const_cast<char *>(&ptr[index]) =see;
+bool Cstr::setAt(const Index &index, char see) const noexcept {
+  if((nonTrivial(ptr)&&isValid(index))) {
+    *const_cast<char *>(&ptr[index]) = see;
     return true;
   } else {
     return false;

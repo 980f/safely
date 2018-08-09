@@ -38,7 +38,8 @@ SOURCES += \
     $$posixdir/jasoned.cpp \
     $$posixdir/filewatcher.cpp \
     $$posixdir/worstcase.cpp \
-    $$PWD/threader.cpp
+    $$posixdir/threader.cpp \
+    $$posixdir/directorywalker.cpp
 
 HEADERS += \
     $$posixdir/timerfd.h \

@@ -1,52 +1,62 @@
-#include <cmath>
-
 #include "dyndeterminator.h"
-#include "iterate.h"
 #include "logger.h"
 #include "minimath.h"
+#include <cmath>
 
-#include "ignoresignwarnings.h"
+//iteration ranges:
+#define forSize(si) for(unsigned si = size; si-->0;)
+#define forP(si) for(unsigned si = p.size; si-->0;)
+#define forTriangle(cl) for(unsigned cl = rw + 1; cl-->0;)
+#define withOutDiagonal(cl) for(unsigned cl = rw; cl-->0;)
 
-#define forP(si) for(unsigned si=p.size;si-->0;)
-#define forTriangle(cl) for(unsigned cl=rw+1;cl-->0;)
-#define withOutDiagonal(cl) for(unsigned cl=rw;cl-->0;)
-
-//@deprecated: use modern for loop constructs
-#define forSize(si) for(unsigned si=size;si-->0;)
-
-LLSQcomputer::LLSQcomputer(int numCoeff):
+//allocate and 0 init.
+LLSQcomputer::LLSQcomputer(unsigned numCoeff) :
   MatrixInverter(numCoeff),
   ys(size),
-  solution(size) {
+  solution(size){
   clear();
 }
 
-int LLSQcomputer::numParams() const {
-  int ni = 0;
-  ITERATE(Gater::const_iterator, it, ignore) {
-    if(*it == false) {
+unsigned LLSQcomputer::numParams() const {
+  unsigned ni = 0;
+  for(auto it = ignore.rbegin(); it!=ignore.rend(); ++it) {
+    if(*it == false) {//not ignored
       ++ni;
     }
   }
   return ni;
-}
+} // LLSQcomputer::numParams
 
-void LLSQcomputer::include(double Y, const Column &correlate) {
-  ++numSamples;
+bool LLSQcomputer::include(double Y, const Column &correlate){
+  if(Y!=0.0 && !isNormal(Y)) {
+    return false;
+  }
+  if(correlate.size()<size) {//allow oversized input, allows users to tack on tracer info.
+    return false;
+  }
+  forSize(rw){
+    double x = correlate[rw];
+    if(!isNormal(x)) {
+      return false;
+    }
+  }
+//now we can add sample into the set, don't want to touch any values if any others are unusable.
   sumy2 += squared(Y);
   //correlates size must match this size
   forSize(rw) {
     double x = correlate[rw];
     ys[rw] += Y * x;
-    forTriangle(cl) {
+    forTriangle(cl){
       xs[rw][cl] += x * correlate[cl];
     }
   }
-}
+  ++numSamples;
+  return true;
+} // LLSQcomputer::include
 
-void LLSQcomputer::clear() {
+void LLSQcomputer::clear(){
   MatrixInverter::clear();
-  forSize(rw) {
+  forSize(rw){
     solution[rw] = 0;
     ys[rw] = 0;
   }
@@ -55,39 +65,40 @@ void LLSQcomputer::clear() {
   sumy2 = 0.0;
 }
 
-void LLSQcomputer::applyIgnorance() {
-  forSize(rw) {
+void LLSQcomputer::applyIgnorance(){
+  forSize(rw){
     if(ignore[rw]) {
       //not clearing Ys as we may use those for statistics.
       xs[rw][rw] = 1.0;
-      withOutDiagonal(cl) {
+      withOutDiagonal(cl){
         xs[rw][cl] = 0;
       }
     }
   }
-}
+} // LLSQcomputer::applyIgnorance
 
-void LLSQcomputer::fillinTriangle() { //todo:2 move into matrixinverter and add a flag indicating symmetry
-  forSize(rw) {
+void LLSQcomputer::fillinTriangle(){  //todo:2 move into matrixinverter and add a flag indicating symmetry
+  forSize(rw){
     if(!ignore[rw]) { //trusting that clear() was called at a good time.
-      withOutDiagonal(cl) {
+      withOutDiagonal(cl){
         xs[cl][rw] = xs[rw][cl]; //copy to upper triangle
       }
     }
   }
 }
 
-int LLSQcomputer::compute() {
+unsigned LLSQcomputer::compute(){
   fillinTriangle();
   double det = MatrixInverter::compute();
   //multiply Ys on left, inv on right:
   if(isNormal(det)) { //#we do wish to exclude 0 as well as strange stuff.
-    forSize(rw) {
+    forSize(rw){
       if(!ignore[rw]) {
         double product = 0;
-        forSize(cl) {
+        forSize(cl){
           if(!ignore[cl]) {
-            product += ys[cl] * inv[cl][rw]; //when we dropped the pivoting we effectiveley transposed the inverse.
+            product += ys[cl] * inv[cl][rw]; //left multiply causes apparent swap of index order of matrix
+//or is it that when we dropped the pivoting we effectiveley transposed the inverse.?
           }
         }
         if(isNormal(product) || product == 0.0) {
@@ -101,46 +112,46 @@ int LLSQcomputer::compute() {
     }
   }
   return numFit;
-}
+} // LLSQcomputer::compute
 
-double LLSQcomputer::sumx(int which) {
+double LLSQcomputer::sumx(unsigned which){
   return xs[0][which];
 }
 
-double LLSQcomputer::Lxx(int which) {
+double LLSQcomputer::Lxx(unsigned which){
   return numSamples * xs[which][which] - squared(sumx(which));
 }
 
-double LLSQcomputer::Lxy(int which) {
+double LLSQcomputer::Lxy(unsigned which){
   return numSamples * ys[which] - (sumx(which) * ys[0]);
 }
 
-double LLSQcomputer::Rsquared(int which) { //todo:3 cache these and compute at time of inverse.
+double LLSQcomputer::Lyy(){
+  return numSamples * sumy2 - squared(ys[0]);
+}
+
+double LLSQcomputer::Rsquared(unsigned which){  //todo:3 cache these and compute at time of inverse.
   if(which == 0) {
     //naive formula would return sum of Y
     return Nan;//need some investigation, no real meaning for this!
   }
-  if(numSamples < numParams()) {//#207: allowing infinite uncertainty to report the slope, until we fix the coeff editor.
+  if(numSamples < numParams()) {
     return Nan; //refuse even if computation wouldn't blow.
   }
   return ratio(squared(Lxy(which)), Lxx(which) * Lyy());
 }
 
-double LLSQcomputer::Lyy() {
-  return numSamples * sumy2 - squared(ys[0]);
-}
-
-double LLSQcomputer::varY() {
+double LLSQcomputer::varY(){
   return ratio(Lyy(), numSamples);
 }
 
-double LLSQcomputer::crossCorr(int i, int j) {
+double LLSQcomputer::crossCorr(unsigned i, unsigned j){
   return ratio(squared(numSamples * xs[i][j] - sumx(i) * sumx(j)), Lxx(i) * Lxx(j));
 }
 
-double LLSQcomputer::multiRsquared() {
+double LLSQcomputer::multiRsquared(){
   double sum = 0;
-  forSize(ci) {
+  forSize(ci){
     if(!ignore[ci]) { //save some time.
       double term = solution[ci] * Lxy(ci);
       sum += term;
