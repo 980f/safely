@@ -11,6 +11,10 @@ static Logger tbg("TextPointer",false);
 #define tbg(...)
 #endif
 
+static char * TextAlloc(unsigned length){
+  return static_cast<char *>( calloc(Zguard(length),1));
+}
+
 Text::Text() : Cstr(){
   //all is well
   tbg("empty construct %p:%p",this,ptr);
@@ -21,7 +25,7 @@ Text::Text(TextKey other){
   copy(other);
 }
 
-Text::Text(unsigned size) : Cstr( static_cast<TextKey>( calloc(Zguard(size),1))){
+Text::Text(unsigned size) : Cstr( TextAlloc(size)){
   //we have allocated a buffer and filled it with 0
   tbg("const by size %p:%p  [%u+1]",this,ptr,size);
 }
@@ -34,7 +38,7 @@ Text::Text(Text &&other) : Cstr(other){
 
 /** this guy is criticial to this class being performant. If we flub it there will be scads of malloc's and free's. */
 Text::Text(Text &other) : Cstr(other){
-  tbg("construct by && %p:%p",this,ptr);
+  tbg("construct by & %p:%p",this,ptr);
   other.release();//take ownership, clearing the other one's pointer keeps it from freeing ours.
 }
 
@@ -42,15 +46,17 @@ Text::Text(Text &other) : Cstr(other){
 Text::Text(TextKey other, const Span &span):Cstr(TextKey(nullptr)){
   if(nonTrivial(other)&&span.ordered()) {
     unsigned length = span.span();
-    char *ptr = reinterpret_cast<char *>(malloc(Zguard(length)));
+    char *ptr = TextAlloc(length);
     if(ptr) {
-      ptr[length] = 0;//safety null
-      memcpy(ptr,&other[span.lowest],length);
+      ptr[length] = 0;//safety null      
+      memcpy(ptr,&other[span.lowest],length);//todo:1 this can read past allocation of other. We should truncate length
       this->ptr=ptr;
       tbg("construct by span %p:%p",this,ptr);
+    } else {
+      tbg("OOM in substring constructor");
     }
   } else {
-      tbg("construct by span is null");
+    tbg("construct by span is null");
   }
 
 }
@@ -116,6 +122,11 @@ void Text::clear() noexcept {
   tbg("about to clear %p:%p",this,ptr);
   release();
 }
+
+Text Text::substring(unsigned first, unsigned last){
+  Span cutter(first,last);
+  return Text(ptr,cutter);
+}
 /////////////////
 
 Text::Chunker::Chunker(const char *start):base(start){
@@ -126,4 +137,8 @@ Text Text::Chunker::operator()(unsigned leap){
   Text piece (base,*this);
   leapfrog(leap);
   return piece;
+}
+
+Text Text::Chunker::chunk() const{
+  return Text(base,*this);//this as Span
 }

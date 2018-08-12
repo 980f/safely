@@ -347,7 +347,7 @@ private:
   static Storable Slash;
 public:
   /** access to @see Slash , the global/shared root*/
-  static Storable &Groot(TextKey pathname);
+  static Storable &Groot(TextKey pathname="");
   /** delete a node given an absolute pathname. @returns whether node was found and deleted */
   static bool Delete(TextKey pathname);
   /** find child given an absolute pathname. */

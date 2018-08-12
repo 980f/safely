@@ -13,12 +13,16 @@
  */
 class DirectoryWalker {
   static std::function<void(Fildes &)> action;
+  static std::function<void(Fildes &,FTW &ftw)> faction;
+
   TextKey path;
   static int readerthunk(const char *,const struct stat* stat,int flags,FTW *ftw);
 public:
   DirectoryWalker(TextKey path);
   /** processes all the files, does not recurse, does follow symlinks, opens file for read before calling action*/
   void flatread(std::function<void(Fildes &)> reader);
+  void flatread(std::function<void(Fildes &,FTW &ftw)> reader);
+
 
 };
 
