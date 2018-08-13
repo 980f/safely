@@ -5,7 +5,7 @@
 #include <utility>
 
 #include "logger.h"
-#if DebugTextClass==1
+#if DebugTextClass
 static Logger tbg("TextPointer",false);
 #else
 #define tbg(...)
@@ -16,6 +16,7 @@ static char * TextAlloc(unsigned length){
 }
 
 Text::Text() : Cstr(){
+  allocated=0;
   //all is well
   tbg("empty construct %p:%p",this,ptr);
 }
@@ -26,6 +27,7 @@ Text::Text(TextKey other){
 }
 
 Text::Text(unsigned size) : Cstr( TextAlloc(size)){
+  allocated=size;
   //we have allocated a buffer and filled it with 0
   tbg("const by size %p:%p  [%u+1]",this,ptr,size);
 }
@@ -33,12 +35,14 @@ Text::Text(unsigned size) : Cstr( TextAlloc(size)){
 /** this guy is criticial to this class being performant. If we flub it there will be scads of malloc's and free's. */
 Text::Text(Text &&other) : Cstr(other){
   tbg("construct by && %p:%p",this,ptr);
+  allocated=other.length();
   other.release();//take ownership, clearing the other one's pointer keeps it from freeing ours.
 }
 
 /** this guy is criticial to this class being performant. If we flub it there will be scads of malloc's and free's. */
 Text::Text(Text &other) : Cstr(other){
   tbg("construct by & %p:%p",this,ptr);
+  allocated=other.length();
   other.release();//take ownership, clearing the other one's pointer keeps it from freeing ours.
 }
 
@@ -47,6 +51,7 @@ Text::Text(TextKey other, const Span &span):Cstr(TextKey(nullptr)){
   if(nonTrivial(other)&&span.ordered()) {
     unsigned length = span.span();
     char *ptr = TextAlloc(length);
+    allocated=length;
     if(ptr) {
       ptr[length] = 0;//safety null      
       memcpy(ptr,&other[span.lowest],length);//todo:1 this can read past allocation of other. We should truncate length
@@ -56,6 +61,7 @@ Text::Text(TextKey other, const Span &span):Cstr(TextKey(nullptr)){
       tbg("OOM in substring constructor");
     }
   } else {
+    allocated=0;
     tbg("construct by span is null");
   }
 
@@ -64,6 +70,7 @@ Text::Text(TextKey other, const Span &span):Cstr(TextKey(nullptr)){
 Text::Text(const char *ptr,bool takeit) :
   Cstr( nonTrivial(ptr) ? (takeit ? ptr : strdup(ptr)) : nullptr){
   //we now own what was passed, or the duplicate we created.
+  allocated=length();
   tbg("construct by takeit:%b  %p:%p",takeit,this,ptr);
 }
 
@@ -81,6 +88,7 @@ void Text::take(Text &&other){
     tbg("taking by ref %p:%p  <-%p:%p",this,ptr,&other,other.ptr);
     clear();
     ptr = other.ptr;
+    allocated=other.allocated;
     other.release();
   }
 }
@@ -102,6 +110,7 @@ void Text::copy(TextKey other){
   }
   if(nonTrivial(other)) {//definitely some data
     ptr = strdup(other);//don't delete!
+    allocated=length();
   }
   tbg("copied by cstr %p:%p  <-%p",this,ptr,other);
 } // Text::copy

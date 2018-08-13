@@ -4,15 +4,15 @@
 #include "cstr.h"
 #include "halfopen.h" //Span
 
-/** This class is a minimal String class, it prevents memory leaks and trivial NPE's but does provide any manipulation facilities.
- * Most especially it does not rellocate/resize its contents. It uses malloc and free rather than new and delete so that it might yield a smaller binary on microcontroller systems.
- *
+/** This class is a minimal String class, it prevents memory leaks and trivial NPE's but does not provide any manipulation facilities.
+ * Most especially it does not rellocate/resize its contents.
+ * It uses malloc and free rather than new and delete so that it might yield a smaller binary on microcontroller systems.
  * adds strdup'ing to @see Cstr functionality, i.e. makes a copy on construction and assignment vs Cstr which just looks at someone else's allocated memory.
  *
  *  This class unconditionally frees the data it points at when destroyed. IE it always owns what it points at, which is why it usually copies its argument on assignment and construction.
  */
 class Text : public Cstr {
-
+  unsigned allocated;
 public:
   /** creates an 'empty' one */
   Text();
@@ -71,6 +71,7 @@ private:
   /** relinquish ownership, which entails also forgetting the content. If used wrongly this will leak memory. */
   void release(){
     ptr=nullptr;
+    allocated=0;
   }
 public:
   /** discard==free internal content (if any) and null the internal pointer (to prevent use-after-free) */
