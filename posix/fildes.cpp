@@ -258,7 +258,7 @@ bool Fildes::write(const u8 *buf, unsigned len){
 bool Fildes::writeChars(char c, unsigned repeats){
   if (repeats <= 4096) {
     u8 reps[repeats];
-    fillObject(reps, sizeof(reps), u8(c));
+    fillObject(reps, repeats, u8(c));//sizeof(reps) always gave 1
     return write(reps, repeats);
   } else {
     return false;
