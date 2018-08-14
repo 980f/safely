@@ -13,9 +13,13 @@ public:
   /**@returns whether @param index is within the defined cycle*/
   bool contains(unsigned index)const;
   /** @returns the cycle length */
-  unsigned cycle()const;
+  unsigned cycle() const {
+    return length;
+  }
   /** @returns present phase in the cycle */
-  operator unsigned(void)const;
+  operator unsigned(void) const {
+    return value;
+  }
 
   /** @returns true once per cycle, and not until the end of the first cycle if used in a typical fashion*/
 //compiler preferred operator bool over operator unsigned, should have complained:--  operator bool(void);
@@ -29,6 +33,17 @@ public:
   unsigned increment(void);
   unsigned operator++ (void); ///pre increment
   unsigned operator++ (int dummy); ///post increment
+
+  /** modulo compare */
+  bool operator ==(unsigned rhs) const {
+    return (rhs%cycle())==value;
+  }
+
+  /** modulo compare */
+  bool operator !=(unsigned rhs) const {
+    return (rhs%cycle())!=value;
+  }
+
 };
 
 #endif // CYCLER_H
