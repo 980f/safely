@@ -7,10 +7,10 @@
  * It happens that if you view -1 as an unsigned it is the maximum possible value. That has the advantage of replacing the signed integer dance:
  * index>=0 && index < quantity with a simple index<quantity, less runtime code.
  *
- * The only risk here is that someone might use -1 as a quantity value indicating that there is not even a container to have a quantity of items in. Just don't do that,
- *return a quantity of 0 for 'not a valid question', that will almost always yield the expected behavior.
+ * The only risk here is that someone might use -1 as a quantity value indicating that there is not even a container to have a quantity of items in.
+ * Just don't do that, return a quantity of 0 for 'not a valid question', that will almost always yield the expected behavior.
  *
- *  todo: need to check for overflow on additi9ve operations and set to badIndex if that occurs.
+ *  todo: need to check for overflow on additive operations and set to badIndex if that occurs.
  */
 /** the magic value, it is all ones */
 constexpr unsigned BadIndex = ~0U;

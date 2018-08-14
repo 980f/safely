@@ -27,9 +27,8 @@ double NumberPieces::packed() const {
     number *= dpow10(pow10);
     //ignore all postdecimal processing as numerically insignificant.
   } else {
-    //have to figure out how many digits the fractional part had
     double fract = postdecimal;
-    fract /= p19;//?dpow10(postDigits);
+    fract /= dpow10(postDigits);
     number += fract;
   }
   if(hasEterm){

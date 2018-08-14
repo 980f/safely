@@ -12,7 +12,6 @@
  *  This class unconditionally frees the data it points at when destroyed. IE it always owns what it points at, which is why it usually copies its argument on assignment and construction.
  */
 class Text : public Cstr {
-  unsigned allocated;
 public:
   /** creates an 'empty' one */
   Text();
@@ -38,9 +37,11 @@ public:
   /** take content from @param other, other will be empty */
   Text(Text &other);
 
-
   /** make a copy of non-null-terminated subset of some string. includes @param begin but not @param end */
   Text(TextKey other,const Span &span);
+
+  /** make a copy of non-null-terminated subset of some string. includes @param begin but not @param end */
+  Text(Text other,const Span &span);
 
 public:
 
@@ -71,7 +72,6 @@ private:
   /** relinquish ownership, which entails also forgetting the content. If used wrongly this will leak memory. */
   void release(){
     ptr=nullptr;
-    allocated=0;
   }
 public:
   /** discard==free internal content (if any) and null the internal pointer (to prevent use-after-free) */
