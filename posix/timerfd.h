@@ -23,9 +23,8 @@ public:
   }
 
   double getPeriod()const noexcept;
-
+  /** @returns number of intervals will elapse for a given frequency's cycle time */
   unsigned chunks(double hz);
-
 };
 
 #endif // TIMERFD_H

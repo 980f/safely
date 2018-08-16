@@ -198,7 +198,7 @@ public:
   }
 
   /** @returns an indexer which covers the leading part of this one. */
-  Indexer<Content> getHead()const {
+  Indexer<Content> getHead() const{
     return view(0,pointer);
   }
 

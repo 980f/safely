@@ -79,16 +79,16 @@ public:
 
   //trying to work around some syntax stuff for indexedBy, and hey-why not add a feature of sorts?
   template<class PrimeContent> void createFor(PrimeContent &indexItem){
-    create(indexItem.getName());
+    create(indexItem.getName());//we can't rename existing nodes when the indexer is attached, but at least new nodes will share names.
   }
 
   /** hooks up primary group (the operand) to manage allocation of this group's items which are 1:1 with the indexer group's items.
    * @see indexes for swapping the args for syntactic convenenience. */
   template<class PrimeContent> void indexedBy(StoredGroup<PrimeContent> &indexer){
-    //by doing these instead of registering a dependent using (nor removed) onReorg all onAdditions take place before any
+    //by using these instead of registering a dependent using onReorg, all onAdditions take place before any
     // whenReorganized's are invoked, so dependent objects are all created before whenReorganized's are invoked. Must check that all
     // non-creation onAddition stuff doesn't need to wait.
-    indexer.onRemoval(MyHandler(StoredGroup<Groupie>::remove));
+    indexer.onRemoval(sigc::hide_return(MyHandler(StoredGroup<Groupie>::remove)));
     indexer.onAddition(MyHandler(StoredGroup<Groupie>::createFor<PrimeContent> ), false);
     setSize(indexer.quantity()); //at time of attachment we resize the indexed entity
   }
@@ -127,7 +127,7 @@ public:
 
   /** someone has just deleted the node one of our members is connected to, it must die quickly or there will be use-after-free faults.*/
   void backdoored(bool removed,unsigned which){
-    if(removed){
+    if(removed) {
       //we can't use remove(which) as it asks for permission and it is too late to stop the process.
       pod.removeNth(which); //deletes Stored entity
       onremoval(which);   //high priority notifications
@@ -190,8 +190,14 @@ public:
       return *pod[ordinal];
     }
     wtf("asked for non-existent member: %d out of %d of set", ordinal, quantity());
-    wtf.dumpStack("StoredGroup::nth");
+    wtf.dumpStack("StoredGroup::nth const");
     return *pod[0]; //which will still blow if there are no entities at all.
+  }
+
+  /** @returns entity with underlying name, creating it with defaults if it didn't exist.
+   * NB: Usually group entities aren't named (name is empty). */
+  Groupie &operator()(TextKey name){
+    return operator[](child(name).node.ownIndex());
   }
 
   /** tableeditor needs this syntax */
@@ -232,18 +238,17 @@ public:
   /**add a new node and build a new thing from it.*/
   Groupie &create(TextKey prename = ""){
     if(preaddition.empty() || preaddition()) {
-      Storable::Freezer autothaw(node, true, true); //#must NOT allow change watchers to execute on node add until we create the
-                                                    // object that they may come looking for. Without this the change actions would
-                                                    // execute before the new object exists instead of after.
-      //wrapNode(node.child(prename));//old code presumed that the node didn't exist unless created here. ParamSet in DP5 violated that.
-      node.child(prename);//just making a node now makes Groupies via backdoor.
+      Storable::Freezer autothaw(node, true, true); //#must NOT allow change watchers to execute on node add until we create the object that they may come looking for. Without this the change actions would  execute before the new object exists instead of after.
+      auto &backer = node.child(prename);//making a node makes related Groupie via backdoor. Node is allowed to already exist, a possibly pathological case.
+      return (*this)[backer.ownIndex()];//just in case we didn't actually create a new node.
+    } else {
+      return last();//if not allowed to create a node return something as best as we can.
     }
-    return last();
   }
 
   /** add a copy of an existing node, build a new thing from it and hence a copy of that thing.
    * generally that existing node is from some other instance of a group of the same type as this group*/
-  Groupie &clone(const Groupie &extant,TextKey altname=nullptr){
+  Groupie &clone(const Groupie &extant,TextKey altname = nullptr){
     wrapNode(node.createChild(extant.node,altname));
     return last();
   }
@@ -276,14 +281,9 @@ public:
 
   /** remove something from given place in list. This DELETES the item, beware of use-after-free.*/
   virtual bool remove(unsigned which){
-    if(has(which)) { //#while the pod and node can take care of bad indexes locally we don't want to do the notifies if the index is
-                     // bad. And now preremoval depends on this check.
+    if(has(which)) { //#while the pod and node can take care of bad indexes locally we don't want to do the notifies if the index is bad. And now preremoval depends on this check.
       if(preremoval(operator [](which))) {//if not vetoed
-        //We actually delete the objects before we signal removal so iterations show it already gone
-//        pod.removeNth(which); //deletes Stored entity
         node.remove(which); //deletes underlying node, which may have its own watchers, and which deletes the Groupie via backdoor();
-//        onremoval(which);   //high priority notifications
-//        dependents(true, which);//lower priority notifications
         return true;
       }
     }
@@ -292,7 +292,7 @@ public:
 
   /** remove something from given place in list. This DELETES the item, beware of use-after-free.*/
   bool removeItem(Groupie &member){
-    if(&member!=nullptr){
+    if(&member!=nullptr) {
       return remove(ordinalOf(&member));
     }
     return false;
@@ -312,7 +312,7 @@ public:
     for(unsigned which = quantity(); which-- > 0; ) { //#keep reverse iteration, can do remove's with it.
       Groupie &victim(*pod[which]);
       if(killit( victim)) {
-        deaths+=remove(which); //#works well because we reverse iterate.(see bug #369)
+        deaths += remove(which); //#works well because we reverse iterate.(see bug #369)
       }
     }
     return deaths;
@@ -337,6 +337,7 @@ public:
     return BadIndex;
   }
 
+  /** a predicate for finding an object that might be in this storedgroup */
   static bool byObject(const Groupie &child, const Groupie *unit){
     return &child == unit;
   }
@@ -345,6 +346,7 @@ public:
     return first(sigc::bind(&byObject, unit));
   }
 
+  /** a predicate for finding a child by its node */
   static bool byNode(const Groupie &child, const Storable &childnode){
     return &child.node == &childnode;
   }
@@ -353,6 +355,7 @@ public:
     return first(sigc::bind(&byNode, sigc::ref(childnode)));
   }
 
+  /** @returns nullptr or first entity that positively meets the predicate */
   Groupie *findFirst(const sigc::slot<bool, Groupie &> &predicate){
     ForValues(list){
       Groupie &item(list.next());
@@ -364,6 +367,7 @@ public:
     return nullptr;
   }
 
+  /** @returns nullptr or first entity that positively meets the predicate */
   const Groupie *findFirst(const sigc::slot<bool, const Groupie &> &predicate) const {
     ForValuesConstly(list){
       const Groupie &item(list.next());
@@ -375,6 +379,7 @@ public:
     return nullptr;
   }
 
+  /** @returns nullptr or first entity who wraps the @param given node */
   Groupie *find(const Storable &childnode){
     return findFirst(sigc::bind(&byNode, sigc::ref(childnode)));
   }
@@ -395,17 +400,17 @@ public:
   /** @returns node by internal name, creates one if it doesn't exist.
    * useful for legacy upgrades of known entities within a group, which is pretty much limited to factory defined files, never user
    * stuff */
-  Groupie &child(const char *key,bool*isNoob=nullptr){
+  Groupie &child(const char *key, bool *isNoob = nullptr){
     Groupie *child = existing(key);
-    if(isNoob){
-      *isNoob= (child==nullptr);
+    if(isNoob) {
+      *isNoob = (child==nullptr);
     }
     if(child) {
       return *child;
     } else {
       return create(key);
     }
-  }
+  } // child
 
   virtual bool wasModified(){
     return node.wasModified();

@@ -68,6 +68,7 @@ void swprintf();
 void vswprintf();
 #endif
 
+//and sometimes you just gotta do something dangerous:
 #define NullRef(sometype) *reinterpret_cast<sometype *>(0)
 #define NullPointer(sometype) reinterpret_cast<sometype *>(0)
 

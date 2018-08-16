@@ -1,9 +1,22 @@
 #ifndef _ITERATE_H_
 #define _ITERATE_H_
 
-//@deprecated  these were used to port in some code that misused stl iterators, these marked usages that needed manual inspection when there was less project pressure.
+#include <vector>
+#include <functional>
+template <typename V> class VectorIterator {
+  std::vector<V> &v;
+public:
+  VectorIterator(std::vector<V> &v):v(v){
+    //#done
+  }
+  void foreach (std::function<void(V&)> body) {
+    for(auto it=v.begin();it!=v.end();++it){
+      body(*it);
+    }
+  }
+};
 
-/** these macro's go together, the first saves the begin so that the distance can be later computed.
+/** these deprecated macro's go together, the first saves the begin so that the distance can be later computed.
 the caching of  (collection).end() violates the iteration validity, it only works if the collection is not added to or removed from during the iteration.
 */
 

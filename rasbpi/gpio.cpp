@@ -69,7 +69,6 @@ GPIOpin::operator bool() noexcept {
 }
 
 ////
-
 struct pwmPinMapping {
   unsigned gpio;
   unsigned altcode;

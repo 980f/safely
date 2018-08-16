@@ -151,9 +151,12 @@ int modulus(int value, unsigned cycle){
   return value;
 } // modulus
 
-u16 saturated(unsigned quantity, float fractionThereof){
+unsigned saturated(unsigned quantity, double fractionThereof){
   double dee(quantity * fractionThereof);
-  unsigned rawbins(dee);//todo:2 is truncating rather than rounding
+  if(dee<0) {
+    return 0;
+  }
+  unsigned rawbins(dee + 0.5);
 
   if(rawbins >= quantity) {
     return quantity - 1;
@@ -184,18 +187,23 @@ int fexp(double d){ //todo:1 remove dependence on cmath.
   return ret;
 }
 
+double dpow10(unsigned uexp){
+  if(uexp<countof(Decimal1)) {
+    return double(Decimal1[uexp]);
+  }
+  if(uexp<countof(Decimal2) + countof(Decimal1)) {
+    return double(Decimal2[uexp - countof(Decimal1)]);
+  }
+  return 0;
+}
+
 double dpow10(int exponent){
-  if(exponent>=0){
-    if(exponent<countof(Decimal1)){
-      return double(Decimal1[exponent]);
-    }
-    if(exponent<countof(Decimal2)+countof(Decimal1)){
-       return double(Decimal2[exponent-countof(Decimal1)]);
-    }
+  if(exponent>=0) {
+     dpow10(unsigned(exponent));
   }
   //todo: see if std lib uses RPE to compute this.
   return pow(double(10), exponent);
-}
+} // dpow10
 
 //linux has this, firmware doesn't have ANY coeffs in its math.h
 #ifndef M_PI
@@ -382,7 +390,7 @@ int splitter(double &d){
   return int(eye);
 }
 
-unsigned splitter2(double &d){
+unsigned splitteru(double &d){
   double eye;
   d = modf(d,&eye);  //todo:2 this can be done very efficiently via bit twiddling. "modf()" has an inconvenient argument order and return type.
   return unsigned(eye);
@@ -405,7 +413,7 @@ unsigned splitter2(double &d){
 //template <> u64 intbin<u64,double>(double &d);
 
 unsigned digitsAbove(unsigned int value, unsigned numDigits){
-  unsigned digit = value/i32pow10(numDigits);
+  unsigned digit = value / i32pow10(numDigits);
   value -= digit * i32pow10(numDigits);
   return digit;
 }

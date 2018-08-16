@@ -60,7 +60,7 @@ public:
 
   bool printNumber(double d, const NumberFormat &nf, bool addone = false);
   /** printNUmber(double,int) prints significant figures, this prints fixedpoint*/
-  bool printDecimals(double d, unsigned decimals);
+  bool printDecimals(double d, int decimals);
 
   bool printString(TextKey s);
 

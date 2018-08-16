@@ -4,24 +4,46 @@
 #include "stdarg.h" //for relaying arg packs through layers
 
 /** a minimalist logging facade */
-class Logger{
+class Logger {
 public:
   /** must point to static text, is printed on the log before each message */
   const char *prefix;
   bool enabled;
-  Logger(const char *location,bool enabled=true);
+  /** used by combiner*/
+  bool combining = false;
+  Logger(const char *location,bool enabled = true);
   ~Logger();
   /** makes usage look like a function */
   void operator() (const char *msg, ...);
 
+  /** output newine and flush the file */
+  void flushline();
   //used for legacy in PosixWrapper
   void varg(const char *fmt, va_list &args);
   void dumpStack(const char *prefix);
+  //RIAA for merging messages:
+  struct Combiner {
+    Logger &logger;
+    bool wasCombining;
+    Combiner(Logger &logger) : logger(logger){
+      wasCombining = logger.combining;
+      logger.combining = true;
+    }
+
+    ~Combiner(){
+      if(!wasCombining) {
+        logger.flushline();
+        logger.combining = false;
+      }
+    }
+
+  };
+
 public:
   struct Manager {
-    virtual void onCreation(Logger &logger)=0;
-    virtual void onDestruction(Logger &logger)=0;
-    virtual ~Manager()=default;
+    virtual void onCreation(Logger &logger) = 0;
+    virtual void onDestruction(Logger &logger) = 0;
+    virtual ~Manager() = default;
   };
   static Manager *manager;
 }; // class Logger
@@ -37,7 +59,7 @@ extern Logger wtf;
 
 //typical allocation of a managed logger
 #define SafeLogger(loggerName,deflevel) \
-  __attribute__((init_priority (202)))  \
-static Logger loggerName( #loggerName , deflevel )
+  __attribute__((init_priority(202)))  \
+  static Logger loggerName( #loggerName, deflevel )
 
 #endif // LOGGER_H

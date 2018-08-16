@@ -141,7 +141,7 @@ s64 CharFormatter::parse64(s64 def){
       if(logProduct<=18) {
         n.predecimal = 0x7FFFFFFFFFFFFFFFLL;
       } else {
-        n.predecimal *= pow10(int(n.exponent));//#cast needed for overload resolution
+        n.predecimal *= i64pow10(unsigned(n.exponent));//#cast needed for overload resolution
       }
     }
     return n.negative ? -n.predecimal : n.predecimal;
@@ -262,7 +262,7 @@ bool CharFormatter::printNumber(double d, int sigfig){
     d = -d;
   }
   double dint = floor(d);//print integer part of value
-  bool is32 = (d == dint && d < _2gig);//todo:1 much better detection of fixed point versus scientific format.
+  bool is32 = (d == dint && d < _2gig);//#Exact FP compare intended.  todo:1 much better detection of fixed point versus scientific format.
   if(is32) {//try to preserve integers that were converted to double.
     checker &= printUnsigned(u32(d));
   } else {
@@ -273,7 +273,7 @@ bool CharFormatter::printNumber(double d, int sigfig){
         //need to maybe reduce the number and have more trailing zeroes.
         div += sigfig - 9;
       }
-      d /= pow10(div);
+      d /= dpow10(div);
       checker &= printUnsigned(u32(d));
       if(div>3) {
         checker &= printChar('E');
@@ -307,7 +307,7 @@ bool CharFormatter::printNumber(double d, int sigfig){
         checker &= printChar('0');
         //ridiculously small, blow it off or add a useless E expression.
       } else {
-        d *= pow10(-div); //if d>_2gig we will lose significant digits.
+        d *= dpow10(-div); //if d>_2gig we will lose significant digits.
         while(numzeros-->0) {
           checker &= printChar('0');
         }
@@ -322,8 +322,13 @@ bool CharFormatter::printNumber(double d, int sigfig){
 bool CharFormatter::printNumber(double d, const NumberFormat &nf, bool addone){
   //first: round!
   if(d!=0.0) {
-    u64 lsd = i64pow10(nf.decimals);
-    d += 0.5 / lsd;
+    if(nf.decimals>=0){
+      u64 lsd = i64pow10(unsigned(nf.decimals));
+      d += 0.5 / lsd;
+    } else {
+      u64 lsd = i64pow10(unsigned(-nf.decimals));
+      d += 0.5 * lsd;
+    }
     //and now we can truncate later on
   }
   TransactionalBuffer<char > checker(*this);
@@ -378,7 +383,7 @@ bool CharFormatter::printNumber(double d, const NumberFormat &nf, bool addone){
   return checker.commit();
 } /* printNumber */
 
-bool CharFormatter::printDecimals(double d, unsigned decimals){
+bool CharFormatter::printDecimals(double d, int decimals){
   NumberFormat nf;
   nf.decimals=decimals;
   return printNumber(d,nf,false);
