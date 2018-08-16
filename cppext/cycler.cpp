@@ -11,10 +11,6 @@ Cycler::Cycler(unsigned length):value(0) {
   setLength(length);//invoke constraint logic
 }
 
-unsigned Cycler::cycle()const {
-  return length;
-}
-
 void Cycler::setLength(unsigned length) {
   if(length<=0){
     length=1;
@@ -40,9 +36,6 @@ unsigned Cycler::increment(void) {
   return value;
 }
 
-Cycler::operator unsigned(void)const {
-  return value;
-}
 
 /** @returns true once per cycle, and not until the end of the first cycle if used in a typical fashion*/
 bool Cycler::next(void) {

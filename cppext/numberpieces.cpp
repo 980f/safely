@@ -26,8 +26,7 @@ double NumberPieces::packed() const {
   if(pow10 > 0) { //then trailing digits of predecimal part were lopped off
     number *= dpow10(pow10);
     //ignore all postdecimal processing as numerically insignificant.
-  } else {
-    //have to figure out how many digits the fractional part had
+  } else if(postdecimal){//postDigits isn't zero under reasonable conditions so let's not bother testing it.
     double fract = postdecimal;
     fract /= dpow10(postDigits);
     number += fract;
@@ -39,7 +38,7 @@ double NumberPieces::packed() const {
       exp = -exp;
     }
 //      exp is now the scientific notation exponent
-    number *= dpow10(exp);//and apply user provide power
+    number *= dpow10(exp);
   }
   return negative ? -number : number;
 }
@@ -66,8 +65,10 @@ void NumberPieces::reset(void){
   isNan = false;
   isInf = false;
   isZero = false;
-  negative = false; hadRadixPoint=false;
+  negative = false;
+  hadRadixPoint=false;
   predecimal = 0;
+  preDigits = 0;
   pow10 = 0;
   postdecimal = 0;
   postDigits = 0;
@@ -101,13 +102,15 @@ void NumberPieces::decompose(double d){
     //todo:0 check against DecimalCutoff, intbin will truncate if d>than that.
     double fraction=d;
     predecimal=intbin<u64,double>(fraction);
+    preDigits= unsigned(1+ilog10(predecimal));//0=>-1=>0  1=>0=>1  9=>0=>1 10=>1=>2.
     postdecimal=u64(fraction * p19);//as many digits as we dare
-    postDigits=19;
+    postDigits=maxDigits;
     if(!negativeExponent && exponent>maxDigits){//predecimal was truncated by intbin
       //divide by 10 until it fits
       pow10=unsigned(exponent-maxDigits);
       fraction=d * dpow10(-pow10);
       predecimal=intbin<u64,double>(fraction);
+      preDigits=1+ilog10(predecimal);//we can compute this from the prior machinations.
       postdecimal=0;//anything here is garbage
       postDigits=0;//
       hasEterm=true;
