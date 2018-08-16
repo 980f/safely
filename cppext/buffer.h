@@ -198,12 +198,12 @@ public:
   }
 
   /** @returns an indexer which covers the leading part of this one. */
-  Indexer<Content> getHead(){
+  Indexer<Content> getHead()const {
     return view(0,pointer);
   }
 
   /** @returns an indexer which covers the trailing part of this one. once upon a time called 'remainder' */
-  Indexer<Content> getTail(){
+  Indexer<Content> getTail() const{
     return view(pointer,allocated());
   }
 
