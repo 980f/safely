@@ -134,6 +134,7 @@ void Text::take(TextKey &other){
 
 void Text::clear() noexcept {
   tbg("about to clear %p:%p",this,ptr);
+  free(static_cast<void *>(violated()));//#need to find when this went missing. It is the main reason for this class's existence.
   release();
 }
 
