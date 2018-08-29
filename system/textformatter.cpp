@@ -127,19 +127,19 @@ void TextFormatter::substitute(u64 value){
 }
 
 void TextFormatter::substitute(u32 value){
-  substitute(u64(value));//need this to distinguish char * from implied char &
+  substitute(u64(value));//templating can't promote
 } //
 
 void TextFormatter::substitute(u16 value){
-  substitute(u64(value));//need this to distinguish char * from implied char &
+  substitute(u64(value));//templating can't promote
 } //
 
 void TextFormatter::substitute(u8 value){
-  substitute(u64(value));//need this to distinguish char * from implied char &
+  substitute(u64(value));//templating can't promote
 } // TextFormatter::substitute
 
 void TextFormatter::substitute(bool value){
-  substitute(u64(value));//need this to distinguish char * from implied char &
+  substitute(u64(value));//templating can't promote
 } // TextFormatter::substitute
 
 

@@ -59,6 +59,8 @@ template<class Groupie> class StoredGroup : public Stored {
    */
   sigc::signal<void, bool, unsigned> dependents;
 
+  /** 4debug: only one indexer can rationally be attached. We use Stored as it is the greatest common base to the indexers which are templates */
+  Stored *indexer=nullptr;
 
 public:
   typedef sigc::slot<void, bool /*removing*/, size_t /* which*/> Watcher;
@@ -85,6 +87,11 @@ public:
   /** hooks up primary group (the operand) to manage allocation of this group's items which are 1:1 with the indexer group's items.
    * @see indexes for swapping the args for syntactic convenenience. */
   template<class PrimeContent> void indexedBy(StoredGroup<PrimeContent> &indexer){
+    if(this->indexer){
+      wtf("already indexed");
+      return;
+    }
+    this->indexer=&indexer;
     //by using these instead of registering a dependent using onReorg, all onAdditions take place before any
     // whenReorganized's are invoked, so dependent objects are all created before whenReorganized's are invoked. Must check that all
     // non-creation onAddition stuff doesn't need to wait.
@@ -423,14 +430,13 @@ public:
     }
   }
 
-  /** @deprecated need to get rid of these as they generate warnings:*/
-  void forEach(const sigc::slot<void, const TextKey &, const Groupie &, unsigned> &action) const {
-    ForValues(list){
-      Groupie &item(list.next());
-
-      action(item.name, item, item.ownIndex());
-    }
-  }
+//  /** @deprecated need to get rid of these as they generate warnings:*/
+//  void forEach(const sigc::slot<void, const TextKey &, const Groupie &, unsigned> &action) const {
+//    ForValuesConstly(list){
+//      Groupie &item(list.next());
+//      action(item.node.name, item, item.index());
+//    }
+//  }
 
   /** faster than using slot's when the method is simple enough:*/
   void forEach(void (Groupie::*method)(void)){

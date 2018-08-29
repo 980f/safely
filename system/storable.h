@@ -62,6 +62,11 @@ public:
   /** ignore this node (and its children) during change polling detection, only apply to stuff that is automatically reconstructed
    * or purely diagnostic. Doesn't affect change watching, only polling. */
   bool isVolatile;
+  /** added to preserve formal 'array' vs 'struct' for json. We preserve order in this tree so it only matter on export. */
+  bool isOrdered=false;
+  /** a non-dedicated field for helping a parser maintain some context.
+First use is as an array indexer for json array parsing, without which reloads add to end of wad duplicating entries. */
+  unsigned parserstate=~0U;
 
   /** hook to force tree node to save all pending changes prior to output.
    * NB: this does not recurse for wads, the caller of this must recurse if the entity is a wad.
@@ -114,7 +119,7 @@ private:
   Storable &precreate(TextKey name);
 public:
   //had to change to Text vs saving a pointer when file loading comes first, else the file content gets ripped out from under us and we are pointing to reclaimable heap. It still is a good idea to not rename nodes, unless perhaps the name is empty.
-  const Text name;
+  Text name;//gave up on const-ness so that we can feed debug info into otherwise unnamed items.
   /** @deprecated we really want node names to be constant, it is bad practice to pass information via name instead of value.
    * the node editor is the only entity which can justify doing that, as you are trying to fix a file. We can add launching nano to that gui, so that we know to reload the file over the node when nano returns.
    * somehow rename the node, perhaps by clone and replace. This might lose its watchers. */
@@ -308,7 +313,8 @@ public:
   const Storable &operator [](unsigned ordinal) const;
   /** named version of operator [] const */
   const Storable &nth(unsigned ordinal) const;
-  Storable &nth(unsigned ordinal);
+  /** this variation may stretch the wad, if given permission to by @param autocreate*/
+  Storable &nth(unsigned ordinal, bool autocreate=false);
 
 private:
   /** find the index of a child node. @returns BadIndex if not a wad or not found in the wad.*/

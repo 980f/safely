@@ -21,10 +21,15 @@ Text StoreJsonConstructor::extract(Span &span) {
 Storable *StoreJsonConstructor::applyToChild(Storable *parent, Text &name, bool haveValue, Text &value, bool valueQuoted) {
   Storable *nova=nullptr;
   if(parent){
-    if(name.empty()){
-      nova=&parent->addChild("");//typically an array element, do NOT make all nameless entities the same entity.
+    if(parent->parserstate!=BadIndex){//then it is index of node to add/overwrite
+      nova=&parent->nth(parent->parserstate,true);
+      ++parent->parserstate;
     } else {
-      nova=parent->findChild(name,true);
+      if(name.empty()){
+        nova=&parent->addChild(nullptr);//typically an array element, do NOT make all nameless entities the same entity.
+      } else {
+        nova=parent->findChild(name,true);
+      }
     }
   } else {
     root = &Storable::Groot(name);

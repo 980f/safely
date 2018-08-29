@@ -601,7 +601,7 @@ unsigned Storable::setSize(unsigned qty){
     --changes;
   }
   while(qty>wad.quantity()) {
-    addChild("");
+    addChild(nullptr);
     ++changes;
   }
   return changes;
@@ -687,7 +687,7 @@ Storable&Storable::operator [](unsigned ordinal){
   if(!has(ordinal)) {
     storetree("nonexisting child of %s referenced by ordinal %d (out of %d).",fullName().c_str(), ordinal, numChildren());
     dbg.dumpStack("nth child doesn't exist");
-    addChild(""); //better than an NPE so deep in the hierarchy that we don't know where it comes from.
+    addChild(nullptr);
     return *wad.last();
   }
   return *wad.nth(ordinal);
@@ -708,8 +708,14 @@ const Storable&Storable::nth(unsigned ordinal) const {
   return *wad.nth(ordinal);
 }
 
-Storable &Storable::nth(unsigned ordinal){
+Storable &Storable::nth(unsigned ordinal,bool autocreate){
   if(!has(ordinal)) {
+    if(autocreate){
+      while(numChildren()<=ordinal){
+        addChild(nullptr);
+      }
+      return *wad.last();//could fold into normal return, doing this for debug trapping.
+    } else
     storetree("nonexisting child referenced by ordinal %d (out of %d).", ordinal, numChildren());
   }
   return *wad.nth(ordinal);
@@ -754,7 +760,7 @@ void Storable::presize(unsigned qty, Storable::Type type){
     unsigned i = qty - numChildren();
 
     while(i-- > 0) {
-      Storable&kid = addChild("");
+      Storable&kid = addChild(nullptr);
       kid.setType(type);
       //and allow constructed default values to persist
       kid.setQuality(Defaulted); //#!# not using Empty as that often masks the type being set.
@@ -824,7 +830,7 @@ Storable&StoredListReuser::next(){
   if(wadding) {
     return node.addWad(wadding);
   } else {
-    return node.addChild("");
+    return node.addChild(nullptr);
   }
 } // next
 

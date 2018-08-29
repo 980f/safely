@@ -74,7 +74,7 @@ void printNode(unsigned tab, Storable &node, FILE *fp,bool showVolatiles){
   }
   switch (node.getType()) {
   case Storable::Wad:
-    fprintf(fp,"{");
+    fputc(node.isOrdered?'[':'{',fp);
     for(ChainScanner<Storable> list(node.kinder()); list.hasNext(); ) {
       Storable & it(list.next());
       printNode((pretty?  tab + 1 : tab),it,fp,showVolatiles);
@@ -83,7 +83,7 @@ void printNode(unsigned tab, Storable &node, FILE *fp,bool showVolatiles){
       }
     }
     indent(fp, tab);
-    fputc('}',fp);
+    fputc(node.isOrdered?']':'}',fp);
     break;
   case Storable::Numerical:
     fprintf(fp,"%g ",node.getNumber<double>());

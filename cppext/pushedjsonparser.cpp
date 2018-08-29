@@ -34,7 +34,7 @@ PushedJSON::Action Parser::next(char pushed){
       }
       d.last=':';//alter token so that downstream guys don't need to have rule.equalscolon access
       //else
-      //JOIN
+      [[clang::fallthrough]];
     case ':':
       recordName();
       return PushedJSON::Continue; //null name is not the same as no name
