@@ -4,6 +4,8 @@
 #include "stopwatch.h"
 
 static const char*jsontests[] = {
+  "array:[one,{two:blue}]",
+  "array:[one,two]",
   "braced1:\"{1}\"",
   "embedcomma:\"com,ma\"",
   "embedcolonv:\"col:on\"",
@@ -24,57 +26,57 @@ static const char*jsontests[] = {
 };
 
 
-void printNode(unsigned tab,Storable &node){
-  bool pretty=Index(tab).isValid();
-  if(pretty){
-    putchar('\n');
-    for(unsigned tabs = tab; tabs-->0; ) {
-      printf("  ");
-    }
-  }
-  if(node.name.empty()) {
-    //just print tabs
-  } else {
-    printf("\"%s\" : ",node.name.c_str());
-  }
-  switch (node.getType()) {
-  case Storable::Wad:
-    printf("{");
-    for(auto list(node.kinder()); list.hasNext(); ) {
-      Storable & it(list.next());
-      printNode(pretty?tab + 1:BadIndex,it);
-      if(list.hasNext()) {
-        putchar(',');
-      } else {
-        if(pretty){
-          putchar('\n');
-          for(unsigned tabs = tab; tabs-->0; ) {
-            printf("  ");
-          }
-        }
-        putchar('}');
-      }
-    }
-    break;
-  case Storable::Numerical:
-    printf("%g ",node.getNumber<double>());
-    break;
-  case Storable::Uncertain:
-  case Storable::NotDefined:
-    printf("%s ",node.image().c_str());
-    break;
-  case Storable::Textual:
-    if(node.image().empty()){
-      putchar('"');
-      //else printf converts null ptr to (null)
-      putchar('"');
-    } else {
-      printf("\"%s\" ",node.image().c_str());
-    }
-    break;
-  } // switch
-  fflush(stdout);
-} // switch
+//void printNode(unsigned tab,Storable &node){
+//  bool pretty=Index(tab).isValid();
+//  if(pretty){
+//    putchar('\n');
+//    for(unsigned tabs = tab; tabs-->0; ) {
+//      printf("  ");
+//    }
+//  }
+//  if(node.name.empty()) {
+//    //just print tabs
+//  } else {
+//    printf("\"%s\" : ",node.name.c_str());
+//  }
+//  switch (node.getType()) {
+//  case Storable::Wad:
+//    printf("{");
+//    for(auto list(node.kinder()); list.hasNext(); ) {
+//      Storable & it(list.next());
+//      printNode(pretty?tab + 1:BadIndex,it);
+//      if(list.hasNext()) {
+//        putchar(',');
+//      } else {
+//        if(pretty){
+//          putchar('\n');
+//          for(unsigned tabs = tab; tabs-->0; ) {
+//            printf("  ");
+//          }
+//        }
+//        putchar('}');
+//      }
+//    }
+//    break;
+//  case Storable::Numerical:
+//    printf("%g ",node.getNumber<double>());
+//    break;
+//  case Storable::Uncertain:
+//  case Storable::NotDefined:
+//    printf("%s ",node.image().c_str());
+//    break;
+//  case Storable::Textual:
+//    if(node.image().empty()){
+//      putchar('"');
+//      //else printf converts null ptr to (null)
+//      putchar('"');
+//    } else {
+//      printf("\"%s\" ",node.image().c_str());
+//    }
+//    break;
+//  } // switch
+//  fflush(stdout);
+//} // switch
 
 //void testJson(const char *block,unsigned size){
 //  dbg("testJson: testing: %s",block);
@@ -115,7 +117,9 @@ void testJ(unsigned which){
     dbg("JsonParse: after %g ms nodes:%u  scalars:%u depth:%u",perftimer.elapsed()*1000, parser.stats.totalNodes, parser.stats.totalScalar, parser.stats.maxDepth.extremum);
 
     if(parser.core.root) {
+
       printNode(1,*parser.core.root);
+      
       putchar('\n');
       fflush(stdout);  //to show up in debugger ASAP.
     }

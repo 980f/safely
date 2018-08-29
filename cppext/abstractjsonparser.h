@@ -102,7 +102,9 @@ protected:
         if(!parser.orderedWad && parent->parserstate!=BadIndex){
           //end curly used with open square
         }
-        parent->parserstate=BadIndex;
+        if(parent){
+          parent->parserstate=BadIndex;
+        }
         return false;
 
       case PushedJSON::Illegal: //unexpected char

@@ -351,6 +351,8 @@ private:
 ///////////////////////////////////
 /** global/shared root, the 'slash' node for findChild */
   static Storable Slash;
+/** set text as image of number, but do not trigger change detect */
+  void formatNumber();
 public:
   /** access to @see Slash , the global/shared root*/
   static Storable &Groot(TextKey pathname="");

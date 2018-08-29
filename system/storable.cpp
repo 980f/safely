@@ -479,24 +479,7 @@ Cstr Storable::image(void){
     if(enumerated) {
       return enumerated->token(number.as<unsigned>());//don't update text, this is much more efficient since enumerated is effectively static.
     } else {
-      //set the internal image without triggering change detect
-      char buffer[64 + 1];//enough for 64 bit boolean image
-      CharFormatter formatter(buffer,sizeof(buffer));
-      switch(number.is) {
-      case NumericalValue::Truthy:
-        text.copy(number.as<bool>() ? "1" : "0");
-        break;
-      case NumericalValue::Whole:
-        formatter.printSigned(number.as<int>());
-        text.copy(buffer);
-        break;
-      case NumericalValue::Counting:
-        formatter.printUnsigned(number.as<unsigned>());
-        break;
-      case NumericalValue::Floating:
-        text.copy(NumberFormatter::makeNumber(number));
-        break;
-      } // switch
+      formatNumber();
       return text;
     }
   case Wad:
@@ -504,9 +487,33 @@ Cstr Storable::image(void){
     return text;
   default:
   case NotDefined:
-    return "(unknown)";
+    if(text.empty()){
+      formatNumber();
+    }
+    return text;
   } // switch
 } // Storable::image
+
+void Storable::formatNumber(){
+  //set the internal image without triggering change detect
+  char buffer[64 + 1];//enough for 64 bit boolean image
+  CharFormatter formatter(buffer,sizeof(buffer));
+  switch(number.is) {
+  case NumericalValue::Truthy:
+    text.copy(number.as<bool>() ? "1" : "0");
+    break;
+  case NumericalValue::Whole:
+    formatter.printSigned(number.as<int>());
+    text.copy(buffer);
+    break;
+  case NumericalValue::Counting:
+    formatter.printUnsigned(number.as<unsigned>());
+    break;
+  case NumericalValue::Floating:
+    text.copy(NumberFormatter::makeNumber(number));
+    break;
+  } // switch
+}
 
 Cstr Storable::getText() const {
   return text.c_str();
