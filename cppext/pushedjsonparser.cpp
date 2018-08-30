@@ -34,7 +34,7 @@ PushedJSON::Action Parser::next(char pushed){
       }
       d.last=':';//alter token so that downstream guys don't need to have rule.equalscolon access
       //else
-      //JOIN
+      [[clang::fallthrough]];
     case ':':
       recordName();
       return PushedJSON::Continue; //null name is not the same as no name
@@ -96,8 +96,17 @@ Parser::Parser(){
 
 
 
-JsonStats::DepthTracker::DepthTracker(JsonStats &s):CountedLock(s.nested){
-  s.maxDepth.inspect(s.nested);//heuristics
+JsonStats::DepthTracker::DepthTracker(JsonStats &s):
+  CountedLock(s.nested){//increments nested , when this tracker is deleted CountedLock deletion will decrement nested.
+  s.maxDepth.inspect(s.nested);
+}
+
+void JsonStats::nest(){
+  maxDepth.inspect(++nested);
+}
+
+void JsonStats::popnest(){
+  --nested;
 }
 
 void JsonStats::reset(){

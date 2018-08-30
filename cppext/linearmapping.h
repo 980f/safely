@@ -29,13 +29,13 @@ public:
   /** set for diagonal given by the parameters. */
   void init(float ymax, float ymin, float xmax, float xmin);
 ///////////// Settable ///////////////
-  int numParams() const {
+  unsigned numParams() const  override{
     return 2 * xaxis.numParams();
   }
 
 /** @returns whether settings are changed.*/
-  bool setParams(ArgSet&args);
-  void getParams(ArgSet&args) const;
+  bool setParams(ArgSet&args) override;
+  void getParams(ArgSet&args) const override;
 
 }; // class LinearMapping
 

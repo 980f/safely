@@ -21,11 +21,11 @@ public:
   /** inverse function*/
   double x(double y)const ;
 
-  int numParams()const{
+  unsigned numParams()const override {
     return 2;
   }
-  bool setParams(ArgSet&args);
-  void getParams(ArgSet&args)const;
+  bool setParams(ArgSet&args) override ;
+  void getParams(ArgSet&args) const override ;
   /** access to individual coefficient*/
   double &operator[](int which);
   /** value of coefficient, note the const*/
