@@ -12,7 +12,7 @@ void FitStat::init(unsigned df) {
   chiSquare = 0.0;
 }
 
-FitStat &FitStat::operator=(const FitStat &&other) {
+FitStat &FitStat::operator = (const FitStat &&other) {
   chiSquare = other.chiSquare;
   df = other.df;
   num = other.num;

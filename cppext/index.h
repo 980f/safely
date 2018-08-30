@@ -25,6 +25,7 @@ inline bool isValid(unsigned index){
 /** marker class for an integer used as an array index or related value. Leave all in header file as we need to strongly urge the compiler to inline all this code  */
 struct Index {
   Index(unsigned raw = BadIndex) : raw(raw){
+    //#nada
   }
 
   unsigned raw;
@@ -85,12 +86,12 @@ struct Index {
   }
 
   /** maydo: convert negatives to canonical ~0*/
-  unsigned operator -- (int) noexcept {
+  unsigned operator-- (int) noexcept {
     return raw--;
   }
 
   /** maydo: convert negatives to canonical ~0*/
-  unsigned operator -- () noexcept {
+  unsigned operator-- () noexcept {
     return --raw;
   }
 

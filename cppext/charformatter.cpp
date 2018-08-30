@@ -59,7 +59,6 @@ CharFormatter::CharFormatter(ByteScanner &other) : CharScanner(other,0){
 }
 
 CharFormatter::CharFormatter(){
-
 //#nada
 }
 
@@ -171,9 +170,9 @@ bool CharFormatter::printChar(char ch, unsigned howMany){
 }
 
 bool CharFormatter::printAtWidth(unsigned int value, unsigned width, char padding){
-  unsigned numDigits = value? ilog10(value)+1 : 1; //ilog10 gives -1 for zero, here we lump zero in with 1..9
+  unsigned numDigits = value ? ilog10(value) + 1 : 1; //ilog10 gives -1 for zero, here we lump zero in with 1..9
   if(numDigits > width) {//if you cant fit the whole thing don't put any digits into the field.
-     printChar('*', width);
+    printChar('*', width);
     return false;
   }
 
@@ -382,12 +381,6 @@ bool CharFormatter::printNumber(double d, const NumberFormat &nf, bool addone){
   }
   return checker.commit();
 }
-
-//bool CharFormatter::printDecimals(double d, int decimals){
-//  NumberFormat nf;
-//  nf.decimals=decimals;
-//  return printNumber(d,nf,false);
-//} /* printNumber */
 
 bool CharFormatter::printDecimals(double d, int decimals){
   NumberFormat nf;

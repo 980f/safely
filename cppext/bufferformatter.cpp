@@ -24,7 +24,6 @@ BufferFormatter::BufferFormatter(unsigned char *raw, unsigned sizeofraw, TextKey
 BufferFormatter& BufferFormatter::setFormat(TextKey format){
   body.rewind();
   body.cat(format);
-//  body.next()=0;//cat doesn't include the null, we do so here to stop the parsing of the format
   body.clearUnused();//easiest way to ensure proper termination.
   which=0;
   return *this;

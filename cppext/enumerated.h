@@ -7,7 +7,7 @@
 /** base class is abstract access to a labeling mechanism */
 class Enumerated {
 protected:
-    virtual ~Enumerated() = default;
+  virtual ~Enumerated() = default;
 public:
   /** gets returned by token() for invalid values.*/
   static const TextKey InvalidToken;
@@ -15,11 +15,11 @@ public:
   /** useful for presizing enum indexed storage:*/
     virtual unsigned numTokens() const = 0;
 
-    /** @returns internal key for present integral value, InvalidToken if @param value isn't valid */
-    virtual TextKey token(unsigned value) const = 0;
+  /** @returns internal key for present integral value, InvalidToken if @param value isn't valid */
+  virtual TextKey token(unsigned value) const = 0;
 
-    /** @returns the integral value associated with an internal key. BadIndex if @paran token isn't valid */
-    virtual unsigned valueOf(TextKey token) const = 0;
+  /** @returns the integral value associated with an internal key. BadIndex if @paran token isn't valid */
+  virtual unsigned valueOf(TextKey token) const = 0;
 
 }; // class Enumerated
 
@@ -28,7 +28,7 @@ public:
  * NB: This implementation presumes that the defining table of tokenNames outlives this enumeration. */
 class SequentialEnumeration : public Enumerated {
 protected:
-    const unsigned quantity;
+  const unsigned quantity;
   const char **tokenNames;
 
 public:

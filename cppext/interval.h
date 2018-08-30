@@ -13,7 +13,7 @@ public:
   }
 
   /**@returns whether settings are modified*/
-  bool setParams(ArgSet&args)override ;
+  bool setParams(ArgSet&args) override ;
   void getParams(ArgSet&args) const override ;
 
   void operator =(const Range<double> &other){

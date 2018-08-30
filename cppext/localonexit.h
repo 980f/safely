@@ -39,7 +39,6 @@ public:
 
 }; // class ClearOnExit
 
-
 /** Clears a flag when destroyed */
 class AutoFlag : public ClearOnExit<bool> {
 public:
