@@ -13,18 +13,21 @@
 
 struct NumberParser : public PushedNumberParser  {
 
-  /** @param buf points after last char, prev() is terminator */
+  /** @param buf points to terminator */
   bool parseNumber(CharFormatter &buf){
-    while(buf.hasNext() && next(buf.next())) {
-      //#nada
+    while(buf.hasNext()) {
+      if(next(buf.peek())){
+        buf.skip(1);
+      } else {
+        break;
+      }
     }
     return seemsOk();
   }
 
   double getValue(CharFormatter &buf, double backup = 0.0){
     if(parseNumber(buf)) {
-      buf.unget();
-      return packed();
+      return lastParsed=packed();//track for debug
     } else {
       return backup;
     }
@@ -56,7 +59,7 @@ CharFormatter::CharFormatter(ByteScanner &other) : CharScanner(other,0){
 }
 
 CharFormatter::CharFormatter(){
-
+//#nada
 }
 
 Indexer<u8> CharFormatter::asBytes(){
@@ -81,6 +84,17 @@ int CharFormatter::parseInt(int def){
     return INT_MIN;
   } else {
     return int(dry);
+  }
+}
+
+unsigned CharFormatter::parseUnsigned(unsigned def){
+  s64 dry = parse64(def);
+  if(dry> UINT_MAX) {
+    return def;
+  } else if (dry< 0) {
+    return def;
+  } else {
+    return unsigned(dry);
   }
 }
 
@@ -122,11 +136,11 @@ s64 CharFormatter::parse64(s64 def){
 
   if(n.parseNumber(*this)) {
     if(n.hasEterm) {//trying to tolerate some values, may produce nonsense.
-      int logProduct = ilog10(n.predecimal) + n.pow10 + n.exponent;
+      int logProduct = ilog10(n.predecimal) + n.pow10 + n.exponent;//??
       if(logProduct<=18) {
         n.predecimal = 0x7FFFFFFFFFFFFFFFLL;
       } else {
-        n.predecimal *= pow10(int(n.exponent));//#cast needed for overload resolution
+        n.predecimal *= i64pow10(unsigned(n.exponent));//#cast needed for overload resolution
       }
     }
     return n.negative ? -n.predecimal : n.predecimal;
@@ -145,7 +159,7 @@ bool CharFormatter::printChar(char ch){
 }
 
 bool CharFormatter::printChar(char ch, unsigned howMany){
-  if(stillHas(howMany)) {
+  if(stillHas(howMany)) {//todo:0 if BadIndex fill to end
     while(howMany--> 0 && hasNext()) {
       next() = ch;
     }
@@ -155,19 +169,17 @@ bool CharFormatter::printChar(char ch, unsigned howMany){
   }
 }
 
-bool CharFormatter::printAtWidth(unsigned int value, unsigned width){
-  unsigned numDigits = value ? ilog10(value) + 1 : 1; //ilog10 gives -1 for zero, we lumpt that in with 1..9
-  if(numDigits > width) {
+bool CharFormatter::printAtWidth(unsigned int value, unsigned width, char padding){
+  unsigned numDigits = value ? ilog10(value) + 1 : 1; //ilog10 gives -1 for zero, here we lump zero in with 1..9
+  if(numDigits > width) {//if you cant fit the whole thing don't put any digits into the field.
     printChar('*', width);
     return false;
   }
 
   if(stillHas(width)) {
-    printChar(' ', width - numDigits);
+    printChar(padding, width-numDigits);
     while(numDigits--> 0) {
-      unsigned digit = value / i32pow10(numDigits);
-      value -= digit * i32pow10(numDigits);
-      printDigit(digit);
+      printDigit(digitsAbove(value,numDigits));
     }
     return true;
   }
@@ -194,12 +206,12 @@ bool CharFormatter::printUnsigned(unsigned int value){
   }
 } // CharFormatter::printUnsigned
 
-bool CharFormatter::printUnsigned(u64 value){
+bool CharFormatter::printUnsigned64(u64 value){
   if(value == 0) {
     return printChar('0');
   }
   int numDigits = ilog10(value) + 1;
-  if(stillHas(numDigits)) {
+  if(stillHas(numDigits)){//this doesn't include checking for room for a separator
     while(numDigits--> 0) {
       unsigned digit = revolutions(value,i64pow10(numDigits));
       printDigit(digit);
@@ -249,7 +261,7 @@ bool CharFormatter::printNumber(double d, int sigfig){
     d = -d;
   }
   double dint = floor(d);//print integer part of value
-  bool is32 = (d == dint && d < _2gig);//todo:1 much better detection of fixed point versus scientific format.
+  bool is32 = (d == dint && d < _2gig);//#Exact FP compare intended.  todo:1 much better detection of fixed point versus scientific format.
   if(is32) {//try to preserve integers that were converted to double.
     checker &= printUnsigned(u32(d));
   } else {
@@ -260,7 +272,7 @@ bool CharFormatter::printNumber(double d, int sigfig){
         //need to maybe reduce the number and have more trailing zeroes.
         div += sigfig - 9;
       }
-      d /= pow10(div);
+      d /= dpow10(div);
       checker &= printUnsigned(u32(d));
       if(div>3) {
         checker &= printChar('E');
@@ -294,7 +306,7 @@ bool CharFormatter::printNumber(double d, int sigfig){
         checker &= printChar('0');
         //ridiculously small, blow it off or add a useless E expression.
       } else {
-        d *= pow10(-div); //if d>_2gig we will lose significant digits.
+        d *= dpow10(-div); //if d>_2gig we will lose significant digits.
         while(numzeros-->0) {
           checker &= printChar('0');
         }
@@ -309,8 +321,13 @@ bool CharFormatter::printNumber(double d, int sigfig){
 bool CharFormatter::printNumber(double d, const NumberFormat &nf, bool addone){
   //first: round!
   if(d!=0.0) {
-    u64 lsd = i64pow10(nf.decimals);
-    d += 0.5 / lsd;
+    if(nf.decimals>=0){
+      u64 lsd = i64pow10(unsigned(nf.decimals));
+      d += 0.5 / lsd;
+    } else {
+      u64 lsd = i64pow10(unsigned(-nf.decimals));
+      d += 0.5 * lsd;
+    }
     //and now we can truncate later on
   }
   TransactionalBuffer<char > checker(*this);
@@ -323,7 +340,7 @@ bool CharFormatter::printNumber(double d, const NumberFormat &nf, bool addone){
     return checker &= printString(np.negative ? "-Inf" : nf.showsign ? "+Inf" : "Inf");
   } else {
     if(nf.scientific) {
-      checker &= printNumber(d,nf.decimals + addone);
+      checker &= printDecimals(d,nf.decimals + addone);
     } else {
       if(nf.showsign && !np.negative) {
         checker &= printChar('+');
@@ -331,37 +348,39 @@ bool CharFormatter::printNumber(double d, const NumberFormat &nf, bool addone){
       if(np.negative) {
         checker &= printChar('-');
       }
-
-      checker &= printUnsigned(np.predecimal);
-      if(nf.decimals>0 &&np.postdecimal>0) {
+      checker &= printUnsigned64(np.predecimal);
+      if(nf.decimals>0) {//if we want radix and digits
         checker &= printChar('.');//not doing locale's herein.
-        int stillwant = nf.decimals + addone;
-        if(np.postdecimal==0) {//frequent case, when number was actually an integer
+        unsigned stillwant = nf.decimals + addone;
+        if(np.postdecimal==0||np.postDigits==0) {//all zeros after radix, frequent case, when number was actually an integer
           checker &= printChar('0',stillwant);
+          //and we are done
         } else {
-          if(np.div10>0) {
-            //the number we have has been boosted by that many digits
-            if(np.div10>=stillwant) {
-              checker &= printChar('0',take(stillwant));
-            } else {
-              checker &= printChar('0',np.div10);
-              stillwant -= np.div10;
-            }
-          }
-          if(stillwant>0) {
-            u64 postdec = truncateDecimals(np.postdecimal,stillwant);
-            int stillhave = 1 + ilog10(postdec);//double checking
-            if(stillhave<stillwant) {
-              checker &= printChar('0',stillwant - stillhave);
-            }
-            checker &= printUnsigned(postdec);
+          //some of postdecimal's digits are zeroes.
+          unsigned digitsPresent=1+ilog10(np.postdecimal);
+          auto numZeroes=np.postDigits-digitsPresent;
+          if(numZeroes>=stillwant){
+             checker &= printChar('0',stillwant);
+             //and we are done
+          } else {
+             checker &= printChar('0',numZeroes);
+             stillwant-=numZeroes;
+
+             if(digitsPresent>=stillwant) {//have more than desired
+               u64 postdec = truncateDecimals(np.postdecimal,stillwant);
+               checker &= printUnsigned64(postdec);
+             } else {//neeed a few tailing zeroes
+               checker &= printUnsigned64(np.postdecimal);
+               //if fixed width ... which we have presumed before here.
+               checker &= printChar('0',stillwant -digitsPresent);
+             }
           }
         }
       }
     }
   }
   return checker.commit();
-} /* printNumber */
+}
 
 bool CharFormatter::printDecimals(double d, int decimals){
   NumberFormat nf;
@@ -378,18 +397,6 @@ bool CharFormatter::printString(TextKey s){
   }
   return checker.commit();
 }
-
-void CharFormatter::printArgs(ArgSet&args,bool master){
-  printChar(master ? '=' : FS); //#chose comma (frame separator) for spread sheet import.
-  ArgSet clipped(args);
-  while(clipped.hasNext()) {
-    double arg = clipped.next(); //4 debug
-    printNumber(arg);
-    if(clipped.hasNext()) {
-      printChar(FS);
-    }
-  }
-} /* printArgs */
 
 int CharFormatter::cmp(const CharScanner&other) const {
   CharScanner me(*this); //this constructor gives us a pointer to the used part of the argument
@@ -414,20 +421,6 @@ int CharFormatter::cmp(const CharScanner&other) const {
   }
 } /* cmp */
 
-bool CharFormatter::addTerminator(){
-  return printChar(EOL)&&printChar(0);
-}
-
-bool CharFormatter::removeTerminator(){
-  if(hasPrevious()&&previous()==0) {
-    rewind(1);
-    if(hasPrevious()&&previous()==EOL) {
-      rewind(1);
-      return true;
-    }
-  }
-  return false;
-}
 
 CharFormatter CharFormatter::infer(char *content){
   Cstr wrap(content);

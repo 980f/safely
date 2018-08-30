@@ -1,6 +1,5 @@
 #ifndef BITBANGER_H
 #define BITBANGER_H
-
 /** bit and bitfield setting and getting.*/
 
 #include <limits> //for number of bits in unsigned
