@@ -11,7 +11,7 @@ GPIO::GPIO() :
   pinIndex(0),
   mask(0),
   offset(0){
-  //#non usable
+  //#non yet usable
 }
 
 GPIO::GPIO(unsigned pinIndex, unsigned af, int pull){

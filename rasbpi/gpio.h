@@ -52,7 +52,6 @@ public:
 }; // class GPIO
 
 #include "abstractpin.h"
-#include "peripheral.h"
 /** simple wrapper so base GPIO isn't encumbered by a virtual table pointer.*/
 class GPIOpin : public AbstractPin {
   GPIO &raw;

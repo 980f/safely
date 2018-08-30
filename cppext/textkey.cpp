@@ -50,6 +50,10 @@ double toDouble(TextKey rawText, bool *impure){
   }
 }
 
+#ifndef BadIndex
+#define BadIndex (~0U)
+#endif
+
 unsigned toIndex(TextKey rawText, bool *impure){
   if(nonTrivial(rawText)){
     char *end(nullptr);
