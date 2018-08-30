@@ -2,11 +2,15 @@
 #define BITBANGER_H
 
 /** bit and bitfield setting and getting.*/
-#define URGENTLY __attribute__((always_inline))
-/** @returns byte address argument as a pointer to that byte */
-//URGENTLY //irritating to step through during debug.
-constexpr unsigned* atAddress(unsigned address){
-  return reinterpret_cast<unsigned *>(address);
+
+#include <limits> //for number of bits in unsigned
+
+constexpr unsigned numBitsInUnsigned(){
+  return std::numeric_limits<unsigned>::digits;
+}
+
+constexpr unsigned msbOfUnsigned(){
+  return std::numeric_limits<unsigned>::digits-1;
 }
 
 constexpr bool bit(unsigned patter, unsigned bitnumber){
@@ -30,9 +34,6 @@ inline bool setBit(volatile unsigned *patter, unsigned bitnumber){
   return *patter |= (1 << bitnumber);
 }
 
-inline bool setBitAt(unsigned addr, unsigned bitnumber){
-  return setBit(*atAddress(addr),bitnumber);
-}
 
 inline bool clearBit(volatile unsigned &patter, unsigned bitnumber){
   return patter &= ~(1 << bitnumber);
@@ -42,10 +43,20 @@ inline bool clearBit(volatile unsigned *patter, unsigned bitnumber){
   return *patter &= ~(1 << bitnumber);
 }
 
+#if 0 //these only make sense for microcontrollers.
+/** @returns byte address argument as a pointer to that byte */
+constexpr unsigned* atAddress(unsigned address){
+  return static_cast<unsigned *>(address);
+}
+
+inline bool setBitAt(unsigned addr, unsigned bitnumber){
+  return setBit(*atAddress(addr),bitnumber);
+}//now it is an aligned 32 bit entity
+
 inline bool clearBitAt(unsigned addr, unsigned bitnumber){
   return clearBit(*atAddress(addr),bitnumber);
 }
-
+#endif
 
 /** ensure a 0:1 transition occurs on given bit. */
 inline void raiseBit(volatile unsigned &address, unsigned  bit){
@@ -60,7 +71,7 @@ inline void raiseBit(volatile unsigned *address, unsigned  bit){
 }
 
 
-inline bool assignBit(unsigned &pattern, unsigned bitnumber,bool one){
+inline bool assignBit(volatile unsigned &pattern, unsigned bitnumber,bool one){
   if(one){
     setBit(pattern,bitnumber);
   } else {
@@ -69,23 +80,25 @@ inline bool assignBit(unsigned &pattern, unsigned bitnumber,bool one){
   return one;
 }
 
+/** for when neither address nor bit is known at compile time */
 struct BitReference {
   unsigned &word;
   unsigned mask;
 
   /** naive constructor, code will work if @param bits isn't aligned, but will be inefficient.*/
-  BitReference(unsigned &bits,unsigned bitnumber):
-    word(bits),  //drop 2 lsbs, i.e. point at xxx00
-    mask(1<<(31& bitnumber)){//try to make bit pointer point at correct thing.
-    //now it is an aligned 32 bit entity
+  BitReference(unsigned *bits,unsigned bitnumber):
+    word(*bits),  //drop 2 lsbs of address , i.e. point at xxx00
+    mask(1<<(msbOfUnsigned()& bitnumber)){//try to make bit pointer point at correct thing.
   }
 
+#if 0 //mcu
   /** initialize from a memory address and bit therein. If address isn't aligned then evil things may happen.  */
   BitReference(unsigned memoryAddress,unsigned bitnumber):
     word(*atAddress(memoryAddress&~3)),  //drop 2 lsbs, i.e. point at xxx00
     mask(1<<(31& ((memoryAddress<<3)|bitnumber))){//try to make bit pointer point at correct thing.
     //now it is an aligned 32 bit entity
   }
+#endif
 
   bool operator =(bool set)const{
     if(set){
@@ -98,6 +111,15 @@ struct BitReference {
 
   operator bool()const{
     return (word&mask)!=0;
+  }
+
+  bool flagged(){
+    if(operator bool()){
+      *this=0;
+      return true;
+    } else {
+      return false;
+    }
   }
 };
 
@@ -121,7 +143,8 @@ inline unsigned mergeInto(unsigned *target, unsigned source, unsigned mask){
 /** @returns bits @param msb through @param lsb set to 1.
  * Default arg allows one to pass a width for lsb aligned mask of that many bits */
 constexpr unsigned fieldMask(unsigned msb,unsigned lsb=0){
-  return (1 << (msb+1)) - (1<<lsb);
+  //for msb=32 compiler computed 1<< (32+1) as 1<<1 == 2, not 0 as it should be! (i.e. it applied modulo(32) to the arg before using it as a shift count.
+  return  ((msb>= msbOfUnsigned())? 0:(1 << (msb+1))) -(1<<lsb);
 }
 
 /** use the following when offset or width are NOT constants, else you should be able to define bit fields in a struct and let the compiler to any inserting*/
@@ -184,6 +207,8 @@ public:
   }
 };
 
+
+/** apply a bit to many different words */
 template <unsigned lsb> class BitPicker {
   enum {
     mask = bitMask(lsb) // aligned mask
@@ -222,12 +247,12 @@ public:
   }
 };
 
-
+#if 0 //MCU
 /** for hard coded absolute (known at compile time) address and bit number */
 template <unsigned memoryAddress,unsigned bitnumber> struct KnownBit {
   enum {
-    word= memoryAddress&~3,
-    mask=(1<<(31& ((memoryAddress<<3)|bitnumber)))
+    word= memoryAddress&~(numBytesInUnsigned()-1),
+    mask=(1<<(msbOfUnsigned()& ((memoryAddress<<2)|bitnumber)))
   };
 
   bool operator =(bool set)const{
@@ -244,7 +269,7 @@ template <unsigned memoryAddress,unsigned bitnumber> struct KnownBit {
   }
 };
 
-
+#endif
 ///////////////////////////////////////////
 /// a group of discontiguous bits, used for bitmasking
 

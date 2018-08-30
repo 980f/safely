@@ -10,7 +10,7 @@ BigEndianer::~BigEndianer(){
   //exists to get rid of warning about multiple v-tables.
 }
 
-int BigEndianer::getU16(){
+unsigned BigEndianer::getU16(){
   if(stillHas(2)) {
     u8 high = next();
     u8 low = next();

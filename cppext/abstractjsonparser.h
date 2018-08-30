@@ -43,7 +43,9 @@ public:
 
   /** process the block */
   void parse(){
-    parseChild(data.root);
+    while(parseChild(data.root)){
+      //todo: added looping here to deal with the given node already having seen its opening brace.
+    }
   }
 
   /** some useless info about the parsed data */
@@ -78,6 +80,10 @@ protected:
       case PushedJSON::BeginWad: {//open brace encountered
         //special treatment for node that matches top level of file
         Storable *nova = ((parent==data.root)&&flagged(data.treatRootSpecial))? parent : assembleItem(parent,true);
+        if(parser.orderedWad && nova){
+          nova->isOrdered=true;
+          nova->parserstate=0;//next item will be 0th item.
+        }
         while(parseChild(nova)) {
           //#recurse while there are more to be found
         }
@@ -92,6 +98,13 @@ protected:
         //#JOIN to try to finish off a trailing not quite closed wad. If multiple open ???
       case PushedJSON::EndWad:   //closing wad
         assembleItem(parent);
+        //can detect mismatched brace types here.
+        if(!parser.orderedWad && parent->parserstate!=BadIndex){
+          //end curly used with open square
+        }
+        if(parent){
+          parent->parserstate=BadIndex;
+        }
         return false;
 
       case PushedJSON::Illegal: //unexpected char
