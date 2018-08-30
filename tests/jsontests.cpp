@@ -3,9 +3,12 @@
 #include "textpointer.h"
 #include "stopwatch.h"
 
+#include <jsonfile.h>
+
 static const char*jsontests[] = {
-  "array:[one,{two:blue}]",
-  "array:[one,two]",
+  "{array:[one,{two:blue}]}",
+  "{array:[one,two]}",
+  "{struct:{one,two}}",
   "braced1:\"{1}\"",
   "embedcomma:\"com,ma\"",
   "embedcolonv:\"col:on\"",
@@ -26,78 +29,6 @@ static const char*jsontests[] = {
 };
 
 
-//void printNode(unsigned tab,Storable &node){
-//  bool pretty=Index(tab).isValid();
-//  if(pretty){
-//    putchar('\n');
-//    for(unsigned tabs = tab; tabs-->0; ) {
-//      printf("  ");
-//    }
-//  }
-//  if(node.name.empty()) {
-//    //just print tabs
-//  } else {
-//    printf("\"%s\" : ",node.name.c_str());
-//  }
-//  switch (node.getType()) {
-//  case Storable::Wad:
-//    printf("{");
-//    for(auto list(node.kinder()); list.hasNext(); ) {
-//      Storable & it(list.next());
-//      printNode(pretty?tab + 1:BadIndex,it);
-//      if(list.hasNext()) {
-//        putchar(',');
-//      } else {
-//        if(pretty){
-//          putchar('\n');
-//          for(unsigned tabs = tab; tabs-->0; ) {
-//            printf("  ");
-//          }
-//        }
-//        putchar('}');
-//      }
-//    }
-//    break;
-//  case Storable::Numerical:
-//    printf("%g ",node.getNumber<double>());
-//    break;
-//  case Storable::Uncertain:
-//  case Storable::NotDefined:
-//    printf("%s ",node.image().c_str());
-//    break;
-//  case Storable::Textual:
-//    if(node.image().empty()){
-//      putchar('"');
-//      //else printf converts null ptr to (null)
-//      putchar('"');
-//    } else {
-//      printf("\"%s\" ",node.image().c_str());
-//    }
-//    break;
-//  } // switch
-//  fflush(stdout);
-//} // switch
-
-//void testJson(const char *block,unsigned size){
-//  dbg("testJson: testing: %s",block);
-
-//  Indexer<const char> loaded(block,size);
-//  Storable *root = nullptr;
-//  StoredJSONparser parser(loaded,root);
-//  StopWatch perftimer;
-//  bool retval = parser.parse(root);
-//  perftimer.stop();
-//  dbg("JsonParse: after %g ms returned: %d  nodes:%u  scalars:%u depth:%u",perftimer.elapsed()*1000.0, retval,parser.s.totalNodes, parser.s.totalScalar, parser.s.maxDepth.extremum);
-
-//  if(root) {
-//    printNode(1,*root);
-//    putchar('\n');
-//      fflush(stdout);
-//  }
-//}   // testJson
-
-//#include "testabstractjsonparser.h"
-
 
 void testJ(unsigned which){
   if(Index(which).isValid()) {
@@ -110,16 +41,16 @@ void testJ(unsigned which){
     dbg("StoreJSON: testing: %s",block);
 
     StoreJsonParser parser(loaded);
-    //  dbg("\nJsonPreParse: nodes:%u  scalars:%u depth:%u",parser.stats.totalNodes, parser.stats.totalScalar, parser.stats.maxDepth.extremum);
+
     StopWatch perftimer;
     parser.parse();
-
     dbg("JsonParse: after %g ms nodes:%u  scalars:%u depth:%u",perftimer.elapsed()*1000, parser.stats.totalNodes, parser.stats.totalScalar, parser.stats.maxDepth.extremum);
-
+//////
     if(parser.core.root) {
-
-      printNode(1,*parser.core.root);
-      
+      Fildes stout("log");
+      stout.preopened(stdout->_fileno,false);
+      JsonFile printer(*parser.core.root);
+      printer.printOn(stout,0,true);
       putchar('\n');
       fflush(stdout);  //to show up in debugger ASAP.
     }

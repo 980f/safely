@@ -164,7 +164,7 @@ void testBufferFormatter(){
   buffer.clearUnused();//the printers don't presume to know where the end of the string is.
   for(int ipow = 4; ipow-->-4; ) {
     buffer.rewind();
-    double d = pow10(ipow);
+    double d = dpow10(ipow);
     auto ok = buffer.printNumber(d,0);
     buffer.next() = 0;
     dbg("CF[10^%d]->%d:%s",ipow,ok,bigenough);
