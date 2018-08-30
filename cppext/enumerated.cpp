@@ -1,39 +1,30 @@
 #include "enumerated.h"
-//#include "uicore.h"
-//#include "string.h"
-//#include "textkey.h"
 
 const TextKey Enumerated::InvalidToken = "Undefined";
 
-//UString Enumerated::displayName(int value) const{
-//  return translate(token(value));
-//}
-
-/////////////////////////
-SequentialEnumeration::SequentialEnumeration(const char *tokenNames[], int numTokens) : numTokens_(numTokens),tokenNames(tokenNames){
-  //finally got them simplified!
+SequentialEnumeration::SequentialEnumeration(const char *tokenNames[], unsigned numTokens) :
+    quantity(numTokens),
+    tokenNames(tokenNames) {
+  //#done
 }
 
-int SequentialEnumeration::numTokens() const {
-  return numTokens_;
+unsigned SequentialEnumeration::numTokens() const {
+  return quantity;
 }
 
-TextKey SequentialEnumeration::token(int ordinal) const {
-  if(0 <= ordinal && ordinal < numTokens_) {
+TextKey SequentialEnumeration::token(unsigned ordinal) const {
+  if (ordinal < quantity) {
     return tokenNames[ordinal];
   } else {
     return InvalidToken;
   }
 }
 
-int SequentialEnumeration::valueOf(TextKey token) const {
-  for(int ordinal = numTokens_; ordinal-- > 0; ) {
+unsigned SequentialEnumeration::valueOf(TextKey token) const {
+  for (unsigned ordinal = quantity; ordinal-- > 0;) {
     if(same(tokenNames[ordinal], token)) {
       return ordinal;
     }
   }
-  return -1;
-}
-
-Enumerated::~Enumerated(){
+  return BadIndex;
 }

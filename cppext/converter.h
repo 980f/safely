@@ -8,7 +8,7 @@
  */
 class Converter {
 public:
-  virtual ~Converter();
+  virtual ~Converter()=default;
   /** @returns length required for converted @param source */
   virtual unsigned length(const char * source) const;
   /** convert @param source into @param packer. Will truncate if you do not make packer big enough to contain what @see length() returns for the @param source.
