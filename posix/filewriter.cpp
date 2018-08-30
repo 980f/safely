@@ -12,10 +12,6 @@ FileWriter::FileWriter() :
   //#nada
 }
 
-FileWriter::~FileWriter(){
-  //#nada
-}
-
 bool FileWriter::process(TextKey fname, const ByteScanner &source,unsigned blocksize){
   if(fd.open(fname,O_REWRITE)) {
     bug("Launching xfer of file %s",fname);

@@ -8,7 +8,6 @@
 //just for name research
 #include "charformatter.h"
 
-
 Fildes::Fildes(const char *whatfor) : PosixWrapper(whatfor){
   errornumber = 0;
   lastRead = lastWrote = 0;

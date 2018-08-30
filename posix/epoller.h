@@ -45,7 +45,6 @@ public:
   //cached call to eventTime.elapsed(). If someone screws it up it will be fixed on next event.
   double elapsed;
 
-
 };
 
 
