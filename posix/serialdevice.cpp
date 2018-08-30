@@ -136,7 +136,7 @@ SerialDevice::Pin::operator bool() noexcept {
   }
 }
 
-SerialDevice::Pin::Pin(const Fildes &fd, SerialDevice::Pin::Which one, bool invert) :
+SerialDevice::Pin::Pin(Fildes &fd, SerialDevice::Pin::Which one, bool invert) :
   fd(fd),
   which(one), //kept for debug
   invert(invert),
@@ -160,9 +160,10 @@ SerialDevice::Pin::Pin(const Fildes &fd, SerialDevice::Pin::Which one, bool inve
     break;
   case Ri:
     pattern = TIOCM_RI;
-  default:
-    pattern = 0;
-    break;
+    break; //this break was missing for quite some time.
+//  default:
+//    pattern = 0;
+//    break;
   } // switch
 }
 

@@ -1,8 +1,6 @@
 #include "stopwatch.h"
 #include "cheaptricks.h"
 
-__time_t StopWatch::epoch = 0;
-
 bool StopWatch::readit(timespec &ts){
   if(clock_gettime(CLOCK_something,&ts)){
     return false;
@@ -14,16 +12,21 @@ bool StopWatch::readit(timespec &ts){
 
 StopWatch::StopWatch(bool beRunning,bool realElseProcess) :
   CLOCK_something(realElseProcess ? CLOCK_MONOTONIC : CLOCK_THREAD_CPUTIME_ID){
+  epoch=0;
   readit(started);
-  if(epoch==0) {//once per application start
-//needs to be per-watch    epoch = take(started.ts.tv_sec);
-  }
+  epoch = take(started.tv_sec);
   stopped = started;
   running = beRunning;
 }
 
-double StopWatch::roll(double *absolutely){
-  double retval = elapsed(absolutely);//must be running to roll.
+void StopWatch::lap(const StopWatch &other){
+  started=other.stopped;
+  running = true;
+}
+
+
+NanoSeconds StopWatch::roll(double *absolutely){
+  NanoSeconds retval = elapsed(absolutely);//must be running to roll.
   if(running) {
     started = stopped;//#do NOT start(), want to read the clock just once with each roll.
   }
@@ -45,7 +48,7 @@ bool StopWatch::isRunning() const {
   return running;
 }
 
-double StopWatch::absolute(){
+NanoSeconds StopWatch::absolute(){
   if(running) {
     readit(stopped);
   }
@@ -69,7 +72,16 @@ unsigned StopWatch::cycles(double atHz,bool andRoll){
   return cycles;
 }
 
-double StopWatch::lastSnap(bool absolute) const{
+unsigned StopWatch::periods(NanoSeconds interval, bool andRoll){
+  NanoSeconds now=elapsed();
+  unsigned modulo=now.modulated(interval);
+  if(andRoll){
+    started=stopped-now;//now at this point is fraction of an interval
+  }
+  return modulo;
+}
+
+NanoSeconds StopWatch::lastSnap(bool absolute) const{
   if(absolute){
     return stopped;
   } else {
@@ -77,14 +89,14 @@ double StopWatch::lastSnap(bool absolute) const{
   }
 }
 
-double StopWatch::elapsed(double *absolutely){
-  double diff = absolute();
+NanoSeconds StopWatch::elapsed(double *absolutely){
+  NanoSeconds diff = absolute();//updates 'stopped'
   if(absolutely) {
     *absolutely = diff;
   }
   diff -= started;
   if(diff<0) {//clock rolled over
-    diff += 0.0;//todo:1 proper value before 2038 happens
+    diff.Never();//todo:1 proper value before 2038 happens
   }
   return diff;
 }

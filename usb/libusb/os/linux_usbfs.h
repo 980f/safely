@@ -24,6 +24,11 @@
 #include <linux/types.h>
 
 #define SYSFS_DEVICE_PATH "/sys/bus/usb/devices"
+//uncomment the following for static code analysis, this header itself should follow ones that pick the mode.
+#include <stdint.h>  //don't trust all users to have already included this.
+//#ifndef usbi_mutex_static_t  //for static code analyzer, shouldn't be relied upon for 'real' code.
+//#include "os/threads_posix.h"
+//#endif
 
 struct usbfs_ctrltransfer {
 	/* keep in sync with usbdevice_fs.h:usbdevfs_ctrltransfer */

@@ -86,7 +86,6 @@ class FtdiDeviceList:public Chain<Ftdi> {
 
 public:
   FtdiDeviceList(Ftdi &context, uint16_t vendor, uint16_t product);
-  ~FtdiDeviceList();
-
+  virtual ~FtdiDeviceList();
 
 }; // class List

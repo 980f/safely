@@ -6,26 +6,25 @@
 
 MemoryMapper *MemoryMapper::Mmap=nullptr;
 
-//rather than have a compiler control create a regular file for simulation and link to /dev/gpiomem for rpi real operation.
+
 MemoryMapper::MemoryMapper():fd("MemoryMapper"){
   fd.open("/dev/gpiomem", O_RDWR | O_SYNC);
 }
 
-void *MemoryMapper::map(unsigned addr, unsigned len){//initMapMem
-  //for mbMapMem: PROT_READ|PROT_WRITE, MAP_SHARED
+void *MemoryMapper::map(unsigned addr, unsigned len){
   //MAP_SHARED may be gratuitous, for actual files is used to push the data to the file
   //MAP_LOCKED may be gratuitous, for actual files is triggers read ahead
-  void *peeker;//=mmap(0, len, PROT_READ|PROT_WRITE/*|PROT_EXEC*/,  MAP_SHARED|MAP_LOCKED,  fd, addr);
+  void *peeker;
 
-  if(fd.okValue(peeker, mmap(0, len, PROT_READ|PROT_WRITE/*|PROT_EXEC*/,  MAP_SHARED|MAP_LOCKED,  fd, addr))){
+  if(fd.okValue(peeker, mmap(0, len, PROT_READ|PROT_WRITE,  MAP_SHARED|MAP_LOCKED,  fd, addr))){
     return peeker;
   } else {
     return nullptr;
   }
 }
 
-bool MemoryMapper::free(void *addr, unsigned size){
-  return fd.ok(munmap(addr, size));
+bool MemoryMapper::free(volatile void *addr, unsigned size){
+  return fd.ok(munmap(const_cast<void *>(addr), size));
 }
 
 int MemoryMapper::getError(){
@@ -41,11 +40,12 @@ int MemoryMapper::getError(){
 }
 
 bool MemoryMapper::init(bool refresh){
-  if(Mmap || refresh){
-    delete Mmap;
-    Mmap=nullptr;
+  if(refresh){
+    Obliterate(Mmap);
   }
-  Mmap=new MemoryMapper();
+  if(Mmap==nullptr){
+    Mmap=new MemoryMapper();
+  }
   return isOperational();
 }
 

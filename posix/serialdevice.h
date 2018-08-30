@@ -8,6 +8,8 @@
 #include "storedlabel.h"
 
 struct SerialConfiguration:public Stored {
+  ~SerialConfiguration()=default;
+
   StoredLabel device;//:"/dev/serial/by-id/usb-FTDI_FT232R_USB_UART_A1000pPj-if00-port0",
   StoredCount baud;//  baud:115200,
   StoredCount parity;//todo: enumerize 0:"none", 1:odd 2:even 3:mark 4:space
@@ -24,17 +26,6 @@ public:
   bool connect(const SerialConfiguration &cfg);
   void close();
 
-//  //for skewless updates:
-//  struct DigitalOutputs {
-//    unsigned DSR:1;
-//    unsigned CTS:1; //don't fiddle this unless you know you have turned off hardware handshaking
-//    //on most hardware the following are only inputs
-//    unsigned DCD:1;
-//    unsigned RI:1;
-//    //more later
-//  };
-//  bool updateDigitalOutputs(const DigitalOutputs &bits);
-
   class Pin {
   public:
     enum Which {
@@ -45,18 +36,18 @@ public:
       Dcd, Ri,
     };
 private:
-    Fildes fd;
+    Fildes &fd;//changed to reference else we would have to implement fd cloning.
     int which;
     int pattern;
     bool invert;
     bool lastSet;
   public:
-    Pin(const Fildes &fd,Which one,bool invert);
+    Pin(Fildes &fd, Which one, bool invert);
     virtual ~Pin()=default;
     operator bool() noexcept;
     bool operator =(bool on)noexcept;
     virtual void toggle() noexcept{
-      *this=1-lastSet;//opposite of last request, in case read doesn't work.
+      *this=!lastSet;//opposite of last request, in case read doesn't work.
     }
   };
 
@@ -69,6 +60,7 @@ class SPIO: public AbstractPin {
   SerialDevice::Pin &raw;
 public:
   SPIO(SerialDevice::Pin &raw);
+  virtual ~SPIO()=default;
 
 public:// AbstractPin interface
   void operator =(bool value)  noexcept override;

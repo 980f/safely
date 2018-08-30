@@ -13,7 +13,7 @@
 #define POLLTimeout 0x8000
 
 
-static Logger bug("SEER:");
+static Logger bug("SEER");
 
 bool Socketeer::makeSocket(){
   if(!resolve()) {
@@ -120,9 +120,8 @@ void Socketeer::flush(){
   u8 bytes[4096];
   ByteScanner toilet(bytes,sizeof(bytes));
 //can we stat a socket fd?
-  unsigned notforever = 10000;
-  while(notforever-- && read(toilet)==sizeof(bytes)) {
-    //#nada
+  for(unsigned notforever = 10000;notforever-- && read(toilet)&&toilet.freespace()==0;) {
+    toilet.rewind();//was defective until this was added, only flushed at most 4k bytes!
   }
 }
 
@@ -151,7 +150,7 @@ bool Socketeer::serve(unsigned backlog){
         bug("Couldn't bind");
       }
     } else {
-      return "Couldn't make socket";
+      bug("Couldn't make socket");
     }
   }
   return false;
@@ -276,10 +275,7 @@ void HostInfo::clip(){
   }
 }
 
-HostInfo::HostInfo() :
-  gotten(false),
-  getError(0),
-  res(nullptr){
+HostInfo::HostInfo(){
   hint();
 }
 
@@ -298,7 +294,12 @@ void HostInfo::hint(bool tcp){
   hints.ai_addr = nullptr;
   hints.ai_canonname = nullptr;
   hints.ai_next = nullptr;
-} // HostInfo::hint
+}
+
+addrinfo *HostInfo::anIpv4() {
+  return this->bestAddress();//todo: what was intended here?
+}
+// HostInfo::hint
 
 unsigned SockAddress::getPort(){
   if(address.sa_family==AF_INET) {

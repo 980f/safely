@@ -50,7 +50,7 @@ struct FileEvent {
   uint32_t cookie;                   /* Unique cookie associating related events (for rename(2)) */
   uint32_t len;                      /* Size of name field */
   char     namestartshere;//[];   //don't access this directly, it may not exist.
-  /** Optional null-terminated name */
+  /** @returns wrapper around null-terminated name */
   Indexer<char> name();
   /* inotify(7) man page: the length of each inotify_event structure is sizeof(struct inotify_event)+len.*/
 };
