@@ -4,13 +4,13 @@
 #include "hassettings.h"
 #include "twiddler.h"
 #include "buffer.h"
-
+#include "settablegroup.h"
 
 struct VersionInfo:public Settable {
   int format;//probably will never change
   double buildId;//integer for proper releases, fraction for hacks.
 
-  int numParams()const{
+  unsigned numParams()const{
     return 2;
   }
   bool setParams(ArgSet&args);
@@ -30,7 +30,7 @@ struct CoreValues:public Settable {
   void init();
   void run();
 
-  int numParams()const{
+  unsigned numParams()const{
     return 2;
   }
   bool setParams(ArgSet&args);
@@ -42,7 +42,7 @@ struct ReportSet:public Indexer<Reporter> ,public Settable{
   ReportSet(const ReportSet&other);
   bool isMaster;//because we don't want to deallocate copies!
   ~ReportSet();
-  int numParams()const ;
+  unsigned numParams()const ;
   bool setParams(ArgSet&args);
   void getParams(ArgSet&args)const;
   bool setFrom(ConstArgSet &table);

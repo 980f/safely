@@ -10,7 +10,7 @@ struct GasPedal :public Settable{
   double accel;
   GasPedal(void);
 
-  int numParams()const{
+  unsigned numParams()const{
     return 3;
   }
   bool setParams(ArgSet&args);
@@ -39,7 +39,7 @@ struct Homer:public Settable {
     offset(0) {
   }
 
-  int numParams()const{
+  unsigned numParams()const{
     return 3;
   }
   bool setParams(ArgSet&args);
@@ -62,7 +62,7 @@ struct StepAccess:public Settable {
   bool clockwise;
   u32 ticks;
 
-  int numParams()const;
+  unsigned numParams()const;
   bool setParams(ArgSet&args);
   void getParams(ArgSet&args)const;
 
@@ -107,7 +107,7 @@ struct MotorReport:public Settable {
     markReport() {
   }
 
-  int numParams()const {
+  unsigned numParams()const {
     return 5+markReport.numParams();
   }
   bool setParams(ArgSet&args);

@@ -60,9 +60,8 @@ TextChunk::operator TextBlock() const noexcept{
 
 TextChunk::TextChunk(const TextBlock &block):
   block(block),
-  span()
-{
-
+  span(){
+  //#nada
 }
 
 void TextChunk::next(char comma){

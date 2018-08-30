@@ -51,6 +51,6 @@
 
 //the number below can be tweaked per system in the above if/elif
 //args quantity here limits number of command parameters
-#define ArgsPerMessage 15
+#define MAXARGS 15
 
 #endif /* ifndef ART_INSTRUMENT */

@@ -15,7 +15,7 @@ bool TextWalker::hasNext() {
   return source.span.nonTrivial();
 }
 
-void TextWalker::TextWalker::skip(unsigned int qty){
+void TextWalker::skip(unsigned int qty){
   while(qty-->0){
     seek();
   }
@@ -30,3 +30,5 @@ void SimpleTextWalker::seek() {
   source.span.leapfrog(1);//points after previous find, or to start of block
   source.span.highest=source.block.nextChar(source.span.lowest,comma);
 }
+
+SimpleTextWalker::SimpleTextWalker(const TextBlock &source, char comma) : TextWalker(source), comma(comma) {}

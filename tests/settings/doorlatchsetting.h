@@ -37,7 +37,7 @@ struct DoorlatchReport :public Settable{
     timer() {
   }
 
-  int numParams()const {
+  unsigned numParams()const {
     return 3;
   }
   bool setParams(ArgSet&args);
