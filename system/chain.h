@@ -171,7 +171,7 @@ public:
    *  @deprecated needs test! had bug so must not have been compiled, ever? */
   bool relocate(unsigned from, unsigned to){
     if(has(from)&&has(to)) {
-      int dir = to - from;//positive if moving towards end
+      int dir = int(to) - int(from);//positive if moving towards end
       if(dir==0) {
         return false;
       }

@@ -3,7 +3,7 @@
 #include "minimath.h"
 #include <cmath>
 
-//iteration ranges:
+//iteration ranges:  todo:1 lambda versions
 #define forSize(si) for(unsigned si = size; si-->0;)
 #define forP(si) for(unsigned si = p.size; si-->0;)
 #define forTriangle(cl) for(unsigned cl = rw + 1; cl-->0;)

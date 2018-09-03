@@ -122,6 +122,7 @@ public:
   bool autocreate;
 
   StoredGroup(Storable &node) : Stored(node), autocreate(false){
+    node.isOrdered=true;//until we find a counterexample for this.
     if(node.setType(Storable::Wad)) { //needed in case group is presently empty, so that proper change watching is set up.
       dbg("Empty group?");
     }

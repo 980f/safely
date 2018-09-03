@@ -33,7 +33,7 @@ public:
 public:
   Column solution;
   /** @returns df()+1 if all goes well, <df on failures */
-  int numFit;
+  unsigned numFit;
 
   LLSQcomputer(unsigned numCoeff);
 

@@ -71,7 +71,7 @@ using namespace sigc;
 static unsigned numericalName(TextKey name){
   if(name[0]=='#') {
     bool impure(true);
-    unsigned which = toDouble(&name[1], &impure);
+    unsigned which = toIndex(&name[1], &impure);
     if(impure) {
       return BadIndex;
     }
