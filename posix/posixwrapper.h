@@ -28,8 +28,8 @@ public: //so that we can merge errors from functions called outside of the objec
     return !failed(zeroorminus1);
   }
 
-  bool isOk() const noexcept {
-    return errornumber==0;
+  bool isOk(bool againIsOk=true) const noexcept {
+    return errornumber==0 || (againIsOk&&errornumber==EAGAIN);
   }
 
   /** @returns whether last error was just some variant of 'try again later' */
