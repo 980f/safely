@@ -119,7 +119,7 @@ public:
 #define ConnectGroot(varname,...)  varname(Storable::Groot( # varname ), ## __VA_ARGS__)
 
 /** for usage as filter: sigc::bind(&byName, sigc::ref(name)) */
-template<class Groupie> bool byName(const TextKey &name, const Groupie & /*child*/, const TextValue &seeking){
+template<class Groupie> bool byName(const TextKey &name, const Groupie & /*child*/, const Text &seeking){
   return seeking == name;
 }
 

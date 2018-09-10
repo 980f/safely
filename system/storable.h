@@ -14,9 +14,6 @@
 #include "textpointer.h"
 #include "numericalvalue.h"
 
-//class for text value storage.
-typedef Text TextValue;
-
 /**
  * non-volatile key-value storage and transport mechanism.
  * The key is text and is non-mutable from outside the class.
@@ -95,7 +92,7 @@ protected:
   /** value if type is numeric or enum */
   NumericalValue number;
   /** value if type is textual or enum, also used for class diagnostics */
-  TextValue text;
+  Text text;
 protected: //if you need access add a method
   /** used primarily for debugging, don't have to unwind stack to discover source of a wtf herein. */
   Storable *parent;
@@ -118,7 +115,7 @@ private:
   /** a piece of constructor. @param name is node name */
   Storable &precreate(TextKey name);
 public:
-  //had to change to Text vs saving a pointer when file loading comes first, else the file content gets ripped out from under us and we are pointing to reclaimable heap. It still is a good idea to not rename nodes, unless perhaps the name is empty.
+  /** probably not a good idea to change this when running. */
   Text name;//gave up on const-ness so that we can feed debug info into otherwise unnamed items.
   /** @deprecated we really want node names to be constant, it is bad practice to pass information via name instead of value.
    * the node editor is the only entity which can justify doing that, as you are trying to fix a file. We can add launching nano to that gui, so that we know to reload the file over the node when nano returns.

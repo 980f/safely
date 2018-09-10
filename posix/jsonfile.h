@@ -13,6 +13,7 @@ public:
 public:
   JsonFile(Storable &node);
   int loadFile(Cstr thename);
+
   bool printOn(Fildes &alreadyOpened,unsigned indent=0, bool showVolatiles=false);
   bool printOn(Cstr somefile, unsigned indent=0, bool showVolatiles=false);
   Cstr originalFile();
