@@ -30,6 +30,7 @@ bool isNormal(double d){
   return std::isnormal(d);
 }
 
+
 #else // ifdef __linux__
 //firmware platform didn't have a useful limits.h so ...
 static int64_t InfPattern = 0x7FFLL << 52;
@@ -52,6 +53,10 @@ bool isNormal(double d){//mimicing std::isnormal which means 'is fully normalize
 }
 
 #endif // ifdef __linux__
+
+bool isDecent(double d){
+  return d==0.0 || isNormal(d);
+}
 
 const u32 Decimal1[] = {
   1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000

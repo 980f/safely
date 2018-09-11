@@ -28,6 +28,9 @@ bool isNormal(double d);
 /** is not a value */
 bool isSignal(double d);
 
+/** is either 0 or not a nan. */
+bool isDecent(double d);
+
 /** Note: 'signbit' is a macro in math.h that pertains only to floating point arguments
  * @returns sign of operand, and converts operand to its magnitude, MININT(0x800...) is still MININT and must be interpreted as unsigned to work correctly
  */
@@ -113,7 +116,7 @@ template<typename Integer,typename Inttoo> Integer quanta(Integer num, Inttoo de
 
 /** protect against garbage in (divide by zero) note: 0/0 is 1*/
 inline double ratio(double num, double denom){
-  if(denom == 0) { //pathological case
+  if(denom == 0) { //#exact compare for pathological case
     return num; //attempt to make 0/0 be 1 gave us 1.0 cps for unmeasured spectra  may someday return signed inf.
   }
   return num / denom;
@@ -121,7 +124,7 @@ inline double ratio(double num, double denom){
 
 /** protect against garbage in (divide by zero) note: 0/0 is 0, at one time this returned 1 for that.*/
 inline float ratio(float num, float denom){
-  if(denom == 0) { //pathological case
+  if(denom == 0) { //#exact compare for pathological case
     return num;//may someday return signed inf.
   }
   return num / denom;

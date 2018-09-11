@@ -6,9 +6,9 @@
 /** dynamic sized multiregression. See class determinator for simple fixed size problems. */
 class MatrixInverter {
 public:
-  typedef std::vector<bool> Gater;
-  typedef std::vector<double> Column;
-  class Matrix:public std::vector<Column> {
+  using Gater = std::vector<bool> ;
+  using Column = std::vector<double>;
+  class Matrix: public std::vector<Column> {
   public:
     Matrix(unsigned size);
   };

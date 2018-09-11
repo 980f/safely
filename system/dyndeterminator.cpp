@@ -2,6 +2,7 @@
 #include "logger.h"
 #include "minimath.h"
 #include <cmath>
+#include "iterate.h"
 
 //iteration ranges:  todo:1 lambda versions
 #define forSize(si) for(unsigned si = size; si-->0;)
@@ -9,26 +10,31 @@
 #define forTriangle(cl) for(unsigned cl = rw + 1; cl-->0;)
 #define withOutDiagonal(cl) for(unsigned cl = rw; cl-->0;)
 
+
 //allocate and 0 init.
 LLSQcomputer::LLSQcomputer(unsigned numCoeff) :
   MatrixInverter(numCoeff),
+  numSamples(~0U),
+  sumy2(Nan),
   ys(size),
-  solution(size){
+  solution(size),
+  numFit(~0U)
+{
   clear();
 }
 
 unsigned LLSQcomputer::numParams() const {
   unsigned ni = 0;
-  for(auto it = ignore.rbegin(); it!=ignore.rend(); ++it) {
-    if(*it == false) {//not ignored
+  ConstVectorIterator<bool>(ignore).foreach([&ni](bool ignoreone){//testing syntax, this is not much of an improvement over std::vector annoyance.
+    if(ignoreone==false){
       ++ni;
     }
-  }
+  });
   return ni;
 } // LLSQcomputer::numParams
 
 bool LLSQcomputer::include(double Y, const Column &correlate){
-  if(Y!=0.0 && !isNormal(Y)) {
+  if(!isDecent(Y)) {
     return false;
   }
   if(correlate.size()<size) {//allow oversized input, allows users to tack on tracer info.
@@ -36,11 +42,11 @@ bool LLSQcomputer::include(double Y, const Column &correlate){
   }
   forSize(rw){
     double x = correlate[rw];
-    if(!isNormal(x)) {
+    if(!isDecent(x)) {
       return false;
     }
   }
-//now we can add sample into the set, don't want to touch any values if any others are unusable.
+//now we can add sample into the set, don't want to touch any values if any others are unusable.(don't merge above logic with similar loops below)
   sumy2 += squared(Y);
   //correlates size must match this size
   forSize(rw) {
