@@ -220,13 +220,15 @@ const Enumerated *Storable::getEnumerizer() const {
 
 //return whether node was altered
 bool Storable::convertToNumber(NumericalValue::Detail subtype){
-  setType(Storable::Numerical);
+  if(setType(Storable::Numerical)){
+    reinterpret();
+    return true;
+  } else
   return number.changeInto(subtype);
 } // Storable::convertToNumber
 
 bool Storable::resolve(bool recursively){
   if(is(Storable::Uncertain)) {
-
     if(false ) {//todo: if needed do a chr scan for numerical appearance.
       return true;
     } else {//it must be text
@@ -234,6 +236,7 @@ bool Storable::resolve(bool recursively){
       return true;
     }
   }
+
   if(recursively && is(Wad)) {
     ForKidsConstly(list){
       list.next().resolve(true);
@@ -425,6 +428,30 @@ void Storable::assignFrom(Storable&other){
   } /* switch */
 } // assignFrom
 
+
+bool Storable::reinterpret(){
+  NumericalValue formerly(number);
+  Cstr units;
+  switch(number.is) {
+  case NumericalValue::Truthy:
+    number = text.cvt<bool>(false,&units);
+    break;
+  case NumericalValue::Counting:
+    number = text.cvt<unsigned>(0,&units);
+    //todo:1 check for KMG units
+    break;
+  case NumericalValue::Whole:
+    number = text.cvt<int>(0,&units);
+    //todo:1 check for KMG units
+    break;
+  case NumericalValue::Floating:
+    number = text.cvt<double>(0.0,&units);
+    //todo:1 report nontrivial units.
+    break;
+  } // switch
+  return !(number==formerly);
+}
+
 void Storable::setImageFrom(TextKey value, Storable::Quality quality){
   if(isTrivial()) { //don't notify or detect change, no one is allowed to watch an uninitialized node
     text = value;
@@ -436,27 +463,8 @@ void Storable::setImageFrom(TextKey value, Storable::Quality quality){
   } else {//has been touched in some fashion
     bool notifeye = false;
     if(type==Numerical) {
-      text = value;   //#bypass change detect here, just recording for posterity
-      Cstr units;
-      NumericalValue formerly(number);
-      switch(number.is) {
-      case NumericalValue::Truthy:
-        number = text.cvt<bool>(false,&units);
-        break;
-      case NumericalValue::Counting:
-        number = text.cvt<unsigned>(0,&units);
-        //todo:1 check for KMG units
-        break;
-      case NumericalValue::Whole:
-        number = text.cvt<int>(0,&units);
-        //todo:1 check for KMG units
-        break;
-      case NumericalValue::Floating:
-        number = text.cvt<double>(0.0,&units);
-        //todo:1 report nontrivial units.
-        break;
-      } // switch
-      notifeye = !(number==formerly);
+      text = value;   //#bypass change detect here, just recording for posterity     
+      notifeye = reinterpret();
     } else {
       notifeye = changed(text, value);
     }

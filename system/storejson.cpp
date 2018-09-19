@@ -37,6 +37,9 @@ Storable *StoreJsonConstructor::applyToChild(Storable *parent, Text &name, bool 
         jsonspew("adding nameless child to %s",parent->name.c_str());
         nova=&parent->addChild(nullptr);//typically an array element, do NOT make all nameless entities the same entity.
       } else {
+        if(name=="baud"){
+          jsonspew("breakpoint name");
+        }
         jsonspew("adding child %s to %s",name.c_str(),parent->name.c_str());
         nova=parent->findChild(name,true);
       }
@@ -52,8 +55,8 @@ Storable *StoreJsonConstructor::applyToChild(Storable *parent, Text &name, bool 
       nova->setImageFrom(value.c_str(),Storable::Parsed);
     } else {//either a trivial value (a formal json defect) or a parent
       if(valueQuoted){//empty quotes were encountered
-        //the following was legacy from when the loader tried to guess types. If we honor null/true/false keywords we need to add a function to storable for that.
-//        nova->setType(Storable::Textual);//#_# all we really want to signal here is 'not a keyword'
+        jsonspew("node %s set value to empty string",nova->name.c_str());
+        nova->setImageFrom("",Storable::Parsed);
       } else {      //inferring wad node
         jsonspew("node %s seems to be a wad",nova->name.c_str());
         nova->setType(Storable::Wad);

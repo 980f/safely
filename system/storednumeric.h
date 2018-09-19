@@ -17,6 +17,7 @@ public:
 
   /**if not already assigned then assign to given value */
   Numeric setDefault(Numeric def) {
+    node.reinterpret();//because the convertTonumber in the constructor doesn't always do waht is expected of it.
     return node.setDefault(def);
   }
 

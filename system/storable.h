@@ -367,6 +367,8 @@ public:
     virtual void remove(const Storable &noob) = 0;
   };
   static Mirror *remote;
+  //parse text into number, gets skipped under some conditions.
+  bool reinterpret();
 }; // class Storable
 
 
