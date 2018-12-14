@@ -12,7 +12,8 @@ SOURCES += \
     $$pidir/inputmonitor.cpp \
     $$pidir/pwm.cpp \
     $$pidir/clockgenerator.cpp \
-    $$pidir/peripheral.cpp
+    $$pidir/peripheral.cpp \
+    $$pidir/i2c.cpp
 
 
 HEADERS += \
@@ -23,3 +24,4 @@ HEADERS += \
     $$pidir/pwm.h \
     $$pidir/clockgenerator.h \
     $$pidir/peripheral.h \
+    $$pidir/i2c.h
