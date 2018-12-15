@@ -193,7 +193,7 @@ extern void testJ(unsigned which);
 //rpi i2c
 #include "SSD1306.h"
 
-SSD1306 hat(128,64,12,true);
+SSD1306 hat({128,64,true,12});
 
 int main(int argc, char *argv[]){
   Text cwd(getcwd(nullptr,0));//we use Text class because it will free what getcwd allocated. Not so critical unless we are using this program to look for memory leaks

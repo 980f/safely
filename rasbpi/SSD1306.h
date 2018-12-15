@@ -1,6 +1,5 @@
 
 
-const unsigned I2C_ADDRESS = 0x3C; //# 011110+SA0+RW - 0x3C or 0x3D
 //  enum Cmd {
 //       SETCOMPINS = 0xDA,
 //      SETLOWCOLUMN = 0x00,
@@ -27,115 +26,250 @@ if set to vertical addressing mode then a natural mapping can be made of increas
 Especially if you Semitic ;)
 To get 4th quadrant such as VGA and all IBM PC adaptors one complements the coordinate, and that is something that the chip itself can help with.
 So on to the frame buffer.
-The I2C interface has a prefix byte compare to the bus protocol. The msbs are used, 0x80 means "there will be multiple commands" and 0x40 "this is data, else command" so 0x80 and 0x00 are commands, 0x40 leads data and there is never a need to 'continue' data.
+The I2C interface has a prefix byte compare to the bus protocol. The msbs are used, 0x80 means "not the last command" and 0x40 "this is data, else command" so 0x80 and 0x00 are commands, 0x40 leads data and there is never a need to 'continue' data.
 
-
+The chip has 64 lines worth of ram regardless of what is attached. When the display is fewer lines one can use that extra ram for things like triple buffering the display.
 */
-class SSD1306 {
 
-public:
-  const unsigned segments;
-  const unsigned commons;
-  const bool swcapvcc;
-private:
-  unsigned pinIndex;//,unsigned af,unsigned pull);//make a gpio
-  Dout resetpin;
-  I2C dev;
-  unsigned pages;
-  u8 *buffer;
+/** doing our own to ensure library smallness*/
+struct PixelCoord {
+  unsigned x[2];
+  PixelCoord(unsigned x0=0, unsigned x1=0) {
+    x[0] = x0;
+    x[1] = x1;
+  }
+  // default copy and assignment work just fine
 
-
-  /** code is the value for the first byte. bits is the field width, bytes is the number of command bytes, 1,2,3 are allowed but not checked, arf is an additional bit shift, for when the lsb of a field is not the lsb of the operand byte. */
-  template <unsigned code, unsigned bits = 1, unsigned bytes = 1, unsigned arf = 0> struct Register {
-    u8 cmd[1+bytes];//0th byte is 0 for single command, 0x80 if it is followed by another, will abuse other bit as 'dirty'
-    Register(){
-      operator =(0);
+  /** move one step along the given access in the given direction, ignoring the magnitude of the direction. For direction==0 don't move at all.*/
+  PixelCoord &step(bool which, int direction) {
+    if (direction == 0) {
+      return *this;
     }
-    enum {
-      mask = ((1 << bits) - 1),  // ones where operand bits are allowed
-      aligner = 8 * (bytes-1) + arf, // little endian machine, must nominally reverse byte order
-    };
+    x[which] += direction < 0 ? -1 : 1;
+  }
+};
 
-    void operator=(unsigned value) {
-      cmd[0]=1;//dirtybit
-      unsigned junk=code | (((value & ~mask) << aligner));
-      cmd[1]=junk;
-      cmd[2]=junk>>8;
+class SSD1306 {
+public:
+  /** attributes of the display */
+  struct Display {
+    unsigned segments = 128;
+    unsigned commons = 32;
+    bool swcapvcc = true;
+
+    unsigned resetPin;
+    unsigned i2c_bus = 1;    // 1 is rPi default, other is hat id interface which is to be avoided for some unknown reason.
+    bool altaddress = false; // modules have a usually hardwired address bit. Theoretically two controllers could be used for a 128 X 128 display.
+    /** the number of 'pages' of display ram. We are using terms from the manual even if they are stilted */
+    unsigned pages() const { return (commons + 7) / 8; }
+  };
+
+  /** program memory with image of what will be put onto display.
+   * The ram is dynamically allocated. This will be reworked with Buffer and Block from safely once arduino versions are tested.
+   * Extra bytes are allocated at each end of the frame buffer for use by the I2C interface code.
+*/
+  struct FrameBuffer {
+    const unsigned pixwidth;
+    const unsigned pixheight;
+    const unsigned stride;
+    u8 *const fb;
+
+    FrameBuffer(unsigned pixwidth, unsigned pixheight)
+      : pixwidth(pixwidth), pixheight(pixheight), // bounds
+        stride((pixwidth + 7) / 8),               // chunkiness
+        fb(new u8[2 + stride * pixheight]) {
+      //#nada
+    }
+
+    ~FrameBuffer() { delete[] fb; }
+  };
+
+  /** maintains offset and bit picker in tandem with logical pixel coordinates.
+Stepping out of bounds results in writes being stifled, algorithms can be sloppy around the edges and not suffer from truncation. */
+  class Pen {
+  public:
+    bool ink;
+    PixelCoord logic;
+
+  private:
+    u8 mask;
+    unsigned offset;
+    FrameBuffer &fb;
+
+  public:
+    Pen(FrameBuffer &fb):fb(fb){
+      jumpto({0,0});
+    }
+
+    void splot() {
+      if (logic.x[1] < fb.pixheight && logic.x[0] < fb.pixwidth) {
+        if (ink) {
+          fb.fb[offset] |= mask;
+        } else {
+          fb.fb[offset] &= ~mask;
+        }
+      }
+    }
+
+    void jumpto(PixelCoord &&random){
+      logic=random;
+      offset=1+fb.stride*logic.x[1]+logic.x[0]/8;
+      mask=1<<(logic.x[0]&7);
+    }
+
+    void step(bool which, int direction) {
+      logic.step(which, direction);
+      if (which) {
+        offset += direction < 0 ? -fb.pixheight : fb.pixheight;
+      } else {
+        if (direction != 0) {
+          if (direction < 0) {
+            mask >>= 1;
+            if (mask == 0) {
+              mask = 0x80;
+              --offset;
+            }
+          } else {
+            mask <<= 1;
+            if (mask == 0) {
+              mask = 0x01;
+              ++offset;
+            }
+          }
+        }
+      }
+    }
+
+    /** todo: discuss whether we should mark the pixel before we step vs. after */
+    void draw(bool which, int direction) {
+      step(which, direction);
+      splot();
     }
   };
 
 public:
-  //address pointer for refresh.
-  Register<0x21, 6, 3, 8> windowSeg; // actuall 2 6 bit operands each in own byte but the first is always 0 for our use so we can cheat.
-  Register<0x22, 3, 3, 8> windowCom; // 0=horizontal like Epson printer, 1=Vertical the most natural, 2= not reasonable for serial interface.
-  Register<0xA4> allOn;        // 1= all pixels lit
-  Register<0xA6> inverseVideo; // inverts data on way ito the video buffer, doesn't alter existing image
-  Register<0xAE> display;      // 1= show data
-  Register<0x81, 8, 2> contrast;
+  const Display oled;
 
-  Register<0x2E> scrolling; //+1 to enable else off
+private:
+  Dout resetpin;
+  I2C dev;
+  unsigned pages;
 
-  Register<0xD5, 8, 2> osc;
-  Register<0xD9, 8, 2> precharge;
-  Register<0xDB, 3, 2, 4> vcomh;
-  Register<0xA8, 6, 2> muxratio; // minimum of 15 not enforced, resets to all ones==63
-  Register<0x2c0, 2, 2, 4> compins;
-  Register<0x8C> chargePump; //!!WAG, hard coded 8D and no matching document.
-//viewport controls
-  Register<0x20, 2, 2> memoryMode;   // 0=horizontal like Epson printer, 1=Vertical the most natural, 2= not reasonable for serial interface.
-  Register<0xA0> hflip;
-  Register<0xC0, 4, 1, 3> vflip;
-  Register<0xD3, 6, 2> displayOffset;
-  Register<0x40, 6, 1> startLine;
+  /** code is the value for the first byte. bits is the field width, bytes is the number of command bytes, 1,2,3 are allowed but not checked, arf is an additional bit shift, for when the lsb of a field is not the lsb of the operand byte. */
+  struct Reg {
+    unsigned pattern;
 
+    const unsigned code;
+    const unsigned bits;
+    const unsigned bytes;
+    const unsigned arf;
 
-  /** typically 128 segments and 32 or 64 commons.
-rst is the iopin designator for the hardware reset, i2c-bus picks an interface, i2c_address is one of two supported by the chip, should reduce to a boolean. */
-  SSD1306(unsigned segments, unsigned commons, unsigned rst, bool swcapvcc,unsigned i2c_bus = 1, unsigned i2c_address = I2C_ADDRESS)
-    : segments(segments), commons(commons),
-      pinIndex(rst), // will need to remap value somewhere
-      swcapvcc(swcapvcc),
-      dev(i2c_bus, i2c_address),
-      pages(commons / 8),  //maydo: guard against a non multiple of 8 commons, also idiot check other numbers.
-      buffer(new u8[segments * pages]) {}
+    const unsigned mask;    // = ((1 << bits) - 1);  // ones where operand bits are allowed
+    const unsigned aligner; // = 8 * (bytes-1) + arf; // little endian machine, must nominally reverse byte order
 
-  ~SSD1306() { delete[] buffer; }
+    Reg(unsigned code, unsigned bits = 1, unsigned bytes = 1, unsigned arf = 0) : code(code), bits(bits), bytes(bytes), arf(arf), mask((1 << bits) - 1), aligner(8 * (bytes - 1) + arf) {
+      operator=(0); // init pattern, handy for testing code.
+    }
+
+    /** masks value into legal range and shifts to where it belongs */
+    Reg &operator=(unsigned value) {
+      pattern = code | (((value & ~mask) << aligner));
+      return *this;
+    }
+
+    /** caller ensures that this won't overflow by prechecking that there is room for the bytes of this+1*/
+    u8 *operator()(u8 *buffer)const {
+      *buffer++ = 0x80; // mark all as continuations, caller will clear bit on first byte
+      *buffer++ = pattern;
+      if (bytes > 1) {
+        *buffer++ = pattern >> 8;
+      }
+      if (bytes > 2) {
+        *buffer++ = pattern >> 16;
+      }
+      if (bytes > 3) {
+        *buffer++ = pattern >> 24;
+      }
+      return buffer;
+    }
+  };
+
+public:
+  // address pointer for refresh.
+  Reg windowSeg = {0x21, 6, 3, 8}; // actuall 2 6 bit operands each in own byte but the first is always 0 for our use so we can cheat.
+  Reg windowCom = {0x22, 3, 3, 8}; // 0=horizontal like Epson printer, 1=Vertical the most natural, 2= not reasonable for serial interface.
+  Reg allOn = {0xA4};              // 1= all pixels lit
+  Reg inverseVideo = {0xA6};       // inverts data on way ito the video buffer, doesn't alter existing image
+  Reg display = {0xAE};            // 1= show data
+  Reg contrast = {0x81, 8, 2};
+  Reg scrolling = {0x2E};       //+1 to enable else off
+  Reg osc = {0xD5, 8, 2};       // actually two nibbles, high is osc freq, starts as 8, low is divide-1
+  Reg precharge = {0xD9, 8, 2}; // actually two nibbles, high is phase 2 of timing low nibble phase 1.
+  Reg vcomh = {0xDB, 3, 2, 4};  // some kind of reset trigger maybe?
+  Reg muxratio = {0xA8, 6, 2};  // minimum of 15 not enforced, resets to all ones==63
+  Reg compins = {0x2c0, 2, 2, 4};
+  Reg something = {0x8C};        //!!WAG, hard coded 8D and no matching document.
+                                 // viewport controls
+  Reg memoryMode = {0x20, 2, 2}; // 0=horizontal like Epson printer, 1=Vertical the most natural, 2= not reasonable for serial interface.
+  Reg hflip = {0xA0};
+  Reg vflip = {0xC0, 4, 1, 3}; // C0 or C8
+  // DA.5 swaps screen halves, DA.4 is "interleave"
+  Reg displayOffset = {0xD3, 6, 2};
+  Reg startLine = {0x40, 6, 1};
+
+  /** you can init inline with braces: {128,64 and so on}*/
+  SSD1306(Display &&displaydefinition) : oled(displaydefinition), dev(oled.i2c_bus, 0x3C + oled.altaddress), pages(oled.pages()) {}
 
   /** tell the OS we want to use this hardware */
   bool connect() {
-    resetpin.beGpio(pinIndex,0,1);//deferred to ensure gpio access mechanism is fully init
-    return dev.connect(); //just gets permissions and such, doesn't hog the master.
+    resetpin.beGpio(oled.resetPin, 0, 1); // deferred to ensure gpio access mechanism is fully init
+    return dev.connect();                 // just gets permissions and such, doesn't hog the master.
   }
 
   /** write one byte of display data. */
   bool data(unsigned pixchunk) {
-    unsigned pattern = 0x40 | (pixchunk << 8);
-    dev.write(reinterpret_cast<u8*>(&pattern), 2); //+1 for the C0/D byte
+    u8 cmd[2];
+    cmd[0] = 0x40;
+    cmd[1] = pixchunk;
+    return dev.write(cmd, 2);
   }
 
+  bool send(const Reg &reg) {
+    u8 cmd[reg.bytes + 1];
+    reg(cmd);
+    cmd[0] = 0; // there is just one.
+    return dev.write(cmd, sizeof(cmd));
+  }
+
+  /** configure the display based on values stored via the constructor */
   bool begin() {
-    //        """Initialize display."""
-    //        # Reset and initialize display.
     reset();
-    display = 0;
+    send(display = 0);
+
     osc = 0x80;
-    muxratio = commons - 1;
+    muxratio = oled.commons - 1;
     displayOffset = 0;
     startLine = 0;
-    // looks funky:
-    chargePump = 1;
+    something = 1;
     // page address mode according to values, ignore for now. command(vccmode == EXTERNAL ? 0x10 : 0x14);
     memoryMode = 1; // 980f preference, adafruit likes 0 here.
     hflip = 1;
     vflip = 1;
-    compins = commons >= 64 ? 1 : 0;                            // 0..3
-    contrast = commons >= 64 ? (swcapvcc ? 0xCF : 0x9F) : 0x8F; //?anal excretion
+    compins = oled.commons >= 64 ? 1 : 0;                                 // 0..3
+    precharge = oled.swcapvcc ? 0xF1 : 0x22;                              // is actually two nibbles and neither should be 0
+    vcomh = 4;                                                            // manual offers 0,2,3 as valid setting, the 4 is from adafruit
+    contrast = oled.commons >= 64 ? (oled.swcapvcc ? 0xCF : 0x9F) : 0x8F; //?anal excretion. The value can be set arbitrarily by user so maybe this is an extra param to begin?
 
-    precharge = swcapvcc ? 0xF1 : 0x22; // is actually two nibbles and neither should be 0
-    vcomh = 4;                          // manual offers 0,2,3 as
-    display = 1;
+    // now to pack all of that into one big happy I2C operation:
+    u8 packer[64];                                                                                                                       // arbitrary at first, might cheat and use fb, else determine empirically what is needed, perhaps worst case.
+                                                                                                                                         // send a wad:
+    u8 *end = osc(muxratio(displayOffset(startLine(something(memoryMode(hflip(vflip(compins(precharge(vcomh(contrast(packer)))))))))))); // excuse my lisp ;)
+    packer[0] = 0;
+    dev.write(packer, packer - end);
+
+    send(display = 1);
+    return true;
   }
-
 
   void reset() {
     //        """Reset the display."""
@@ -150,26 +284,34 @@ rst is the iopin designator for the hardware reset, i2c-bus picks an interface, 
     resetpin = 1;
   }
 
-  //        """Write display buffer to physical display."""
-
-  void refresh() {
+  void refresh(const FrameBuffer &fb) {
     // set gdram pointer to 0, which appears to be a side effect of these two commands. Actually the implied 0's are the pointer set, but the command insists we also resend the limits.
-    windowCom = pages - 1;
-    windowSeg = segments - 1;
-    //        # Write buffer data.
-    for (unsigned i = 0; i < sizeof(buffer); i += 16) { // 16 at a time
-      dev.write(buffer + i, 16);                        // todo: prefix with 0x40
+    windowCom = fb.stride - 1;
+    windowSeg = fb.pixheight - 1;
+
+#ifdef __linux__
+    // 1st attempt: send the whole nine yards, hence adding an extra byte to fb allocator.
+    fb.fb[0] = 0x40; // we require the user allocate this byte to us. If they fail to then the display is shifted and they will figure that out eventually.
+    dev.write(fb.fb, 1 + fb.stride * fb.pixheight);
+#else
+    const unsigned WireLimit = 32; // to stay compatibile with arduinos we must limit a transmission to 32 bytes including the 0x40 leader.
+    unsigned bytesPer = 24;        //= (WireLimit-1) - ((WireLimit-1)%pages); //makes ripping not quite so bad, breathing instead of tearing.
+    // could be 28 on X32 display.
+    for (unsigned i = 0; i < length; i += bytesPer) { // 16 at a time
+      Wire.beginTransaction();
+      Wire.write(0x40);
+      Wire.write(fb.fb + i, bytesPer);
+      Wire.endTransaction();
     }
+#endif
   }
 
-  //one user can't stand for this to take longer than 15ms (ESP8266 will potentially lose wifi state or data)
-  void eachMilli(){
-    //reset prepare
-    //reset active
-    //reset take hold
+  // one user can't stand for this to take longer than 15ms (ESP8266 will potentially lose wifi state or data)
+  void eachMilli() {
+    // reset prepare
+    // reset active
+    // reset take hold
 
-    //send init stuff
-
+    // send init stuff
   }
-
 };
