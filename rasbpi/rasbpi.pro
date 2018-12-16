@@ -13,7 +13,8 @@ SOURCES += \
     $$pidir/pwm.cpp \
     $$pidir/clockgenerator.cpp \
     $$pidir/peripheral.cpp \
-    $$pidir/i2c.cpp
+    $$pidir/i2c.cpp \
+    $$pidir/SSD1306.cpp
 
 
 HEADERS += \
@@ -24,4 +25,5 @@ HEADERS += \
     $$pidir/pwm.h \
     $$pidir/clockgenerator.h \
     $$pidir/peripheral.h \
-    $$pidir/i2c.h
+    $$pidir/i2c.h \
+    $$pidir/SSD1306.h

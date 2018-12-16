@@ -1,37 +1,20 @@
 
-
-//  enum Cmd {
-//       SETCOMPINS = 0xDA,
-//      SETLOWCOLUMN = 0x00,
-//      SETHIGHCOLUMN = 0x10,
-
-//      COLUMNADDR = 0x21,
-//      PAGEADDR = 0x22,
-
-/////# Scrolling constants
-//      SET_VERTICAL_SCROLL_AREA = 0xA3,
-//      RIGHT_HORIZONTAL_SCROLL = 0x26,
-//      LEFT_HORIZONTAL_SCROLL = 0x27,
-//      VERTICAL_AND_RIGHT_HORIZONTAL_SCROLL = 0x29,
-//      VERTICAL_AND_LEFT_HORIZONTAL_SCROLL = 0x2A,
-
-//};
-
 #include "dout.h" //reset pin
-#include "i2c.h"
+#include "i2c.h"  //safely wrapper, not the OS's
 
 /**
 
 if set to vertical addressing mode then a natural mapping can be made of increasing bit address across the 32/64 dimension from top to bottom or right to left. This could be called 3rd quandrant addressing which while uncommon in CRT controllers works just as well as 1st or 4th quadrant attitudes.
-Especially if you Semitic ;)
+Especially if you are Semitic and laying on your side ;)
 To get 4th quadrant such as VGA and all IBM PC adaptors one complements the coordinate, and that is something that the chip itself can help with.
 So on to the frame buffer.
-The I2C interface has a prefix byte compare to the bus protocol. The msbs are used, 0x80 means "not the last command" and 0x40 "this is data, else command" so 0x80 and 0x00 are commands, 0x40 leads data and there is never a need to 'continue' data.
+The I2C interface has a prefix byte compare to the '8080' bus protocol.
+The msbs are used, 0x80 means "not the last command" and 0x40 "this is data, else command" so 0x80 and 0x00 are commands, 0x40 leads data and there is never a need to 'continue' data.
 
-The chip has 64 lines worth of ram regardless of what is attached. When the display is fewer lines one can use that extra ram for things like triple buffering the display.
+The chip has 64 lines worth of ram regardless of what is attached. When the display is fewer lines one can use that extra ram for things smooth scrolling, one can alter the start-of-screen address.
 */
 
-/** doing our own to ensure library smallness*/
+/** doing our own drawing classes to ensure library smallness, and to expedite axis swapping */
 struct PixelCoord {
   unsigned x[2];
   PixelCoord(unsigned x0 = 0, unsigned x1 = 0) {
@@ -46,47 +29,59 @@ struct PixelCoord {
       return *this;
     }
     x[which] += direction < 0 ? -1 : 1;
+    return *this;
   }
 };
 
+/** combined class of display controls and namespace for rendering algorithms customized for the structure of the frame buffer. */
 class SSD1306 {
 public:
   /** attributes of the display */
   struct Display {
+    // this is the coordinate that is 1:1 with pixels, usually horizontal or X
     unsigned segments = 128;
+    // this is the coordinate that is managed 8 at a time (whether you like that or not), usually vertical or Y
     unsigned commons = 32;
+    // this is some power supply configuration, the false is 'external'. The name suggests the chip has a charge pump to generate voltage needed by the OLED.
     bool swcapvcc = true;
 
+    // for easiest control it is good to have a hard reset into the device. This number depends upon platform, you may have to do some research to figure out what your actual pin is.
     unsigned resetPin;
-    unsigned i2c_bus = 1;    // 1 is rPi default, other is hat id interface which is to be avoided for some unknown reason.
+    // on the RPi there is more than one I2C port, ditto for some arduinos.
+    unsigned i2c_bus = 1; // 1 is rPi default, other is hat id interface which is to be avoided for some unknown reason.
+    // there are two I2C addresses the chip supports. This matches the "SA0" pin.
     bool altaddress = false; // modules have a usually hardwired address bit. Theoretically two controllers could be used for a 128 X 128 display.
-    /** the number of 'pages' of display ram. We are using terms from the manual even if they are stilted */
+
+    /** the number of 'pages' of display ram used. We are using terms from the manual even if they are stilted */
     unsigned pages() const { return (commons + 7) / 8; }
   };
 
-  /** program memory with image of what will be put onto display.
-   * The ram is dynamically allocated. This will be reworked with Buffer and Block from safely once arduino versions are tested.
-   * Extra bytes are allocated at each end of the frame buffer for use by the I2C interface code.
+  /** processor memory with image of what will be put onto display.
+   *
+
    * coordinates on the chip are COMmmons, the narrower range, and SEGments the wider range.
    */
   struct FrameBuffer {
     const unsigned comspan;
     const unsigned segspan;
+    // bytes per increment of the seg coordinate.
     const unsigned stride;
-    u8 *const fb;
+    const unsigned databytes;
+    // The ram is dynamically allocated. This will be reworked with Buffer and Block from safely once arduino versions are tested.
+    u8 *fb;
 
-    FrameBuffer(unsigned pixwidth, unsigned pixheight = 128)
-      : comspan(pixwidth), segspan(pixheight), // bounds
-        stride((pixwidth + 7) / 8),            // chunkiness
-        fb(new u8[2 + stride * pixheight]) {
-      //#nada
-    }
+    FrameBuffer(unsigned pixwidth, unsigned pixheight = 128);
 
     ~FrameBuffer() { delete[] fb; }
+
+    void clear(bool ink=false){
+      memset(fb+1,ink?255:0,databytes);//leave control bytes unchanged.
+    }
   };
 
-  /** maintains offset and bit picker in tandem with logical pixel coordinates.
-Stepping out of bounds results in writes being stifled, algorithms can be sloppy around the edges and not suffer from truncation. */
+  /** maintains offset and bit picker in tandem with logical pixel coordinates. This is for slower processors, especially ones with no native divide instruction.
+   * Even on systems with a divide instruction it might be slower than this.
+   * Stepping out of bounds results in writes being stifled, algorithms can be sloppy around the edges and not suffer from truncation. */
   class Pen {
   public:
     bool ink;
@@ -100,47 +95,16 @@ Stepping out of bounds results in writes being stifled, algorithms can be sloppy
   public:
     Pen(FrameBuffer &fb) : fb(fb) { jumpto({0, 0}); }
 
-    void splot() {
-      if (logic.x[1] < fb.segspan && logic.x[0] < fb.comspan) {
-        if (ink) {
-          fb.fb[offset] |= mask;
-        } else {
-          fb.fb[offset] &= ~mask;
-        }
-      }
-    }
+    /** set a pixel */
+    void splot();
 
-    void jumpto(PixelCoord &&random) {
-      logic = random;
-      offset = 1 + fb.stride * logic.x[1] + logic.x[0] / 8;//initial 1+ is for the I2C to insert a command at front of buffer before sending it. Presumes we send all 1k in one command.
-      mask = 1 << (logic.x[0] & 7);
-    }
+    /** move coordinates, but don't alter image */
+    void jumpto(PixelCoord &&random);
 
     /** just move one cell in any of 8 directions, with a 9th option to not move at all.
      * we'll add step0 and step1 functions later that always step but just along the buitin-to-name axis.
      */
-    void step(bool which, int direction) {
-      logic.step(which, direction);
-      if (which) {
-        offset += direction < 0 ? -fb.segspan : fb.segspan;
-      } else {
-        if (direction != 0) {
-          if (direction < 0) {
-            mask >>= 1;
-            if (mask == 0) {
-              mask = 0x80;
-              --offset;
-            }
-          } else {
-            mask <<= 1;
-            if (mask == 0) {
-              mask = 0x01;
-              ++offset;
-            }
-          }
-        }
-      }
-    }
+    void step(bool which, int direction);
 
     /** todo: discuss whether we should mark the pixel before we step vs. after */
     void draw(bool which, int direction) {
@@ -157,42 +121,31 @@ private:
   I2C dev;
   unsigned pages;
 
-  /** code is the value for the first byte. bits is the field width, bytes is the number of command bytes, 1,2,3 are allowed but not checked, arf is an additional bit shift, for when the lsb of a field is not the lsb of the operand byte. */
-  struct Reg {
+  /** A base class so that we can send singles simply via a reference. It can be used to send up to 4 bytes of content to the chip. */
+  struct Register {
     unsigned pattern;
-    // might be able to make this a template again now that we have eliminated pointers to instances.
-    const unsigned code;
-    const unsigned bits;
     const unsigned bytes;
-    const unsigned arf;
+    /** masks value into legal range and shifts to where it belongs */
+    virtual Register &operator=(unsigned value) = 0;
+    Register(unsigned bytes);
+    virtual ~Register()=default;//to stifle warnings
+    /** caller ensures that this won't overflow by prechecking that there is room for the bytes of this+1*/
+    u8 *operator()(u8 *buffer) const;
+  };
 
-    const unsigned mask;    // = ((1 << bits) - 1);  // ones where operand bits are allowed
-    const unsigned aligner; // = 8 * (bytes-1) + arf; // little endian machine, must nominally reverse byte order
+  /** code is the value for the first byte. bits is the field width, bytes is the number of command bytes, 1,2,3 are allowed but not checked, arf is an additional bit shift, for when the lsb of a field is not the lsb of the operand byte. */
+  template <unsigned code, unsigned bits = 1, unsigned numbytes = 1, unsigned arf = 0> struct Reg : public Register {
+    enum {
+      mask = ((1 << bits) - 1),           // ones where operand bits are allowed
+      aligner = 8 * (numbytes - 1) + arf, // little endian machine, must nominally reverse byte order
+    };
 
-    Reg(unsigned code, unsigned bits = 1, unsigned bytes = 1, unsigned arf = 0) : code(code), bits(bits), bytes(bytes), arf(arf), mask((1 << bits) - 1), aligner(8 * (bytes - 1) + arf) {
-      operator=(0); // init pattern, handy for testing code.
-    }
+    Reg() : Register(numbytes) {}
 
     /** masks value into legal range and shifts to where it belongs */
-    Reg &operator=(unsigned value) {
+    Register &operator=(unsigned value) {
       pattern = code | (((value & ~mask) << aligner));
       return *this;
-    }
-
-    /** caller ensures that this won't overflow by prechecking that there is room for the bytes of this+1*/
-    u8 *operator()(u8 *buffer) const {
-      *buffer++ = 0x80; // mark all as continuations, caller will clear bit on first byte
-      *buffer++ = pattern;
-      if (bytes > 1) {
-        *buffer++ = pattern >> 8;
-      }
-      if (bytes > 2) {
-        *buffer++ = pattern >> 16;
-      }
-      if (bytes > 3) {
-        *buffer++ = pattern >> 24;
-      }
-      return buffer;
     }
   };
 
@@ -207,144 +160,61 @@ private:
 
 private: // expose only the ones that make sense, such as contrast, through code that remembers to send the value.
   // once we know which are dynamically used we can ditch most of this via building a struct with bit fields.
-  // address pointer for refresh.
-  Reg windowSeg = {0x21, 6, 3, 8}; // actually 2 6 bit operands each in own byte but the first is always 0 for our use so we can cheat.
-  Reg windowCom = {0x22, 3, 3, 8}; // see above, smaller arguments on page axis.
-  Reg allOn = {0xA4};              // 1= all pixels lit
-  Reg inverseVideo = {0xA6};       // inverts data on way ito the video buffer, doesn't alter existing image
-  Reg display = {0xAE};            // 1= show data
-  Reg contrast = {0x81, 8, 2};     // the adafruit code has strange ideas of suggested values for init.
-  Reg scrolling = {0x2E};          // to enable else off
-  Reg osc = {0xD5, 8, 2};          // actually two nibbles, high is osc freq, starts as 8, low is divide-1
-  Reg precharge = {0xD9, 8, 2};    // actually two nibbles, high is phase 2 of timing low nibble phase 1.
-  Reg vcomh = {0xDB, 3, 2, 4};     // some kind of reset trigger maybe?
-  Reg muxratio = {0xA8, 6, 2};     // minimum of 15 not enforced, resets to all ones==63
-  Reg compins = {0x2c0, 2, 2, 4};
-  Reg something = {0x8C};        //!!WAG, hard coded 8D and no matching document.
-                                 // viewport controls
-  Reg memoryMode = {0x20, 2, 2}; // 0=horizontal like Epson printer, 1=Vertical the most natural, 2= not reasonable for serial interface.
-  Reg hflip = {0xA0};
-  Reg vflip = {0xC0, 4, 1, 3}; // C0 or C8
+
+  Reg<0x21, 6, 3, 8> windowSeg; // address pointer for refresh.
+                                //  Reg windowSeg = {0x21, 6, 3, 8}; // actually 2 6 bit operands each in own byte but the first is always 0 for our use so we can cheat.
+  Reg<0x22, 3, 3, 8> windowCom; // see above, smaller arguments on page axis.
+  Reg<0xA4> allOn;              // 1= all pixels lit
+  Reg<0xA6> inverseVideo;       // inverts data on way ito the video buffer, doesn't alter existing image
+  Reg<0xAE> display;            // 1= show data
+  Reg<0x81, 8, 2> contrast;     // the adafruit code has strange ideas of suggested values for init.
+  Reg<0x2E> scrolling;          // to enable else off
+  Reg<0xD5, 8, 2> osc;          // actually two nibbles, high is osc freq, starts as 8, low is divide-1
+  Reg<0xD9, 8, 2> precharge;    // actually two nibbles, high is phase 2 of timing low nibble phase 1.
+  Reg<0xDB, 3, 2, 4> vcomh;     // some kind of reset trigger maybe?
+  Reg<0xA8, 6, 2> muxratio;     // minimum of 15 not enforced, resets to all ones==63
+  Reg<0x2c0, 2, 2, 4> compins;
+  Reg<0x8C> something;        //!!WAG, hard coded 8D and no matching document.
+                              // viewport controls
+  Reg<0x20, 2, 2> memoryMode; // 0=horizontal like Epson printer, 1=Vertical the most natural, 2= not reasonable for serial interface.
+  Reg<0xA0> hflip;
+  Reg<0xC0, 4, 1, 3> vflip; // C0 or C8
+
+  // this works, but it is rarely an improvement over 'Reg'. With C++20 it might be on par.
+  //  struct  __attribute__((packed)) {
+  //    unsigned opcode:4;
+  //    unsigned flip:1;
+  //    unsigned:0;
+  //  } v {12,0};
+
   // DA.5 swaps screen halves, DA.4 is "interleave"
-  Reg displayOffset = {0xD3, 6, 2};
-  Reg startLine = {0x40, 6, 1};
+  Reg<0xD3, 6, 2> displayOffset;
+  Reg<0x40, 6, 1> startLine;
 
 public:
   /** you can init inline with braces: {128,64 and so on}*/
-  SSD1306(Display &&displaydefinition) : oled(displaydefinition), dev(oled.i2c_bus, 0x3C + oled.altaddress), pages(oled.pages()) {}
+  SSD1306(Display &&displaydefinition);
 
   /** tell the OS we want to use this hardware */
-  bool connect() {
-    resetpin.beGpio(oled.resetPin, 0, 1); // deferred to ensure gpio access mechanism is fully init
-    return dev.connect();                 // just gets permissions and such, doesn't hog the master.
-  }
-
-  /** write one byte of display data at hardware byte cursor. Should not be deemed useful.*/
-  bool data(unsigned pixchunk) {
-    u8 cmd[2];
-    cmd[0] = 0x40;
-    cmd[1] = pixchunk;
-    return dev.write(cmd, 2);
-  }
+  bool connect();
 
   /** send a solitary command.*/
-  bool send(const Reg &reg) {
-    u8 cmd[reg.bytes + 1];
-    reg(cmd);
-    cmd[0] = 0; // there is just one.
-    return dev.write(cmd, sizeof(cmd));
-  }
+  bool send(const Register &reg, bool asdata = false);
 
   /** configure the display based on values stored via the constructor */
-  void begin() {
-    reset();
-    // adafruit disabled the display, but so does reset. Perhaps that was incase there was no reset pin in some mechanical arrangements.
-  }
+  void begin();
 
-  void setContrast(unsigned bytish) { send(contrast = bytish); }
+  void setContrast(unsigned bytish);
 
-  void refresh(const FrameBuffer &fb) {
-    // set gdram pointer to 0, which appears to be a side effect of these two commands. Actually the implied 0's are the pointer set, but the command insists we also resend the limits.
-    windowCom = fb.stride - 1;
-    windowSeg = fb.segspan - 1;
-
-#ifdef __linux__
-    // 1st attempt: send the whole nine yards, hence adding an extra byte to fb allocator.
-    fb.fb[0] = 0x40; // we require the user allocate this byte to us. If they fail to then the display is shifted and they will figure that out eventually.
-    dev.write(fb.fb, 1 + fb.stride * fb.segspan);
-#else
-    const unsigned WireLimit = 32; // to stay compatibile with arduinos we must limit a transmission to 32 bytes including the 0x40 leader.
-    unsigned bytesPer = 24;        //= (WireLimit-1) - ((WireLimit-1)%pages); //makes ripping not quite so bad, breathing instead of tearing.
-    // could be 28 on X32 display.
-    for (unsigned i = 0; i < length; i += bytesPer) { // 16 at a time
-      Wire.beginTransaction();
-      Wire.write(0x40);
-      Wire.write(fb.fb + i, bytesPer);
-      Wire.endTransaction();
-    }
-#endif
-  }
+  void refresh(const FrameBuffer &fb);
 
 private:
   // called back via procedure started with reset()
-  void sendInit() {
-    osc = 0x80;
-    muxratio = oled.commons - 1;
-    displayOffset = 0;
-    startLine = 0;
-    something = 1;
-    // page address mode according to values, ignore for now. command(vccmode == EXTERNAL ? 0x10 : 0x14);
-    memoryMode = 1; // 980f preference, adafruit likes 0 here. 1 = 90' rotated 3rd quandrant, fix in Pen class.
-    hflip = 1;      // make these two configurable, or after-the-fact adjustable.
-    vflip = 1;
-    compins = oled.commons >= 64 ? 1 : 0;                                 // 0..3
-    precharge = oled.swcapvcc ? 0xF1 : 0x22;                              // is actually two nibbles and neither should be 0
-    vcomh = 4;                                                            // manual offers 0,2,3 as valid setting, the 4 is from adafruit
-    contrast = oled.commons >= 64 ? (oled.swcapvcc ? 0xCF : 0x9F) : 0x8F; //?anal excretion. The value can be set arbitrarily by user so maybe this is an extra param to begin?
-    display = 1;
-    // now to pack all of that into one big happy I2C operation:
-    u8 packer[64]; // arbitrary at first, might cheat and use fb, else determine empirically what is needed, perhaps worst case.
-   /* send a wad: each passes along a pointer after writing a few bytes with it.*/
-    u8 *last = osc(muxratio(displayOffset(startLine(something(memoryMode(hflip(vflip(compins(precharge(vcomh(contrast(packer)))))))))))); // excuse my lisp ;)
-    u8 *end = display(last);
-    *last = 0; // the above functions prefix the continuation flag, we eliminate that with this line.
-    dev.write(packer, packer - end);
-    // todo: log actual length to see if we can reduce packer's allocation, or abuse the frame buffer and clear screen.
-  }
+  void sendInit();
 
-  void reset() {
-    resetpin = 1;
-    bgdelay = 2; // in case first is short
-    bgact = StartReset;
-  }
+  void reset();
 
   // for when our application is polled by something like an NRF radio chip.
-  //todo: rework with NanoSecond return mechanism once we have that for Arduino.
-  void eachMilli() {
-    switch (bgact) {
-    case Idle:
-      return;
-    case StartReset:
-      if (--bgdelay == 0) {
-        resetpin = 0;
-        bgdelay = 10;
-        bgact = ActiveReset;
-      }
-      return;
-    case ActiveReset:
-      if (--bgdelay == 0) {
-        resetpin = 1;
-        bgdelay = 1;
-        bgact = SendInit;
-      }
-      return;
-    case SendInit:
-      if (--bgdelay == 0) {
-        sendInit();
-        bgact=Idle;
-      }
-      return;
-    }
-
-  }
+  // todo: rework with NanoSecond return mechanism once we have that for Arduino.
+  void eachMilli();
 };
