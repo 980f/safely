@@ -12,7 +12,9 @@ SSD1306::FrameBuffer::FrameBuffer(unsigned pixwidth, unsigned pixheight)
 SSD1306::SSD1306(SSD1306::Display &&displaydefinition) : oled(displaydefinition), dev(oled.i2c_bus, 0x3C + oled.altaddress), pages(oled.pages()) {}
 
 bool SSD1306::connect() {
-  resetpin.beGpio(oled.resetPin, 0, 1); // deferred to ensure gpio access mechanism is fully init
+  if(oled.resetPin!=~0){
+    resetpin.beGpio(oled.resetPin, 0, 1); // deferred to ensure gpio access mechanism is fully init
+  }
   return dev.connect();                 // just gets permissions and such, doesn't hog the master.
 }
 
@@ -24,7 +26,12 @@ bool SSD1306::send(const SSD1306::Register &reg, bool asdata) {
 }
 
 void SSD1306::begin() {
-  reset();
+  if(oled.resetPin!=~0){//initial test hardware doesn't have a reset pin. I wasted my time coding all that timing stuff!
+    reset();
+  } else {
+    sendInit();
+    bgact = Idle;
+  }
   // adafruit disabled the display, but so does reset. Perhaps that was incase there was no reset pin in some mechanical arrangements.
   //the rest of the adafruit equivalent code is in sendInit();
 }

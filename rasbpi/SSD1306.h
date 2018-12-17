@@ -77,6 +77,11 @@ public:
     void clear(bool ink=false){
       memset(fb+1,ink?255:0,databytes);//leave control bytes unchanged.
     }
+
+    u8 &operator()(unsigned page,unsigned segment){
+      return fb[1+page+stride*segment];
+    }
+
   };
 
   /** maintains offset and bit picker in tandem with logical pixel coordinates. This is for slower processors, especially ones with no native divide instruction.
@@ -203,6 +208,16 @@ public:
 
   /** configure the display based on values stored via the constructor */
   void begin();
+  /** @returns whether it can be talked to profitably. False when going through initialization sequence or not configured*/
+  int busy(){
+    if(!dev.isOpen()){
+      return -1;
+    }
+    if(bgact!=Idle){
+      return 1;
+    }
+    return 0;
+  }
 
   void setContrast(unsigned bytish);
 
