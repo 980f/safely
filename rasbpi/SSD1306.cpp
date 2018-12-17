@@ -20,7 +20,7 @@ bool SSD1306::connect() {
 
 bool SSD1306::send(const SSD1306::Register &reg, bool asdata) {
   u8 cmd[reg.bytes + 1];
-  reg(cmd);
+  reg(cmd);//reg's exist to poke their values into a buffer.
   cmd[0] = asdata ? 0x40 : 0;
   return dev.write(cmd, sizeof(cmd));
 }
@@ -61,7 +61,8 @@ void SSD1306::refresh(const SSD1306::FrameBuffer &fb) {
 }
 
 void SSD1306::sendInit() {
-  //    v.flip=1;
+
+#if MassSend ==1
   osc = 0x80;
   muxratio = oled.commons - 1;
   displayOffset = 0;
@@ -76,6 +77,8 @@ void SSD1306::sendInit() {
   vcomh = 4;                                                            // manual offers 0,2,3 as valid setting, the 4 is from adafruit
   contrast = oled.commons >= 64 ? (oled.swcapvcc ? 0xCF : 0x9F) : 0x8F; //?anal excretion. The value can be set arbitrarily by user so maybe this is an extra param to begin?
   display = 1;
+
+
   // now to pack all of that into one big happy I2C operation:
   u8 packer[64];                                                                                                                        // arbitrary at first, might cheat and use fb, else determine empirically what is needed, perhaps worst case.
   /* send a wad: each passes along a pointer after writing a few bytes with it.
@@ -85,6 +88,22 @@ void SSD1306::sendInit() {
   *last = 0; // the above functions prefix the continuation flag, we eliminate that with this line.
   dev.write(packer, end-packer);
   // todo: log actual length to see if we can reduce packer's allocation, or abuse the frame buffer and clear screen.
+#else
+  send(osc = 0x80);
+  send(muxratio = oled.commons - 1);
+  send(displayOffset = 0);
+  send(startLine = 0);
+  send(something = 1);
+  // page address mode according to values, ignore for now. command(vccmode == EXTERNAL ? 0x10 : 0x14);
+  send(memoryMode = 1); // 980f preference, adafruit likes 0 here. 1 = 90' rotated 3rd quandrant, fix in Pen class.
+  send(hflip = 1);      // make these two configurable, or after-the-fact adjustable.
+  send(vflip = 1);
+  send(compins = oled.commons >= 64 ? 1 : 0);                                 // 0..3
+  send(precharge = oled.swcapvcc ? 0xF1 : 0x22);                              // is actually two nibbles and neither should be 0
+  send(vcomh = 4);                                                            // manual offers 0,2,3 as valid setting, the 4 is from adafruit
+  send(contrast = oled.commons >= 64 ? (oled.swcapvcc ? 0xCF : 0x9F) : 0x8F); //?anal excretion. The value can be set arbitrarily by user so maybe this is an extra param to begin?
+  send(display = 1);
+#endif
 }
 
 void SSD1306::reset() {

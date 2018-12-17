@@ -184,15 +184,6 @@ private: // expose only the ones that make sense, such as contrast, through code
   Reg<0x20, 2, 2> memoryMode; // 0=horizontal like Epson printer, 1=Vertical the most natural, 2= not reasonable for serial interface.
   Reg<0xA0> hflip;
   Reg<0xC0, 4, 1, 3> vflip; // C0 or C8
-
-  // this works, but it is rarely an improvement over 'Reg'. With C++20 it might be on par.
-  //  struct  __attribute__((packed)) {
-  //    unsigned opcode:4;
-  //    unsigned flip:1;
-  //    unsigned:0;
-  //  } v {12,0};
-
-  // DA.5 swaps screen halves, DA.4 is "interleave"
   Reg<0xD3, 6, 2> displayOffset;
   Reg<0x40, 6, 1> startLine;
 

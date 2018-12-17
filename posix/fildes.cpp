@@ -243,7 +243,7 @@ bool Fildes::write(const u8 *buf, unsigned len){
   if (isOpen()) {
     if (okValue(lastWrote, ::write(fd, buf, len))) {
       if(traceWrite) {
-        return true;
+        return true;//this is a place to breakpoint on when you want to see every write that works.
       }
       return true;
     }

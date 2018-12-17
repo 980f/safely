@@ -18,8 +18,38 @@
 
 static const u8 bybye[]="Bye Bye!";
 
+
+
 struct BonnetDemo: Application {
-  Din A,B,C,D,L,R,U;
+
+  class ButtonTracker {
+    Din pin;
+  public:
+    bool isPressed=false;
+    const char id;//A,B,C,D,L,R,U;
+    const unsigned pinnum=~0U;
+public:
+
+    ButtonTracker(char id,unsigned pinnum):id(id),pinnum(pinnum){
+      //#do nothing here
+    }
+
+    void connect(){
+      if(pinnum!=~0U){
+        pin.beGpio(pinnum);
+      }
+    }
+
+    bool changed(){
+      return ::changed(isPressed,pin.readpin());
+    }
+
+    operator bool()const{
+      return pin.readpin();
+    }
+  };
+
+  ButtonTracker but[7]={{'A',5},{'B',6},{'C',4},{'D',22},{'L',27},{'R',23},{'U',17}};//
   SSD1306 hat;
   SSD1306::FrameBuffer fb;
 
@@ -32,8 +62,10 @@ struct BonnetDemo: Application {
   fb(64),
   cin("console"),
   cout("console"){
-    cin.preopened(1,false);//let us not close the console, let the OS tend to that.
-    cout.preopened(2,false);
+    cin.preopened(STDIN_FILENO,false);//let us not close the console, let the OS tend to that.
+    cin.setBlocking(false);//since available() is lying to us ...
+    cout.preopened(STDOUT_FILENO,false);
+    cout.setBlocking(false);
     fb.clear(1);
   }
 
@@ -52,8 +84,8 @@ struct BonnetDemo: Application {
   /** like Arduino loop() */
   bool keepAlive() override {
     bool dirty=false;
-
-    if(int incoming=cin.available()){
+    int incoming=cin.available();
+    if(incoming>0){
       u8 cmd[incoming+1];
       cin.read(cmd,incoming);
       cmd[incoming]=0;//guarantee null terminator so we can use naive string routines.
@@ -71,8 +103,12 @@ struct BonnetDemo: Application {
       }
     }
 
-
-
+    for(unsigned pi=countof(but);pi-->0;){
+      ButtonTracker &it(but[pi]);
+      if(it.changed()){
+        dbg("%c is now %d",it.id,it.isPressed);
+      }
+    }
 
     if(!hat.busy()){
       if(flagged(dirty)){
@@ -93,13 +129,10 @@ struct BonnetDemo: Application {
   }
 
   void grabPins(){
-    A.beGpio(5);
-    B.beGpio(6);
-    C.beGpio(4);
-    D.beGpio(22);
-    L.beGpio(27);
-    R.beGpio(23);
-    U.beGpio(17);
+    for(unsigned pi=countof(but);pi-->0;){
+      ButtonTracker &it(but[pi]);
+      it.connect();
+    }
   }
 
 };
