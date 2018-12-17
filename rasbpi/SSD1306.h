@@ -149,7 +149,7 @@ private:
 
     /** masks value into legal range and shifts to where it belongs */
     Register &operator=(unsigned value) {
-      pattern = code | (((value & ~mask) << aligner));
+      pattern = code | ((value & mask) << aligner);
       return *this;
     }
   };

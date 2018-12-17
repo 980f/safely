@@ -12,7 +12,7 @@ SSD1306::FrameBuffer::FrameBuffer(unsigned pixwidth, unsigned pixheight)
 SSD1306::SSD1306(SSD1306::Display &&displaydefinition) : oled(displaydefinition), dev(oled.i2c_bus, 0x3C + oled.altaddress), pages(oled.pages()) {}
 
 bool SSD1306::connect() {
-  if(oled.resetPin!=~0){
+  if(oled.resetPin!=~0U){
     resetpin.beGpio(oled.resetPin, 0, 1); // deferred to ensure gpio access mechanism is fully init
   }
   return dev.connect();                 // just gets permissions and such, doesn't hog the master.
@@ -26,7 +26,7 @@ bool SSD1306::send(const SSD1306::Register &reg, bool asdata) {
 }
 
 void SSD1306::begin() {
-  if(oled.resetPin!=~0){//initial test hardware doesn't have a reset pin. I wasted my time coding all that timing stuff!
+  if(oled.resetPin!=~0U){//initial test hardware doesn't have a reset pin. I wasted my time coding all that timing stuff!
     reset();
   } else {
     sendInit();
@@ -78,11 +78,12 @@ void SSD1306::sendInit() {
   display = 1;
   // now to pack all of that into one big happy I2C operation:
   u8 packer[64];                                                                                                                        // arbitrary at first, might cheat and use fb, else determine empirically what is needed, perhaps worst case.
-  /* send a wad: each passes along a pointer after writing a few bytes with it.*/
+  /* send a wad: each passes along a pointer after writing a few bytes with it.
+ they will get sent right to left, if order is relevant then do follower(precedent(..)*/
   u8 *last = osc(muxratio(displayOffset(startLine(something(memoryMode(hflip(vflip(compins(precharge(vcomh(contrast(packer)))))))))))); // excuse my lisp ;)
-  u8 *end = display(last);
+  u8 *end = display(last); //34 command bytes on 1st run.
   *last = 0; // the above functions prefix the continuation flag, we eliminate that with this line.
-  dev.write(packer, packer - end);
+  dev.write(packer, end-packer);
   // todo: log actual length to see if we can reduce packer's allocation, or abuse the frame buffer and clear screen.
 }
 
@@ -119,7 +120,7 @@ void SSD1306::eachMilli() {
   }
 }
 
-SSD1306::Register::Register(unsigned bytes) : bytes(bytes) {}
+SSD1306::Register::Register(unsigned bytes) : pattern(0),bytes(bytes) {}
 
 u8 *SSD1306::Register::operator()(u8 *buffer) const {
 
