@@ -26,6 +26,7 @@ struct BonnetDemo: Application {
     Din pin;
   public:
     bool isPressed=false;
+    unsigned toggles=0;
     const char id;//A,B,C,D,L,R,U;
     const unsigned pinnum=~0U;
 public:
@@ -36,12 +37,17 @@ public:
 
     void connect(){
       if(pinnum!=~0U){
-        pin.beGpio(pinnum);
+        pin.beGpio(pinnum,0,1);
       }
     }
 
     bool changed(){
-      return ::changed(isPressed,pin.readpin());
+      if(::changed(isPressed,pin.readpin())){
+        ++toggles;
+        return true;
+      } else {
+        return false;
+      }
     }
 
     operator bool()const{
@@ -106,7 +112,7 @@ public:
     for(unsigned pi=countof(but);pi-->0;){
       ButtonTracker &it(but[pi]);
       if(it.changed()){
-        dbg("%c is now %d",it.id,it.isPressed);
+        dbg("%c[%d] is now %d, toggled: %d",it.id,it.pinnum,it.isPressed,take(it.toggles));
       }
     }
 
