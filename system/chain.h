@@ -105,7 +105,7 @@ public:
   /** presizes chain for faster insertions via adding nullptr entries. This violates some of the expectations of other member functions */
   void allocate(unsigned howmany){
     if(howmany>quantity()) {
-      v.resize(howmany,0);//adds null entries, generally not a desirable thing.
+      v.reserve(howmany);//adds null entries, generally not a desirable thing.
     }
   }
 
