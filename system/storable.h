@@ -216,8 +216,8 @@ public:
     return noteQuality(quality,notifeye);
   }
 
-  template<typename Numeric=double> Numeric getNumber() const {
-    return number;
+  template<typename Numeric> Numeric getNumber() const {
+    return number.cast<Numeric>();
   }
 
   /** if no value has been set from parsing a file or program execution then set a value on the node. Defaults are normally set via ConnectChild macro. */
