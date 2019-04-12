@@ -13,10 +13,6 @@ static const char PathSep = '/';
 //this is not a class member so that we don't force pathparser.h on all users:
 static const PathParser::Rules slasher(PathSep,false,true);// '.' gives java property naming, '/' would allow use of filename classes. '|' was used for gtkwrappers' access
 
-#define ONNULLTHIS(arg) if(!this) {return arg;}
-#define ONNULLREF(ref, arg) if(!&ref) {return arg;}
-
-
 /** global/shared root, the 'slash' node for findChild */
 __attribute__((init_priority(200)))
 Storable Storable::Slash("/");//probably should tie this a bit harder into PathSep.
@@ -71,7 +67,7 @@ using namespace sigc;
 static unsigned numericalName(TextKey name){
   if(name[0]=='#') {
     bool impure(true);
-    unsigned which = toDouble(&name[1], &impure);
+    unsigned which = toIndex(&name[1], &impure);
     if(impure) {
       return BadIndex;
     }
@@ -266,9 +262,9 @@ bool Storable::isModified() const {
         return true;
       }
     }
-  //#JOIN
+    JOIN
   case Numerical:
-  //#JOIN
+    JOIN
   case Textual:
     return ChangeMonitored::isModified();
   default:

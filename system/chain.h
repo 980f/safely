@@ -2,6 +2,7 @@
 #define CHAIN_H
 
 #include "safely.h"
+#include "index.h"
 #include <vector>  //an STL class that is dangerous for naive users (as is all of the STL)
 #include <cstring>
 
@@ -171,7 +172,7 @@ public:
    *  @deprecated needs test! had bug so must not have been compiled, ever? */
   bool relocate(unsigned from, unsigned to){
     if(has(from)&&has(to)) {
-      int dir = to - from;//positive if moving towards end
+      int dir = int(to - from);//positive if moving towards end
       if(dir==0) {
         return false;
       }
