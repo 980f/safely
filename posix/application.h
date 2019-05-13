@@ -9,7 +9,7 @@
 class Application: public PosixWrapper {
 protected:
   Indexer<TextKey> arglist;
-    double hz;
+//dregs from early input debouncing attempt?  double hz;
   /** event manager */
   Epoller looper;
 

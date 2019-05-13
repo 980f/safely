@@ -77,6 +77,11 @@ public:
     void clear(bool ink=false){
       memset(fb+1,ink?255:0,databytes);//leave control bytes unchanged.
     }
+
+    u8 &operator()(unsigned page,unsigned segment){
+      return fb[1+page+stride*segment];
+    }
+
   };
 
   /** maintains offset and bit picker in tandem with logical pixel coordinates. This is for slower processors, especially ones with no native divide instruction.
@@ -144,7 +149,7 @@ private:
 
     /** masks value into legal range and shifts to where it belongs */
     Register &operator=(unsigned value) {
-      pattern = code | (((value & ~mask) << aligner));
+      pattern = code | ((value & mask) << aligner);
       return *this;
     }
   };
@@ -179,15 +184,6 @@ private: // expose only the ones that make sense, such as contrast, through code
   Reg<0x20, 2, 2> memoryMode; // 0=horizontal like Epson printer, 1=Vertical the most natural, 2= not reasonable for serial interface.
   Reg<0xA0> hflip;
   Reg<0xC0, 4, 1, 3> vflip; // C0 or C8
-
-  // this works, but it is rarely an improvement over 'Reg'. With C++20 it might be on par.
-  //  struct  __attribute__((packed)) {
-  //    unsigned opcode:4;
-  //    unsigned flip:1;
-  //    unsigned:0;
-  //  } v {12,0};
-
-  // DA.5 swaps screen halves, DA.4 is "interleave"
   Reg<0xD3, 6, 2> displayOffset;
   Reg<0x40, 6, 1> startLine;
 
@@ -203,6 +199,16 @@ public:
 
   /** configure the display based on values stored via the constructor */
   void begin();
+  /** @returns whether it can be talked to profitably. False when going through initialization sequence or not configured*/
+  int busy(){
+    if(!dev.isOpen()){
+      return -1;
+    }
+    if(bgact!=Idle){
+      return 1;
+    }
+    return 0;
+  }
 
   void setContrast(unsigned bytish);
 
