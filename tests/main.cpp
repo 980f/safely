@@ -182,6 +182,31 @@ void showSizes(){
   dbg("Size of minimal functor: %d",sizeof (nullfunctor));
 }
 
+/** testing chained operator() use, as alternative to varargs template */
+class Weird {
+public:
+  Weird(int ){}
+
+  Weird & operator ()(char see){
+    dbg("%c",see);
+    return *this;
+  }
+  Weird & operator ()(unsigned ewe){
+    dbg("%u",ewe);
+    return *this;
+  }
+
+  static int test(){
+    Weird thing(0);
+    char see='A';
+    unsigned ewe=42;
+    thing(see)(ewe);
+
+    Weird(3)('d')(1984U);
+    return 0;
+  }
+};
+
 extern void testJ(unsigned which);
 #include "unicodetester.h"
 #include "numberformatter.h"
@@ -208,18 +233,21 @@ int main(int argc, char *argv[]){
     char group = (*tes++);
     unsigned which = atoi(tes);
     switch(group) {
+    case 'k':
+      Weird::test();
+      break;
     case '%':
       testPrettyPrinter(which);
       break;
     case 'z':
       showSizes();
       break;
-    case 'w': {
+    case 'w':
       FileWriterTester().run(which);
-    } break;
-    case 'f': {
+     break;
+    case 'f':
       FileReaderTester().run(which);
-    } break;
+     break;
     case 'b'://buffer formatting
       testBufferFormatter();
       break;
