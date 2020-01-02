@@ -8,7 +8,7 @@
 
 //compiler specific way to make 'missing break' warnings go away.
 #if __has_cpp_attribute(fallthrough)
-#define JOIN  [[clang::fallthrough]];
+#define JOIN  [[clang::fallthrough]]
 #else
 #define JOIN
 #endif
