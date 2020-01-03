@@ -103,10 +103,11 @@ public:
   }
 
   /** presizes chain for faster insertions via adding nullptr entries. This violates some of the expectations of other member functions */
-  void allocate(unsigned howmany){
+  unsigned allocate(unsigned howmany){
     if(howmany>quantity()) {
       v.reserve(howmany);//adds null entries, generally not a desirable thing.
     }
+    return howmany;
   }
 
   /** @returns whether chain has an entry for @param ordinal. Entry itself might be nullptr if @see allocate was used/*/

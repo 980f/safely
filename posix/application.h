@@ -51,5 +51,7 @@ public: //utilities
   Text hostname();//not static as we record errors
   /** write pid to file. best practice is for that file to be in /tmp so that it evaporates on a crash of the system. */
   static bool writepid(TextKey pidname);
+
+  NanoSeconds * timestamper();
 };
 

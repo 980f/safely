@@ -25,7 +25,7 @@ unsigned NanoSeconds::ms() const noexcept {
   if(signabs()<=0) {
     return 0;
   }
-  unsigned millis = tv_sec;
+  unsigned millis = tv_sec * 1000;
   millis += quanta(tv_nsec,OneMeg);//round any fraction up.
   return millis;
 }
