@@ -3,6 +3,7 @@
 
 #include "fildes.h"
 
+using WatchMarker =unsigned ;
 
 struct FileWatch {
   enum On {
@@ -39,13 +40,13 @@ struct FileWatch {
     Additionally=29,/* Add to the mask of an already existing watch.  */
     JustOnce=31 /* Only send event once.  */
   };
-  //use the above enums with BitWad: BitWad<CloseWrite,Moved,Deleted>::value
-  int wd;
+  //use the above enums with BitWad: BitWad<CloseWrite,Moved,Deleted>::mask
+  WatchMarker wd;
 };
 
 /** the layout of what gets read from a FileWatcher fd. */
 struct FileEvent {
-  int wd;                            /* Watch descriptor */
+  WatchMarker wd;                            /* Watch descriptor */
   uint32_t mask;                     /* Mask describing event */
   uint32_t cookie;                   /* Unique cookie associating related events (for rename(2)) */
   uint32_t len;                      /* Size of name field */
@@ -56,20 +57,26 @@ struct FileEvent {
 };
 
 
-/** a wrapper around inotify calls. */
+/** a wrapper around inotify calls.
+ * One can create a single one of these for all the watching needs of an application.
+ * The handler you provide would have to keep a list of wd/item handler callbacks.
+ */
 class FileWatcher {
-  /** the fd that does the watching */
+  /** the fd that does the watching, created by constructor. */
   Fildes fd;
 public:
   FileWatcher(bool blocking = false);
-  /** for @param mask use BitWad<comma list of enums>::mask */
-  int addWatch (const char *pathname, uint32_t mask);
+  /** @returns handle of some sort, BadIndex on failure.
+   * for @param mask use BitWad<comma list of enums>::mask */
+  WatchMarker addWatch(const char *pathname, uint32_t mask);
   /** remove a watch that just fired off. Handy to stop watching a deleted file.*/
   bool removeWatch(FileEvent &fe);
   /** @returns whether their appears to be a FileEvent pending */
   bool hasEvent();
-  typedef  void (* FileEventHandler)(const FileEvent &);
-  /** process the next FileEvent in the queue. If @param handler is null the event still gets pulled from the queue. */
+  using  FileEventHandler =void * (const FileEvent &);
+  /** process the next FileEvent in the queue. If @param handler is null the event still gets pulled from the queue.
+   * your handler will have to look at a FileEvent.wd and compare that to what addWatch returned.
+*/
   void nextEvent(FileEventHandler *handler);
 };
 

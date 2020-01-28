@@ -1306,7 +1306,7 @@ align_with_tabs                 = false    # false/true
 align_on_tabstop                = false    # false/true
 
 # Whether to left-align numbers
-align_number_left               = false    # false/true
+#?unknown to v66: align_number_left               = false    # false/true
 
 # Whether to keep whitespace not required for alignment.
 align_keep_extra_space          = false    # false/true
@@ -1681,7 +1681,7 @@ mod_remove_empty_return         = true    # false/true
 #
 
 # Try to wrap comments at cmt_width columns
-cmt_width                       = 168        # number
+cmt_width                       = 511        # number
 
 # Set the comment reflow mode (default: 0)
 # 0: no reflowing (apart from the line wrapping due to cmt_width)

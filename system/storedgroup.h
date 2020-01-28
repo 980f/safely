@@ -292,10 +292,8 @@ public:
 
   /** remove something from given place in list. This DELETES the item, beware of use-after-free.*/
   bool removeItem(Groupie &member){
-    if(&member!=nullptr) {
-      return remove(ordinalOf(&member));
-    }
-    return false;
+    ONNULLREF(member,false);//#gtk does this.
+    return remove(ordinalOf(&member));
   }
 
   /** caller better be damned sure the row is the storage node of a Groupie from this group.*/

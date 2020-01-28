@@ -1,5 +1,5 @@
-#ifndef CONTINUEDFRACTIONRATIOGENERATOR_H
-#define CONTINUEDFRACTIONRATIOGENERATOR_H
+#pragma once
+#define CONTINUEDFRACTIONRATIOGENERATOR_H  //(C) 2018-2019 Andy Heilveil, github/980f
 
 /** find a ratio of integers which best matches a floating point number.
  * This is useful for tuning a PWM.
@@ -27,10 +27,12 @@ public:
   /** create one for learning the algorithm*/
   ContinuedFractionRatioGenerator();
 
-  /** create and iterate. By the time this returns it holds the best ratio. */
-  ContinuedFractionRatioGenerator(double ratio,unsigned limit = 0){
-    restart(ratio,limit);
-    best();
+  /** @returns the best integer ratio for @param ratio */
+  static ContinuedFractionRatioGenerator Run(double ratio,unsigned limit = 0){
+    ContinuedFractionRatioGenerator generator;
+    generator.restart(ratio,limit);
+    generator.best();
+    return generator;
   }
 
   /** numerator and denominator will be <limit when iteration stops. for hardware use value should be ((1<<numbits)-1)
@@ -61,4 +63,4 @@ private:
   bool bump(unsigned hk[]);
 }; // class ContinuedFractionRatioGenerator
 
-#endif // CONTINUEDFRACTIONRATIOGENERATOR_H
+

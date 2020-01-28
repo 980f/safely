@@ -58,6 +58,3 @@ void IncrementalFileTransfer::onDone(){
   trace("block: %d/%d \tbytes: %ld/%ld",blockstransferred,blocksexpected,transferred,expected);
 }
 
-IncrementalFileTransfer::~IncrementalFileTransfer(){
-  //#nada, just squelching a gratuitous warning
-}

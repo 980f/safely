@@ -13,7 +13,7 @@ bool nonTrivial(TextKey t){
 }
 
 void denull(TextKey &t){
-  if(t == 0) {
+  if(t == nullptr) {
     t = ""; //hopefully compiler creates a shared one of these empty strings.
   }
 }
