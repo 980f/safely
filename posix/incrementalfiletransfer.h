@@ -24,7 +24,7 @@ public:
 
 public:
   IncrementalFileTransfer(bool reader, Fildes &fd, ByteScanner &buf);
-  virtual ~IncrementalFileTransfer();
+  virtual ~IncrementalFileTransfer()=default;//#just squelching a gratuitous warning
   /** @param amount is file size for read, blocksize for write */
   void prepare(unsigned amount);
   /** actual chunk mover must call this at end of each incremental transfer */

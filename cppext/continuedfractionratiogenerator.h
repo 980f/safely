@@ -28,7 +28,7 @@ public:
   ContinuedFractionRatioGenerator();
 
   /** @returns the best integer ratio for @param ratio */
-  ContinuedFractionRatioGenerator Run(double ratio,unsigned limit = 0){
+  static ContinuedFractionRatioGenerator Run(double ratio,unsigned limit = 0){
     ContinuedFractionRatioGenerator generator;
     generator.restart(ratio,limit);
     generator.best();
