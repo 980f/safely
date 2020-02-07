@@ -140,3 +140,7 @@ bool Application::writepid(TextKey pidname){
   }
   return false;
 }
+
+NanoSeconds *Application::timestamper(){
+  return &looper.eventTime.stopped;
+}

@@ -11,10 +11,19 @@ Logger wtf("WTF");
 
 #define stdf stderr
 
+static NanoSeconds * stamper = nullptr;
+
+void setStamper(NanoSeconds * stamp){
+  stamper = stamp;
+}
+
 void logmessage(const char *prefix,const char *msg,va_list &args,bool moretocome){
   if(msg==nullptr) {//for Logger.flushline, need to implement logging provider.
     fputc('\n', stdf);
     fflush(stdf);
+  }
+  if(stamper){
+    fprintf(stdf,"%6d ",stamper->ms() %1000000);
   }
   if(nonTrivial(prefix)) {
     fputs(prefix,stdf);
