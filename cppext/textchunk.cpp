@@ -59,7 +59,8 @@ TextChunk::operator TextBlock() const noexcept{
 }
 
 TextChunk::TextChunk(const TextBlock &block):
-  block(block), span(){
+  block(block),
+  span(){
   //#nada
 }
 

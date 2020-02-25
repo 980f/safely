@@ -59,6 +59,8 @@ template<class Groupie> class StoredGroup : public Stored {
    */
   sigc::signal<void, bool, unsigned> dependents;
 
+  /** 4debug: only one indexer can rationally be attached. We use Stored as it is the greatest common base to the indexers which are templates */
+  Stored *indexer=nullptr;
 
 public:
   typedef sigc::slot<void, bool /*removing*/, size_t /* which*/> Watcher;
@@ -79,16 +81,21 @@ public:
 
   //trying to work around some syntax stuff for indexedBy, and hey-why not add a feature of sorts?
   template<class PrimeContent> void createFor(PrimeContent &indexItem){
-    create(indexItem.getName());
+    create(indexItem.getName());//we can't rename existing nodes when the indexer is attached, but at least new nodes will share names.
   }
 
   /** hooks up primary group (the operand) to manage allocation of this group's items which are 1:1 with the indexer group's items.
    * @see indexes for swapping the args for syntactic convenenience. */
   template<class PrimeContent> void indexedBy(StoredGroup<PrimeContent> &indexer){
-    //by doing these instead of registering a dependent using (nor removed) onReorg all onAdditions take place before any
+    if(this->indexer){
+      wtf("already indexed");
+      return;
+    }
+    this->indexer=&indexer;
+    //by using these instead of registering a dependent using onReorg, all onAdditions take place before any
     // whenReorganized's are invoked, so dependent objects are all created before whenReorganized's are invoked. Must check that all
     // non-creation onAddition stuff doesn't need to wait.
-    indexer.onRemoval(MyHandler(StoredGroup<Groupie>::remove));
+    indexer.onRemoval(sigc::hide_return(MyHandler(StoredGroup<Groupie>::remove)));
     indexer.onAddition(MyHandler(StoredGroup<Groupie>::createFor<PrimeContent> ), false);
     setSize(indexer.quantity()); //at time of attachment we resize the indexed entity
   }
@@ -115,6 +122,7 @@ public:
   bool autocreate;
 
   StoredGroup(Storable &node) : Stored(node), autocreate(false){
+    node.isOrdered=true;//until we find a counterexample for this.
     if(node.setType(Storable::Wad)) { //needed in case group is presently empty, so that proper change watching is set up.
       dbg("Empty group?");
     }
@@ -190,8 +198,14 @@ public:
       return *pod[ordinal];
     }
     wtf("asked for non-existent member: %d out of %d of set", ordinal, quantity());
-    wtf.dumpStack("StoredGroup::nth");
+    wtf.dumpStack("StoredGroup::nth const");
     return *pod[0]; //which will still blow if there are no entities at all.
+  }
+
+  /** @returns entity with underlying name, creating it with defaults if it didn't exist.
+   * NB: Usually group entities aren't named (name is empty). */
+  Groupie &operator()(TextKey name){
+    return operator[](child(name).node.ownIndex());
   }
 
   /** tableeditor needs this syntax */
@@ -232,13 +246,12 @@ public:
   /**add a new node and build a new thing from it.*/
   Groupie &create(TextKey prename = ""){
     if(preaddition.empty() || preaddition()) {
-      Storable::Freezer autothaw(node, true, true); //#must NOT allow change watchers to execute on node add until we create the
-                                                    // object that they may come looking for. Without this the change actions would
-                                                    // execute before the new object exists instead of after.
-      //wrapNode(node.child(prename));//old code presumed that the node didn't exist unless created here. ParamSet in DP5 violated that.
-      node.child(prename);//just making a node now makes Groupies via backdoor.
+      Storable::Freezer autothaw(node, true, true); //#must NOT allow change watchers to execute on node add until we create the object that they may come looking for. Without this the change actions would  execute before the new object exists instead of after.
+      auto &backer = node.child(prename);//making a node makes related Groupie via backdoor. Node is allowed to already exist, a possibly pathological case.
+      return (*this)[backer.ownIndex()];//just in case we didn't actually create a new node.
+    } else {
+      return last();//if not allowed to create a node return something as best as we can.
     }
-    return last();
   }
 
   /** add a copy of an existing node, build a new thing from it and hence a copy of that thing.
@@ -276,14 +289,9 @@ public:
 
   /** remove something from given place in list. This DELETES the item, beware of use-after-free.*/
   virtual bool remove(unsigned which){
-    if(has(which)) { //#while the pod and node can take care of bad indexes locally we don't want to do the notifies if the index is
-                     // bad. And now preremoval depends on this check.
+    if(has(which)) { //#while the pod and node can take care of bad indexes locally we don't want to do the notifies if the index is bad. And now preremoval depends on this check.
       if(preremoval(operator [](which))) {//if not vetoed
-        //We actually delete the objects before we signal removal so iterations show it already gone
-//        pod.removeNth(which); //deletes Stored entity
         node.remove(which); //deletes underlying node, which may have its own watchers, and which deletes the Groupie via backdoor();
-//        onremoval(which);   //high priority notifications
-//        dependents(true, which);//lower priority notifications
         return true;
       }
     }
@@ -400,7 +408,7 @@ public:
   /** @returns node by internal name, creates one if it doesn't exist.
    * useful for legacy upgrades of known entities within a group, which is pretty much limited to factory defined files, never user
    * stuff */
-  Groupie &child(const char *key,bool*isNoob = nullptr){
+  Groupie &child(const char *key, bool *isNoob = nullptr){
     Groupie *child = existing(key);
     if(isNoob) {
       *isNoob = (child==nullptr);
@@ -423,14 +431,13 @@ public:
     }
   }
 
-  /** @deprecated need to get rid of these as they generate warnings:*/
-  void forEach(const sigc::slot<void, const TextKey &, const Groupie &, unsigned> &action) const {
-    ForValues(list){
-      Groupie &item(list.next());
-
-      action(item.name, item, item.ownIndex());
-    }
-  }
+//  /** @deprecated need to get rid of these as they generate warnings:*/
+//  void forEach(const sigc::slot<void, const TextKey &, const Groupie &, unsigned> &action) const {
+//    ForValuesConstly(list){
+//      Groupie &item(list.next());
+//      action(item.node.name, item, item.index());
+//    }
+//  }
 
   /** faster than using slot's when the method is simple enough:*/
   void forEach(void (Groupie::*method)(void)){

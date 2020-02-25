@@ -28,6 +28,9 @@ bool isNormal(double d);
 /** is not a value */
 bool isSignal(double d);
 
+/** is either 0 or not a nan. */
+bool isDecent(double d);
+
 /** Note: 'signbit' is a macro in math.h that pertains only to floating point arguments
  * @returns sign of operand, and converts operand to its magnitude, MININT(0x800...) is still MININT and must be interpreted as unsigned to work correctly
  */
@@ -113,7 +116,7 @@ template<typename Integer,typename Inttoo> Integer quanta(Integer num, Inttoo de
 
 /** protect against garbage in (divide by zero) note: 0/0 is 1*/
 inline double ratio(double num, double denom){
-  if(denom == 0) { //pathological case
+  if(denom == 0) { //#exact compare for pathological case
     return num; //attempt to make 0/0 be 1 gave us 1.0 cps for unmeasured spectra  may someday return signed inf.
   }
   return num / denom;
@@ -121,7 +124,7 @@ inline double ratio(double num, double denom){
 
 /** protect against garbage in (divide by zero) note: 0/0 is 0, at one time this returned 1 for that.*/
 inline float ratio(float num, float denom){
-  if(denom == 0) { //pathological case
+  if(denom == 0) { //#exact compare for pathological case
     return num;//may someday return signed inf.
   }
   return num / denom;
@@ -153,7 +156,7 @@ template<typename Integrish, typename Integrash> Integrish revolutions(Integrish
   }
   //todo: see if std::div or std::remquo can be applied here, for greater portability or whatever.
   Integrish cycles = accum / length;
-  accum = accum % length;
+  accum %= length;
   return cycles;
 }
 
@@ -201,15 +204,16 @@ unsigned digitsAbove(unsigned int value, unsigned numDigits);
 /** an integer power of 10. out of bounds arg gets you nothing but trouble ... */
 u64 i64pow10(unsigned power);
 
-/** @param p19 is 1-^19 times a fractional value. @param digits is the number of digits past the virtual radix point you are interested in.
+/** @param p19 is 10^19 times a fractional value. @param digits is the number of digits past the virtual radix point you are interested in.
  *  @returns a properly rounded int that has those digits of interest, but you may need to pad with leading zeroes. */
 u64 keepDecimals(u64 p19,unsigned digits);
 
-/** @param p19 is 1-^19 times a fractional value. @param digits is the number of digits past the virtual radix point you are interested in.
+/** @param p19 is 10^19 times a fractional value. @param digits is the number of digits past the virtual radix point you are interested in.
  *  @returns a truncated int that has those digits of interest, but you may need to pad with leading zeroes. */
 u64 truncateDecimals(u64 p19,unsigned digits);
 /** filtering in case we choose to optimize this */
 double dpow10(int exponent);
+double dpow10(unsigned uexp);
 
 template<typename mathy> double squared(mathy x){
   return x * x;
@@ -290,30 +294,30 @@ template< typename Scalar > void swap(Scalar &a, Scalar &b){
 
 /** Things that are coded in assembler on some platforms, due to efficiency concerns. In 2009 one version of the GCC compiler for ARM often produced horrible and sometimes incorrect code. Time permitting these should be compiled from the C equivalents and compared to the hand coded assembler to see if we can abandon the assembler source due to compiler improvements. */
 extern "C" {
-/* @returns integer part of d, modify d to be its fractional part.
- */
+/* @returns integer part of d, modify d to be its fractional part.*/
 int splitter(double &d);
 /** like splitter but has an extra bit of output range by presuming input is non-negative. */
 unsigned splitteru(double &d);
 
 /** the time delay given by ticks is ambiguous, it depends upon processor clock. @72MHz 1000 ticks is roughly one microsecond.*/
-void nanoSpin(unsigned ticks);   //fast spinner, first used in soft I2C.
+void nanoSpin(unsigned ticks);
 
-//rounded and overflow managed 'multiply by ratio'
+/** rounded and overflow managed 'multiply by ratio' */
 u32 muldivide(u32 arg, u32 num, u32 denom);
 
-/** @param fractionalThereof changed from double to float due to compiler error, passed arg in wrong registers! (probably early gcc 4.1, need to retest) */
+/** @param fractionalThereof */
 unsigned saturated(unsigned quantity, double fractionThereof);
 
-//fraction is a fractional multiplier, with numbits stating how many fractional bits it has.
+/** fraction is a fractional multiplier, with numbits stating how many fractional bits it has.*/
 u16 fractionallyScale(u16 number, u16 fraction, u16 numbits);
+
 /** 1 + the integer part of log base 2 of the given number, pretty much is just "count the leading zeroes".
  * Note well that this will give 0 as the log of 0 rather than negative infinity, precheck the argument if you can't live with that.
  * mathematical definition: "number of right shifts necessary for an unsigned number to become 0"
  */
 u32 log2Exponent(u32 number);
 
-/** return eff * 2^pow2  where pow2 is signed. This can be done rapidly via bitfiddling*/
+/** @returns eff * 2^pow2  where pow2 is signed. This can be done rapidly via bitfiddling*/
 float shiftScale(float eff, int pow2);
 
 double flog(u32 number);
@@ -360,5 +364,4 @@ template<typename Integrish,typename Floater> Integrish intbin(Floater &d){
   d = modf(d,&eye);
   return Integrish(eye);
 }
-
 #endif /* ifndef minimath_h */

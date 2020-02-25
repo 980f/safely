@@ -81,7 +81,7 @@ unsigned Utf8ConverterIn::length(const char *source) const {
       break;
     case Utf8Decoder::Xand://need to resend last char
       --source;//resends
-      //JOIN
+    [[clang::fallthrough]];
     case Utf8Decoder::Done: //uch is utf8 char
       totes += UTF8::numFollowers(dx.fetch()) + 1;
       break;
@@ -108,7 +108,8 @@ bool Utf8ConverterIn::operator()(const char *peeker, Indexer<char> &packer){
       break;
     case Utf8Decoder::Xand://need to resend last char
       --peeker;//resends last
-      //JOIN
+
+    [[clang::fallthrough]];
     case Utf8Decoder::Done:{ //uch is utf8 char
       unsigned nf=UTF8::numFollowers(dx.uch);
       if(packer.stillHas(nf+ 1)){

@@ -1,6 +1,5 @@
 #ifndef BITBANGER_H
 #define BITBANGER_H
-
 /** bit and bitfield setting and getting.*/
 
 #include <limits> //for number of bits in unsigned
@@ -33,7 +32,6 @@ inline bool setBit(volatile unsigned &patter, unsigned bitnumber){
 inline bool setBit(volatile unsigned *patter, unsigned bitnumber){
   return *patter |= (1 << bitnumber);
 }
-
 
 
 inline bool clearBit(volatile unsigned &patter, unsigned bitnumber){

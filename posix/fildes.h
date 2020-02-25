@@ -6,6 +6,10 @@
 struct FDset;//forward reference, we may be relocating this logic elsewhere as we purge select() in favor of poll() #include "fdset.h"
 #include "stdio.h"  //FILE
 
+#include <sys/ioctl.h> //ioctl in a template, would have to gyrate quite a bit to isolate this to the cpp, can be done with some nasty typecasting.
+
+#include <textpointer.h>
+
 /** wrapper around file descriptors, especially noteworthy is that it closes the file on destruction, so best use is to create and use locally.*/
 class Fildes : public PosixWrapper {
 public:
@@ -88,6 +92,19 @@ public:
 
   /** close it then forget which it was */
   static void Close(int &somefd);
+
+  /** thin wrapper around ioctl calls */
+  template <typename Scalar> bool ioctl(unsigned code ,Scalar datum){
+    //pre-test isopen so as to not overwrite the error code from that.
+    return isOpen() && ok(::ioctl(asInt(),code, datum));
+  }
+
+
+protected:
+  Text name;//not always valid, call getName to ensure.
+public:
+  /** recover name from OS. Uses linux PROC file system specific routine, and is not cheap. */
+  Text &getName();
 }; // class Fildes
 
 #endif // FILDES_H

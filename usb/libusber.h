@@ -8,7 +8,6 @@
 #include "cstr.h"
 
 /** use libusb without having to deal with allocation details. */
-
 class LibUsber : public PosixWrapper {
   libusb_context * ctx=nullptr;
 public:

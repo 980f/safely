@@ -8,8 +8,8 @@
  * wrapper instead of extending Storable, to lighten each instance's memory footprint.
  **/
 class Stored : SIGCTRACKABLE {
-  Stored()=delete;//# we must attache to a storable, we exist to wrap access to one with type-safety.
-  Stored(const Stored &cantbecopied)=delete;//can't copy a subset of a tree, not generically.
+  Stored() = delete;//# we must attache to a storable, we exist to wrap access to one with type-safety.
+  Stored(const Stored &cantbecopied) = delete;//can't copy a subset of a tree, not generically.
 protected:
   /** used to per-class disable notification causing onParse' to be called before all children exist.
    * Only a few situations have needed to do this.
@@ -55,7 +55,7 @@ public:
 
   /** The next stuff is used by stored group refresh operations, to track no-longer relevent items */
 protected:
-  bool refreshed;
+  bool refreshed; //todo: isolate into helper class, or otherwise allow for 'refresh' to be conditionally compiled
 public:
   virtual void prepRefresh(); //virtual to allow for additional pre-scan operations.
   void isRefreshed();
@@ -119,7 +119,7 @@ public:
 #define ConnectGroot(varname,...)  varname(Storable::Groot( # varname ), ## __VA_ARGS__)
 
 /** for usage as filter: sigc::bind(&byName, sigc::ref(name)) */
-template<class Groupie> bool byName(const TextKey &name, const Groupie & /*child*/, const TextValue &seeking){
+template<class Groupie> bool byName(const TextKey &name, const Groupie & /*child*/, const Text &seeking){
   return seeking == name;
 }
 

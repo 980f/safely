@@ -7,10 +7,10 @@
  * It happens that if you view -1 as an unsigned it is the maximum possible value. That has the advantage of replacing the signed integer dance:
  * index>=0 && index < quantity with a simple index<quantity, less runtime code.
  *
- * The only risk here is that someone might use -1 as a quantity value indicating that there is not even a container to have a quantity of items in. Just don't do that,
- *return a quantity of 0 for 'not a valid question', that will almost always yield the expected behavior.
+ * The only risk here is that someone might use -1 as a quantity value indicating that there is not even a container to have a quantity of items in.
+ * Just don't do that, return a quantity of 0 for 'not a valid question', that will almost always yield the expected behavior.
  *
- *  todo: need to check for overflow on additi9ve operations and set to badIndex if that occurs.
+ *  todo: need to check for overflow on additive operations and set to badIndex if that occurs.
  */
 /** the magic value, it is all ones */
 constexpr unsigned BadIndex = ~0U;
@@ -25,6 +25,7 @@ inline bool isValid(unsigned index){
 /** marker class for an integer used as an array index or related value. Leave all in header file as we need to strongly urge the compiler to inline all this code  */
 struct Index {
   Index(unsigned raw = BadIndex) : raw(raw){
+    //#nada
   }
 
   unsigned raw;
@@ -85,12 +86,12 @@ struct Index {
   }
 
   /** maydo: convert negatives to canonical ~0*/
-  unsigned operator -- (int) noexcept {
+  unsigned operator-- (int) noexcept {
     return raw--;
   }
 
   /** maydo: convert negatives to canonical ~0*/
-  unsigned operator -- () noexcept {
+  unsigned operator-- () noexcept {
     return --raw;
   }
 

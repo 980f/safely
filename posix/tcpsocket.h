@@ -69,12 +69,13 @@ protected:
   bool autoConnect;
   /** pointer into actual sending buffer, which is NOT part of this object. */
   ByteScanner sendbuf;
-  /** called by glib when there is something to read (after startReception has once been called) */
+//  /** called by glib when there is something to read (after startReception has once been called) */
   bool readable();
-  /** called by glib when remote disconnects (after startReception has once been called) */
+//  /** called by glib when remote disconnects (after startReception has once been called) */
   bool hangup();
-
-  /** called by glib when data can be written (after writeInterest has recently been called) */
+//  /** call this when you would like to write something, get called back for the data inside writeable*/
+//  void writeInterest();
+//  /** called by glib when data can be written (after writeInterest has recently been called) */
   bool writeable();
 public:
   virtual ~TcpSocket();
@@ -96,7 +97,6 @@ public:
   sigc::connection whenConnectionChanges(const BooleanSlot &nowConnected, bool kickme = false);
   bool reconnect();
   void startReception();
-  bool setNodelay();
 }; // class TcpSocket
 
 #include <netinet/in.h>

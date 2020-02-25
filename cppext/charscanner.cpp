@@ -6,6 +6,7 @@
 //this one is sharable, with care! You should never be calling wrap or clone on a reference.
 CharScanner CharScanner::Null;
 
+
 int ourStrncmp(const char *one, const char *two, unsigned length){
   for(unsigned i = 0; i<length; ++i) {//# in order
     //formerly returned 'equal' when either was equal to the start of the other, now returns the approprite mismatch where longer string is > shorter.
@@ -208,7 +209,6 @@ bool CharScanner::operator == (const CharScanner &rhs) const {
 } // ==
 
 /** for use with trusted rhs strings */
-//#include "string.h"
 bool CharScanner::operator == (const char *literal) const {
   if(!literal) {
     return used()==0; //null pointer matches empty string
@@ -217,7 +217,7 @@ bool CharScanner::operator == (const char *literal) const {
   if(0==ourStrncmp(internalBuffer(),literal,used())) {//then we MIGHT have a match
     //strncmp stops at first null in either string, or after 'used' items
     if(buffer[pointer - 1]) {//no null terminator
-      return literal[pointer]==0;//
+      return literal[pointer]==0;
     } else {
       return literal[pointer - 1]==0;
     }
@@ -282,7 +282,6 @@ CharScanner CharScanner::cut(char separator){
       return CharScanner(&peek(),freespace());
     }
   } else {
-    //todo: 000 termlocation=allocated();//and creator better have used zguard()
     return CharScanner();
   }
 }

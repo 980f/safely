@@ -21,7 +21,6 @@ int JsonFile::loadFile(Cstr thename){
   //... we dare not inject nodes into other people's trees.
   Filer optionFile("LoadJSON");
   loadedFrom=thename;//mark intended file name
-
   if(! optionFile.openFile(thename)){
     dbg("Couldn't open \"%s\", error:[%d]%s",thename.c_str(),optionFile.errornumber,optionFile.errorText());
     return optionFile.errornumber;
@@ -47,6 +46,7 @@ int JsonFile::loadFile(Cstr thename){
   dbg("loaded %d nodes, %d levels, from %s",parser.stats.totalNodes,parser.stats.maxDepth.extremum,thename.c_str());
   return 0;//#an errno
 }
+
 
 bool indent(FILE *fp, unsigned tab){
   if(Index(tab).isValid()){
@@ -75,7 +75,7 @@ void printNode(unsigned tab, Storable &node, FILE *fp,bool showVolatiles){
   }
   switch (node.getType()) {
   case Storable::Wad:
-    fprintf(fp,"{");
+    fputc(node.isOrdered?'[':'{',fp);
     for(ChainScanner<Storable> list(node.kinder()); list.hasNext(); ) {
       Storable & it(list.next());
       printNode((pretty?  tab + 1 : tab),it,fp,showVolatiles);
@@ -84,7 +84,7 @@ void printNode(unsigned tab, Storable &node, FILE *fp,bool showVolatiles){
       }
     }
     indent(fp, tab);
-    fputc('}',fp);
+    fputc(node.isOrdered?']':'}',fp);
     break;
   case Storable::Numerical:
     fprintf(fp,"%g ",node.getNumber<double>());
@@ -107,11 +107,13 @@ void printNode(unsigned tab, Storable &node, FILE *fp,bool showVolatiles){
 }
 
 
-void JsonFile::printOn(Cstr somefile, unsigned indent, bool showVolatiles){
+bool JsonFile::printOn(Cstr somefile, unsigned indent, bool showVolatiles){
   Filer fout("JsonSave");
-
   if(fout.openFile(somefile,O_CREAT|O_RDWR,true)){
     printNode(indent,root,fout.getfp("w"),showVolatiles);
+    return true;
+  } else {
+    return false;
   }
 }
 
@@ -119,8 +121,12 @@ Cstr JsonFile::originalFile(){
   return loadedFrom.c_str();
 }
 
-void JsonFile::printOn(Fildes &alreadyOpened, unsigned indent, bool showVolatiles){
-  auto fp=alreadyOpened.getfp("w");
-  printNode(indent,root,fp,showVolatiles);
-
+bool JsonFile::printOn(Fildes &alreadyOpened, unsigned indent, bool showVolatiles){
+  if(alreadyOpened.isOk()){
+    auto fp=alreadyOpened.getfp("w");
+    printNode(indent,root,fp,showVolatiles);
+    return true;
+  } else {
+    return false;
+  }
 }

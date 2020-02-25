@@ -30,7 +30,7 @@ double TimerFD::setPeriod(double seconds){
 bool TimerFD::ack(){
   u64 expirations=~0UL;//type here is chosen by timer fd stuff, not us.
   ByteScanner discard(reinterpret_cast<u8*>(&expirations),sizeof(expirations));
-  fd.read(discard);//todo:1 why does fd.read return 0 even when it read 8 bytes?
+  fd.read(discard);
   if(sizeof(expirations)==fd.lastRead){
     return true;
   } else {

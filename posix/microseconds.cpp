@@ -13,7 +13,7 @@ void parseTime(timeval &ts, double seconds){
     return;
   }
   ts.tv_sec = splitter(seconds);
-  ts.tv_usec = u32(1e6 * seconds);
+  ts.tv_usec = u32(1e6 * seconds);//splitter modifies the operand to be a fraction
 }
 
 bool MicroSeconds::operator >(const MicroSeconds &that) const {

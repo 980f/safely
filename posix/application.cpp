@@ -1,6 +1,4 @@
-
 //"(C) Andrew L. Heilveil, 2017-2018"
-
 #include "application.h"
 #include "errno.h"
 
@@ -17,11 +15,9 @@
 #include "nanoseconds.h"
 #include "cheaptricks.h" //take()
 
-
 bool Application::setQuickCheck(NanoSeconds soonish){
   if(soonish.inFuture()){
     quickCheck.atMost(soonish);
-
     return true;
   } else {
     return false;//user might want to try to set it again later.
@@ -36,7 +32,7 @@ bool Application::keepAlive(){
 
 Application::Application(unsigned argc, char *argv[]):PosixWrapper ("APP"),//todo:1 name from arg0 last member
   arglist(const_cast<const char **>(argv),argc*sizeof (const char *)),
-  hz(1000.0), //start with epoll's value
+//  hz(1000.0), //start with epoll's value
   looper(32), //maydo: figure out size of maximum reasonable poll set.
   period(NanoSeconds(0.1)), //start at 10 Hz, a rather slow value.
   beRunning(false){//startup idle.
@@ -60,12 +56,10 @@ void Application::logCwd(){
 
 int Application::run(){
   beRunning=true;
-
   while(beRunning){//this is what some people call "the event loop"
     NanoSeconds nextPeriod=period;
     //first use: libusb sometimes wants us to get back to it perhaps sooner than our period is set for.
     if(quickCheck.signabs()>0){
-
       if(quickCheck<period){
         nextPeriod=take(quickCheck);
       } else {

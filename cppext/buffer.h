@@ -110,9 +110,7 @@ public:
   /** deallocate contents, set tracking to reflect that. This is NEVER called from within this class, only call it if you know the content was allocated for this object and not remembered elsewhere */
   void freeContent(){
     delete [] buffer;
-    buffer=nullptr;
-    length=0;
-    pointer=0;
+    forget();
   }
 
   /** @returns whether this seems to be a useful object. Note that it might have no freespace(), but it will have content.
@@ -163,6 +161,12 @@ public:
     length = other.freespace();
   }
 
+  /** @returns an indexer that covers the freespace of this one. this one is not modified */
+  Indexer<Content> remainder() const {
+    Indexer<Content> rval;
+    rval.getTail(*this);
+    return rval;
+  }
 
   /** reduce length to be that used and reset pointer.
    * useful for converting from a write buffer to a read buffer, but note that the original buffer size is lost.*/
@@ -198,12 +202,12 @@ public:
   }
 
   /** @returns an indexer which covers the leading part of this one. */
-  Indexer<Content> getHead(){
+  Indexer<Content> getHead() const{
     return view(0,pointer);
   }
 
   /** @returns an indexer which covers the trailing part of this one. once upon a time called 'remainder' */
-  Indexer<Content> getTail(){
+  Indexer<Content> getTail() const{
     return view(pointer,allocated());
   }
 
@@ -450,7 +454,7 @@ public:
 
   /** append @param other 's pointer through length-1 to this, but will append all or none.
    * Suitable for picking up the end of a partially copied buffer */
-  Indexer appendRemaining(Indexer<Content> &other){
+  Indexer appendRemaining(Indexer<Content> &other){//append tail of other
     int qty = other.freespace();
     if(stillHas(qty)) {
       catFrom(other, qty);
@@ -501,14 +505,15 @@ public:
     }
   }
 
-  /** */
+  /** point to nothing */
   void forget(){
     length=0;
     pointer=0;
     buffer=nullptr;
   }
 
-  //free contents and forget them. Only safe todo if you know this buffer is created from a malloc.
+  /** You probably want  @see forget!
+   * free contents and forget them. Only safe todo if you know this buffer is created from a malloc. */
   void destroy(){
     if(length){//# testing 4debug, delete[] can handle a zero.
       delete []buffer;
@@ -546,7 +551,3 @@ public:
 //raw (bytewise) access to object
 #define IndexBytesOf(indexer, thingy) Indexer<u8> indexer(reinterpret_cast<u8 *>(&thingy), sizeof(thingy))
 
-//do we still need these?:
-#define BytesOf(thingy) IndexBytesOf(, thingy)
-
-#define ForIndexed(classname, indexer) for(Indexer<classname> list(indexer); list.hasNext(); )

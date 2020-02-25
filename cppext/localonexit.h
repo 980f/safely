@@ -5,7 +5,7 @@
  * This is C++'s answer to Java's "try with resources" and similar features in other languages.
 */
 
-
+/** ModifyOnExit is a base class, its internals are named for ClearOnExit which it was extracted from */
 template<typename Scalar> class ModifyOnExit {
 protected:
   Scalar &zipperatus;
@@ -21,7 +21,7 @@ public:
   operator Scalar(void){
     return zipperatus;
   }
-
+  /** overload this to do something to the saved reference on exit */
   virtual ~ModifyOnExit()=default;
 
 }; // class ClearOnExit
@@ -30,7 +30,7 @@ public:
 /** clear a variable on block exit, regardless of how the exit happens, including exceptions */
 template<typename Scalar> class ClearOnExit :public ModifyOnExit<Scalar> {
 public:
-  using ModifyOnExit<Scalar>::ModifyOnExit;
+  using ModifyOnExit<Scalar>::ModifyOnExit;//needed to get a default constructor
   using ModifyOnExit<Scalar>::zipperatus;
 
   ~ClearOnExit(){
@@ -38,7 +38,6 @@ public:
   }
 
 }; // class ClearOnExit
-
 
 /** Clears a flag when destroyed */
 class AutoFlag : public ClearOnExit<bool> {
@@ -52,7 +51,7 @@ public:
 
 template<typename Scalar> class IncrementOnExit:public ModifyOnExit<Scalar> {
 public:
-  using ModifyOnExit<Scalar>::ModifyOnExit;
+  using ModifyOnExit<Scalar>::ModifyOnExit;//needed to get a default constructor
   using ModifyOnExit<Scalar>::zipperatus;
 
   virtual ~IncrementOnExit(){
@@ -88,9 +87,8 @@ public:
 /** assign a value to variable on block exit, regardless of how the exit happens, including exceptions.
  * NB: it records the value to use at time of this object's creation */
 template<typename Scalar> class AssignOnExit:public ModifyOnExit<Scalar> {
-  using ModifyOnExit<Scalar>::ModifyOnExit;
   using ModifyOnExit<Scalar>::zipperatus;
-
+  /** value to assign to zipperatus on exit */
   Scalar onexit;
 public:
   AssignOnExit(Scalar & toBeCleared, Scalar onexit) : ModifyOnExit<Scalar>(toBeCleared){
@@ -108,13 +106,22 @@ public:
 
 }; // class AssignOnExit
 
+/** record present value to be restored on exit, assign a new value */
+template<typename Scalar> class Pushit:public AssignOnExit<Scalar> {
+  Pushit(Scalar & toBePushed, Scalar newvalue):AssignOnExit<Scalar> (toBePushed,toBePushed){
+    toBePushed=newvalue;
+  }
+};
+
 /** assign a value to variable from another one on block exit, regardless of how the exit happens, including exceptions.
  * NB: the value set will the value of the @param onexit when the exit occurs. If that item is dynamically allocated then it might get freed before this object copies it. */
-template<typename Scalar> class CopyOnExit {
-  Scalar&zipperatus;
+template<typename Scalar> class CopyOnExit: public ModifyOnExit<Scalar> {
+  using ModifyOnExit<Scalar>::zipperatus;
   Scalar& onexit;
 public:
-  CopyOnExit(Scalar & toBeCleared, Scalar &onexit) : zipperatus(toBeCleared), onexit(onexit){
+  CopyOnExit(Scalar & toBeCleared, Scalar &onexit) :
+    ModifyOnExit<Scalar>(toBeCleared),
+    onexit(onexit){
     //both are references, you should not delete either of them until after the scope of this object is exited.
   }
 
@@ -122,9 +129,6 @@ public:
     zipperatus = onexit;
   }
 
-  operator Scalar() const noexcept{
-    return zipperatus;
-  }
   /** @returns the change that would occur to the target should the exit occur now */
   Scalar delta(void) const noexcept{
     return onexit - zipperatus;
@@ -149,7 +153,7 @@ public:
   }
 
   DeleteOnExit(Deletable&something) : something(&something){
-//we have recorded that which is to be deleted.
+    //we have recorded that which is to be deleted.
   }
 
   /** named version of cast to template type */
@@ -170,7 +174,7 @@ public:
     return *something;
   }
 
-  /** @returns whether there is an object lurking inside of this*/
+  /** @returns whether there is an object lurking inside of this */
   operator bool() const {
     return something!=nullptr;
   }

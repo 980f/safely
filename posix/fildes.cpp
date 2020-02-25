@@ -5,6 +5,9 @@
 #include <sys/ioctl.h>
 #include "fdset.h"
 
+//just for name research
+#include "charformatter.h"
+
 Fildes::Fildes(const char *whatfor) : PosixWrapper(whatfor){
   errornumber = 0;
   lastRead = lastWrote = 0;
@@ -14,6 +17,7 @@ Fildes::Fildes(const char *whatfor) : PosixWrapper(whatfor){
 
 Fildes::Fildes(const Fildes &other) : Fildes(other.dbg.prefix){
   this->fd = other.fd;
+  this->name.copy(other.name);//need independent copy for safety.
 }
 
 bool Fildes::assignFd(int anFD){
@@ -37,6 +41,7 @@ bool Fildes::open(const char *devname, int O_stuff){ //todo:3 expose 3rd argumen
   int maybefd;
   if (okValue(maybefd, ::open(devname, O_stuff, 0777))) {//3rd arg is only relevant if O_stuff includes O_Creat. The (3) 7's lets umask provide the argument.)
     assignFd(maybefd);
+    name = devname;//there's a strdup in here.
     return true;
   } else {
     dbg("Failed to open %s", devname);
@@ -50,7 +55,7 @@ FILE *Fildes::getfp(const char *fargs){
 
 unsigned Fildes::available(){ //was buggy prior to 25apr2018
   unsigned bytesAvailable = 0;
-  if(failure(ioctl(fd, FIONREAD,&bytesAvailable))) {//missing third arg did amazing damage to caller
+  if(!(ioctl(FIONREAD,&bytesAvailable))) {
     return 0;//a place to breakpoint
   } else {
     return bytesAvailable;
@@ -71,6 +76,29 @@ void Fildes::Close(int &somefd){
   ::close(somefd);
   somefd = BADFD;
 }
+
+Text &Fildes::getName(){
+//proc/self/fdastext resolve link
+  char seeker[100];
+  CharFormatter procself(seeker,sizeof seeker);
+  procself.cat("/proc/self/");
+  procself.printNumber(fd);
+  procself.next() = 0;
+
+  char temp [512];//todo: symbol for max path
+  CharScanner response(temp,sizeof (temp));
+  response.zguard();
+  auto target = procself.internalBuffer();//4 debug
+  auto actualsize = readlink(target,response.internalBuffer(),response.freespace());
+  if(actualsize>0) {//always get -1 here, errno:0
+    response.skip(unsigned(actualsize));
+    response.next() = 0;
+    name = response.internalBuffer();//should strdup.
+  } else {
+    //name is still what 'open' was given.
+  }
+  return name;
+} // Fildes::getName
 
 bool Fildes::setSingleFlag(int bitfield, bool one){
   if (!isOpen()) {
@@ -215,7 +243,7 @@ bool Fildes::write(const u8 *buf, unsigned len){
   if (isOpen()) {
     if (okValue(lastWrote, ::write(fd, buf, len))) {
       if(traceWrite) {
-        return true;
+        return true;//this is a place to breakpoint on when you want to see every write that works.
       }
       return true;
     }
@@ -229,7 +257,7 @@ bool Fildes::write(const u8 *buf, unsigned len){
 bool Fildes::writeChars(char c, unsigned repeats){
   if (repeats <= 4096) {
     u8 reps[repeats];
-    fillObject(reps, sizeof(reps), u8(c));
+    fillObject(reps, repeats, u8(c));//sizeof(reps) always gave 1
     return write(reps, repeats);
   } else {
     return false;

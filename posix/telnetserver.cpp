@@ -10,13 +10,12 @@ bool TelnetServer::enroll(int newfd, SockAddress &sadr){
 
   //purge dead ones, then try to add newone
   purge();
-  if(clients.quantity()<maxClients){
-    Socketeer &newby=*clients.append(factory(newfd,sadr));
-    newby.setBlocking(false);
-    return true;
-  } else {
-    return false;
+  while(clients.quantity()>=maxClients){
+    clients.removeNth(0);
   }
+  Socketeer &newby=*clients.append(factory(newfd,sadr));
+  newby.setBlocking(false);
+  return true;
 }
 
 Socketeer *TelnetServer::simpleFactory(int newfd, SockAddress &sadr){

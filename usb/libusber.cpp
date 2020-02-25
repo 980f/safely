@@ -34,7 +34,6 @@ void UsbDevice::pollfd_removed(int fd, void *user_data){
 #endif // if 0
 
 static const char * errormessages[] {
-
   "Success",
   "Input/output error",
   "Invalid parameter",
@@ -104,7 +103,7 @@ bool LibUsber::find(uint16_t idVendor,uint16_t idProduct,unsigned nth){
 
   OnExit release([devs] (){
     libusb_free_device_list(devs, 1);//libusb_open ++'s the ref count for the one we keep a ref to.
-    });
+  });
   ssize_t devcnt = libusb_get_device_list(nullptr, &devs);
 
   if (devcnt < 0) {
@@ -175,7 +174,6 @@ bool LibUsber::submit(libusb_transfer *xfer){
       if(xfer->last_errno!=0 && xfer->last_errno!=errornumber) {
         failure(xfer->last_errno);//above 'hides' core errno. //22 invalid parameter
       }
-
       ack(xfer);
       return false;
     } else {
@@ -186,7 +184,6 @@ bool LibUsber::submit(libusb_transfer *xfer){
     //todo:1 cancel current xfer, presently not allowed
     return false;
   }
-
 } // LibUsber::submit
 
 bool LibUsber::ack(libusb_transfer *xfer){

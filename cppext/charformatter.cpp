@@ -59,7 +59,6 @@ CharFormatter::CharFormatter(ByteScanner &other) : CharScanner(other,0){
 }
 
 CharFormatter::CharFormatter(){
-
 //#nada
 }
 
@@ -141,7 +140,7 @@ s64 CharFormatter::parse64(s64 def){
       if(logProduct<=18) {
         n.predecimal = 0x7FFFFFFFFFFFFFFFLL;
       } else {
-        n.predecimal *= pow10(int(n.exponent));//#cast needed for overload resolution
+        n.predecimal *= i64pow10(unsigned(n.exponent));//#cast needed for overload resolution
       }
     }
     return n.negative ? -n.predecimal : n.predecimal;
@@ -171,9 +170,9 @@ bool CharFormatter::printChar(char ch, unsigned howMany){
 }
 
 bool CharFormatter::printAtWidth(unsigned int value, unsigned width, char padding){
-  unsigned numDigits = value? ilog10(value)+1 : 1; //ilog10 gives -1 for zero, here we lump zero in with 1..9
+  unsigned numDigits = value ? ilog10(value) + 1 : 1; //ilog10 gives -1 for zero, here we lump zero in with 1..9
   if(numDigits > width) {//if you cant fit the whole thing don't put any digits into the field.
-     printChar('*', width);
+    printChar('*', width);
     return false;
   }
 
@@ -273,7 +272,7 @@ bool CharFormatter::printNumber(double d, int sigfig){
         //need to maybe reduce the number and have more trailing zeroes.
         div += sigfig - 9;
       }
-      d /= pow10(div);
+      d /= dpow10(div);
       checker &= printUnsigned(u32(d));
       if(div>3) {
         checker &= printChar('E');
@@ -307,7 +306,7 @@ bool CharFormatter::printNumber(double d, int sigfig){
         checker &= printChar('0');
         //ridiculously small, blow it off or add a useless E expression.
       } else {
-        d *= pow10(-div); //if d>_2gig we will lose significant digits.
+        d *= dpow10(-div); //if d>_2gig we will lose significant digits.
         while(numzeros-->0) {
           checker &= printChar('0');
         }
@@ -382,12 +381,6 @@ bool CharFormatter::printNumber(double d, const NumberFormat &nf, bool addone){
   }
   return checker.commit();
 }
-
-//bool CharFormatter::printDecimals(double d, int decimals){
-//  NumberFormat nf;
-//  nf.decimals=decimals;
-//  return printNumber(d,nf,false);
-//} /* printNumber */
 
 bool CharFormatter::printDecimals(double d, int decimals){
   NumberFormat nf;

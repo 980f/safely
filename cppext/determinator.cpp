@@ -19,12 +19,12 @@ DeterminatorCore::DeterminatorCore(int size, bool *rower, bool *columner, bool *
 }
 
 double DeterminatorCore::descend(void){
-  for(unsigned cl = size; cl-- > 0; ) {
+  for(unsigned cl = size; cl--> 0; ) {
     if(!columner[cl]) { //1st usable column is one we will sum on
       double summer = 0;
       bool flipper = false;
       columner[cl] = true; //descent ignores the current column
-      for(unsigned rw = size; rw-- > 0; ) {
+      for(unsigned rw = size; rw--> 0; ) {
         if(!rower[rw]) {
           double term;
           if(yish && which == cl) {

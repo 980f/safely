@@ -46,5 +46,6 @@ bool same(TextKey a,TextKey b);
 /** wraps strtod() to regularize use of its 2nd parameter.
  * @param impure if not null gets set to whether the numerical part of the string was followed by more text.*/
 double toDouble(TextKey rawText, bool* impure = nullptr);
+unsigned toIndex(TextKey rawText, bool *impure = nullptr);
 
 #endif // TEXTKEY_H

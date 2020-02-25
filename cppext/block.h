@@ -7,8 +7,8 @@ template<typename Content> class Block {
   Content *buffer;
   bool owner;
 public:
-  /** trusting constructor, trusts that caller knows the length of the buffer */
-  Block(unsigned length,Content *buffer,bool ownit = false) :
+  /** dangerous constructor, trusts that caller knows the length of the buffer */
+  Block(unsigned length,Content *buffer,bool ownit = false):
     length(length),
     buffer(buffer),
     owner(ownit){

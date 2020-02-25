@@ -1,7 +1,7 @@
 #include "storedlabel.h"
 
 
-StoredLabel::StoredLabel(Storable&node, const TextValue &fallback) : Stored(node){
+StoredLabel::StoredLabel(Storable&node, const char *fallback) : Stored(node){
   if(node.setType(Storable::Textual)) {
     if(node.is(Storable::Parsed)) {
       dbg("Attaching StoredLabel to non-textual Storable, node %s", node.fullName().c_str());
@@ -10,8 +10,8 @@ StoredLabel::StoredLabel(Storable&node, const TextValue &fallback) : Stored(node
   setDefault(fallback);
 }
 
-void StoredLabel::setDefault(const TextValue &deftext){
-  node.setDefault(deftext.c_str());
+void StoredLabel::setDefault(const char *deftext){
+  node.setDefault(deftext);
 }
 
 TextKey StoredLabel::c_str() const {
@@ -34,11 +34,11 @@ void StoredLabel::operator =(const StoredLabel&other){
   }
 }
 
-void StoredLabel::operator =(const TextValue &zs){
+void StoredLabel::operator =(const Text &zs){
   node.setImage(zs);
 }
 
-bool StoredLabel::operator ==(const TextValue &zs) const {
+bool StoredLabel::operator ==(const Text &zs) const {
   return node.image() == zs;
 }
 

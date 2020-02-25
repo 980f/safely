@@ -57,8 +57,24 @@ unsigned Cstr::length() const noexcept {
 }
 
 bool Cstr::endsWith(char isit) const noexcept {
-  return *this[length() - 1]==isit;
+  return empty() ? isit==0 : *this[length() - 1]==isit;
 }
+
+bool Cstr::endsWith(TextKey ext) const noexcept {
+  Cstr lookfor(ext);
+  if(empty()&&lookfor.empty()) {
+    return true;
+  }
+  int offset = length() - lookfor.length();
+  if(offset<0) {
+    return false;
+  }
+  if(offset==0) {
+    return *this==lookfor;
+  }
+  Cstr thisend(ptr + offset);
+  return thisend ==(lookfor);
+} // Cstr::endsWith
 
 bool Cstr::is(TextKey other) const noexcept {
   return same(this->ptr,other);
@@ -72,9 +88,9 @@ char Cstr::at(const Index &index) const noexcept {
   return (nonTrivial(ptr)&&isValid(index)) ? ptr[index] : 0;
 }
 
-bool Cstr::setAt(const Index &index, char see) const noexcept{
-  if((nonTrivial(ptr)&&isValid(index))){
-    *const_cast<char *>(&ptr[index]) =see;
+bool Cstr::setAt(const Index &index, char see) const noexcept {
+  if((nonTrivial(ptr)&&isValid(index))) {
+    *const_cast<char *>(&ptr[index]) = see;
     return true;
   } else {
     return false;
@@ -154,23 +170,23 @@ const char *Cstr::rchr(int chr) const noexcept {
   }
 }
 
-Index Cstr::trailingZeroes() const{
-  unsigned p=length();
-  if(p==1){
+Index Cstr::trailingZeroes() const {
+  unsigned p = length();
+  if(p==1) {
     return BadIndex;//easiest way to deal with a single '0' character.
   }
-  while(p-->0){
-    if(ptr[p]!='0'){
-      if(ptr[p]=='.'){
+  while(p-->0) {
+    if(ptr[p]!='0') {
+      if(ptr[p]=='.') {
         return Index(p);//#yes, p not dp. we also remove the dp
       }
       ++p;//point to last zero
-      if(p==length()){
+      if(p==length()) {
         return BadIndex;//no trailing zeroes.
       }
       //p is the last '0' and is preceded by something other than a '.'
-      for(unsigned dp=p;dp-->0;){
-        if(ptr[dp]=='.'){
+      for(unsigned dp = p; dp-->0;) {
+        if(ptr[dp]=='.') {
           //then the trailin zeroes were actually post decimal point
           return Index(p);//#yes, p not dp. we also remove the dp
         }
@@ -179,7 +195,7 @@ Index Cstr::trailingZeroes() const{
     }
   }
   return BadIndex;
-}
+} // Cstr::trailingZeroes
 
 double Cstr::asNumber(Cstr *tail) const noexcept {
   if(nonTrivial(ptr)) {

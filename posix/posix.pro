@@ -38,7 +38,8 @@ SOURCES += \
     $$posixdir/jasoned.cpp \
     $$posixdir/filewatcher.cpp \
     $$posixdir/worstcase.cpp \
-    $$PWD/threader.cpp
+    $$posixdir/threader.cpp \
+    $$posixdir/directorywalker.cpp
 
 HEADERS += \
     $$posixdir/timerfd.h \
@@ -65,8 +66,8 @@ HEADERS += \
     $$posixdir/jasoned.h \
     $$posixdir/filewatcher.h \
     $$posixdir/worstcase.h \
-    $$PWD/threader.h
-
+    $$posixdir/threader.h \
+    $$posixdir/directorywalker.h
 
 #for async IO (aio_*), as used in filereader: rt:"glibc runtime"
 LIBS += -lrt

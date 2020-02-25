@@ -2,7 +2,6 @@
 #define GPIO_H "(C) Andrew L. Heilveil, 2017"
 
 #include "memorymapper.h"
-
 #include "peripheral.h"
 /** raspbery pi version of making a pin look like a bool.
  *  This module subtly inits the memory mapping module via static construction of the gpioBase.
@@ -13,7 +12,6 @@ class GPIO {
   unsigned offset;//
 
   static Peripheral base;
-
 
   enum RegisterAsIndex {
     Function=0, //6 here
@@ -44,7 +42,6 @@ public:
   }
 
   /** af=0 for input, 1 for output, remaining values are alternate function select and the meaning depends upon the pin */
-
   GPIO &configure(unsigned af);
   /** @param pull: -1 for down, +1 for up, 0 for let it float */
   GPIO& pullit(int pull);
@@ -55,7 +52,6 @@ public:
 }; // class GPIO
 
 #include "abstractpin.h"
-#include "peripheral.h"
 /** simple wrapper so base GPIO isn't encumbered by a virtual table pointer.*/
 class GPIOpin : public AbstractPin {
   GPIO &raw;
@@ -66,7 +62,6 @@ public:  // AbstractPin interface
   void operator =(bool value) noexcept override;
   operator bool() noexcept override;
 };
-
 
 
 #endif // GPIO_H

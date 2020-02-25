@@ -71,7 +71,7 @@ using namespace sigc;
 static unsigned numericalName(TextKey name){
   if(name[0]=='#') {
     bool impure(true);
-    unsigned which = toDouble(&name[1], &impure);
+    unsigned which = toIndex(&name[1], &impure);
     if(impure) {
       return BadIndex;
     }
@@ -197,7 +197,6 @@ void Storable::setEnumerizer(const Enumerated *enumerated){
   if(changed(this->enumerated, enumerated)) {
     if(enumerated) {
       number.changeInto(NumericalValue::Counting);//enumness is more important than textuality.
-
       if((q >= Parsed) && is(Storable::Textual)) { //if already has a text value
         number = enumerated->valueOf(text.c_str()); //reconcile numeric value
       } else {
@@ -221,13 +220,15 @@ const Enumerated *Storable::getEnumerizer() const {
 
 //return whether node was altered
 bool Storable::convertToNumber(NumericalValue::Detail subtype){
-  setType(Storable::Numerical);
+  if(setType(Storable::Numerical)){
+    reinterpret();
+    return true;
+  } else
   return number.changeInto(subtype);
 } // Storable::convertToNumber
 
 bool Storable::resolve(bool recursively){
   if(is(Storable::Uncertain)) {
-
     if(false ) {//todo: if needed do a chr scan for numerical appearance.
       return true;
     } else {//it must be text
@@ -235,6 +236,7 @@ bool Storable::resolve(bool recursively){
       return true;
     }
   }
+
   if(recursively && is(Wad)) {
     ForKidsConstly(list){
       list.next().resolve(true);
@@ -426,6 +428,30 @@ void Storable::assignFrom(Storable&other){
   } /* switch */
 } // assignFrom
 
+
+bool Storable::reinterpret(){
+  NumericalValue formerly(number);
+  Cstr units;
+  switch(number.is) {
+  case NumericalValue::Truthy:
+    number = text.cvt<bool>(false,&units);
+    break;
+  case NumericalValue::Counting:
+    number = text.cvt<unsigned>(0,&units);
+    //todo:1 check for KMG units
+    break;
+  case NumericalValue::Whole:
+    number = text.cvt<int>(0,&units);
+    //todo:1 check for KMG units
+    break;
+  case NumericalValue::Floating:
+    number = text.cvt<double>(0.0,&units);
+    //todo:1 report nontrivial units.
+    break;
+  } // switch
+  return !(number==formerly);
+}
+
 void Storable::setImageFrom(TextKey value, Storable::Quality quality){
   if(isTrivial()) { //don't notify or detect change, no one is allowed to watch an uninitialized node
     text = value;
@@ -437,27 +463,8 @@ void Storable::setImageFrom(TextKey value, Storable::Quality quality){
   } else {//has been touched in some fashion
     bool notifeye = false;
     if(type==Numerical) {
-      text = value;   //#bypass change detect here, just recording for posterity
-      Cstr units;
-      NumericalValue formerly(number);
-      switch(number.is) {
-      case NumericalValue::Truthy:
-        number = text.cvt<bool>(false,&units);
-        break;
-      case NumericalValue::Counting:
-        number = text.cvt<unsigned>(0,&units);
-        //todo:1 check for KMG units
-        break;
-      case NumericalValue::Whole:
-        number = text.cvt<int>(0,&units);
-        //todo:1 check for KMG units
-        break;
-      case NumericalValue::Floating:
-        number = text.cvt<double>(0.0,&units);
-        //todo:1 report nontrivial units.
-        break;
-      } // switch
-      notifeye = !(number==formerly);
+      text = value;   //#bypass change detect here, just recording for posterity     
+      notifeye = reinterpret();
     } else {
       notifeye = changed(text, value);
     }
@@ -480,24 +487,7 @@ Cstr Storable::image(void){
     if(enumerated) {
       return enumerated->token(number.as<unsigned>());//don't update text, this is much more efficient since enumerated is effectively static.
     } else {
-      //set the internal image without triggering change detect
-      char buffer[64 + 1];//enough for 64 bit boolean image
-      CharFormatter formatter(buffer,sizeof(buffer));
-      switch(number.is) {
-      case NumericalValue::Truthy:
-        text.copy(number.as<bool>() ? "1" : "0");
-        break;
-      case NumericalValue::Whole:
-        formatter.printSigned(number.as<int>());
-        text.copy(buffer);
-        break;
-      case NumericalValue::Counting:
-        formatter.printUnsigned(number.as<unsigned>());
-        break;
-      case NumericalValue::Floating:
-        text.copy(NumberFormatter::makeNumber(number));
-        break;
-      } // switch
+      formatNumber();
       return text;
     }
   case Wad:
@@ -505,9 +495,33 @@ Cstr Storable::image(void){
     return text;
   default:
   case NotDefined:
-    return "(unknown)";
+    if(text.empty()){
+      formatNumber();
+    }
+    return text;
   } // switch
 } // Storable::image
+
+void Storable::formatNumber(){
+  //set the internal image without triggering change detect
+  char buffer[64 + 1];//enough for 64 bit boolean image
+  CharFormatter formatter(buffer,sizeof(buffer));
+  switch(number.is) {
+  case NumericalValue::Truthy:
+    text.copy(number.as<bool>() ? "1" : "0");
+    break;
+  case NumericalValue::Whole:
+    formatter.printSigned(number.as<int>());
+    text.copy(buffer);
+    break;
+  case NumericalValue::Counting:
+    formatter.printUnsigned(number.as<unsigned>());
+    break;
+  case NumericalValue::Floating:
+    text.copy(NumberFormatter::makeNumber(number));
+    break;
+  } // switch
+}
 
 Cstr Storable::getText() const {
   return text.c_str();
@@ -602,7 +616,7 @@ unsigned Storable::setSize(unsigned qty){
     --changes;
   }
   while(qty>wad.quantity()) {
-    addChild("");
+    addChild(nullptr);
     ++changes;
   }
   return changes;
@@ -688,7 +702,7 @@ Storable&Storable::operator [](unsigned ordinal){
   if(!has(ordinal)) {
     storetree("nonexisting child of %s referenced by ordinal %d (out of %d).",fullName().c_str(), ordinal, numChildren());
     dbg.dumpStack("nth child doesn't exist");
-    addChild(""); //better than an NPE so deep in the hierarchy that we don't know where it comes from.
+    addChild(nullptr);
     return *wad.last();
   }
   return *wad.nth(ordinal);
@@ -709,8 +723,14 @@ const Storable&Storable::nth(unsigned ordinal) const {
   return *wad.nth(ordinal);
 }
 
-Storable &Storable::nth(unsigned ordinal){
+Storable &Storable::nth(unsigned ordinal,bool autocreate){
   if(!has(ordinal)) {
+    if(autocreate){
+      while(numChildren()<=ordinal){
+        addChild(nullptr);
+      }
+      return *wad.last();//could fold into normal return, doing this for debug trapping.
+    } else
     storetree("nonexisting child referenced by ordinal %d (out of %d).", ordinal, numChildren());
   }
   return *wad.nth(ordinal);
@@ -755,7 +775,7 @@ void Storable::presize(unsigned qty, Storable::Type type){
     unsigned i = qty - numChildren();
 
     while(i-- > 0) {
-      Storable&kid = addChild("");
+      Storable&kid = addChild(nullptr);
       kid.setType(type);
       //and allow constructed default values to persist
       kid.setQuality(Defaulted); //#!# not using Empty as that often masks the type being set.
@@ -825,7 +845,7 @@ Storable&StoredListReuser::next(){
   if(wadding) {
     return node.addWad(wadding);
   } else {
-    return node.addChild("");
+    return node.addChild(nullptr);
   }
 } // next
 
@@ -856,7 +876,7 @@ Storable::Freezer::~Freezer(){
   }
 }
 
-void Storable::Freezer::freezeNode(Storable & node, bool childrenToo, bool onlyChildren){
+void Storable::Freezer::freezeNode(Storable &node, bool childrenToo, bool onlyChildren){
   if(!onlyChildren) {
     node.watchers.gate();
   }

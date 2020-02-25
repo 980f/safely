@@ -127,6 +127,8 @@ public:
     return const_cast<unsigned char *>(reinterpret_cast<const unsigned char *>(ptr));
   }
 
+  /** search from end forward matching chars*/
+  bool endsWith(TextKey ext) const noexcept;
 }; // class Cstr
 
 //versions implemented in cstr.cpp. You should probably add others here if the type is intrinsic or already known to this module.

@@ -1,6 +1,5 @@
 #include "settable.h"
 
-//#include "art.h"
 #ifndef MAXARGS
 #define MAXARGS 10
 #endif

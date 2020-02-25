@@ -1,4 +1,5 @@
-## qtcreator .pro ject file for accessing sigc signals library
+## // *INDENT-OFF*
+## fragment of a qtcreator .pro ject file for accessing sigc signals library
 
 unix: CONFIG += link_pkgconfig
 unix: PKGCONFIG += sigc++-2.0

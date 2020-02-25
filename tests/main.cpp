@@ -72,10 +72,10 @@ void testPrettyPrinter(unsigned which){
 
 } // testPrettyPrinter
 
-SafeStr<14> fortnight;
+static SafeStr<14> fortnight;
 
 //simply compiling the following is a demanding thing:
-Indexer<SafeStr<10>> pressure;
+static Indexer<SafeStr<10>> pressure;
 
 #include "watchable.h"
 
@@ -164,7 +164,7 @@ void testBufferFormatter(){
   buffer.clearUnused();//the printers don't presume to know where the end of the string is.
   for(int ipow = 4; ipow-->-4; ) {
     buffer.rewind();
-    double d = pow10(ipow);
+    double d = dpow10(ipow);
     auto ok = buffer.printNumber(d,0);
     buffer.next() = 0;
     dbg("CF[10^%d]->%d:%s",ipow,ok,bigenough);
@@ -182,6 +182,31 @@ void showSizes(){
   dbg("Size of minimal functor: %d",sizeof (nullfunctor));
 }
 
+/** testing chained operator() use, as alternative to varargs template */
+class Weird {
+public:
+  Weird(int ){}
+
+  Weird & operator ()(char see){
+    dbg("%c",see);
+    return *this;
+  }
+  Weird & operator ()(unsigned ewe){
+    dbg("%u",ewe);
+    return *this;
+  }
+
+  static int test(){
+    Weird thing(0);
+    char see='A';
+    unsigned ewe=42;
+    thing(see)(ewe);
+
+    Weird(3)('d')(1984U);
+    return 0;
+  }
+};
+
 extern void testJ(unsigned which);
 #include "unicodetester.h"
 #include "numberformatter.h"
@@ -190,6 +215,10 @@ extern void testJ(unsigned which);
 #include "filewritertester.h"
 #include "application.h"
 
+//rpi i2c
+#include "SSD1306.h"
+
+static SSD1306 hat({128,64,true,12});
 
 int main(int argc, char *argv[]){
   Text cwd(getcwd(nullptr,0));//we use Text class because it will free what getcwd allocated. Not so critical unless we are using this program to look for memory leaks
@@ -204,18 +233,21 @@ int main(int argc, char *argv[]){
     char group = (*tes++);
     unsigned which = atoi(tes);
     switch(group) {
+    case 'k':
+      Weird::test();
+      break;
     case '%':
       testPrettyPrinter(which);
       break;
     case 'z':
       showSizes();
       break;
-    case 'w': {
+    case 'w':
       FileWriterTester().run(which);
-    } break;
-    case 'f': {
+     break;
+    case 'f':
       FileReaderTester().run(which);
-    } break;
+     break;
     case 'b'://buffer formatting
       testBufferFormatter();
       break;

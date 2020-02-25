@@ -5,11 +5,16 @@
 #include <utility>
 
 #include "logger.h"
-#if DebugTextClass==1
+#if DebugTextClass
 static Logger tbg("TextPointer",false);
 #else
 #define tbg(...)
 #endif
+
+//calloc'ing here to inject terminal nulls
+static char * TextAlloc(unsigned length){
+  return static_cast<char *>( calloc(Zguard(length),1));
+}
 
 Text::Text() : Cstr(){
   //all is well
@@ -21,7 +26,7 @@ Text::Text(TextKey other){
   copy(other);
 }
 
-Text::Text(unsigned size) : Cstr( static_cast<TextKey>( calloc(Zguard(size),1))){
+Text::Text(unsigned size) : Cstr(TextAlloc(size)){
   //we have allocated a buffer and filled it with 0
   tbg("const by size %p:%p  [%u+1]",this,ptr,size);
 }
@@ -34,25 +39,40 @@ Text::Text(Text &&other) : Cstr(other){
 
 /** this guy is criticial to this class being performant. If we flub it there will be scads of malloc's and free's. */
 Text::Text(Text &other) : Cstr(other){
-  tbg("construct by && %p:%p",this,ptr);
+  tbg("construct by & %p:%p",this,ptr);
   other.release();//take ownership, clearing the other one's pointer keeps it from freeing ours.
 }
 
 
-Text::Text(TextKey other, const Span &span):Cstr(TextKey(nullptr)){
-  if(nonTrivial(other)&&span.ordered()) {
-    unsigned length = span.span();
-    char *ptr = reinterpret_cast<char *>(malloc(Zguard(length)));
+Text::Text(TextKey other, const Span &span):Text(span.span()){
+  if(nonTrivial(other)&&span.ordered()){
     if(ptr) {
-      ptr[length] = 0;//safety null
-      memcpy(ptr,&other[span.lowest],length);
-      this->ptr=ptr;
+      unsigned length=span.span();
+//TextAlloc took care of this:      ptr[length] = 0;//safety null
+      strncpy(violated(),&other[span.lowest],length);//todo:1 if span starts past end of given then this access 'crap'
       tbg("construct by span %p:%p",this,ptr);
+    } else {
+      tbg("OOM in substring constructor");
     }
   } else {
-      tbg("construct by span is null");
+    tbg("construct by span is null");
   }
+}
 
+
+
+Text::Text(Text other, const Span &span):Text(span.span()){
+  if(!other.empty()&&span.ordered()) {
+    Index length = span.span();
+    if(length) {
+      strncpy(violated(),&other.ptr[span.lowest],length);//todo:1 if span starts past end of given then this access 'crap'
+      tbg("construct by span %p:%p",this,ptr);
+    } else {
+      tbg("OOM in substring constructor");
+    }
+  } else {
+    tbg("construct by span is null");
+  }
 }
 
 Text::Text(const char *ptr,bool takeit) :
@@ -95,7 +115,7 @@ void Text::copy(TextKey other){
     clear();
   }
   if(nonTrivial(other)) {//definitely some data
-    ptr = strdup(other);//don't delete!
+    ptr = strdup(other);//don't delete the original!
   }
   tbg("copied by cstr %p:%p  <-%p",this,ptr,other);
 } // Text::copy
@@ -114,7 +134,13 @@ void Text::take(TextKey &other){
 
 void Text::clear() noexcept {
   tbg("about to clear %p:%p",this,ptr);
+  free(static_cast<void *>(violated()));//#need to find when this went missing. It is the main reason for this class's existence.
   release();
+}
+
+Text Text::substring(unsigned first, unsigned last){
+  Span cutter(first,last);
+  return Text(ptr,cutter);
 }
 /////////////////
 
@@ -126,4 +152,8 @@ Text Text::Chunker::operator()(unsigned leap){
   Text piece (base,*this);
   leapfrog(leap);
   return piece;
+}
+
+Text Text::Chunker::chunk() const{
+  return Text(base,*this);//this as Span
 }
