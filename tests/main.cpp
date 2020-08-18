@@ -122,6 +122,12 @@ void testNonSigcDemon(){
   demonical=12;
   demonical=3;
   printf("\nnon sigc demon testing done\n");
+  demonical.onAnyChange([](auto is){
+    printf("\nDemonic<int>:set to %d",is);
+  },true);
+  demonical=79;
+  demonical=35;
+  printf("\nnon sigc demon testing done\n");
 }
 
 #include "cheaptricks.h"

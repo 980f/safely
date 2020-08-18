@@ -12,12 +12,11 @@ template<typename Numeric> class Demonic {
 Numeric thing;
 
 /** lambda will be called with (newvalue, oldvalue) */
-using DemonFn = std::function<void (Numeric,Numeric)>;
+using DeltaFn = std::function<void (Numeric,Numeric)>;
 
-//using DemonFnAlt = const std::function<void (Numeric)>;
+using SetterFn = const std::function<void (Numeric)>;
 
-
-DemonFn demon;
+DeltaFn demon;
 
 public:
   /** default init for value, not coercing '0' */
@@ -36,7 +35,7 @@ It is theoretically possible to make a list via "andThen" wrapper around a pair 
 The demon will be passed the PRIOR value of the object, you can inspect the new value by capturing the object in your lambda.
 If @param kickme is true then the demon is called with its present value as the new one and the default value for the numeric type as the old.
   */
-void onAnyChange(DemonFn&& ademon,bool kickme=false){
+void onAnyChange(DeltaFn&& ademon,bool kickme=false){
   demon = ademon;
   if(kickme){
     ademon(thing,Numeric());
@@ -44,9 +43,11 @@ void onAnyChange(DemonFn&& ademon,bool kickme=false){
 }
 
 /** lambda will be called with (newvalue) */
-//void onChange(DemonFnAlt ademon){
-//  demon = std::bind<>(ademon,Numeric(0));
-//}
+void onAnyChange(SetterFn ademon,bool kickme=false){
+  onAnyChange([ademon](Numeric is,Numeric ){
+    ademon(is);
+  },kickme);
+}
 
 
 operator Numeric() const {
