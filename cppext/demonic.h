@@ -12,7 +12,7 @@ template<typename Numeric> class Demonic {
 Numeric thing;
 
 /** lambda will be called with (newvalue, oldvalue) */
-using DemonFn = const std::function<void (Numeric,Numeric)>;
+using DemonFn = std::function<void (Numeric,Numeric)>;
 
 //using DemonFnAlt = const std::function<void (Numeric)>;
 
@@ -34,9 +34,13 @@ Demonic(const Numeric &other) : thing(other){
 It is theoretically possible to make a list via "andThen" wrapper around a pair of functors, but let us wait until we have a good use case to dig into that syntax.
 
 The demon will be passed the PRIOR value of the object, you can inspect the new value by capturing the object in your lambda.
+If @param kickme is true then the demon is called with its present value as the new one and the default value for the numeric type as the old.
   */
-void onChange(DemonFn ademon){
+void onAnyChange(DemonFn&& ademon,bool kickme=false){
   demon = ademon;
+  if(kickme){
+    ademon(thing,Numeric());
+  }
 }
 
 /** lambda will be called with (newvalue) */
