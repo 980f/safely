@@ -48,7 +48,8 @@ SOURCES += \
     $$cppextdir/settable.cpp \
     $$cppextdir/textwalker.cpp \
     $$cppextdir/textchunk.cpp \
-    $$cppextdir/continuedfractionratiogenerator.cpp
+    $$cppextdir/continuedfractionratiogenerator.cpp \
+    $$cppextdir/demonic.cpp
 
 HEADERS += safely.h \
     $$cppextdir/buffer.h \
@@ -97,6 +98,7 @@ HEADERS += safely.h \
     $$cppextdir/numericalvalue.h \
     $$cppextdir/textwalker.cpp \
     $$cppextdir/textchunk.h \
-    $$cppextdir/continuedfractionratiogenerator.h
+    $$cppextdir/continuedfractionratiogenerator.h \
+    $$cppextdir/demonic.h
 
 
