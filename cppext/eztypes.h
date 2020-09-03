@@ -25,37 +25,22 @@ typedef int64_t s64;
 //lord it would be nice if C would make a standard operator for this:
 #define countof(array) (sizeof(array) / sizeof((array)[0]))
 
-/** instantiate one of these as a local variable at the start of a compound statement to ensure the given 'lock' bit is set to !polarity for all exit paths of that
- * block
- */
-class BitLock {
-  /** the (naturally atomic) item being used as a mutex */
-  u32&locker; //for a cortex-M* mcu this is usually the bit band address of something
-  /** whether 'locked' is represented by a 1 */
-  u32 polarity;
-  /** construction assigns to the lock bit*/
-  BitLock( u32 & lockBit, u32 _polarity) : locker(lockBit), polarity(_polarity){
-    locker = polarity;
-  }
-
-  /** destruction assigns to opposite of original assignment, blowing away any interim assignments */
-  ~BitLock(){
-    locker = !polarity;
-  }
-
-}; // class BitLock
-
-
 /** delete an object and zero the pointer that pointed to it.
  *  attempts to make it a function were painful. Should try templating
  */
 #define Obliterate(thingpointer) do {delete thingpointer; thingpointer = nullptr;} while(0)
 
 //in case some other compiler is used someday, this is gcc specific:
+#ifndef PACKED
 #define PACKED __attribute__((packed))
+#endif
 
-#if OptimizeSafely && (isQCU || isPCU)
+#ifndef WEAK
+#define WEAK __attribute((weak))
+#endif
+
 //function is used in an isr, should be speed optimized:
+#if OptimizeSafely
 #define ISRISH __attribute__((optimize(3)))
 #else
 #define ISRISH

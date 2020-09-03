@@ -1,7 +1,7 @@
 #ifndef CHAIN_H
 #define CHAIN_H
 
-#include "safely.h"
+#include "index.h"
 #include <vector>  //an STL class that is dangerous for naive users (as is all of the STL)
 #include <cstring>
 

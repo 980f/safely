@@ -34,7 +34,7 @@ bool isDecent(double d);
 /** Note: 'signbit' is a macro in math.h that pertains only to floating point arguments
  * @returns sign of operand, and converts operand to its magnitude, MININT(0x800...) is still MININT and must be interpreted as unsigned to work correctly
  */
-template<typename Numerical> int signabs(Numerical &absolutatus){
+template <typename SignedInt> int signabs(SignedInt& absolutatus) {
   if(absolutatus < 0) {
     absolutatus = -absolutatus;
     return -1;
@@ -114,10 +114,10 @@ template<typename Integer,typename Inttoo> Integer quanta(Integer num, Inttoo de
   return (num + denom - 1) / denom;
 }
 
-/** protect against garbage in (divide by zero) note: 0/0 is 1*/
-inline double ratio(double num, double denom){
-  if(denom == 0) { //#exact compare for pathological case
-    return num; //attempt to make 0/0 be 1 gave us 1.0 cps for unmeasured spectra  may someday return signed inf.
+/** protect against garbage in (divide by zero) note: 0/0 is 0 */
+template <typename NumType,typename DenType=NumType>  double ratio(NumType num, DenType denom) {
+  if (denom == 0) { //pathological case
+    return num; //attempt to make 0/0 be 1 gave 1 for ratio of unmeasured items, was not a good choice  may someday return signed inf.
   }
   return num / denom;
 }
@@ -268,7 +268,7 @@ template< typename S1, typename S2 > bool elevate(S1 &a, S2 b,bool orequal = fal
 
 //todo:2 see if compiler can use this for min of convertible types:
 template< typename S1, typename S2 > S1 lesser(S1 a, S2 b){
-  S1 b1 = S1(b); //so incomparable types gives us just one error.
+  S1 b1 = static_cast<S1>(b); //so incomparable types gives us just one error.
   if(a < b1) {
     return a;
   } else {
@@ -306,7 +306,7 @@ void nanoSpin(unsigned ticks);
 u32 muldivide(u32 arg, u32 num, u32 denom);
 
 /** @param fractionalThereof */
-unsigned saturated(unsigned quantity, double fractionThereof);
+u16 saturated(unsigned quantity, double fractionThereof);
 
 /** fraction is a fractional multiplier, with numbits stating how many fractional bits it has.*/
 u16 fractionallyScale(u16 number, u16 fraction, u16 numbits);
