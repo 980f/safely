@@ -39,17 +39,17 @@ public:
 };
 
 //todo: conditionalize this on lib being handy:
-#include <functional>
-struct OnExit {
-  typedef std::function<void(void)> Lamda;
-  Lamda lamda;
-  OnExit(Lamda dolater):lamda(dolater){
-    //#nada
-  }
-
-  ~OnExit(){
-    lamda();
-  }
-};
+//#include <functional>
+//struct OnExit {
+//  using Lamda=void(void);
+//  Lamda lamda;
+//  OnExit(Lamda dolater):lamda(dolater){
+//    //#nada
+//  }
+//
+//  ~OnExit(){
+//    lamda();
+//  }
+//};
 
 #endif // ONEXIT_H

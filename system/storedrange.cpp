@@ -14,6 +14,9 @@ StoredRange::StoredRange(Storable &node, double maximum, double minimum):Stored(
   //#nada
 }
 
+StoredRange::StoredRange( double maximum, double minimum):StoredRange(NullRef(Storable),maximum,minimum){}
+
+
 StoredRange::~StoredRange(){
   //#nada, present for breakpoints.
 }
@@ -24,12 +27,12 @@ void StoredRange::setto(double higher, double lower){
 }
 
 Ranged StoredRange::ranged() const {
-  return Ranged(max,min);
+  return {max,min};
 }
 
-sigc::slot<bool> StoredRange::rangeChecker() const{
-  return MyHandler(StoredRange::isUseful);
-}
+//sigc::slot<bool> StoredRange::rangeChecker() const{
+//  return MyHandler(StoredRange::isUseful);
+//}
 
 bool StoredRange::isUseful()const{
   return ranged().nonTrivial();

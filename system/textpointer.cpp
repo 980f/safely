@@ -1,4 +1,4 @@
-#include "safely.h"
+#include "index.h"
 #include "textpointer.h"
 #include "string.h"  //strdup
 #include "stdlib.h"  //free
@@ -45,7 +45,7 @@ Text::Text(Text &other) : Cstr(other){
 
 
 Text::Text(TextKey other, const Span &span):Text(span.span()){
-  if(nonTrivial(other)&&span.ordered()){
+  if(::nonTrivial(other)&&span.ordered()){
     if(ptr) {
       unsigned length=span.span();
 //TextAlloc took care of this:      ptr[length] = 0;//safety null

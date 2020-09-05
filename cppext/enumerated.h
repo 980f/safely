@@ -1,7 +1,7 @@
 #ifndef ENUMERATED_H_
 #define ENUMERATED_H_
 
-#include "safely.h"
+//#include "safely.h"
 #include "textkey.h"
 
 /** base class is abstract access to a labeling mechanism */

@@ -46,7 +46,14 @@ typedef int64_t s64;
 #define ISRISH
 #endif
 
+//a function suitable for handling interrupts:
+typedef void (*Handler)(void);
+
 #define InitStep(k) __attribute__((init_priority(k)))
+//lower happens first. some dox say leave 0..101 for the compiler.
+#define InitHardware 10000
+#define InitUserLibrary 20000
+#define InitApplication 30000
 
 #if 1 //missing on windows (mingw) platform compiler, expected by cwchar
 void swprintf();

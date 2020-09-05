@@ -1,7 +1,7 @@
 #ifndef ARGSET_H
 #define ARGSET_H
 
-#include "safely.h"       //ArgsPerMessage maximum copyable set
+#include "index.h"       //ArgsPerMessage maximum copyable set
 #include "buffer.h"
 
 /** used as an intermediate representation of a struct made of only numbers (no text) */

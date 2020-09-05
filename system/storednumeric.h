@@ -21,7 +21,7 @@ public:
     return node.setDefault(def);
   }
 
-  Numeric assign(Numeric newnum) {
+  Numeric set(Numeric newnum) {
     return node.setNumber< Numeric >(newnum);
   }
 

@@ -49,7 +49,7 @@ public:
   virtual ~Text() override;
 
   /** useful for forcing a copy when constructing, the copy constructor is used for moving. */
-  operator TextKey() const;
+  operator TextKey() const ;
 
   /** deletes present content (if any) and copies @param ptr content (if any).
    * @returns the @param pointer, not a pointer to self or the copy made.

@@ -1,8 +1,10 @@
 #ifndef CHANGEMONITORED_H
 #define CHANGEMONITORED_H
 
-#include "argset.h" //should seperate this guy out.
+
 #include "cheaptricks.h" //flagged
+#include "argset.h"
+
 /** manages a "dirty" bit, extended must use the set functions rather than assignment */
 class ChangeMonitored {
 protected:

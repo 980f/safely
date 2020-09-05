@@ -8,7 +8,7 @@
 //#include <cstdio> //snprintf
 #include "string.h"
 #include "numberparser.h"
-#include "safely.h" //ascii framing characters
+//#include "safely.h" //ascii framing characters
 #include "cstr.h"
 
 struct NumberParser : public PushedNumberParser  {
