@@ -1,5 +1,9 @@
 #include "minimath.h"
 
+//we are very precise in our rounding choices, we aren't always "rounding to nearest" like this warning expects.
+#pragma ide diagnostic ignored "bugprone-incorrect-roundings"
+#pragma ide diagnostic ignored "UnusedGlobalDeclarationInspection"
+
 #ifdef __linux__
 #include <limits>
 const double Infinity = std::numeric_limits<double>::infinity();
@@ -155,7 +159,22 @@ int modulus(int value, unsigned cycle){
   return value;
 } // modulus
 
-unsigned saturated(unsigned quantity, double fractionThereof){
+//conflicted with u16 version, may need template.
+//unsigned saturated(unsigned quantity, double fractionThereof){
+//  double dee(quantity * fractionThereof);
+//  if(dee<0) {
+//    return 0;
+//  }
+//  unsigned rawbins(dee + 0.5);
+//
+//  if(rawbins >= quantity) {
+//    return quantity - 1;
+//  } else {
+//    return rawbins;
+//  }
+//} /* saturated */
+
+u16 saturated(unsigned quantity, double fractionThereof){
   double dee(quantity * fractionThereof);
   if(dee<0) {
     return 0;
@@ -418,7 +437,7 @@ unsigned splitteru(double &d){
 unsigned digitsAbove(unsigned int value, unsigned numDigits){
   unsigned digit = value / i32pow10(numDigits);
   value -= digit * i32pow10(numDigits);
-  return digit;
+  return value;//the former code here was wrong for quite some time!
 }
 
 int ilog10(double value){

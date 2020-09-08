@@ -1,21 +1,22 @@
 #include "settable.h"
 
+//temporarily don't have a project options file for this:
 #ifndef MAXARGS
-#define MAXARGS 10
+#define MAXARGS 15
 #endif
 
-bool Settable::blockCheck(Settable &desired) const{
-  return differs(desired);
-}
-
-bool Settable::differs(const Settable &other)const{
-  ArgBlock<MAXARGS> args;
-  ArgBlock<MAXARGS> args2;
-
-  other.getParams(args);
-  this->getParams(args2);
-  return !args2.equals(args);
-}
+//bool Settable::blockCheck(Settable &desired) const{
+//  return differs(desired);
+//}
+//
+//bool Settable::differs(const Settable &other)const{
+//  ArgBlock<MAXARGS> args;
+//  ArgBlock<MAXARGS> args2;
+//
+//  other.getParams(args);
+//  this->getParams(args2);
+//  return !args2.equals(args);
+//}
 
 void Settable::copy(const Settable &other){
   if(!&other){//compiler generated an operator = with a null 'other'

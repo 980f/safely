@@ -27,7 +27,7 @@ protected:
 /** lambda will be called, it must somehow know how to get the value(s) of interest. */
   using NotifierFn =  void(void);
 
-  DeltaFn demon;
+  DeltaFn *demon;
 
 public:
   /** default init for value, not coercing '0' */

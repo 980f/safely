@@ -92,7 +92,7 @@ bool Char::isHexDigit() const noexcept {
   return isxdigit(raw);
 }
 
-#include "ignoresignwarnings.h"
+//#include "ignoresignwarnings.h"
 unsigned Char::hexDigit() const noexcept {
   unsigned trusting=(raw|0x20) - '0';//tolowerthen subtract char for zero.
   if((trusting>9)){

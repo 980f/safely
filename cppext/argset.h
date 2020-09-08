@@ -1,7 +1,7 @@
 #ifndef ARGSET_H
 #define ARGSET_H
-
-#include "index.h"       //ArgsPerMessage maximum copyable set
+//ArgsPerMessage maximum copyable set
+#include "index.h"
 #include "buffer.h"
 
 /** used as an intermediate representation of a struct made of only numbers (no text) */
@@ -24,7 +24,7 @@ public:
  *  @see nearly for @param bits value */
   bool equals(const ArgSet &args, int bits = 18) const;
   //lint makes me do this:
-  virtual ~ArgSet();
+  virtual ~ArgSet()=default;
 }; // class ArgSet
 
 
