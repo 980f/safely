@@ -10,3 +10,4 @@ bool changed(double&target, double newvalue,int bits){
     return false;
   }
 }
+

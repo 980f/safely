@@ -2,9 +2,10 @@
 #define BLOCK_H "(C) Andrew L. Heilveil, 2017"
 
 /** basic block manager */
-template<typename Content> class Block {
+template<typename Content=uint8_t> class Block {
   unsigned length;
   Content *buffer;
+  //not const so that we can take it
   bool owner;
 public:
   /** dangerous constructor, trusts that caller knows the length of the buffer */
@@ -26,7 +27,7 @@ public:
     }
     buffer = nullptr;//reduce use-after-free damage, should NPE instead of random trashing.
     length = 0;
-    owner = 0;
+    owner = false;
   }
 
   /** there are two concepts that might fall under copy construction.*/
@@ -43,7 +44,7 @@ public:
     if(contains(index)) {
       return buffer[index];
     }
-    return reinterpret_cast<Content &>(nullptr);//converts illegal access into an NPE.
+    return NullRef(Content);//converts illegal access into an NPE.
   }
 
   /** only a good idea if the class has a move constructor. */
@@ -54,8 +55,20 @@ public:
     return defawlt;
   }
 
+  unsigned stuff(unsigned index, const Content *source, unsigned incoming)const{
+    if(index+incoming<length){
+      while(incoming-->0){
+        buffer[index++]=*source++;
+      }
+      return index;
+    } else {
+      //TBD: do we refuse or just truncate?
+      return BadLength;
+    }
+  }
+
   /** access that bypasses the sanity checks of the class */
-  Content *violated(){
+  Content *violated() const {
     return buffer;
   }
 

@@ -8,11 +8,8 @@
  * started.
  */
 
-
-
-/** atomisable compare and assign
- * @returns whether assigning @param newvalue to @param target changes the latter */
-template<typename Scalar1, typename Scalar2 = Scalar1> bool changed(Scalar1 &target, const Scalar2 &newvalue){
+/** @returns whether assigning @param newvalue to @param target changes the latter.  */
+template<typename Scalar1, typename Scalar2 = Scalar1> bool changed(Scalar1 &target, Scalar2 &&newvalue){
   //attempt to cast newvalue to Scalar1 via declaring a local Scalar1 here wasn't universally acceptible, tried to implicitly construct and that can be expensive
   if(target != newvalue) {
     target = newvalue;
@@ -22,12 +19,11 @@ template<typename Scalar1, typename Scalar2 = Scalar1> bool changed(Scalar1 &tar
   }
 }
 
-/** @returns whether assigning @param newvalue to @param target changes the latter. the compare is for nearly @param bits, not an exact number. If nearly the same then
+/** @returns whether assigning @param newvalue to @param target changes the latter. The compare is for nearly @param bits, not an exact number. If nearly the same then
  * the assignment does not occur.
  *  This is handy when converting a value to ascii and back, it tells you whether that was significantly corrupting.
  */
-bool changed(double&target, double newvalue,int bits = 32);
-
+bool changed(double&target, double newvalue,int bits =32);
 
 /** marker for potential atomic value shift
  * assign new value but return previous, kinda like value++
@@ -53,13 +49,20 @@ template<typename Scalar> void Free(Scalar **p2p){
   }
 }
 
-/** originally was the same code as the newer 'take' but since the code was found duplicated in another file the name wasn't quote right.
+/** originally was the same code as the newer 'take' but since the code was found duplicated in another file the name wasn't quite right.
  * 'flagged' is still a very good name for the boolean implementation of take, so we rework it thusly:
  */
 bool flagged(bool &varb) ISRISH; //mark as needing critical optimization
 inline bool flagged(bool &varb){
   return take(varb);
 }
+
+/** avert compiler complaints when our boolean is hiding under a bitbanded unsigned int */
+bool flagged(unsigned &varb) ISRISH; //mark as needing critical optimization
+inline bool flagged(unsigned &varb){
+  return take(varb);
+}
+
 
 /** atomisable test and set
  * if arg is false set it to true and return true else return false.*/

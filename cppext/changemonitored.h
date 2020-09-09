@@ -2,7 +2,7 @@
 #define CHANGEMONITORED_H
 
 
-#include "cheaptricks.h" //flagged
+#include "cheaptricks.h" //flagged,
 #include "argset.h"
 
 /** manages a "dirty" bit, extended must use the set functions rather than assignment */
@@ -40,6 +40,10 @@ public:
   bool also(const ChangeMonitored&other){
     return also(other.modified);
   }
+
+//  bool set(double &parm,double value){
+//    return changed(parm,value,32);
+//  }
 
   /** added return for use in gui "actually changed" event generation.*/
   template<typename Scalar> bool set(Scalar &parm,Scalar value){
