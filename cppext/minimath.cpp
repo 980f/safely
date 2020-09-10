@@ -82,7 +82,7 @@ const u64 Decimal2[] = {
 };
 
 /** @returns the number of decimal digits needed to represent the given integer, -1 if the number is 0 */
-int ilog10(u64 value){
+int ilog10l(u64 value){
   for(int log = countof(Decimal2); log-->0; ) {
     if(Decimal2[log]<=value) {
       return log + 10;
@@ -91,7 +91,7 @@ int ilog10(u64 value){
   return ilog10(u32(value));
 }
 
-u32 i32pow10(unsigned power){
+unsigned i32pow10(unsigned power){
   if(power<countof(Decimal1)) {
     return Decimal1[power];
   }
@@ -440,6 +440,6 @@ unsigned digitsAbove(unsigned int value, unsigned numDigits){
   return value;//the former code here was wrong for quite some time!
 }
 
-int ilog10(double value){
-  return ilog10(u64(fabs(value)));
+int ilog10d(double value){
+  return ilog10l(u64(fabs(value)));
 }

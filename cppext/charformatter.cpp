@@ -136,7 +136,7 @@ s64 CharFormatter::parse64(s64 def){
 
   if(n.parseNumber(*this)) {
     if(n.hasEterm) {//trying to tolerate some values, may produce nonsense.
-      int logProduct = ilog10(n.predecimal) + n.pow10 + n.exponent;//??
+      int logProduct = ilog10l(n.predecimal) + n.pow10 + n.exponent;//??
       if(logProduct<=18) {
         n.predecimal = 0x7FFFFFFFFFFFFFFFLL;
       } else {
@@ -169,7 +169,7 @@ bool CharFormatter::printChar(char ch, unsigned howMany){
   }
 }
 
-bool CharFormatter::printAtWidth(unsigned int value, unsigned width, char padding){
+bool CharFormatter::printAtWidth(unsigned value, unsigned width, char padding){
   unsigned numDigits = value ? ilog10(value) + 1 : 1; //ilog10 gives -1 for zero, here we lump zero in with 1..9
   if(numDigits > width) {//if you cant fit the whole thing don't put any digits into the field.
     printChar('*', width);
@@ -194,7 +194,7 @@ bool CharFormatter::printUnsigned(unsigned int value){
   if(value == 0) {//frequent case
     return printChar('0'); // simpler than dicking with the suppression of leading zeroes.
   }
-  int numDigits = ilog10(value) + 1;
+  int numDigits = ilog10l(value) + 1;
   if(stillHas(numDigits)) {//this doesn't include checking for room for a separator
     while(numDigits--> 0) {
       unsigned digit = revolutions(value,i32pow10(numDigits));
@@ -210,7 +210,7 @@ bool CharFormatter::printUnsigned64(u64 value){
   if(value == 0) {
     return printChar('0');
   }
-  int numDigits = ilog10(value) + 1;
+  int numDigits = ilog10l(value) + 1;
   if(stillHas(numDigits)){//this doesn't include checking for room for a separator
     while(numDigits--> 0) {
       unsigned digit = revolutions(value,i64pow10(numDigits));
@@ -357,7 +357,7 @@ bool CharFormatter::printNumber(double d, const NumberFormat &nf, bool addone){
           //and we are done
         } else {
           //some of postdecimal's digits are zeroes.
-          unsigned digitsPresent=1+ilog10(np.postdecimal);
+          unsigned digitsPresent=1+ilog10l(np.postdecimal);
           auto numZeroes=np.postDigits-digitsPresent;
           if(numZeroes>=stillwant){
              checker &= printChar('0',stillwant);

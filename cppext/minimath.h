@@ -192,12 +192,12 @@ template<typename floating> bool nearly(floating value, floating other, int bits
 
 /** @returns The base 10 exponent of @param value. Note that the number of digits for values >0 is 1+ilog10().
  * For zero this returns -1, most logic will have problems if you don't check that. */
-int ilog10(u32 value);
-int ilog10(u64 value);
-int ilog10(double value);
+int ilog10(unsigned value);
+int ilog10l(u64 value);
+int ilog10d(double value);
 
 /** an integer power of 10. out of bounds arg gets you nothing but trouble ... */
-u32 i32pow10(unsigned power);
+unsigned i32pow10(unsigned power);
 
 unsigned digitsAbove(unsigned int value, unsigned numDigits);
 
@@ -303,7 +303,7 @@ unsigned splitteru(double &d);
 void nanoSpin(unsigned ticks);
 
 /** rounded and overflow managed 'multiply by ratio' */
-u32 muldivide(u32 arg, u32 num, u32 denom);
+unsigned muldivide(unsigned arg, unsigned num, unsigned denom);
 
 /** @param fractionalThereof */
 u16 saturated(unsigned quantity, double fractionThereof);
@@ -315,22 +315,22 @@ u16 fractionallyScale(u16 number, u16 fraction, u16 numbits);
  * Note well that this will give 0 as the log of 0 rather than negative infinity, precheck the argument if you can't live with that.
  * mathematical definition: "number of right shifts necessary for an unsigned number to become 0"
  */
-u32 log2Exponent(u32 number);
+unsigned log2Exponent(unsigned number);
 
 /** @returns eff * 2^pow2  where pow2 is signed. This can be done rapidly via bitfiddling*/
 float shiftScale(float eff, int pow2);
 
-double flog(u32 number);
+double flog(unsigned number);
 /** @return the natural logarithm of the ratio of @param over over @param under.
  * This is computable as the difference of their logs, but we wrap that here so that some fancy fidding can reduce the number of logarithms executed.  */
-double logRatio(u32 over, u32 under);
+double logRatio(unsigned over, unsigned under);
 
 u16 uround(float scaled);
 s16 sround(float scaled);
 
 /**NB: copyObject() and fillObject() can NOT be used with objects that contain polymorphic objects*/
-void copyObject(const void *source, void *target, u32 length);
-void fillObject(void *target, u32 length, u8 fill);
+void copyObject(const void *source, void *target, unsigned length);
+void fillObject(void *target, unsigned length, u8 fill);
 
 //EraseThing only works on non-polymorphic types. On polymorphs it also  kills the vtable!
 #define EraseThing(thing) fillObject(&(thing), sizeof(thing), 0);
