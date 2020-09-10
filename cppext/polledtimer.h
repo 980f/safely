@@ -37,6 +37,7 @@ public:
   inline bool isDone() const {
     return !running;
   }
+  Ticks ticksForSeconds(double sec);
 };
 
 
