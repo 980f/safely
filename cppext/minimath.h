@@ -145,7 +145,7 @@ inline double rounder(double value, double quantum){
  *  0<= return <cycle;
  *  Note: the C '%' operator gives negative out for negative in.
  */
-int modulus(int value, unsigned cycle);
+int fast_modulus(int value, unsigned cycle);
 
 /** @param accum is reduced to a number less than @param length, @returns the number of subtractions that were necessary to do so.
  * Named for use in reporting rotary position from encoder without an index pulse to pick out the revolutions.

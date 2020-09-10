@@ -145,7 +145,7 @@ s16 sround(float scaled){ //#this would be so much cleaner and faster in asm!
   return s16(scaled);
 }
 
-int modulus(int value, unsigned cycle){
+int fast_modulus(int value, unsigned cycle){
   /* since most use cases are within one cycle we use add/sub rather than try to make divide work.*/
   if(cycle<=1) {
     return value;

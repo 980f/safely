@@ -60,9 +60,6 @@ bool ArgSet::equals(const ArgSet &args, int bits) const {
   return true;
 } // ArgSet::equals
 
-ArgSet::~ArgSet(){
-  //#nada, we wrap data, we don't own it.
-}
 
 ConstArgSet::ConstArgSet(const double* d, int sizeofd) : Indexer<const double>(d, sizeofd){
   //#nada
