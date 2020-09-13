@@ -87,7 +87,7 @@ template< typename mathy > int compareof(mathy lhs,mathy rhs){
 }
 
 /** 'round to nearest' ratio of integers*/
-template<typename Integer> Integer rate(Integer num, Integer denom){
+template<typename Integer,typename Integer2=Integer> Integer rate(Integer num, Integer2 denom){
   if(denom == 0) {
     return num == 0 ? 1 : 0; //pathological case
   }

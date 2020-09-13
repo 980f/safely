@@ -4,22 +4,12 @@
 #pragma ide diagnostic ignored "bugprone-incorrect-roundings"
 #pragma ide diagnostic ignored "UnusedGlobalDeclarationInspection"
 
-#ifdef __linux__
-#include <limits>
-const double Infinity = std::numeric_limits<double>::infinity();
-const double Nan = std::numeric_limits<double>::quiet_NaN();
+using namespace std;//had to do this as microcontroller STL library is still useless. It declares a weird namespace to replace std.
 
-u32 log2Exponent(u32 number){
-  //can be really fast in asm
-  for(u32 exp = 0; exp<32; ++exp) {
-    if(number) {
-      number >>= 1;
-    } else {
-      return exp;
-    }
-  }
-  return 32;
-} // log2Exponent
+#if __has_include(<limits>)
+#include <limits>
+const double Infinity = numeric_limits<double>::infinity();
+const double Nan = numeric_limits<double>::quiet_NaN();
 
 #include <cmath>
 bool isSignal(double d){
@@ -27,15 +17,16 @@ bool isSignal(double d){
 }
 
 bool isNan(double d){
-  return std::isnan(d);
+  return isnan(d);
 }
 
 bool isNormal(double d){
-  return std::isnormal(d);
+  return isnormal(d);
 }
 
 
 #else // ifdef __linux__
+
 //firmware platform didn't have a useful limits.h so ...
 static int64_t InfPattern = 0x7FFLL << 52;
 static int64_t NanPattern = 0x7FF8LL << 48;
