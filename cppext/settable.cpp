@@ -19,7 +19,7 @@
 //}
 
 void Settable::copy(const Settable &other){
-  if(!&other){//compiler generated an operator = with a null 'other'
+  if(!&other){//#warn -Waddress etc. is ok, we guard against a compiler generated operator = with a null 'other'
     return;
   }
   ArgBlock<MAXARGS> args;
