@@ -22,7 +22,7 @@ public:
   ~PolledTimer();//=default;
   virtual void restart(Ticks ticks);
 
-  void restart(float seconds);//float (not double) as is often in time critical code.
+  void restartSeconds(float seconds);//float (not double) as is often in time critical code.
   /** stops countdown without triggering onDone() */
   void freeze();
 

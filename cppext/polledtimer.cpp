@@ -57,7 +57,7 @@ void PolledTimer::restart(Ticks value){
   }
 } /* restart */
 
-void PolledTimer::restart(float seconds){
+void PolledTimer::restartSeconds(float seconds){
   if(seconds<=0){
     return;
   }
