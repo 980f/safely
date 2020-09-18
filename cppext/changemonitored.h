@@ -2,7 +2,7 @@
 #define CHANGEMONITORED_H
 
 
-#include "cheaptricks.h" //flagged,
+#include "boolish.h" //flagged,
 #include "argset.h"
 
 /** manages a "dirty" bit, extended must use the set functions rather than assignment */
