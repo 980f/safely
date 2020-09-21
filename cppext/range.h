@@ -25,9 +25,7 @@ public:
     trivialize();
   }
 
-  Range( PrimitiveNumeric highest, PrimitiveNumeric lowest ){
-    setto(highest,lowest);
-  }
+  constexpr Range( PrimitiveNumeric highest, PrimitiveNumeric lowest):lowest(lowest),highest(highest),reversed(lowest > highest){ }
 
   bool isValid(void) const {
     return lowest <= highest;
@@ -114,11 +112,11 @@ public:
     }
   } // adjustInto
 
-  PrimitiveNumeric width(void) const {
+  constexpr  PrimitiveNumeric width(void) const {
     return highest - lowest;
   }
 
-  PrimitiveNumeric center(void) const {
+  constexpr PrimitiveNumeric center(void) const {
     return (highest + lowest) / 2;
   }
 
@@ -135,11 +133,11 @@ public:
     return true;
   } /* setto */
 
-  PrimitiveNumeric start(void) const {
+  constexpr PrimitiveNumeric start(void) const {
     return lowest;
   }
 
-  PrimitiveNumeric end(void) const {
+  constexpr PrimitiveNumeric end(void) const {
     return highest;
   }
 

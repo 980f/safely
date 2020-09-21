@@ -60,7 +60,7 @@ void swprintf();
 void vswprintf();
 #endif
 
-//and sometimes you just gotta do something dangerous:
+//and sometimes you just gotta do something dangerous: (if you use nullptr instead of 0 the compiler catches on!)
 #define NullRef(sometype) *reinterpret_cast<sometype *>(0)
 #define NullPointer(sometype) reinterpret_cast<sometype *>(0)
 

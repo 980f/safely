@@ -4,9 +4,6 @@ Ranged::Ranged(){
   //#nada
 }
 
-Ranged::Ranged(double highest, double lowest):Range(highest,lowest){
-  //#nada
-}
 
 Ranged Ranged::around(double center,double factor){
   return Ranged(center*(1+factor),center*(1-factor));

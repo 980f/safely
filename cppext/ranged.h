@@ -6,7 +6,10 @@
 class Ranged :public Range<double> {
 public:
   Ranged();
-  Ranged(double highest, double lowest);
+  constexpr Ranged(double highest, double lowest):Range(highest,lowest){
+    //#nada
+  }
+
   /** @returns the given @param raw value if it is in range, else the nearest bound. */
   double clamped(double raw) const;
   /** coerces value into range and @returns whether it was altered */

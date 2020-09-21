@@ -21,10 +21,10 @@ public:
   virtual void getParams(ArgSet&args)const =0 ;
 
 public:
-  /** @returns whether posting should be requested, clears modified flags on both entities. */
-  bool blockCheck(Settable &desired)const;
-  /** compare */
-  bool differs(Settable const &other)const;//compare
+//  /** @returns whether posting should be requested, clears modified flags on both entities. */
+//  bool blockCheck(Settable &desired)const;
+//  /** compare */
+//  bool differs(Settable const &other)const;//compare
   /** assign. can inspect change flags or @see differed() */
   void copy(Settable const &other);
   /**assign, report if assignment caused something to change.*/
