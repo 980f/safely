@@ -53,9 +53,7 @@ bool isDecent(double d){
   return d==0.0 || isNormal(d);
 }
 
-const u32 Decimal1[] = {
-  1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000
-};
+
 
 /** @returns the number of decimal digits needed to represent the given integer, -1 if the number is 0 */
 int ilog10(u32 value){
@@ -82,12 +80,6 @@ int ilog10l(u64 value){
   return ilog10(u32(value));
 }
 
-unsigned i32pow10(unsigned power){
-  if(power<countof(Decimal1)) {
-    return Decimal1[power];
-  }
-  return 0;//this should get the caller's attention.
-}
 
 u64 i64pow10(unsigned power){
   if(power>=countof(Decimal1)) {

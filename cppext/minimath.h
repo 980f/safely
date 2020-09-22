@@ -196,8 +196,20 @@ int ilog10(unsigned value);
 int ilog10l(u64 value);
 int ilog10d(double value);
 
-/** an integer power of 10. out of bounds arg gets you nothing but trouble ... */
-unsigned i32pow10(unsigned power);
+/** initially constexpr exposed for i32pow10 */
+constexpr u32 Decimal1[] = {
+  1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000
+};
+
+/** an integer power of 10. out of bounds arg gets you nothing but trouble ...
+ *  initially constexpr exposed for CG::Message::Field constructor */
+constexpr unsigned i32pow10(unsigned power){
+  if(power<countof(Decimal1)) {
+    return Decimal1[power];
+  }
+  return 0;//this should get the caller's attention.
+}
+
 
 unsigned digitsAbove(unsigned int value, unsigned numDigits);
 
