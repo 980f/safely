@@ -281,21 +281,21 @@ public:
   }
 
   /** @return index of next which is typically the same as the number of times 'next()' has been called*/
-  unsigned int used(void) const {
+  unsigned used() const {
     return ordinal();
   }
 
   //publish parts of ordinator, without these derived classes are deemed abstract.
-  virtual bool hasNext(void) override {//const removed to allow derived classes to lookahead and cache
+  virtual bool hasNext() override {//const removed to allow derived classes to lookahead and cache
     return Ordinator::hasNext();
   }
 
-  bool hasPrevious(void) const override {
+  bool hasPrevious() const override {
     return Ordinator::hasPrevious();
   }
 
   /** on overrun of buffer returns last valid entry*/
-  virtual Content &next(void) override{
+  virtual Content &next() override{
     CppExtBufferFailureGuard
     return buffer[pointer < length ? pointer++ : length - 1];
   }
@@ -316,24 +316,24 @@ public:
     return hasNext();
   }
 
-  Content &operator *(void){
+  Content &operator *(){
     CppExtBufferFailureGuard
     return buffer[pointer < length ? pointer : length - 1];
   }
 
   /** you should avoid using this value for anything except diagnostics, it allows you to bypass the bounds checking which is the reason for existence of this class. */
-  Content *internalBuffer(void) const {
+  Content *internalBuffer() const {
     return buffer;
   }
 
   /** @return current object ('s reference), rigged for sensible behavior when buffer is used circularly*/
-  Content &peek(void) const override {
+  Content &peek() const override {
     CppExtBufferFailureGuard
     return buffer[pointer < length ? pointer : 0];
   }
 
   /** @returns reference to item most likely delivered by last call to next()*/
-  Content &previous(void) const {
+  Content &previous() const {
     CppExtBufferFailureGuard
     return buffer[pointer >= length ? length - 1 : (pointer ? pointer - 1 : 0)];
   }
@@ -343,7 +343,7 @@ public:
   }
 
   /** undo last next, undo at zero is still at 0. */
-  void unget(void){
+  void unget(){
     Ordinator::rewind(1);
   }
 
@@ -368,7 +368,7 @@ public:
    * This does a memory move, no copy constructor or such will be invoked.
    * The allocation is reduced, don't do this to a primary buffer.
    */
-  Indexer &remove(unsigned int amount){
+  Indexer &remove(unsigned int amount){//# OK not virtual.
     if(amount > pointer) {
       amount = pointer;
     }
