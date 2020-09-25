@@ -34,7 +34,7 @@ public:
   }
 
 /** @returns whether settings are changed.*/
-  bool setParams(ArgSet&args) override;
+  bool setParams(ConstArgSet&args) override;
   void getParams(ArgSet&args) const override;
 
 }; // class LinearMapping

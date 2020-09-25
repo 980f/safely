@@ -12,7 +12,8 @@ void Settable::copy(const Settable &other){
   ArgBlock<MAXARGS> args;
   other.getParams(args);
   args.freeze();
-  this->setParams(args);
+  ConstArgSet punned(args);
+  this->setParams(punned);
 }
 
 bool Settable::changed(const Settable &other){

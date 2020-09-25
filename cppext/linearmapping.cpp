@@ -31,7 +31,7 @@ void LinearMapping::init(float ymax, float ymin, float xmax, float xmin){
   xaxis.setto(xmax, xmin);
 }
 /** @returns whether settings are changed.*/
-bool LinearMapping::setParams(ArgSet&args){
+bool LinearMapping::setParams(ConstArgSet&args){
   also(yaxis.setParams(args));
   return also(xaxis.setParams(args));
 }

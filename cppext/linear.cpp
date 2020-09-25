@@ -30,7 +30,7 @@ double Linear::x(double y)const {
   return ratio(y-a[0],a[1]);
 }
 
-bool Linear::setParams(ArgSet&args){
+bool Linear::setParams(ConstArgSet&args){
   set(a[0],args);
   set(a[1],args);
   return isModified();

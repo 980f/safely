@@ -24,7 +24,7 @@ public:
   unsigned numParams()const override {
     return 2;
   }
-  bool setParams(ArgSet&args) override ;
+  bool setParams(ConstArgSet&args) override ;
   void getParams(ArgSet&args) const override ;
   /** access to individual coefficient*/
   double &operator[](int which);

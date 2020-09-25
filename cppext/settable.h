@@ -17,7 +17,7 @@ protected:
   }
 public:
   virtual unsigned numParams()const=0;
-  virtual bool setParams(ArgSet&args)=0;
+  virtual bool setParams(ConstArgSet&args)=0;
   virtual void getParams(ArgSet&args)const =0 ;
 
 public:
@@ -55,7 +55,7 @@ public:
     return 1;
   }
 
-  bool setParams(ArgSet&args)override {
+  bool setParams(ConstArgSet&args)override {
     return also(::changed(value,args.next(0)));
   }
 

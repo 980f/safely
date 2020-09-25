@@ -47,14 +47,19 @@ public:
 
 }; // class ArgBlock
 
-/** appears to be incomplete, need to look for usages */
+/** exists so that we can wrap const arrays of doubles for firmware rom based config. */
 class ConstArgSet : public Indexer<const double> {
 public:
-  ConstArgSet(const double *d, int sizeofd);
+  ConstArgSet(const double *d, unsigned numArgs);
   ConstArgSet(const ArgSet &other);
   ConstArgSet(const ConstArgSet &other);
   ~ConstArgSet() = default;
 };
+
+//FakeArgs takes a root name and creates a const array and a wrapper for it: nameArgs
+#define FakeArgs(name, ...)\
+static constexpr double name##Scaling[] = { __VA_ARGS__ };\
+static ConstArgSet name##Args(&name##Scaling[0], sizeof(name##Scaling))
 
 
 #endif // ARGSET_H

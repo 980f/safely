@@ -46,23 +46,23 @@ public:
 //  }
 
   /** added return for use in gui "actually changed" event generation.*/
-  template<typename Scalar> bool set(Scalar &parm,Scalar value){
+  template<typename Scalar> bool set(Scalar &parm,const Scalar value){
     bool altered = changed(parm,value);
     also(altered);
     return altered;
   }
 
-  template<typename Scalar> void set(Scalar &parm,ArgSet &args){
+  template<typename Scalar> void set(Scalar &parm,ConstArgSet &args){
     if(args.hasNext()) {
       also(changed(parm,Scalar(args.next())));
     }
   }
 
-  template<typename Scalar> void set(Scalar &parm,ArgSet &args,Scalar def){
+  template<typename Scalar> void set(Scalar &parm,ConstArgSet &args,Scalar def){
     also(changed(parm,args.next(def)));
   }
 
-  void set(float&parm,ArgSet &args,double def = 0.0){
+  void set(float&parm,ConstArgSet &args,double def = 0.0){
     also(changed(parm,float(args.next(def))));
   }
 
