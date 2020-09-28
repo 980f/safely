@@ -78,12 +78,16 @@ If @param kickme is true then the demon is called with its present value as the 
   }
 
   Numeric set(const Numeric &newvalue) {
-    if (newvalue != item) {
-      Numeric was = item;
-      item = newvalue;
-      demon(newvalue, was);
+    if(demon){
+      if (newvalue != item) {
+        Numeric was = item;
+        item = newvalue;
+        demon(newvalue, was);
+      }
+      return item;
+    } else {
+      return item = newvalue;
     }
-    return item;
   }
 
   Numeric operator=(const Numeric &other) {
