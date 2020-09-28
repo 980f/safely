@@ -22,8 +22,8 @@ protected://we are a base class
 
 public:
   Cstr();
-  Cstr(TextKey target);//# we desire implicit conversions
-  Cstr(unsigned char *target);//# we desire implicit conversions
+  Cstr(TextKey target);//#no 'explicit' we desire implicit conversions
+  Cstr(unsigned char *target);//#no 'explicit' we desire implicit conversions
 
   //virtual destructor as this is a base for classes which may do smart things with the pointer on destruction.
   virtual ~Cstr() = default;//we never take ownership of ptr, see class Text for such a beast.
@@ -31,11 +31,11 @@ public:
   virtual TextKey operator =(TextKey ptr);//# we desire passthrough on argument
 
   /** @returns pointer member, allowing you to bypass the checks of this class.  */
-  operator TextKey() const;
+  operator TextKey() const noexcept;
 
   /** @returns pointer member, allowing you to bypass the checks of this class.
    * Name is from/for replacing glib::ustring and std::string */
-  TextKey c_str() const;
+  TextKey c_str() const noexcept;
 
   /** as byte vs human readable character */
   const unsigned char*raw() const;
@@ -46,7 +46,10 @@ public:
   const char *nullIfEmpty() const;
 
   /** @returns whether content is non-existent or trivial */
-  bool empty() const;
+  bool isTrivial() const noexcept;
+  bool empty() const noexcept{
+    return isTrivial();
+  }
 
   /** @returns length, 0 if ptr is null.
    *  not using size_t due to textual analysis of frequency of casts.*/
@@ -96,11 +99,15 @@ public:
   /** @returns pointer to last character in this string which matches ch. @see chr() */
   const char *rchr(int chr) const noexcept;
 
+/** @returns the leading numerical part of the string. If you provide a tail it will be pointed at the char that stopped the parsing */
+  unsigned asUnsigned(const char **tail=nullptr) const noexcept;
+ /** strtod */
+  double asNumber(Cstr *tail = nullptr) const noexcept;
+
   /** @returns an index that if nulled will remove useless '0' digits, and maybe a radix point. This is dumb and presumes the string is a reasonable representation of a number. */
   Index trailingZeroes() const;
 
-  /** strtod */
-  double asNumber(Cstr *tail = nullptr) const noexcept;
+ 
 
   /** for bool: 1,0,true, false have definite values.
    * to distinguish onNull from the same value being parsed inspect units.

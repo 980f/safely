@@ -1,6 +1,9 @@
 #include "cstr.h"
-#include "safely.h"
+
 #include "string.h"
+#include "char.h"
+#include "textkey.h"
+//todo: wrap stdlib dependent parts with a __have_include__
 #include "stdlib.h" //strtod
 
 Cstr::Cstr() : ptr(nullptr){
@@ -20,7 +23,7 @@ TextKey Cstr::operator =(TextKey ptr){
   return ptr;
 }
 
-TextKey Cstr::c_str() const {
+TextKey Cstr::c_str() const noexcept {
   return ptr;
 }
 
@@ -36,6 +39,10 @@ const char *Cstr::notNull() const {
   }
 }
 
+bool Cstr::isTrivial() const noexcept {
+  return ptr == nullptr || *ptr == 0;
+}
+
 const char *Cstr::nullIfEmpty() const {
   if(empty()) {
     return nullptr;
@@ -48,9 +55,6 @@ Cstr::operator const char *() const {
   return notNull();
 }
 
-bool Cstr::empty() const {
-  return isTrivial(ptr);
-}
 
 unsigned Cstr::length() const noexcept {
   return nonTrivial(ptr) ? static_cast<unsigned>(strlen(ptr)) : 0;
@@ -112,7 +116,7 @@ int Cstr::cmp(TextKey rhs) const noexcept {
 
 bool Cstr::startsWith(TextKey other) const noexcept {
   if(ptr == nullptr) {
-    return isTrivial(other);
+    return ::isTrivial(other);
   }
   if(ptr == other) {
     return true;
@@ -205,6 +209,24 @@ double Cstr::asNumber(Cstr *tail) const noexcept {
   }
 }
 
+unsigned Cstr::asUnsigned(const char **tail) const noexcept {
+  if (nonTrivial(ptr)) {
+    unsigned acc = 0;
+    const char *s = ptr;
+    while (*s) {
+      if (!Char(*s).appliedDigit(acc)) {
+        break;
+      }
+      ++s;
+    }
+    if (tail) {
+      *tail = s;
+    }
+    return acc;
+  } else {
+    return 0;
+  }
+}
 void Cstr::clear() noexcept {
   ptr = nullptr;
 }
