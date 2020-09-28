@@ -1,7 +1,7 @@
 #include "twiddler.h"
 #include "minimath.h"
 
-#ifdef UseContinuedFractions
+#ifdef TwiddleContinuedFractions
 #include "continuedfractionratiogenerator.h"
 #endif
 
@@ -13,20 +13,19 @@ IntegerTwiddler::IntegerTwiddler(unsigned numer, unsigned denom, bool center) {
   setRatio(numer, denom, center);
 }
 
-//neither following pragma worked :(  suppressed via CLI arg for the whole file.
-//#pragma clang diagnostic ignored "-Wsign-compare"
-//#pragma gcc diagnostic ignored "-Wsign-compare"
 void IntegerTwiddler::setRatio(unsigned numer, unsigned denom, bool center) {
   above = numer;
   below = denom;
   if (center) {
     twiddle = (above - below) / 2;
   } else {
-    if (twiddle > below) {  //#-Wsign-compare OK
+    //try to transition smoothly, useful when the twiddle is drawing a polyline.
+    if (twiddle > int(below)) {
       twiddle = below;
-    } else if (twiddle < -above) { //#-Wsign-compare OK
+    } else if (twiddle < -int(above)) {
       twiddle = -above;
     }
+    //else leave it where it is, we would need to rewrite this a bunch to try to stay at same relative phase as prior above/below
   }
 } /* setRatio */
 
@@ -37,7 +36,7 @@ void Twiddler::setRatio(double ratio) {
     return;
   }
 
-#ifdef UseContinuedFractions
+#ifdef TwiddleContinuedFractions
   ContinuedFractionRatioGenerator cfrg=ContinuedFractionRatioGenerator::Run(ratio);//Note: this might do 30 or so floating point divides.
   IntegerTwiddler::setRatio(cfrg.numerator(),cfrg.denominator());//todo: test if we have the right order here, might need to swap the operands.
 #else
