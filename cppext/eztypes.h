@@ -1,7 +1,7 @@
 #ifndef eztypes_h
 #define eztypes_h
 
-//platform differences manager
+//platform differences manager, named for repo it was first created for "980F/ezcpp"
 
 #include <stdint.h>  //<cstdint> not available on micro.
 
