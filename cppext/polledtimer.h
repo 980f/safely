@@ -38,6 +38,9 @@ public:
     return !running;
   }
   Ticks ticksForSeconds(double sec);
+
+  /** @returns approximate time remaining in ticks */
+  unsigned countdown() const;
 };
 
 

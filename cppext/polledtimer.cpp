@@ -69,6 +69,9 @@ void PolledTimer::freeze(){
 }
 
 PolledTimer::~PolledTimer(){}
+unsigned int PolledTimer::countdown() const{
+  return systicksRemaining;
+}
 
 ////////////////////////////
 
