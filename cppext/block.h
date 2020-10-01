@@ -53,6 +53,11 @@ public:
     return *this;
   }
 
+  /** @returns whether there is any data */
+  operator bool() const {
+    return length>0 && buffer!=nullptr;
+  }
+
   /** index validator */
   bool contains(unsigned index) const noexcept {
     return index < length;
@@ -97,7 +102,7 @@ public:
   }
 
   /** @returns whether this block owns the allocation */
-  bool isOwned() {
+  bool isOwned() const {
     return owner;
   }
 }; // class Block

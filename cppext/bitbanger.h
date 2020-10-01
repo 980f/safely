@@ -16,6 +16,10 @@ constexpr bool bit(unsigned patter, unsigned bitnumber){
   return (patter & (1 << bitnumber)) != 0;
 }
 
+constexpr bool bitFrom(unsigned patter, unsigned bitnumber){//same as bit, merging two projects into one.
+  return (patter & (1 << bitnumber)) != 0;
+}
+
 
 constexpr bool isOdd(unsigned pattern){
   return pattern&1;
