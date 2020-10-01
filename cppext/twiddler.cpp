@@ -10,10 +10,10 @@ IntegerTwiddler::IntegerTwiddler() {
 }
 
 IntegerTwiddler::IntegerTwiddler(unsigned numer, unsigned denom, bool center) {
-  setRatio(numer, denom, center);
+  setRate(numer, denom, center);
 }
 
-void IntegerTwiddler::setRatio(unsigned numer, unsigned denom, bool center) {
+void IntegerTwiddler::setRate(unsigned numer, unsigned denom, bool center) {
   above = numer;
   below = denom;
   if (center) {
@@ -27,7 +27,7 @@ void IntegerTwiddler::setRatio(unsigned numer, unsigned denom, bool center) {
     }
     //else leave it where it is, we would need to rewrite this a bunch to try to stay at same relative phase as prior above/below
   }
-} /* setRatio */
+} /* setRate */
 
 
 void Twiddler::setRatio(double ratio) {
@@ -38,15 +38,15 @@ void Twiddler::setRatio(double ratio) {
 
 #ifdef TwiddleContinuedFractions
   ContinuedFractionRatioGenerator cfrg=ContinuedFractionRatioGenerator::Run(ratio);//Note: this might do 30 or so floating point divides.
-  IntegerTwiddler::setRatio(cfrg.numerator(),cfrg.denominator());//todo: test if we have the right order here, might need to swap the operands.
+  IntegerTwiddler::setRate(cfrg.numerator(),cfrg.denominator());//todo: test if we have the right order here, might need to swap the operands.
 #else
 //a value used to get the maximum precision/resolution available due to the data type of twiddle
   static const unsigned MaxRes = ~0U>>1; //todo:3 max pos int, find standard symbol for it.
 
   if (ratio >= 1.0) {
-    IntegerTwiddler::setRatio(MaxRes * ratio, MaxRes);
+    IntegerTwiddler::setRate(MaxRes * ratio, MaxRes);
   } else {
-    IntegerTwiddler::setRatio(MaxRes, MaxRes * ratio);
+    IntegerTwiddler::setRate(MaxRes, MaxRes * ratio);
   }
 #endif
 }
@@ -113,4 +113,8 @@ unsigned PwmModulator::quanta(unsigned chunk, bool noFloat) {
   } else {
     return ratio(double(chunk), quoticks + Twiddler::getRatio());
   }
+}
+void PwmModulator::setRate(unsigned int numer, unsigned int denom) {
+  quoticks=numer/denom;
+  IntegerTwiddler::setRate(numer-quoticks,denom);
 }

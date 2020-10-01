@@ -16,11 +16,11 @@ protected:
 public:
   IntegerTwiddler();
 
-  /** @see setRatio */
+  /** @see setRate */
   IntegerTwiddler(unsigned numer, unsigned denom, bool center = true);
 
   /** numer out of (numer+denom) calls (in a row) to pwm() will return true. @param center true initializes the cycling to halfway through the longer part of the cycle.*/
-  void setRatio(unsigned numer, unsigned denom, bool center = true);
+  void setRate(unsigned numer, unsigned denom, bool center = true);
 
   /** set ratio such that pwm is true once per @param rate calls
     * NB: rate of 0 makes pwm 'always true'*/
@@ -56,6 +56,8 @@ class PwmModulator : public Twiddler {
   unsigned quoticks; //subtract or add this amount per tick for accel/decel respectively
 public:
   PwmModulator();
+
+  void setRate(unsigned numer, unsigned denom);
 
   void setRatio(double ratio);
 
