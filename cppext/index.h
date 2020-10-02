@@ -132,24 +132,24 @@ struct Index {
 
   /** @returns present value, then sets it to zero. NB it is set to 0 not invalidated. */
   unsigned take() noexcept {
-    return take(raw);
+    return ::take(raw);
   }
 
-  /** @returns up to @param howMany if present value is greater than that, else returns present value. Value is post-decremented by howMany but doesn't wrap.
-   * If howMany is BadIndex then this returns BadIndex and doesn't change. <- If we drop that rule BadIndex is 'take all', for which functionality there is a specific
-   *method.
+  /** @returns up to @param howMany if present value is greater than that, else returns present value. Value is post-decremented by howMany if howmany is less than its present value.
+   * If howMany is BadIndex then this returns BadIndex and doesn't change. <- If we drop that rule BadIndex is 'take all'
    * EG: if presently ==5 and you take 3 this will return 3 and become ==2. if presently ==1 and you take 3 this returns 1 and becomes 0.
    */
   unsigned take(unsigned howMany) noexcept {
-    if(howMany<raw) {
-      raw -= howMany;
-      return howMany;
-    }
     if(howMany==BadIndex) {
       return BadIndex;
       //and make no change.
     }
-    return take(raw);
+    if(howMany<raw) {
+      raw -= howMany;
+      return howMany;
+    }
+    //return only what we have, not what was asked for:
+    return ::take(raw);
   } // take
 
 };
