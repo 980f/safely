@@ -53,7 +53,8 @@ public:
 /** a globally shared logger, for when you are too lazy to create one for your context */
 extern Logger dbg;
 /** a globally shared logger, for really egregious problems */
-extern Logger wtf;
+//trying to reconcile with integer version, versus this textly one: extern Logger wtf;
+#define wtf(...) dbg(  __VA_ARGS__ )
 
 #define IgnoreGlib(err) dbg("%s ignoring %s",__PRETTY_FUNCTION__, err.what().c_str())
 
