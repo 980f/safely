@@ -13,9 +13,11 @@ public:
   Linear();
   /** for initialized constants*/
   Linear(double offset,double slope);
+  /** add post construction init from constants to match interface of LinearMapping class */
+  Linear &init(double offset,double slope);
   /** so that y() returns its argument*/
   void trivialize();
-  /** -1 for always returns 0, 0 for returns a constant, 1 for does something interesting.*/
+  /** -1 for y() always returns 0, 0 for y() returns a constant, 1 for y() returns something interesting.*/
   int effectiveDegree()const;
 
   /** inverse function*/
