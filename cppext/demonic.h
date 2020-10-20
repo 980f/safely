@@ -1,7 +1,7 @@
 #ifndef DEMONIC_H
 #define DEMONIC_H
 
-#include <functional>
+#include <functional> //todo: requires STLPort rowley package, need to fork that into a repo we control
 #include "minimath.h" //depress and elevate
 
 /** a numeric value that may have unlimited side effects when set.
