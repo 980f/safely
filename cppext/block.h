@@ -23,7 +23,7 @@ public:
     //#nada
   }
 
-  /** creates content, deletes it when this object is deleted */
+  /** creates empty/useless instance */
   Block() : Block(0, nullptr, false) {
     //#nada
   }

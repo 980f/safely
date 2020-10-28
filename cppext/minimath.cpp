@@ -211,6 +211,8 @@ double dpow10(int exponent){
   return pow(double(10), exponent);
 } // dpow10
 
+
+#if PI_TRIG   //got tired of warnings about M_PI, but need it if we do have trig usages.
 //linux has this, firmware doesn't have ANY coeffs in its math.h
 #ifndef M_PI
 #warning platform specific value for PI
@@ -220,6 +222,7 @@ double dpow10(int exponent){
 double degree2radian(double theta){
   return theta * (M_PI / 180);
 }
+#endif
 
 #define gotFlogWorking 0
 
