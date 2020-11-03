@@ -21,7 +21,7 @@ public:
   int effectiveDegree()const;
 
   /** inverse function*/
-  double x(double y)const ;
+  virtual double x(double y)const ;
 
   unsigned numParams()const override {
     return 2;
@@ -35,7 +35,7 @@ public:
 
   /** @return value of derivative of order @param prime evalued at @param x
     * default value of prime gives poly(x);*/
-  double y(double x, unsigned prime = 0)const;
+  virtual double y(double x, unsigned prime = 0)const;
   double operator()(double x) const {
     return y(x);
   }
