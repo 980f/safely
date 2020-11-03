@@ -102,7 +102,13 @@ public:
    * we could use a boolean for the nibble select, but want this to look like the unicode variation of this class.*/
   char hexNibble(unsigned sb) const noexcept;
 
-/** @returns whether this char needs a slash preceding it */
+  template<typename Intish>
+  static char hexNibbleOf(Intish value, unsigned sb) noexcept {
+    unsigned char nib= 15&(value>>(sb*4)); //push to low nib
+    return nib>9? 'A'+nib-10: '0'+nib;
+  }
+
+  /** @returns whether this char needs a slash preceding it */
   bool needsSlash() const noexcept;
 
 /** @returns the c-escape partner of this. 'n' goes to newline, a newline goes to 'n' */
