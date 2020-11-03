@@ -1,5 +1,5 @@
 #ifndef BIGENDIANER_H
-#define BIGENDIANER_H
+#define BIGENDIANER_H "(C) 2012 Andrew Heilveil (github/980f) "
 
 #include "eztypes.h" //sized ints
 #include "buffer.h" //for indexing access to data block
@@ -11,7 +11,7 @@ public:
   BigEndianer(u8 * allocation, unsigned length);
 
   BigEndianer(Indexer<u8> other, int clip = 0);
- virtual ~BigEndianer();
+  virtual ~BigEndianer();
   unsigned getU16(void);
   int getI16(void);
   void hilo(u16 datum);
