@@ -5,16 +5,14 @@
 
 /** basic block manager */
 template<typename Content> class Block {
-  //there are not const so that we can 'take' the blocks contents.
+  //there are not const so that we can 'take' the block's contents.
   Index length;
   Content *buffer;
   bool owner;
 public:
-  /** dangerous constructor, trusts that caller knows the length of the buffer */
+  /** wrap existing buffer of known size */
   Block(unsigned length, Content *buffer, bool ownit = false) :
-    length(length),
-    buffer(buffer),
-    owner(ownit) {
+    length(length), buffer(length ? buffer : nullptr), owner(length != 0 && ownit) {
     //#nada
   }
 
@@ -45,17 +43,21 @@ public:
   };
 
   /** @returns this after copying content of @param toBeTaken , clears toBeTaken's owner. */
-  Block &take(Block &toBeTaken) {
+  Block &take(Block &toBeTaken, bool fully = false) {//default for fully is historical, should chase down users and change default to true.
     this->length = toBeTaken.length;
     this->buffer = toBeTaken.buffer;
     this->owner = toBeTaken.owner;
     toBeTaken.owner = false;//we own it now
+    if (fully) {
+      toBeTaken.buffer = nullptr;
+      toBeTaken.length = 0;
+    }
     return *this;
   }
 
   /** @returns whether there is any data */
   operator bool() const {
-    return length>0 && buffer!=nullptr;
+    return length > 0 && buffer != nullptr;
   }
 
   /** index validator */
