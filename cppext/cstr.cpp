@@ -18,9 +18,9 @@ Cstr::Cstr(unsigned char *target) : ptr(reinterpret_cast<char *>(target)){
   //#nada
 }
 
-TextKey Cstr::operator =(TextKey ptr){
-  this->ptr = ptr;
-  return ptr;
+TextKey Cstr::operator =(TextKey raw){
+  this->ptr = raw;
+  return raw;
 }
 
 TextKey Cstr::c_str() const noexcept {
@@ -51,7 +51,7 @@ const char *Cstr::nullIfEmpty() const {
   }
 }
 
-Cstr::operator const char *() const {
+Cstr::operator const char *() const noexcept {
   return notNull();
 }
 

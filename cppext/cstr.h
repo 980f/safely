@@ -28,7 +28,7 @@ public:
   //virtual destructor as this is a base for classes which may do smart things with the pointer on destruction.
   virtual ~Cstr() = default;//we never take ownership of ptr, see class Text for such a beast.
   /** change internal pointer */
-  virtual TextKey operator =(TextKey ptr);//# we desire passthrough on argument
+  virtual TextKey operator =(TextKey raw);//# we desire passthrough on argument
 
   /** @returns pointer member, allowing you to bypass the checks of this class.  */
   operator TextKey() const noexcept;
