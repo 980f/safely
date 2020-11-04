@@ -2,6 +2,7 @@
 #pragma once
 
 #include <stdint.h>
+#include "block.h"
 #include <cstr.h>
 #include <char.h>
 #include <charscanner.h>
@@ -16,6 +17,14 @@ protected:
   uint8_t octets[num];
 
 public:
+  NetworkAddress(uint8_t *octets) {
+    memory_copy(octets,this->octets,octets+num);
+  }
+
+  void makeall(bool ones){
+    memory_set(octets,octets+num,ones?~0:0);
+  }
+
   BigEndianer scanner() {
     return {octets, sizeof(octets)};
   }
@@ -23,7 +32,7 @@ public:
   void parse(Cstr humanreadable, bool hexly) {
     ByteScanner reader(humanreadable.casted(), humanreadable.length());
     auto writer(scanner());
-    while (writer.hasNext()) {
+    while (writer.hasNext()) {//#IDE mismarks this
       auto &octet = writer.next();
       octet = 0;
       while (reader.hasNext()) {
@@ -34,27 +43,25 @@ public:
       }
     }
   };
-};
+} PACKED;
 
 struct EthernetAddress : public NetworkAddress<6> {
   /** parse 6 2 char hex fields separate by colons (or any non hexadecimal digit) */
   void parse(Cstr humanreadable) {
     NetworkAddress<6>::parse(humanreadable, true);
   }
-
-  static const EthernetAddress Broadcast;//todo:00 how to make a const one?
-};
+} PACKED;
 
 struct IPV4Address : public NetworkAddress<4> {
-  IPV4Address(uint32_t raw) {
-    htonl32(octets, raw);
+  IPV4Address(uint32_t raw) :NetworkAddress<4>(&pun(uint8_t,raw)){//todo:00 htonlize the argument!
+    //
   }
 
   /** parse dotted decimal */
   void parse(Cstr humanreadable) {
     NetworkAddress<4>::parse(humanreadable, false);
   }
-};
+}PACKED;
 
 struct ArpV4Pair {
   /** carefully layed out for EthernetFrame */
@@ -111,6 +118,8 @@ struct EthernetHeader {
   EtherType ethType;
 } PACKED;
 
+
+/***/
 struct IPV4Header {
   unsigned version: 4;
   unsigned headerLength: 4; //*4 for bytes
@@ -128,6 +137,26 @@ struct IPV4Header {
   uint16_t headerChecksum;
   IPV4Address sourceIP;
   IPV4Address destIP;
+
+protected:
+  uint8_t *myWord(unsigned int wordOffset) { return (reinterpret_cast<uint8_t *>(this) + 4 * wordOffset); }
+  unsigned chunkLength(uint16_t total, unsigned int header) const { return static_cast<unsigned int>(4 * (total - header)); }
+
+public:
+  /** @returns pointer to bytes following base part of header */
+  Block<uint8_t> options() {
+    if(headerLength>5){
+      return {chunkLength(headerLength,5), myWord(5)};
+    } else {
+      return {};
+    }
+  }
+
+
+/** @returns length of and pointer to bytes following base part of header */
+  Block<uint8_t> payload(){
+    return {chunkLength(totalLength, headerLength), myWord(headerLength)};
+  }
   //if IHL>5 then there will be more bytes following this object.
   //options are byte streamy, 8 bit commands, null terminated.
 //  struct Option {
@@ -136,4 +165,4 @@ struct IPV4Header {
 //    unsigned skip1:1;//reserved
 //    unsigned copy:1; //fragmenter must copy this option to all fragments
 //  };
-};
+} PACKED;
