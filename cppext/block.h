@@ -74,6 +74,13 @@ public:
     return NullRef(Content);//converts illegal access into an NPE.
   }
 
+  /** write self over some memory that better be big enough! */
+  void operator >>(Content *raw) const {
+    for (unsigned i = 0; i < quantity();) {//todo:M memcopy
+      *raw++ = buffer[i++];
+    }
+  }
+
   /** @returns the index-th element is the index is valid, or the passed in default if it is not.
    * This is only a good idea if the class has a move constructor. */
   Content &operator()(unsigned index, const Content &defawlt) const noexcept {
