@@ -8,10 +8,11 @@ double polysum(double x, const double *a, int degree, unsigned prime = 0);
 /** given an array of coefficients of a polynomial return the ordinal of the highest non-zero one, ~0 if null polynomial */
 unsigned effectiveDegree(const double *a, unsigned degree);
 
-template<unsigned degree> class Polynomial : public Settable {
+/** @tparam degree is highest power supported, not number of coefficients. */
+template<unsigned degree,typename Floater=double> class Polynomial : public Settable {
 
 protected:
-  double a[degree + 1];
+  Floater a[degree + 1];
 public:
   Polynomial() {
     for (unsigned ai = 0; ai <= degree; ++ai) {
@@ -22,7 +23,8 @@ public:
 
   /** @returns whether the assignment changed this object.*/
 
-  bool operator=(const Polynomial<degree> &other) {
+  template<typename OtherFloater=Floater>
+  bool operator=(const Polynomial<degree,OtherFloater> &other) {
     for (unsigned ai = 0; ai <= degree; ++ai) {
       set(a[ai], ai <= degree ? other[ai] : 0);//todo:1 template a different degree for 2nd argument.
     }
@@ -33,7 +35,7 @@ public:
     return which <= degree;
   }
 
-  double &operator[](unsigned which) {
+  Floater &operator[](unsigned which) {
     if (validIndex(which)) {
       return a[which];
     } else {
@@ -52,6 +54,7 @@ argument list is 0 to higher order*/
     }
     return isModified();
   }
+  
   /** export coefficients*/
   void getParams(ArgSet &args) const override {
     for (unsigned ai = 0; ai <= degree; ++ai) {
@@ -61,7 +64,7 @@ argument list is 0 to higher order*/
 
   /** @return value of derivative of order @param prime evaluated at @param x
     * default value of prime gives poly(x);  @see polysum */
-  double y(double x, unsigned prime = 0) const {
+  Floater y(Floater x, unsigned prime = 0) const {
     return polysum(x, a, degree, prime);
   }
 
@@ -69,7 +72,7 @@ argument list is 0 to higher order*/
     return ::effectiveDegree(a, degree);
   }
 
-  double inv(double y) const {
+  Floater inv(Floater y) const {
     switch (effectiveDegree()) {
     case ~0:
       return 0.0;//null polynomial
