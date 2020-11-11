@@ -45,6 +45,11 @@ typedef int64_t s64;
 #define WEAK __attribute((weak))
 #endif
 
+
+#define INLINETHIS __attribute__((always_inline))
+
+#define ISRALIGN __attribute__((__aligned__(4)))
+
 //function is used in an isr, should be speed optimized:
 #if OptimizeSafely
 #define ISRISH __attribute__((optimize(3)))
@@ -53,7 +58,7 @@ typedef int64_t s64;
 #endif
 
 //a function suitable for handling interrupts:
-typedef void (*Handler)(void);
+using Handler= void (*)(void);
 
 #define InitStep(k) __attribute__((init_priority(k)))
 //lower happens first. some dox say leave 0..101 for the compiler.
