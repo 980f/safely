@@ -25,8 +25,13 @@ typedef int64_t s64;
 //lord it would be nice if C would make a standard operator for this:
 #define countof(array) (sizeof(array) / sizeof((array)[0]))
 
+//use these when you have to force a symbol to resolve before token pasting
+#define MACRO_cat(a, ...) a ## __VA_ARGS__
+#define MACRO_wrap(prefix, var, suffix) prefix ## var ## suffix
+
+
 /** delete an object and zero the pointer that pointed to it.
- *  attempts to make it a function were painful. Should try templating
+ * see Free() in cheaptricks.h
  */
 #define Obliterate(thingpointer) do {delete thingpointer; thingpointer = nullptr;} while(0)
 
@@ -34,6 +39,7 @@ typedef int64_t s64;
 #ifndef PACKED
 #define PACKED __attribute__((packed))
 #endif
+
 
 #ifndef WEAK
 #define WEAK __attribute((weak))
@@ -54,11 +60,6 @@ typedef void (*Handler)(void);
 #define InitHardware 10000
 #define InitUserLibrary 20000
 #define InitApplication 30000
-
-#if 1 //missing on windows (mingw) platform compiler, expected by cwchar
-void swprintf();
-void vswprintf();
-#endif
 
 //and sometimes you just gotta do something dangerous: (if you use nullptr instead of 0 the compiler catches on!)
 #define NullRef(sometype) *reinterpret_cast<sometype *>(0)
