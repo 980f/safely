@@ -54,7 +54,7 @@ argument list is 0 to higher order*/
     }
     return isModified();
   }
-  
+
   /** export coefficients*/
   void getParams(ArgSet &args) const override {
     for (unsigned ai = 0; ai <= degree; ++ai) {
