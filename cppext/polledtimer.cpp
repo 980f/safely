@@ -23,7 +23,6 @@ void PolledTimerServer() {
   }
 } /* onTick */
 
-
 void PolledTimer::check(){
   if(running){
     if(--systicksRemaining==0){

@@ -14,7 +14,11 @@
 
 //puts a thing in the list
 #define RegisterAt(ClassX,varble,priority) ClassX * TableTag(ClassX,priority) ClassX##varble (&varble)
+#define RegisterAtNamed(ClassX,varble,priority,nickname) ClassX * TableTag(ClassX,priority) ClassX##nickname (&varble)
+
 #define Register(ClassY,varble) RegisterAt(ClassY,varble,5)
+#define RegisterNamed(ClassY,varble,nickname) RegisterAtNamed(ClassY,varble,5,nickname)
+
 
 
 //tagging the table, conveniently using the pointers to begin and end as the markers for the extent of the table
