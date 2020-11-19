@@ -90,6 +90,13 @@ public:
     return defawlt;
   }
 
+  /** requires copy constructor or assignment && operator*/
+  void fill(Content&&filler){
+    for(int i=quantity();i-->0;){
+      buffer[i]=filler;
+    }
+  }
+
   /** @returns index of next spot to stuff. Will not copy in anything if it doesn't all fit. */
   Index stuff(unsigned index, const Content *source, unsigned incoming) const {
     if (index + incoming < length) {
