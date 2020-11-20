@@ -45,7 +45,7 @@ template <typename SignedInt> int signabs(SignedInt& absolutatus) {
 }
 
 /** Note: 'signbit' is a macro in math.h that pertains only to floating point arguments
- * @returns sign of operand, and converts operand to its magnitude, MININT(0x800...) is still MININT and must be interpreted as unsigned to work correctly
+ * @returns absolute sign of operand, returning its sign as -1,0,or 1 if @param sign is not null.
  */
 template<typename Numerical> Numerical absvalue(Numerical absolutatus, int *sign = nullptr){
   if(absolutatus < 0) {
@@ -131,7 +131,6 @@ inline float ratio(float num, float denom){
   }
   return num / denom;
 }
-
 
 
 /** quantity of bins needed to hold num items at denom items per bin*/
