@@ -25,8 +25,10 @@ inline bool isNan(unsigned){
 
 /** is a normalized fp number, excludes zero and signals */
 bool isNormal(double d);
-/** is not a value */
+/** @returns whether d is a numerical value, excludes signalling values but includes zero.*/
 bool isSignal(double d);
+/** @returns whether d is a numerical value, excludes signalling values but includes zero.*/
+bool isSignal(float f);
 
 /** is either 0 or not a nan. */
 bool isDecent(double d);
@@ -115,7 +117,7 @@ template<typename Integer,typename Inttoo> Integer quanta(Integer num, Inttoo de
 }
 
 /** protect against garbage in (divide by zero) note: 0/0 is 0 */
-template <typename NumType,typename DenType=NumType>  double ratio(NumType num, DenType denom) {
+template <typename NumType,typename DenType=NumType>  NumType ratio(NumType num, DenType denom) {
   if (denom == 0) { //pathological case
     return num; //attempt to make 0/0 be 1 gave 1 for ratio of unmeasured items, was not a good choice  may someday return signed inf.
   }
@@ -130,8 +132,7 @@ inline float ratio(float num, float denom){
   return num / denom;
 }
 
-/** @returns whether d is a numerical value, excludes signalling values but includes zero.*/
-bool isSignal(double d);
+
 
 /** quantity of bins needed to hold num items at denom items per bin*/
 u32 chunks(double num, double denom);
@@ -198,8 +199,11 @@ int ilog10d(double value);
 
 /** initially constexpr exposed for i32pow10 */
 constexpr u32 Decimal1[] = {
-  1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000
+  1, 10, 100, 1'000, 10'000, 100'000, 1'000'000, 10'000'000, 100'000'000, 1'000'000'000
 };
+
+/** highest power of 10 that fits in an unsigned 64 bit number */
+constexpr int DecimalDigitsIn64bits = 19;//FYI equals countof(Decimal1)+countof(Decimal2)-1, power of highest member of Decimal2
 
 /** an integer power of 10. out of bounds arg gets you nothing but trouble ...
  *  initially constexpr exposed for CG::Message::Field constructor */
@@ -210,7 +214,7 @@ constexpr unsigned i32pow10(unsigned power){
   return 0;//this should get the caller's attention.
 }
 
-
+/** @returns @param value with @param numDigits least significant digits set to 0. This is truncating, not rounding.*/
 unsigned digitsAbove(unsigned int value, unsigned numDigits);
 
 /** an integer power of 10. out of bounds arg gets you nothing but trouble ... */
