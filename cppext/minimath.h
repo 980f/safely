@@ -354,7 +354,7 @@ void fillObject(void *target, unsigned length, u8 fill);
 #define CopyThing(thing1,thing2) copyObject(thing1,thing2,min(sizeof(thing1),sizeof(thing2)))
 //documenting accessible portions of microcontroller startup code:
 void memory_copy(const void *source, void *target, void *sourceEnd);
-
+/** including target, not including targetEnd, presumes target<=targetEnd */
 void memory_set(void *target, void *targetEnd, u8 value);
 
 #if 0 //  fixmelater //!defined( QT_CORE_LIB ) && !defined() //std lib's differ between pc and arm.
