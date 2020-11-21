@@ -2,6 +2,8 @@
 #define BITBANGER_H
 /** bit and bitfield setting and getting.*/
 
+//Rowley provides an ancient implementation of limits which is missing gobs of stuff from the same vintage arm gcc release.
+#ifdef HaveStdNumericLimits
 #include <limits> //for number of bits in unsigned
 
 constexpr unsigned numBitsInUnsigned(){
@@ -11,6 +13,18 @@ constexpr unsigned numBitsInUnsigned(){
 constexpr unsigned msbOfUnsigned(){
   return std::numeric_limits<unsigned>::digits-1;
 }
+
+#else
+constexpr unsigned numBitsInUnsigned(){
+  return 32;
+}
+
+constexpr unsigned msbOfUnsigned(){
+  return numBitsInUnsigned()-1;
+}
+
+
+#endif
 
 constexpr bool bit(unsigned patter, unsigned bitnumber){
   return (patter & (1 << bitnumber)) != 0;
