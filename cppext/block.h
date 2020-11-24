@@ -27,6 +27,10 @@ public:
   }
 
   ~Block() {
+    release();
+  }
+
+  void release() {
     if (owner) {
       delete[]buffer;
     }
@@ -35,15 +39,17 @@ public:
     owner = false;
   }
 
-  /** there are two concepts that might fall under copy construction.*/
-  Block(Block &) = delete;
+  /** don't allow copy construction until we have a good use case.*/
+  Block(const Block &sacred) {
+    peek(sacred);
+  }
 
-  Block(Block &&toBeTaken) : Block() {
-    take(toBeTaken);
-  };
+  /** there are two operations that this might be, force the user to call named functions for each */
+  Block(Block &) = delete;
 
   /** @returns this after copying content of @param toBeTaken , clears toBeTaken's owner. */
   Block &take(Block &toBeTaken, bool fully = false) {//default for fully is historical, should chase down users and change default to true.
+    release();
     this->length = toBeTaken.length;
     this->buffer = toBeTaken.buffer;
     this->owner = toBeTaken.owner;
@@ -55,7 +61,32 @@ public:
     return *this;
   }
 
-  /** @returns whether there is any data */
+  /** move constructor full takes the operand */
+  Block(Block &&toBeTaken) : Block() {
+    take(toBeTaken,true);
+  };
+
+  Block &operator = (const Block &sacred){
+    peek(sacred);
+  }
+
+  /** set this block to cover the same data as the @param sacred one, but not 'take' it in any sense. */
+  void peek(const Block &sacred) {
+    release();
+    buffer =sacred.buffer;
+    length =sacred.length;
+    owner =false;
+  }
+
+  /** release what is owned and take full ownership of @param movable's data */
+  Block &operator = (Block &&movable) {
+    release();
+    take(movable,true);
+  }
+
+  Block &operator = (Block &sacred)=delete;
+
+    /** @returns whether there is any data */
   operator bool() const {
     return length > 0 && buffer != nullptr;
   }
