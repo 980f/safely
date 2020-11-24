@@ -75,7 +75,7 @@ public:
   }
 
   /** write self over some memory that better be big enough! */
-  void operator >>(Content *raw) const {
+  void operator>>(Content *raw) const {
     for (unsigned i = 0; i < quantity();) {//todo:M memcopy
       *raw++ = buffer[i++];
     }
@@ -91,9 +91,9 @@ public:
   }
 
   /** requires copy constructor or assignment && operator*/
-  void fill(Content&&filler){
-    for(int i=quantity();i-->0;){
-      buffer[i]=filler;
+  void fill(Content &&filler) {
+    for (int i = quantity(); i-- > 0;) {
+      buffer[i] = filler;
     }
   }
 
@@ -127,6 +127,16 @@ public:
   /** forget that we have some data. Misfires if the length is BadIndex. The only way that happens is if you construct one with an existing block and BadIndex for length. */
   void clip(unsigned shorter) {
     length.depress(shorter);
+  }
+
+  /** move start and adjust length to get rid of dead stuff. Disallowed if owner */
+  bool removeHead(unsigned int dead) {
+    if (owner) {
+      return false;
+    }
+    buffer += dead;
+    length -= dead;
+    return true;
   }
 }; // class Block
 
