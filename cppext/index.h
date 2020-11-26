@@ -101,13 +101,16 @@ struct Index {
   }
 
   /** set this to the lesser of this and other depending upon validity */
-  void depress(Index other){
+  bool depress(Index other){
     if(isValid()) {
       if(other.isValid() && raw>other.raw) {
         raw = other.raw;
+        return true;
       }
+      return false;
     } else {
       raw = other.raw;
+      return true;
     }
   }
 
