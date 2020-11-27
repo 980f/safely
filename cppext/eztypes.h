@@ -62,6 +62,7 @@ using Handler= void (*)(void);
 
 #define InitStep(k) __attribute__((init_priority(k)))
 //lower happens first. some dox say leave 0..101 for the compiler.
+#define InitCore 9000
 #define InitHardware 10000
 #define InitUserLibrary 20000
 #define InitApplication 30000
