@@ -2,10 +2,10 @@
 #include "textpointer.h"
 #include "string.h"  //strdup
 #include "stdlib.h"  //free
-#include <utility>
 
-#include "logger.h"
+
 #if DebugTextClass
+#include "logger.h"
 static Logger tbg("TextPointer",false);
 #else
 #define tbg(...)
