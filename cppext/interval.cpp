@@ -1,6 +1,6 @@
 #include "interval.h"
 
-Interval::Interval(double highest, double lowest) : Ranged(highest, lowest) {
+Interval::Interval(float highest, float lowest) : Rangef(highest, lowest) {
   //#nada
 }
 

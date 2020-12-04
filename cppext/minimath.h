@@ -311,6 +311,10 @@ template< typename Scalar > void swap(Scalar &a, Scalar &b){
 extern "C" {
 /* @returns integer part of d, modify d to be its fractional part.*/
 int splitter(double &d);
+
+/* @returns integer part of d, modify d to be its fractional part.*/
+int splitterf(float &d);
+
 /** like splitter but has an extra bit of output range by presuming input is non-negative. */
 unsigned splitteru(double &d);
 

@@ -427,6 +427,12 @@ int splitter(double &d) {
   return int(eye);
 }
 
+int splitterf(float &d) {
+  float eye;
+  d = modff(d, &eye);  //todo:2 this can be done very efficiently via bit twiddling. "modf()" has an inconvenient argument order and return type.
+  return int(eye);
+}
+
 unsigned splitteru(double &d) {
   double eye;
   d = modf(d, &eye);  //todo:2 this can be done very efficiently via bit twiddling. "modf()" has an inconvenient argument order and return type.
