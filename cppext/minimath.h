@@ -347,6 +347,15 @@ double logRatio(unsigned over, unsigned under);
 u16 uround(float scaled);
 s16 sround(float scaled);
 
+/** rounding divide, and divide by zero same as divide by 1 */
+constexpr unsigned divideby(unsigned numerator,unsigned denominator){
+  if(denominator>0) {
+    numerator += denominator / 2;
+    numerator /= denominator;
+  }
+  return numerator;
+}
+
 /**NB: copyObject() and fillObject() can NOT be used with objects that contain polymorphic objects*/
 void copyObject(const void *source, void *target, unsigned length);
 void fillObject(void *target, unsigned length, u8 fill);
