@@ -7,9 +7,11 @@
 #include <char.h>
 #include <charscanner.h>
 #include "bigendianer.h"
+#include <cstring> //temp for memcpy
 
 //on the cortexM series this will inline a single instruction.
 extern constexpr void htonl32(uint8_t *target, uint32_t source);
+
 
 template<unsigned num> class NetworkAddress {
 protected:
@@ -17,12 +19,12 @@ protected:
   uint8_t octets[num];
 
 public:
-  NetworkAddress(uint8_t *octets) {
-    memory_copy(octets,this->octets,octets+num);
+  NetworkAddress(const uint8_t *octets) {
+    memcpy(this->octets, octets, num);
   }
 
-  void makeall(bool ones){
-    memory_set(octets,octets+num,ones?~0:0);
+  void makeall(bool ones) {
+    memset(octets, ones ? ~0 : 0, num);
   }
 
   BigEndianer scanner() {
@@ -43,6 +45,7 @@ public:
       }
     }
   };
+
 } PACKED;
 
 struct EthernetAddress : public NetworkAddress<6> {
@@ -53,10 +56,10 @@ struct EthernetAddress : public NetworkAddress<6> {
 } PACKED;
 
 struct IPV4Address : public NetworkAddress<4> {
-  IPV4Address(uint32_t raw) :NetworkAddress<4>(&pun(uint8_t,raw)){//todo:00 htonlize the argument!
-    //
-  }
-
+//  IPV4Address(uint32_t raw) :NetworkAddress<4>(&pun(uint8_t,raw)){//todo:00 htonlize the argument!
+//    //
+//  }
+//
   /** parse dotted decimal */
   void parse(Cstr humanreadable) {
     NetworkAddress<4>::parse(humanreadable, false);
@@ -86,7 +89,7 @@ enum Arpcodes {
   NoCode = 0 //indicates uninit field.
   , ArpRequest = 1
   , ArpReply = 2
-    // 3 .. 9 for RARP and InARP and friends, add as needed.
+  // 3 .. 9 for RARP and InARP and friends, add as needed.
 };
 
 enum IPProtos {
@@ -121,32 +124,36 @@ struct EthernetHeader {
 
 /***/
 struct IPV4Header {
-  unsigned version: 4;
-  unsigned headerLength: 4; //*4 for bytes
+  uint16_t totalLength;//576 = 512+64
   unsigned DSCP: 6;
   unsigned ECN: 2;
+  unsigned headerLength: 4; //*4 for bytes
+  unsigned version: 4;
 
-  uint16_t totalLength;//576 = 512+64
-  uint16_t uselessID;
-  unsigned ff0: 1;//ignored
-  unsigned dontFragme: 1;
-  unsigned moreFragments: 1;
+
   unsigned fragmentOffset: 13;
-  uint8_t timeToLive;
-  uint8_t protocolCode;
+  unsigned moreFragments: 1;
+  unsigned dontFragme: 1;
+  unsigned ff0: 1;//ignored
+  uint16_t uselessID;
+
   uint16_t headerChecksum;
+  uint8_t protocolCode;
+  uint8_t timeToLive;
+
   IPV4Address sourceIP;
   IPV4Address destIP;
 
 protected:
   uint8_t *myWord(unsigned int wordOffset) { return (reinterpret_cast<uint8_t *>(this) + 4 * wordOffset); }
+
   unsigned chunkLength(uint16_t total, unsigned int header) const { return static_cast<unsigned int>(4 * (total - header)); }
 
 public:
   /** @returns pointer to bytes following base part of header */
   Block<uint8_t> options() {
-    if(headerLength>5){
-      return {chunkLength(headerLength,5), myWord(5)};
+    if (headerLength > 5) {
+      return {chunkLength(headerLength, 5), myWord(5)};
     } else {
       return {};
     }
@@ -154,7 +161,7 @@ public:
 
 
 /** @returns length of and pointer to bytes following base part of header */
-  Block<uint8_t> payload(){
+  Block<uint8_t> payload() {
     return {chunkLength(totalLength, headerLength), myWord(headerLength)};
   }
   //if IHL>5 then there will be more bytes following this object.
@@ -166,3 +173,34 @@ public:
 //    unsigned copy:1; //fragmenter must copy this option to all fragments
 //  };
 } PACKED;
+
+using AckValue = uint32_t;
+
+struct TCPHeader {
+  uint16_t destport;
+  uint16_t sourceport;
+  AckValue seq;
+  AckValue ack;
+  uint16_t window;
+  unsigned FIN: 1;
+  unsigned SYN: 1;
+  unsigned RST: 1;
+  unsigned PSH: 1;
+  unsigned ACK: 1;
+  unsigned URG: 1;
+  unsigned ECE: 1;
+  unsigned CWR: 1;
+  unsigned : 4;//reserved
+  unsigned offset: 4;//*4 to get byte offset of data from end of header
+  uint16_t urgent;
+  uint16_t checksum;
+
+  uint8_t *options() {
+    return reinterpret_cast<uint8_t *>(this) + sizeof(TCPHeader);
+  };
+
+  uint8_t *data() {
+    return options() + offset * 4;
+  }
+
+};
