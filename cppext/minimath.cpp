@@ -420,22 +420,24 @@ u32 Cnr(unsigned n, unsigned r) {
 extern "C" {
 
 /* @return integer part of d, modify d to be its fractional part.
+ * todo:1 this is very cheap to do in asm language
+ * NB: modf fraction return has same sign as the 'eye' return.
  */
 int splitter(double &d) {
   double eye;
-  d = modf(d, &eye);  //todo:2 this can be done very efficiently via bit twiddling. "modf()" has an inconvenient argument order and return type.
+  d = fabs(modf(d, &eye));
   return int(eye);
 }
 
 int splitterf(float &d) {
   float eye;
-  d = modff(d, &eye);  //todo:2 this can be done very efficiently via bit twiddling. "modf()" has an inconvenient argument order and return type.
+  d = fabsf(modff(d, &eye));
   return int(eye);
 }
 
 unsigned splitteru(double &d) {
   double eye;
-  d = modf(d, &eye);  //todo:2 this can be done very efficiently via bit twiddling. "modf()" has an inconvenient argument order and return type.
+  d = fabs(modf(d, &eye));//todo:1 this indicates that this function is illdefined for negative inputs. we should probably zero both args on negative input.
   return unsigned(eye);
 }
 } //end extern C for potentially assembly coded routines.
