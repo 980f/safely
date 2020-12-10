@@ -15,6 +15,7 @@ template<class TraceItem, unsigned depth = 100, bool Ticked = false> class Trace
 public:
   CircularIndexer<TraceItem> looper{memory, sizeof(memory)};
 
+  /** the argument type passed to this is usually a member of the TraceItem class, so usage involves wrapping in {} so that a constructor can fill out the object and timestamp it for classes that support Ticked.*/
   void operator()(TraceItem &&braced) {
     if constexpr (Ticked) {
       braced.tick = SystemTimer::snapLongTime();
