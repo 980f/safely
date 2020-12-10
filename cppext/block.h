@@ -12,7 +12,7 @@ template<typename Content> class Block {
 public:
   /** wrap existing buffer of known size */
   Block(unsigned length, Content *buffer, bool ownit = false) :
-    length(length), buffer(length ? buffer : nullptr), owner(length != 0 && ownit) {
+    length(length), buffer(length>0 ? buffer : nullptr), owner(length != 0 && ownit) {
     //#nada
   }
 
@@ -63,37 +63,37 @@ public:
 
   /** move constructor full takes the operand */
   Block(Block &&toBeTaken) : Block() {
-    take(toBeTaken,true);
+    take(toBeTaken, true);
   };
 
-  Block &operator = (const Block &sacred){
+  Block &operator=(const Block &sacred) {
     peek(sacred);
   }
 
   /** set this block to cover the same data as the @param sacred one, but not 'take' it in any sense. */
   void peek(const Block &sacred) {
     release();
-    buffer =sacred.buffer;
-    length =sacred.length;
-    owner =false;
+    buffer = sacred.buffer;
+    length = sacred.length;
+    owner = false;
   }
 
   /** release what is owned and take full ownership of @param movable's data */
-  Block &operator = (Block &&movable) {
+  Block &operator=(Block &&movable) {
     release();
-    take(movable,true);
+    take(movable, true);
   }
 
-  Block &operator = (Block &sacred)=delete;
+  Block &operator=(Block &sacred) = delete;
 
-    /** @returns whether there is any data */
+  /** @returns whether there is any data */
   operator bool() const {
-    return length > 0 && buffer != nullptr;
+    return length.isValid() && length > 0 && buffer != nullptr;
   }
 
   /** index validator */
   bool contains(unsigned index) const noexcept {
-    return index < length;
+    return length.isValid() && index < length;
   }
 
   /** @returns pointer to @param index th item, or a nullptr that should blow up more readiliy than if we passed back garbage.
@@ -130,7 +130,7 @@ public:
 
   /** @returns index of next spot to stuff. Will not copy in anything if it doesn't all fit. */
   Index stuff(unsigned index, const Content *source, unsigned incoming) const {
-    if (index + incoming < length) {
+    if (length.isValid() && (index + incoming < length)) {
       while (incoming-- > 0) {
         buffer[index++] = *source++;
       }
@@ -143,7 +143,12 @@ public:
 
   /** access that bypasses the sanity checks of the class */
   Content *violated() const {
-    return buffer;
+    return length.isValid() ? buffer : nullptr;
+  }
+
+  /** @returns address just past the end of this block, nullptr if this block isn't sane and nontrivial */
+  Content *end() const {
+    return length.isValid() ? buffer + length : nullptr;
   }
 
   Index quantity() const {
