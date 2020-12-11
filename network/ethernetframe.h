@@ -10,9 +10,8 @@
 #include <cstring> //temp for memcpy
 #include <cgmessage.h>
 
-
-constexpr uint16_t htons(uint16_t swapme){
-  return swapme>>8 | swapme<<8;
+constexpr uint16_t htons(uint16_t swapme) {
+  return swapme >> 8 | swapme << 8;
 }
 
 template<unsigned num> class NetworkAddress {
@@ -28,7 +27,7 @@ protected:
 
 public:
   NetworkAddress(const NetworkAddress<num> &rhs) {
-    copy(rhs);
+    copy(rhs.octets);
   }
 
   NetworkAddress(const uint8_t rhs[num]) {
@@ -153,9 +152,7 @@ struct ArpIPV4 {
   uint16_t operation;
   ArpV4Pair sender;
   ArpV4Pair target;
-
 } PACKED;
-
 
 /** complete arp packet */
 struct ArpIPV4Ethernet {
@@ -165,67 +162,41 @@ struct ArpIPV4Ethernet {
 
 /** */
 struct IPV4Header {
-  uint16_t totalLength;//576 = 512+64
-
-  unsigned DSCP: 6;
-  unsigned ECN: 2;
   unsigned headerLength: 4; //*4 for bytes
   unsigned version: 4;
 
-  union {
-    struct {
-      unsigned fragmentOffset: 13;
-      unsigned moreFragments: 1;
-      unsigned dontFragme: 1;
-      unsigned ff0: 1;//ignored
-    };
-    uint16_t packed;
-  } fragger;
+  uint8_t DSCP_ECN;//: 6;   unsigned ECN: 2;
+
+  uint16_t totalLength;//576 = 512+64
   uint16_t uselessID;
 
-  uint16_t headerChecksum;
-  uint8_t protocolCode;
-  uint8_t timeToLive;
+  struct FragmentationStuff {
+    unsigned fragmentOffset: 13;
+    unsigned moreFragments: 1;
+    unsigned dontFragme: 1;
+    unsigned ff0: 1;//ignored
+  } fragger;//a FragmentationStuff, union was causing pain when constexpr init'ing
 
+  uint8_t timeToLive;
+  uint8_t protocolCode;
+  uint16_t headerChecksum;
   IPV4Address sourceIP;
   IPV4Address destIP;
-
-protected:
-  uint8_t *myWord(unsigned int wordOffset) {
-    return (reinterpret_cast<uint8_t *>(this) + 4 * wordOffset);
-  }
-
-  unsigned chunkLength(uint16_t total, unsigned int header) const {
-    return static_cast<unsigned int>(4 * (total - header));
-  }
-
-public:
-  /** @returns pointer to bytes following base part of header */
-  Block<uint8_t> options();
-
-/** @returns length of and pointer to bytes following base part of header */
-  Block<uint8_t> payload() {
-    return {chunkLength(totalLength, headerLength), myWord(headerLength)};
-  }
-  //if IHL>5 then there will be more bytes following this object.
-  //options are byte streamy, 8 bit commands, null terminated.
-//  struct Option {
-//    unsigned code:5; // 11 for MTU probe, 12 for MTU reply
-//    unsigned debugger:1; //else control option
-//    unsigned skip1:1;//reserved
-//    unsigned copy:1; //fragmenter must copy this option to all fragments
-//  };
 } PACKED;
 
 using AckValue = uint32_t;
 
 struct TCPHeader {
-  uint16_t destport;
   uint16_t sourceport;
+  uint16_t destport;
+
   AckValue seq;
   AckValue ack;
-  uint16_t window;
-  struct {
+
+  unsigned : 4;//reserved
+  unsigned offset: 4;//aka headerLength NB *4 to get byte offset of data from end of header
+
+  struct Flags {
     unsigned FIN: 1;
     unsigned SYN: 1;
     unsigned RST: 1;
@@ -235,11 +206,10 @@ struct TCPHeader {
     unsigned ECE: 1;
     unsigned CWR: 1;
   } f;
-  unsigned : 4;//reserved
-  unsigned offset: 4;//NB *4 to get byte offset of data from end of header
 
-  uint16_t urgent;
+  uint16_t window;
   uint16_t checksum;
+  uint16_t urgent;
 } PACKED;
 
 struct TcpEthernet {
@@ -247,9 +217,21 @@ struct TcpEthernet {
   IPV4Header ipv4Header;
   TCPHeader tcpHeader;
 
-  /** options follow header, might be zero length */
+  /** options follow header, might be zero length
+  if offset(IHL)>5 then there will be more bytes following this object.
+  options are byte streamy, 8 bit commands, null terminated.
+  struct Option {
+    unsigned code:5; // 11 for MTU probe, 12 for MTU reply
+    unsigned debugger:1; //else control option
+    unsigned skip1:1;//reserved
+    unsigned copy:1; //fragmenter must copy this option to all fragments
+  };
+*/
   DataBlock options();
+
+public:
 
   /** payload follows options, which might be zero length and ditto for the payload. */
   DataBlock payload(unsigned totalEthernetLength);
+  void loadData(const DataBlock &block);
 }PACKED;

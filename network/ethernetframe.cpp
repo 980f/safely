@@ -3,7 +3,7 @@
 #include "ethernetframe.h"
 
 DataBlock TcpEthernet::options() {
-  return {tcpHeader.offset * 4u, reinterpret_cast<uint8_t *>(&tcpHeader) + sizeof(TCPHeader)};
+  return {(tcpHeader.offset-5) * 4u, reinterpret_cast<uint8_t *>(&tcpHeader) + sizeof(TCPHeader)};
 }
 
 DataBlock TcpEthernet::payload(unsigned int totalEthernetLength) {
@@ -11,10 +11,9 @@ DataBlock TcpEthernet::payload(unsigned int totalEthernetLength) {
   return {totalEthernetLength - sizeof(TcpEthernet) -opts.quantity(), opts.violated()+opts.quantity()};//todo:00 this presumes checksum has been stripped from given length
 }
 
-Block<uint8_t> IPV4Header::options() {
-  if (headerLength > 5) {
-    return {chunkLength(headerLength, 5), myWord(5)};
-  } else {
-    return {};
-  }
+void TcpEthernet::loadData(const DataBlock &block) {
+  auto opts=options();
+  memcpy(opts.violated()+opts.quantity(),block.violated(),block.quantity());
+  ipv4Header.totalLength+=block.quantity();
 }
+
