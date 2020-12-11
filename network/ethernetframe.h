@@ -47,7 +47,7 @@ public:
   }
 
   NetworkAddress &operator=(NetworkAddress<num> &&rhs) {
-    return copy(rhs);
+    return copy(rhs.octets);
   }
 
   BigEndianer scanner() {
