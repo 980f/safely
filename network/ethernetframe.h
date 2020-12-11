@@ -14,6 +14,8 @@ constexpr uint16_t htons(uint16_t swapme) {
   return swapme >> 8 | swapme << 8;
 }
 
+extern "C" uint32_t htonl(uint32_t littlendian);
+
 template<unsigned num> class NetworkAddress {
 protected:
   /** maintained in network order, MSbyte at lowest index */
@@ -102,8 +104,8 @@ struct IPV4Address : public NetworkAddress<4> {
 
 struct ArpV4Pair {
   /** carefully layed out for direct use in packets */
-  EthernetAddress HA;
-  IPV4Address PA;
+  EthernetAddress hardwareAddress;
+  IPV4Address protocolAddress;
 } PACKED;
 
 enum EtherType {//if these insert wrong into packets then fix that here, no need to be byteswapping constants.
@@ -169,13 +171,15 @@ struct IPV4Header {
 
   uint16_t totalLength;//576 = 512+64
   uint16_t uselessID;
-
-  struct FragmentationStuff {
-    unsigned fragmentOffset: 13;
-    unsigned moreFragments: 1;
-    unsigned dontFragme: 1;
-    unsigned ff0: 1;//ignored
-  } fragger;//a FragmentationStuff, union was causing pain when constexpr init'ing
+// ignore fragmentation, helps get correct size for struct.
+//  struct FragmentationStuff {
+//    unsigned fragmentOffset: 13;
+//    unsigned moreFragments: 1;
+//    unsigned dontFragme: 1;
+//    unsigned ff0: 1;//ignored
+//  } PACKED;
+//  FragmentationStuff
+  uint16_t fragger;//a FragmentationStuff, union was causing pain when constexpr init'ing
 
   uint8_t timeToLive;
   uint8_t protocolCode;
@@ -196,7 +200,6 @@ struct TCPHeader {
   unsigned : 4;//reserved
   unsigned offset: 4;//aka headerLength NB *4 to get byte offset of data from end of header
 
-  struct Flags {
     unsigned FIN: 1;
     unsigned SYN: 1;
     unsigned RST: 1;
@@ -205,7 +208,7 @@ struct TCPHeader {
     unsigned URG: 1;
     unsigned ECE: 1;
     unsigned CWR: 1;
-  } f;
+
 
   uint16_t window;
   uint16_t checksum;
@@ -216,7 +219,8 @@ struct TcpEthernet {
   EthernetHeader ethernetHeader;
   IPV4Header ipv4Header;
   TCPHeader tcpHeader;
-
+  /** the following is sometimes the ethernet checksum, but other times is the start of options or data */
+  uint32_t ethernetChecksum;
   /** options follow header, might be zero length
   if offset(IHL)>5 then there will be more bytes following this object.
   options are byte streamy, 8 bit commands, null terminated.

@@ -3,7 +3,7 @@
 #include "ethernetframe.h"
 
 DataBlock TcpEthernet::options() {
-  return {(tcpHeader.offset-5) * 4u, reinterpret_cast<uint8_t *>(&tcpHeader) + sizeof(TCPHeader)};
+  return {(tcpHeader.offset-5) * 4u, reinterpret_cast<uint8_t *>(&ethernetChecksum)};
 }
 
 DataBlock TcpEthernet::payload(unsigned int totalEthernetLength) {
