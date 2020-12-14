@@ -236,6 +236,6 @@ struct TcpEthernet {
 public:
 
   /** payload follows options, which might be zero length and ditto for the payload. */
-  DataBlock payload(unsigned totalEthernetLength);
+  DataBlock payload();
   void loadData(const DataBlock &block);
 }PACKED;
