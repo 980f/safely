@@ -186,6 +186,11 @@ struct IPV4Header {
   uint16_t headerChecksum;
   IPV4Address sourceIP;
   IPV4Address destIP;
+
+  void addToLength(unsigned morebytes){
+    totalLength = htons(htons(totalLength) + morebytes);
+  }
+
 } PACKED;
 
 using AckValue = uint32_t;
@@ -215,6 +220,11 @@ struct TCPHeader {
   uint16_t urgent;
 } PACKED;
 
+
+
+constexpr unsigned tcpDataOffset = sizeof(IPV4Header) + sizeof(TCPHeader);  //40
+
+
 struct TcpEthernet {
   EthernetHeader ethernetHeader;
   IPV4Header ipv4Header;
@@ -237,5 +247,7 @@ public:
 
   /** payload follows options, which might be zero length and ditto for the payload. */
   DataBlock payload();
-  void loadData(const DataBlock &block);
+//  void loadData(const DataBlock &block);
+  uint8_t *paystart() ;
+  unsigned actualLength();
 }PACKED;

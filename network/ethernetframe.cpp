@@ -7,14 +7,17 @@ DataBlock TcpEthernet::options() {
 }
 
 DataBlock TcpEthernet::payload() {
-  auto opts = options();
-  auto paystart = opts.quantity() > 0 ? opts.violated() + opts.quantity() : reinterpret_cast<uint8_t *>(&ethernetChecksum);
-  return {htons(ipv4Header.totalLength)-40u , paystart};//40 ~= sizeof(IpHeader)+sizeof(TcpHeader)
+  return {htons(ipv4Header.totalLength) - tcpDataOffset, paystart()};//40 ~= sizeof(IpHeader)+sizeof(TcpHeader)
 }
 
-void TcpEthernet::loadData(const DataBlock &block) {
-  auto opts = options();
-  memcpy(opts.violated() + opts.quantity(), block.violated(), block.quantity());
-  ipv4Header.totalLength += block.quantity();
+uint8_t *TcpEthernet::paystart() {
+  auto paystart = reinterpret_cast<uint8_t *>(&ethernetChecksum);
+  auto optquantity = (tcpHeader.offset - 5) * 4u;
+  return paystart + optquantity;
 }
+
+unsigned TcpEthernet::actualLength() {
+  return sizeof(ethernetHeader) + htons(ipv4Header.totalLength);
+}
+
 
