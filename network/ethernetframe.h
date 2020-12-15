@@ -229,8 +229,7 @@ struct TcpEthernet {
   EthernetHeader ethernetHeader;
   IPV4Header ipv4Header;
   TCPHeader tcpHeader;
-  /** the following is sometimes the ethernet checksum, but other times is the start of options or data */
-  uint32_t ethernetChecksum;
+  uint8_t etc[1500]; //bigger than we will need.
   /** options follow header, might be zero length
   if offset(IHL)>5 then there will be more bytes following this object.
   options are byte streamy, 8 bit commands, null terminated.

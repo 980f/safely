@@ -3,7 +3,7 @@
 #include "ethernetframe.h"
 
 DataBlock TcpEthernet::options() {
-  return {(tcpHeader.offset - 5) * 4u, reinterpret_cast<uint8_t *>(&ethernetChecksum)};
+  return {(tcpHeader.offset - 5) * 4u, reinterpret_cast<uint8_t *>(&etc)};
 }
 
 DataBlock TcpEthernet::payload() {
@@ -11,7 +11,7 @@ DataBlock TcpEthernet::payload() {
 }
 
 uint8_t *TcpEthernet::paystart() {
-  auto paystart = reinterpret_cast<uint8_t *>(&ethernetChecksum);
+  auto paystart = reinterpret_cast<uint8_t *>(&etc);
   auto optquantity = (tcpHeader.offset - 5) * 4u;
   return paystart + optquantity;
 }
