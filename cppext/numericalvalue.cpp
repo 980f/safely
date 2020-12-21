@@ -63,7 +63,7 @@ template <> int NumericalValue::cast<int>() const noexcept{
     return storage.eye;
   case Counting:
     return int(storage.ewe);
-  case Floating://todo: saturated return
+  case Floating://todo:1 saturated return
     if(storage.dee==0.0 || !::isNormal(storage.dee)){
       return 0;
     }

@@ -1,7 +1,7 @@
 #include "twiddler.h"
 #include "minimath.h"
 
-#ifdef TwiddleContinuedFractions
+#if TwiddleContinuedFractions == 1
 #include "continuedfractionratiogenerator.h"
 #endif
 
@@ -36,9 +36,9 @@ void Twiddler::setRatio(double ratio) {
     return;
   }
 
-#ifdef TwiddleContinuedFractions
+#if TwiddleContinuedFractions == 1
   ContinuedFractionRatioGenerator cfrg=ContinuedFractionRatioGenerator::Run(ratio);//Note: this might do 30 or so floating point divides.
-  IntegerTwiddler::setRate(cfrg.numerator(),cfrg.denominator());//todo: test if we have the right order here, might need to swap the operands.
+  IntegerTwiddler::setRate(cfrg.numerator(),cfrg.denominator());//todo:0 test if we have the right order here, might need to swap the operands.
 #else
 //a value used to get the maximum precision/resolution available due to the data type of twiddle
   static const unsigned MaxRes = ~0U>>1; //todo:3 max pos int, find standard symbol for it.

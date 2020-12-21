@@ -112,6 +112,6 @@ void NumberPieces::decompose(double d){
       hasEterm=true;
     }
   } else {
-    //todo:wtf do we do with deNorms?
+    //todo:0 wtf do we do with deNorms?
   }
 }

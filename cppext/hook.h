@@ -113,6 +113,6 @@ public:
 
 };
 
-//todo: equivalent of sigc hideReturn() and whatever they called supplyReturn()
+//todo:1 equivalent of sigc hideReturn() and whatever they called supplyReturn()
 
 #endif // HOOK_H

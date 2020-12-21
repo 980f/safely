@@ -154,7 +154,7 @@ template<typename Integrish, typename Integrash> Integrish revolutions(Integrish
   if(length==0) {
     return accum;
   }
-  //todo: see if std::div or std::remquo can be applied here, for greater portability or whatever.
+  //todo:1 see if std::div or std::remquo can be applied here, for greater portability or whatever.
   Integrish cycles = accum / length;
   accum %= length;
   return cycles;
@@ -357,8 +357,10 @@ constexpr unsigned divideby(unsigned numerator,unsigned denominator){
 }
 
 /**NB: copyObject() and fillObject() can NOT be used with objects that contain polymorphic objects*/
+extern "C" {
 void copyObject(const void *source, void *target, unsigned length);
 void fillObject(void *target, unsigned length, u8 fill);
+};
 
 //EraseThing only works on non-polymorphic types. On polymorphs it also  kills the vtable!
 #define EraseThing(thing) fillObject(&(thing), sizeof(thing), 0);

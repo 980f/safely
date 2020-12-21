@@ -1,13 +1,13 @@
 #ifndef SYNCRETIC_H
 #define SYNCRETIC_H
 
-/**
+/** Deprecated: use tableofpointers
   * When all the instances of a class need to be accessed as a group then derive from this class.
   * Deriviation forces the constructor call which in turn records the objects existence.
   * While not apparently needing to be templated the template forces a separate lister
   * per using class, else all using classes would get dropped into one list. I.E. templating is needed for a static member to be specific to each class that derives from this one.
   *
-  * todo: support multithreading */
+  * todo:1 support multithreading */
 
 template <class K> class Syncretic {
 protected:
