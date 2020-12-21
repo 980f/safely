@@ -1,13 +1,13 @@
 #pragma once  // (C) 2020 Andrew Heilveil (github/980f). Created by andyh on 12/20/20.
 
-/** a queue that is implemented by shifting its contents.
- * It only allows an item to be present once.
- * There is a sentinal value of the class named 'nullish' which defaults to an instance created via the no-args constructor if no explicit value is given.
+/** A queue for tracking a subset of a set of items, it only allows an item to be present once.
+   The set is defined by a type argument of the template.
+ * There is a sentinal value of the type named 'nullish' which defaults to an instance created via the no-args constructor if no explicit value is given.
  *
  * Unless the class is an enumeration or a pointer to something this class is likely a bad choice.
  * */
 
-template<typename Copyable, int quantity, Copyable nullish = Copyable()> class ShiftyQueue {
+template<typename Copyable, int quantity, Copyable nullish = Copyable()> class ItemQueue {
   Copyable content[quantity];
 
 public:
