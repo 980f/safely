@@ -1,5 +1,5 @@
 #include "centeredslice.h"
-#include "ignoresignwarnings.h"
+//#include "ignoresignwarnings.h"
 
 CenteredSlice::CenteredSlice(int *data, unsigned hwidth):data(data),hwidth(hwidth){}
 
@@ -8,10 +8,10 @@ unsigned CenteredSlice::width()const {
 }
 
 int CenteredSlice::operator [](int i) const{
-  if(i<-hwidth){
+  if(i<-int(hwidth)){
     return 0;
   }
-  if(i > hwidth){
+  if(i > int(hwidth)){
     return 0;
   }
   return data[i];

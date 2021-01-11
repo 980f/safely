@@ -61,7 +61,7 @@ bool ArgSet::equals(const ArgSet &args, int bits) const {
 } // ArgSet::equals
 
 
-ConstArgSet::ConstArgSet(const double* d, int sizeofd) : Indexer<const double>(d, sizeofd){
+ConstArgSet::ConstArgSet(const double* d, unsigned sizeofd) : Indexer<const double>(d, sizeofd){
   //#nada
 }
 

@@ -7,8 +7,8 @@ protected:
   /** caller must assure that this points to the center of allocated data */
   int *data;
 public:
-  /** half width of filter, using int rather than unsigned to get rid of warnings */
-  const int hwidth;
+  /** half width of filter */
+  const unsigned hwidth;
 public:
   CenteredSlice(int *data,unsigned hwidth);
   unsigned width()const ;
