@@ -159,7 +159,7 @@ bool CharFormatter::printChar(char ch){
 }
 
 bool CharFormatter::printChar(char ch, unsigned howMany){
-  if(stillHas(howMany)) {//todo:0 if BadIndex fill to end
+  if(stillHas(howMany)) {//todo:1 if BadIndex fill to end
     while(howMany--> 0 && hasNext()) {
       next() = ch;
     }

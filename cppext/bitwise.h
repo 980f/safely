@@ -1,7 +1,7 @@
 #ifndef BITWISE_H
 #define BITWISE_H
 
-//todo: import from ezcpp repo
+//todo:M import from ezcpp repo
 
 //for non-bit addressable items:
 constexpr bool bit(unsigned patter, unsigned int bitnumber){

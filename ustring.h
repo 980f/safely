@@ -49,7 +49,7 @@ private: //template varargs majick
 
   /** @param which is the ordinal of @param ref in the original function call. @param args is uninspected rest of arguments.
    *  arguments are process in order, the format string is looked at to find matching ordinal and format spec is replaced with formatted value.
-   *  todo: field with limiter
+   *  todo:1 field with limiter
    */
   template<typename NextArg, typename ... Args> static void compose_item(unsigned which, Ustring &format, NextArg&ref, const Args& ... args){
     try {

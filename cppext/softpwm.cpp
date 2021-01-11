@@ -2,7 +2,7 @@
 
 void SoftPWM::onDone() {
   phase ^= 1;
-  restart(pair[phase] - 1);//# the polledtimer stuff adds a 1 for good luck, we don't need no stinking luck. //todo: guard against a zero input
+  restart(pair[phase] - 1);//# the polledtimer stuff adds a 1 for good luck, we don't need no stinking luck. //todo:1 guard against a zero input
   onToggle(phase);
 }
 

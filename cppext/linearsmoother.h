@@ -11,9 +11,9 @@
 
 template <int hwidth> class LinearSmoother {
   enum{ fullWidth = 1 + 2 * hwidth};
-  static const double invS0 = 1.0 / fullWidth;
-  static const double invS1 = 1.0 / ((hwidth + 1) * fullWidth); //== invS0/(hw+1)
-  static const double invS2 = 3.0 / (hwidth * (hwidth + 1) * fullWidth); //==invS0*3/()(+1)
+  static constexpr double invS0 = 1.0 / fullWidth;
+  static constexpr double invS1 = 1.0 / ((hwidth + 1) * fullWidth); //== invS0/(hw+1)
+  static constexpr double invS2 = 3.0 / (hwidth * (hwidth + 1) * fullWidth); //==invS0*3/()(+1)
 
   int memory[fullWidth]; // 0..2*hwidth
   Cycler phaser;
@@ -31,12 +31,6 @@ template <int hwidth> class LinearSmoother {
       memory[i] = dc;
     }
   }
-
-//  /** todo: return whether value is reasonable compared to what is expected from smoothing*/
-//  bool copacetic(int newvalue){
-//    //todo: whether abs(newvalue-now()) is less than some multiple of the std error.
-//    return true;
-//  }
 
   void update(int Ynew){
     int Yold = memory[phaser];

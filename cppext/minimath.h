@@ -154,7 +154,7 @@ template<typename Integrish, typename Integrash> Integrish revolutions(Integrish
   if(length==0) {
     return accum;
   }
-  //todo: see if std::div or std::remquo can be applied here, for greater portability or whatever.
+  //todo:1 see if std::div or std::remquo can be applied here, for greater portability or whatever.
   Integrish cycles = accum / length;
   accum %= length;
   return cycles;
@@ -311,6 +311,10 @@ template< typename Scalar > void swap(Scalar &a, Scalar &b){
 extern "C" {
 /* @returns integer part of d, modify d to be its fractional part.*/
 int splitter(double &d);
+
+/* @returns integer part of d, modify d to be its fractional part.*/
+int splitterf(float &d);
+
 /** like splitter but has an extra bit of output range by presuming input is non-negative. */
 unsigned splitteru(double &d);
 
@@ -343,9 +347,20 @@ double logRatio(unsigned over, unsigned under);
 u16 uround(float scaled);
 s16 sround(float scaled);
 
+/** rounding divide, and divide by zero same as divide by 1 */
+constexpr unsigned divideby(unsigned numerator,unsigned denominator){
+  if(denominator>0) {
+    numerator += denominator / 2;
+    numerator /= denominator;
+  }
+  return numerator;
+}
+
 /**NB: copyObject() and fillObject() can NOT be used with objects that contain polymorphic objects*/
+extern "C" {
 void copyObject(const void *source, void *target, unsigned length);
 void fillObject(void *target, unsigned length, u8 fill);
+};
 
 //EraseThing only works on non-polymorphic types. On polymorphs it also  kills the vtable!
 #define EraseThing(thing) fillObject(&(thing), sizeof(thing), 0);

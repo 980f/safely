@@ -9,20 +9,20 @@ LinearMapping& LinearMapping::operator = (const LinearMapping &other) {
 }
 
 /** x clamped then converted to y */
-double LinearMapping::y(double x) const {
+float LinearMapping::y(float x) const {
   return yaxis.start() + yaxis.width() * xaxis.fragment(xaxis.clamped(x));
 }
 
 /** y clamped then converted to x */
-double LinearMapping::x(double y) const {
+float LinearMapping::x(float y) const {
   return xaxis.start() + xaxis.width() * yaxis.fragment(yaxis.clamped(y));
 }
 
-double LinearMapping::yraw(double x) const {
+float LinearMapping::yraw(float x) const {
   return yaxis.start() + yaxis.width() * xaxis.fragment(x);
 }
 
-double LinearMapping::xraw(double y) const {
+float LinearMapping::xraw(float y) const {
   return xaxis.start() + xaxis.width() * yaxis.fragment(y);
 }
 

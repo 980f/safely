@@ -15,8 +15,8 @@ typedef u32 Ticks;
 
 class PolledTimer {
 protected:
-  bool running; //changed from 'done' to 'running' so that we can init via joint ram clear rather than init code.
-  Ticks systicksRemaining;
+  volatile bool running; //changed from 'done' to 'running' so that we can init via joint ram clear rather than init code.
+  volatile Ticks systicksRemaining;
 public:
   PolledTimer();
   ~PolledTimer();//=default;

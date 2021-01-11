@@ -38,18 +38,18 @@ public:
   }
 };
 
-//todo: conditionalize this on lib being handy:
-//#include <functional>
-//struct OnExit {
-//  using Lamda=void(void);
-//  Lamda lamda;
-//  OnExit(Lamda dolater):lamda(dolater){
-//    //#nada
-//  }
-//
-//  ~OnExit(){
-//    lamda();
-//  }
-//};
+#if __has_include("functional")
+#include <functional>
+struct OnExit {
+  using Lamda=void(*)(void);
+  Lamda lamda;
+  OnExit(Lamda dolater):lamda(dolater){
+    //#nada
+  }
 
+  ~OnExit(){
+    lamda();
+  }
+};
+#endif
 #endif // ONEXIT_H

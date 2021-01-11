@@ -3,7 +3,7 @@
 #include "string.h"
 #include "char.h"
 #include "textkey.h"
-//todo: wrap stdlib dependent parts with a __have_include__
+//todo:1 wrap stdlib dependent parts with a __have_include__
 #include "stdlib.h" //strtod
 
 Cstr::Cstr() : ptr(nullptr){

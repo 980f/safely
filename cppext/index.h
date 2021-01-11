@@ -10,7 +10,7 @@
  * The only risk here is that someone might use -1 as a quantity value indicating that there is not even a container to have a quantity of items in.
  * Just don't do that, return a quantity of 0 for 'not a valid question', that will almost always yield the expected behavior.
  *
- *  todo: need to check for overflow on additive operations and set to badIndex if that occurs.
+ *  todo:1 need to check for overflow on additive operations and set to badIndex if that occurs.
  */
 /** the magic value, it is all ones */
 constexpr unsigned BadIndex = ~0U;

@@ -16,14 +16,14 @@ public:
 public:
   LinearMapping& operator = (const LinearMapping &other);
   /** @returns x clamped then converted to y */
-  double y(double x) const;
+  float y(float x) const;
   /** @returns y clamped then converted to x */
-  double x(double y) const;
+  float x(float y) const;
 
   /** @returns y(x) ignoring bounds */
-  double yraw(double x) const;
+  float yraw(float x) const;
   /** @returns x(y) ignoring bounds */
-  double xraw(double y) const;
+  float xraw(float y) const;
 
   bool seemsTrivial() const;
   /** set for diagonal given by the parameters. */
