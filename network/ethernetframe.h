@@ -9,6 +9,8 @@
 #include "bigendianer.h"
 #include <cstring> //temp for memcpy
 #include <cgmessage.h>
+#include "stm32f4xx_hal_eth.h" //Needed for ETH_MAX_ETH_PAYLOAD
+
 
 constexpr uint16_t htons(uint16_t swapme) {
   return swapme >> 8 | swapme << 8;
@@ -229,7 +231,7 @@ struct TcpEthernet {
   EthernetHeader ethernetHeader;
   IPV4Header ipv4Header;
   TCPHeader tcpHeader;
-  uint8_t etc[1500]; //bigger than we will need.
+  uint8_t etc[2*ETH_MAX_ETH_PAYLOAD]; //bigger than we will need.
   /** options follow header, might be zero length
   if offset(IHL)>5 then there will be more bytes following this object.
   options are byte streamy, 8 bit commands, null terminated.

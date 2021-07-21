@@ -1,7 +1,7 @@
 // (C) 2020 Andrew Heilveil (980f) created on 11/10/20.
 #pragma once
 
-#include <systick.h>
+#include "systick.h"
 #include "circularindexer.h"
 
 /**
@@ -9,6 +9,7 @@
  *
  * @param TraceItem class must be copy assignable.
  * if @param Ticked is true then it must have a 'tick' member of some integral type and this class will timestamp the object using SystemTimer (cortexm SysTick).
+ * @param tick must be the trailing member of class TraceItem for curly braces to work nicely.
  * */
 template<class TraceItem, unsigned depth = 100, bool Ticked = false> class Tracer {
 public:
