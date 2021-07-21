@@ -233,7 +233,7 @@ double dpow10(int exponent) {
   if (exponent >= 0) {
     dpow10(unsigned(exponent));
   }
-  //todo: see if std lib uses RPE to compute this.
+  //todo:M see if std lib uses RPE to compute this.
   return pow(double(10), exponent);
 } // dpow10
 

@@ -11,7 +11,7 @@
  *  Instances are passed a pointer to a buffer and its length and provide pointer-like syntax for modifying and accessing said
  *  buffer, but won't increment the pointer outside the allocated range.
  *  This class does not CONTAIN the data, it is a pointer into data allocated elsewhere.
- *  todo: add ownership flag, to delete the buffer when the object goes away. We don't already have that as most of the time we have multiple indexers into a shared buffer.
+ *  todo:1 add ownership flag, to delete the buffer when the object goes away. We don't already have that as most of the time we have multiple indexers into a shared buffer.
  *  If this is the only place a malloc'd address is retained you can free that block (at the appropriate time!) by calling free(indx.internalBuffer());
  *
  *  There are two major modalities of use, writing and reading.
@@ -22,9 +22,9 @@
  *
  * The term "primary buffer" is used in comments to refer to one which describes an actuall allocation of memory whereas this class often represents a view within such.
  * It is up to the user to note when that is the case and to not use a mutator which changes the range of a primary buffer.
- *  todo: many of the functions were named for first use, not how they work. As such the names eventually did not match other usages.
- *  todo: C++11 and C++14 iterator and lambda helpers.
- *  todo: const versions of some methods.
+ *  todo:1 many of the functions were named for first use, not how they work. As such the names eventually did not match other usages.
+ *  todo:1 C++11 and C++14 iterator and lambda helpers.
+ *  todo:1 const versions of some methods.
  *
  * Thing stuff[7];
  * Indexer<Thing> index(stuff, sizeof(stuff));//note sizeof, not countof.
@@ -240,7 +240,7 @@ public:
     if(high<length){
       length=high;
     }
-    skip(low);//todo: alter buffer address so that rewind is clipped
+    skip(low);//todo:2 alter buffer address so that rewind is clipped
   }
 
   /** reworks this one to be a byte accessor of the filled portion of another one,

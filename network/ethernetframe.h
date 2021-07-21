@@ -94,10 +94,6 @@ struct EthernetAddress : public NetworkAddress<6> {
 } PACKED;
 
 struct IPV4Address : public NetworkAddress<4> {
-//  IPV4Address(uint32_t raw) :NetworkAddress<4>(&pun(uint8_t,raw)){//todo:00 htonlize the argument!
-//    //
-//  }
-//
   /** parse dotted decimal */
   void parse(Cstr humanreadable) {
     NetworkAddress<4>::parse(humanreadable, false);

@@ -65,7 +65,7 @@ unsigned Cycler::operator +=(int offset){
 }
 
 unsigned Cycler::operator -(int offset) const {
-  //todo: needs validation
+  //todo:0 needs validation
   return (*this + -offset)%length;
 }
 

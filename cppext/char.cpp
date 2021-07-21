@@ -107,5 +107,5 @@ char Char::hexNibble(unsigned sb) const noexcept {
 }
 
 bool Char::startsNumber() const noexcept {
-  return isDigit()||is('-')||is('+');//todo: ?how did this disappear
+  return isDigit()||is('-')||is('+');
 }

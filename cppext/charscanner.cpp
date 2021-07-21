@@ -213,7 +213,7 @@ bool CharScanner::operator == (const char *literal) const {
   if(!literal) {
     return used()==0; //null pointer matches empty string
   }
-  /** todo: get rid of the following strncmp */
+  /** todo:1 get rid of the following strncmp */
   if(0==ourStrncmp(internalBuffer(),literal,used())) {//then we MIGHT have a match
     //strncmp stops at first null in either string, or after 'used' items
     if(buffer[pointer - 1]) {//no null terminator

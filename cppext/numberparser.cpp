@@ -18,7 +18,7 @@ bool PushedNumberParser::applydigit(u64 &accum,char ch){
     return false;
   }
   unsigned digit=unsigned(ch-'0');
-  //todo: base 36 logic.
+  //todo:1 base 36 logic.
   accum*=base;
   accum+=digit;
   return true;
