@@ -93,6 +93,8 @@ void justOnceLater(int newvalue){
   dbg("\njustOnceLater: %d",newvalue);
 }
 
+
+
 #include "runoncenthtime.h"
 void testdemonic(){
 
@@ -109,6 +111,24 @@ void testdemonic(){
   demonic = 22;//should print 0
   //nothing else should print.
 } // testdemonic
+
+
+#include "demonic.h"
+static Demonic<int> demonical(39);
+void testNonSigcDemon(){
+  demonical.onAnyChange([](auto is,auto was){
+    printf("\nDemonic<int>:%d -> %d",was,is);
+  },true);
+  demonical=12;
+  demonical=3;
+  printf("\nnon sigc demon testing done\n");
+  demonical.onAnyChange([](auto is){
+    printf("\nDemonic<int>:set to %d",is);
+  },true);
+  demonical=79;
+  demonical=35;
+  printf("\nnon sigc demon testing done\n");
+}
 
 #include "cheaptricks.h"
 void coe(int &shouldclear){
@@ -233,6 +253,9 @@ int main(int argc, char *argv[]){
     char group = (*tes++);
     unsigned which = atoi(tes);
     switch(group) {
+    case 'd':
+      testNonSigcDemon();
+      break;
     case 'k':
       Weird::test();
       break;

@@ -99,6 +99,7 @@ HEADERS += safely.h \
     $$cppextdir/textwalker.cpp \
     $$cppextdir/textchunk.h \
     $$cppextdir/continuedfractionratiogenerator.h \
-    $$cppextdir/pathiterator.h
+    $$cppextdir/pathiterator.h \
+    $$cppextdir/demonic.h
 
 
