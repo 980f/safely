@@ -1,7 +1,7 @@
 ## qtcreator pro file fragment for making a static lib
 QT       -= core gui
 TEMPLATE = lib
-CONFIG += staticlib
+CONFIG += staticlib usbSafely
 
 include("safely.pro")
 
