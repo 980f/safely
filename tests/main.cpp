@@ -10,7 +10,8 @@
 
 #include "storable.h"
 #include "numericalvalue.h" //union + type enum
-#include "stddef.h"
+//#include <stddef.h>
+#include "index.h"
 /** test harness for qtcreator debugger helper*/
 void testPrettyPrinter(unsigned which){
   switch(which) {
