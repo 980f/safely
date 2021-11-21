@@ -15,3 +15,15 @@ public:
   }
 };
 
+template <typename V> class ConstVectorIterator {
+  const std::vector<V> &v;
+public:
+  ConstVectorIterator(const std::vector<V> &v):v(v){
+    //#done
+  }
+  void foreach (std::function<void(const V&)> body) {
+    for(auto it=v.begin();it!=v.end();++it){
+      body(*it);
+    }
+  }
+};

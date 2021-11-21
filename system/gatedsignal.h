@@ -1,5 +1,4 @@
-#ifndef GATEDSIGNAL_H_
-#define GATEDSIGNAL_H_
+#pragma once
 
 #include "sigcuser.h"
 
@@ -16,7 +15,7 @@
 class GatedSignal {
 public:
   GatedSignal();
-  /** regiseters */
+  /** registers */
   SimpleSignal::iterator connect(const SimpleSlot &slot);
   /** emits signal if not gated off else arranges for signal to emit when gated back on.*/
   void send();
@@ -69,9 +68,8 @@ public:
   }
 
   SimpleSignal::iterator connect(const sigc::slot< void,Arg > &slot){
-    return GatedSignal::connect(sigc::bind(slot,ref(knownArg)));//use a seperate sigc::ref for each slot
+    return GatedSignal::connect(sigc::bind(slot,sigc::ref(knownArg)));//use a seperate sigc::ref for each slot
   }
 
 };
 
-#endif // _GATEDSIGNAL_H_

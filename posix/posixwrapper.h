@@ -14,8 +14,8 @@ class PosixWrapper {
 
 protected:
   //added for libusb, extends error numbers in the negative direction.
-  const char **alttext = nullptr;
-  unsigned numalts = 0;
+  const char **alttext=nullptr;
+  unsigned numalts=0;
 public:
   /** for use with functions that return directly the codes that usually go into errno. */
   bool failure(int errcode);
@@ -38,14 +38,15 @@ public: //so that we can merge errors from functions called outside of the objec
   /** set @param target with @param value, if value is -1 (all ones, ~0) then call failure(errno), @returns whether value!=~0. */
   template<typename Integrish,typename Other> bool okValue(Integrish &target,Other value){
     target = static_cast<Integrish>(value);
-    return !setFailed(value==Integrish(~0ULL));//tilde operator is unduly restricted by compiler :(
+    return !setFailed(value == Integrish(~0ULL)); // tilde operator is unduly restricted by compiler :(
   }
 
 public:
   /** ERRNO for last operation done using the extend object */
-  int errornumber = 0;
+  int errornumber=0;
   /** ignore resource temporarily unavailable error. users sets this when that error is to be stifled from the log stream. */
   bool stifleEAGAIN = true;
+
 public:
   /** @param prefix is used for logging. */
   PosixWrapper(const char *prefix);
@@ -59,6 +60,18 @@ public:
    */
   bool setFailed(bool passthrough);
 }; // class PosixWrapper
+
+
+
+/** free data and clear the pointer so that an attempted double-free doesn't occur. 
+ This is a dance that is popular in Glib but occasionally forgotten.
+*/
+template <typename ObjType> void Free(ObjType **pointer){
+  if(pointer){
+    delete *pointer;
+    *pointer=nullptr;
+  }
+}
 
 
 #endif // POSIXWRAPPER_H

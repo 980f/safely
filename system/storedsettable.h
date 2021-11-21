@@ -1,5 +1,5 @@
 #ifndef STOREDSETTABLE_H
-#define STOREDSETTABLE_H
+#define STOREDSETTABLE_H  "(C) 2017 Andrew L. Heilveil"
 
 #include "stored.h"
 #include "settable.h"

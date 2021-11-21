@@ -55,7 +55,7 @@ FILE *Fildes::getfp(const char *fargs){
 
 unsigned Fildes::available(){ //was buggy prior to 25apr2018
   unsigned bytesAvailable = 0;
-  if(failure(ioctl(fd, FIONREAD,&bytesAvailable))) {//missing third arg did amazing damage to caller
+  if(!(ioctl(FIONREAD,&bytesAvailable))) {
     return 0;//a place to breakpoint
   } else {
     return bytesAvailable;
@@ -240,10 +240,10 @@ bool Fildes::write(Indexer<char> &&p){
 }
 
 bool Fildes::write(const u8 *buf, unsigned len){
-  if (isOpen()) {
-    if (okValue(lastWrote, ::write(fd, buf, len))) {
+  if(isOpen()) {
+    if(okValue(lastWrote, ::write(fd,buf, len))) {
       if(traceWrite) {
-        return true;
+        return true;//this is a place to breakpoint on when you want to see every write that works.
       }
       return true;
     }

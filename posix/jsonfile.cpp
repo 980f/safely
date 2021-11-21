@@ -47,6 +47,7 @@ int JsonFile::loadFile(Cstr thename){
   return 0;//#an errno
 }
 
+
 bool indent(FILE *fp, unsigned tab){
   if(Index(tab).isValid()){
     fputc('\n',fp);
@@ -106,11 +107,13 @@ void printNode(unsigned tab, Storable &node, FILE *fp,bool showVolatiles){
 }
 
 
-void JsonFile::printOn(Cstr somefile, unsigned indent, bool showVolatiles){
+bool JsonFile::printOn(Cstr somefile, unsigned indent, bool showVolatiles){
   Filer fout("JsonSave");
-
   if(fout.openFile(somefile,O_CREAT|O_RDWR,true)){
     printNode(indent,root,fout.getfp("w"),showVolatiles);
+    return true;
+  } else {
+    return false;
   }
 }
 
@@ -118,7 +121,12 @@ Cstr JsonFile::originalFile(){
   return loadedFrom.c_str();
 }
 
-void JsonFile::printOn(Fildes &alreadyOpened, unsigned indent, bool showVolatiles){
-  auto fp=alreadyOpened.getfp("w");
-  printNode(indent,root,fp,showVolatiles);
+bool JsonFile::printOn(Fildes &alreadyOpened, unsigned indent, bool showVolatiles){
+  if(alreadyOpened.isOk()){
+    auto fp=alreadyOpened.getfp("w");
+    printNode(indent,root,fp,showVolatiles);
+    return true;
+  } else {
+    return false;
+  }
 }

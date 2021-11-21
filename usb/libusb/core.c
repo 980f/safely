@@ -1325,14 +1325,13 @@ libusb_device_handle * LIBUSB_CALL libusb_open_device_with_vid_pid(
 
 	if (found) {
 		r = libusb_open(found, &dev_handle);
-		if (r < 0)
+    if (r < 0){
 			dev_handle = NULL;
-                //todo: leave r where higher levels can find it.
-                if(ctx){
-                        ctx->debug_fixed=r;    //[alh] abuse variable that is set but never read (at least in linux code)
-                }
+      //todo: leave r where higher levels can find it.
+      if(ctx){
+        ctx->debug_fixed=r;    //[alh] abuse variable that is set but never read (at least in linux code)
+      }
     }
-
 	}
 
 out:

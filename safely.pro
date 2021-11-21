@@ -1,14 +1,14 @@
-## QT project file fragment with things common to libraries and applications using the 'safely' project
+==== BASE ====
+## QT project file fragment with things common to libraries  and applications using the 'safely' project
 safelydir=$$PWD
 
 CONFIG -= app_bundle
 CONFIG -= qt
 #we want the same language in use everywhere:
 CONFIG += c++14
-
 #rpi gcc is now 6.x, the following may be redundant
 QMAKE_CXXFLAGS += -std=c++14
-
+QMAKE_CXXFLAGS += -funsigned-char
 
 #signed chars are such a pain.
 QMAKE_CFLAGS += -funsigned-char

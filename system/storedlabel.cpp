@@ -1,7 +1,7 @@
 #include "storedlabel.h"
 
 
-StoredLabel::StoredLabel(Storable&node, const TextValue &fallback) : Stored(node){
+StoredLabel::StoredLabel(Storable&node, const char *fallback) : Stored(node){
   if(node.setType(Storable::Textual)) {
     if(node.is(Storable::Parsed)) {
       dbg("Attaching StoredLabel to non-textual Storable, node %s", node.fullName().c_str());
@@ -10,8 +10,8 @@ StoredLabel::StoredLabel(Storable&node, const TextValue &fallback) : Stored(node
   setDefault(fallback);
 }
 
-void StoredLabel::setDefault(const TextValue &deftext){
-  node.setDefault(deftext.c_str());
+void StoredLabel::setDefault(const char *deftext){
+  node.setDefault(deftext);
 }
 
 TextKey StoredLabel::c_str() const {
@@ -27,18 +27,18 @@ bool StoredLabel::isTrivial() const {
 }
 
 void StoredLabel::operator =(const StoredLabel&other){
-  if(&other) {//yes, we can get null references.
+  if(&other) {//#yes, we did get null references from gui editor
     node.setImage(other.node.image());
   } else {
     wtf("null rhs in StoredLabel operator =");
   }
 }
 
-void StoredLabel::operator =(const TextValue &zs){
+void StoredLabel::operator =(const Text &zs){
   node.setImage(zs);
 }
 
-bool StoredLabel::operator ==(const TextValue &zs) const {
+bool StoredLabel::operator ==(const Text &zs) const {
   return node.image() == zs;
 }
 
@@ -63,10 +63,15 @@ void StoredLabel::applyTo(sigc::slot<void, TextKey> slotty){
   slotty(c_str());
 }
 
-sigc::connection StoredLabel::onChange(sigc::slot<void, TextKey> slotty){
-  return node.addChangeWatcher(bind(MyHandler(StoredLabel::applyTo), slotty));
+sigc::connection StoredLabel::onChange(sigc::slot<void, TextKey> slotty, bool kickme){
+  return node.addChangeWatcher(bind(MyHandler(StoredLabel::applyTo), slotty),kickme);
 }
 
 sigc::slot<void, TextKey> StoredLabel::setter(){
   return bind(mem_fun(node, &Storable::setImageFrom), Storable::Edited);
+}
+
+void StoredLabel::setFrom(double value, int decimals){
+  auto nf=NumberFormatter(decimals);
+  node.setImage(nf.format(value));
 }

@@ -128,7 +128,7 @@ SerialConfiguration::SerialConfiguration(Storable &node) : Stored(node),
 
 SerialDevice::Pin::operator bool() noexcept {
   int pattern;
-  if(fd.ok(ioctl(fd,TIOCMGET, &pattern))) {
+  if(fd.ioctl(TIOCMGET, &pattern)) {
     pattern &= this->pattern;//pick our bit
     return invert ? pattern ==0 : pattern!=0;
   } else {

@@ -9,8 +9,6 @@
 class Application: public PosixWrapper {
 protected:
   Indexer<TextKey> arglist;
-    double hz;
-  /** event manager */
   Epoller looper;
 
   /** time until next keepalive/sampling */

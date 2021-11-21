@@ -14,7 +14,7 @@ struct Din {
 public:
   Din();
 
-  GPIO *beGpio(unsigned pinIndex,unsigned af,unsigned pull);//make a gpio
+  GPIO *beGpio(unsigned pinIndex,unsigned af=0,unsigned pull=0);//make a gpio
   SerialDevice::Pin *beSpio(SerialDevice &port,SerialDevice::Pin::Which one, bool invert);//make an spio
 
   void connect(SerialDevice *port, unsigned which, bool invert=true, int pullit=0);

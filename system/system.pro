@@ -1,12 +1,61 @@
-# // *INDENT-OFF*  in case we run uncrustify on this flie
+##qtcreator project file for functions that need heap
+##there are items in the associated folder that aren't in this list as they haven't been tested.
+##todo: chunk this in groups such as "stored" and "paths" and add conditional build flags.
 
-#magic for making a static lib
-#who brought this back? causes a build loop. include ("../staticlib.pro")
+systemdir=$$PWD
 
-#our sibling with heapless code
-#who brought this back? part of static lib builds, which are deprecated: include("../cppext/lib.pro")
-#we'll use system sigc code
-include("../sigc.pro")
+message("Including heap dependent parts from $$systemdir")
 
-include("system.files")
+DEPENDPATH += $$systemdir
+INCLUDEPATH += $$systemdir
+
+SOURCES += \
+    $$systemdir/logger.cpp \
+    $$systemdir/numberformatter.cpp \
+    $$systemdir/storable.cpp \
+    $$systemdir/storedipv4address.cpp \
+    $$systemdir/storednumeric.cpp \
+    $$systemdir/storedrange.cpp \
+    $$systemdir/textpointer.cpp \
+    $$systemdir/storejson.cpp \
+    $$systemdir/segmentedname.cpp \
+    $$systemdir/storedlabel.cpp \
+    $$systemdir/storedgroup.cpp \
+    $$systemdir/pathparser.cpp \
+    $$systemdir/sigcuser.cpp \
+    $$systemdir/gatedsignal.cpp \
+    $$systemdir/stored.cpp \
+    $$systemdir/dottedname.cpp \
+    $$systemdir/filename.cpp \
+    $$systemdir/filenameconverter.cpp \
+    $$systemdir/textformatter.cpp  \
+    $$systemdir/storedargs.cpp \
+    $$systemdir/dyndeterminator.cpp \
+    $$systemdir/matrixinverter.cpp
+
+HEADERS += \
+    $$systemdir/chain.h \
+    $$systemdir/chainsorter.h \
+    $$systemdir/logger.h \
+    $$systemdir/numberformatter.h \
+    $$systemdir/storable.h \
+    $$systemdir/storedgroup.h \
+    $$systemdir/storedipv4address.h \
+    $$systemdir/storednumeric.h \
+    $$systemdir/storedrange.h \
+    $$systemdir/textkey.h \
+    $$systemdir/textpointer.h \
+    $$systemdir/watchable.h \
+    $$systemdir/sigcuser.h \
+    $$systemdir/storejson.h \
+    $$systemdir/storedlabel.h \
+    $$systemdir/pathparser.h \
+    $$systemdir/stored.h \
+    $$systemdir/filename.h \
+    $$systemdir/dottedname.h \
+    $$systemdir/allocatedindexer.h \
+    $$systemdir/storedargs.h \
+    $$systemdir/dyndeterminator.cpp \
+    $$systemdir/matrixinverter.cpp
+
 

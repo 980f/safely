@@ -4,6 +4,7 @@
 #include "safely.h"
 #include <vector>  //an STL class that is dangerous for naive users (as is all of the STL)
 
+
 /**
  * Safe(r) and convenient wrapper around a vector of pointers.
  * It is very suited for container managed persistence, i.e. all objects of a class can be tracked herein and removal from here results in deletion of object.
@@ -124,6 +125,14 @@ public:
     return true;
   }
 
+  /** removes @param n th item, 0 removes first in chain. @returns the item. Compared to removeNth this never deletes the object even if this wad claims ownership */
+  T* takeNth(unsigned n){
+    T* adoptee = nth(n);
+    if(adoptee) {
+      v.erase(v.begin() + n);//things like this is sufficient reason to hate the stl.
+    }
+    return adoptee;
+  }
   bool removeLast(){
     return removeNth(quantity()-1);
   }
@@ -143,13 +152,25 @@ public:
     return removeNth(indexOf(thing));
   }
 
+  /** change positions of a pair of elements. @returns whether elements existed. */
+  bool swap(unsigned from, unsigned to){
+    if(has(from)&&has(to)) {
+      T* thing = v[from];
+      v[from]=v[to];
+      v[to]=thing;
+      return true;
+    } else {
+      return false;
+    }
+  }
+
   /** move item at @param from location to @param to location, shifting the items inbetween.
    * @returns whether the operation was performed, which only happens if both indexes are in the chain.
    * This is faster than remove/insert and more importantly does not delete the item as remove does.
    *  @deprecated needs test! had bug so must not have been compiled, ever? */
   bool relocate(unsigned from, unsigned to){
     if(has(from)&&has(to)) {
-      int dir = to - from;//positive if moving towards end
+      int dir = int(to) - int(from);//positive if moving towards end
       if(dir==0) {
         return false;
       }
@@ -171,7 +192,7 @@ public:
   /** removes all items. */
   void clear(){
     if(isOwner) {
-      for(int i = v.size(); i-->0; ) {//#explicit iteration to make it easier to debug exceptions
+      for(unsigned i = v.size(); i-->0; ) {//#explicit iteration to make it easier to debug exceptions
         delete v[i];
       }
     }
@@ -179,7 +200,7 @@ public:
   }
 
   /** destruction removes all items */
-  ~Chain(){
+  virtual ~Chain(){
     clear();
   }
 
@@ -236,7 +257,7 @@ public:
     if(which<steps) {//if removing history
       --steps;//decrement so we don't skip the one moving into the spot erased.
     }
-    list.remove(which);
+    list.removeNth(which);
   }
 
   //todo: detect c++14 and add a forEach
@@ -315,7 +336,7 @@ public:
   }
 
   void remove(unsigned which){
-    list.remove(which);
+    list.removeNth(which);
   }
 
   /** removes  the item that the last call to next() gave you, adjusting iteration for its absence */

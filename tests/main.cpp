@@ -10,8 +10,7 @@
 
 #include "storable.h"
 #include "numericalvalue.h" //union + type enum
-//#include <stddef.h>
-#include "index.h"
+#include "stddef.h"
 /** test harness for qtcreator debugger helper*/
 void testPrettyPrinter(unsigned which){
   switch(which) {
@@ -73,10 +72,10 @@ void testPrettyPrinter(unsigned which){
 
 } // testPrettyPrinter
 
-SafeStr<14> fortnight;
+static SafeStr<14> fortnight;
 
 //simply compiling the following is a demanding thing:
-Indexer<SafeStr<10>> pressure;
+static Indexer<SafeStr<10>> pressure;
 
 #include "watchable.h"
 
@@ -94,6 +93,8 @@ void justOnceLater(int newvalue){
   dbg("\njustOnceLater: %d",newvalue);
 }
 
+
+
 #include "runoncenthtime.h"
 void testdemonic(){
 
@@ -110,6 +111,24 @@ void testdemonic(){
   demonic = 22;//should print 0
   //nothing else should print.
 } // testdemonic
+
+
+#include "demonic.h"
+static Demonic<int> demonical(39);
+void testNonSigcDemon(){
+  demonical.onAnyChange([](auto is,auto was){
+    printf("\nDemonic<int>:%d -> %d",was,is);
+  },true);
+  demonical=12;
+  demonical=3;
+  printf("\nnon sigc demon testing done\n");
+  demonical.onAnyChange([](auto is){
+    printf("\nDemonic<int>:set to %d",is);
+  },true);
+  demonical=79;
+  demonical=35;
+  printf("\nnon sigc demon testing done\n");
+}
 
 #include "cheaptricks.h"
 void coe(int &shouldclear){
@@ -183,6 +202,31 @@ void showSizes(){
   dbg("Size of minimal functor: %d",sizeof (nullfunctor));
 }
 
+/** testing chained operator() use, as alternative to varargs template */
+class Weird {
+public:
+  Weird(int ){}
+
+  Weird & operator ()(char see){
+    dbg("%c",see);
+    return *this;
+  }
+  Weird & operator ()(unsigned ewe){
+    dbg("%u",ewe);
+    return *this;
+  }
+
+  static int test(){
+    Weird thing(0);
+    char see='A';
+    unsigned ewe=42;
+    thing(see)(ewe);
+
+    Weird(3)('d')(1984U);
+    return 0;
+  }
+};
+
 extern void testJ(unsigned which);
 #include "unicodetester.h"
 #include "numberformatter.h"
@@ -190,8 +234,10 @@ extern void testJ(unsigned which);
 #include "filereadertester.h"
 #include "filewritertester.h"
 #include "application.h"
+//rpi i2c
+#include "SSD1306.h"
 
-
+static SSD1306 hat({128,64,true,12});
 int main(int argc, char *argv[]){
   Text cwd(getcwd(nullptr,0));//we use Text class because it will free what getcwd allocated. Not so critical unless we are using this program to look for memory leaks
                               // in the functions it tests.
@@ -202,21 +248,27 @@ int main(int argc, char *argv[]){
   while(argc-->0) {
     const char*tes = argv[argc];
     dbg("%d: %s",argc,tes);
-    char group = (*tes++);
-    unsigned which = atoi(tes);
-    switch(group) {
+    char group=(*tes++);
+    unsigned which=atoi(tes);
+    switch(group){
+    case 'd':
+      testNonSigcDemon();
+      break;
+    case 'k':
+      Weird::test();
+      break;
     case '%':
       testPrettyPrinter(which);
       break;
     case 'z':
       showSizes();
       break;
-    case 'w': {
-      FileWriterTester().run(which);
-    } break;
-    case 'f': {
-      FileReaderTester().run(which);
-    } break;
+    case 'w':
+        FileWriterTester().run(which);
+     break;
+    case 'f':
+        FileReaderTester().run(which);
+     break;
     case 'b'://buffer formatting
       testBufferFormatter();
       break;

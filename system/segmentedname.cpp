@@ -22,8 +22,8 @@ void SegmentedName::purify(){
 }
 
 void SegmentedName::copycat(const SegmentedName &other){
-  for(auto index=other.indexer();index.hasNext();){
-    Text &item=index.next();
+  for(auto index=other.cindexer();index.hasNext();){
+    const Text &item=index.next();
     this->suffix(item.c_str());//c_str() here forces copy, see transfer where we take the content
   }
 }
@@ -64,6 +64,6 @@ ChainScanner<Text> SegmentedName::indexer(){
   return ChainScanner<Text>(*this);
 }
 
-ConstChainScanner<Text> SegmentedName::indexer() const {
+ConstChainScanner<Text> SegmentedName::cindexer() const {
   return ConstChainScanner<Text>(*this);
 }

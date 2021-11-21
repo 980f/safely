@@ -5,7 +5,6 @@
  * This is C++'s answer to Java's "try with resources" and similar features in other languages.
 */
 
-
 /** ModifyOnExit is a base class, its internals are named for ClearOnExit which it was extracted from */
 template<typename Scalar> class ModifyOnExit {
 protected:
@@ -22,7 +21,6 @@ public:
   operator Scalar(void){
     return zipperatus;
   }
-
   /** overload this to do something to the saved reference on exit */
   virtual ~ModifyOnExit()=default;
 
@@ -91,7 +89,6 @@ public:
 template<typename Scalar> class AssignOnExit:public ModifyOnExit<Scalar> {
   using ModifyOnExit<Scalar>::ModifyOnExit;
   using ModifyOnExit<Scalar>::zipperatus;
-
   /** value to assign to zipperatus on exit */
   Scalar onexit;
 public:
@@ -109,6 +106,8 @@ public:
   }
 
 }; // class AssignOnExit
+
+
 /** record present value to be restored on exit, assign a new value */
 template<typename Scalar> class Pushit:public AssignOnExit<Scalar> {
   Pushit(Scalar & toBePushed, Scalar newvalue):AssignOnExit<Scalar> (toBePushed,toBePushed){
@@ -159,7 +158,7 @@ public:
   }
 
   DeleteOnExit(Deletable&something) : something(&something){
-//we have recorded that which is to be deleted.
+    //we have recorded that which is to be deleted.
   }
 
   /** named version of cast to template type */
@@ -180,7 +179,7 @@ public:
     return *something;
   }
 
-  /** @returns whether there is an object lurking inside of this*/
+  /** @returns whether there is an object lurking inside of this */
   operator bool() const {
     return something!=nullptr;
   }

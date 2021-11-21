@@ -20,7 +20,7 @@ void GatedSignal::send(){
 }
 
 void GatedSignal::gate(){
-  gateCounter++;
+  ++gateCounter;
 }
 
 void GatedSignal::ungate(){
@@ -35,6 +35,11 @@ void GatedSignal::ungate(){
 
 SimpleSlot GatedSignal::propagator(){
   return MyHandler(GatedSignal::send);
+}
+
+void GatedSignal::kill() {
+  gateCounter=0;
+  doEmit= false;
 }
 
 /////////////////

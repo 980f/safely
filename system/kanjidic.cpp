@@ -1,3 +1,4 @@
+#include <cppext/utf8.h>
 #include "kanjidic.h"
 
 #include "storable.h"

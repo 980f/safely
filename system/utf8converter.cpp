@@ -1,7 +1,4 @@
 #include "utf8converter.h"
-#include "utf8transcoder.h"
-
-
 
 unsigned Utf8ConverterOut::length(const char *source) const{
   if(Cstr(source).empty()) {
@@ -74,7 +71,7 @@ unsigned Utf8ConverterIn::length(const char *source) const {
   if(Cstr(source).empty()) {
     return 0;
   }
-  int totes(0);
+  unsigned totes(0);
 
   Utf8Decoder dx;
   //#not using elseif below because of one exception and to make it easy to reorder the tests.
@@ -84,7 +81,7 @@ unsigned Utf8ConverterIn::length(const char *source) const {
       break;
     case Utf8Decoder::Xand://need to resend last char
       --source;//resends
-      //JOIN
+    [[clang::fallthrough]];
     case Utf8Decoder::Done: //uch is utf8 char
       totes += UTF8::numFollowers(dx.fetch()) + 1;
       break;
@@ -99,7 +96,7 @@ unsigned Utf8ConverterIn::length(const char *source) const {
       return totes;
     }
   }
-  return BadIndex;
+  return BadIndex;//#can't get here.
 }
 
 bool Utf8ConverterIn::operator()(const char *peeker, Indexer<char> &packer){
@@ -111,7 +108,8 @@ bool Utf8ConverterIn::operator()(const char *peeker, Indexer<char> &packer){
       break;
     case Utf8Decoder::Xand://need to resend last char
       --peeker;//resends last
-      //JOIN
+
+    [[clang::fallthrough]];
     case Utf8Decoder::Done:{ //uch is utf8 char
       unsigned nf=UTF8::numFollowers(dx.uch);
       if(packer.stillHas(nf+ 1)){
@@ -145,7 +143,7 @@ UnicharScanner::UnicharScanner(const Indexer<const char> &utf8, int rewind):utf8
   //#nada
 }
 
-bool UnicharScanner::hasNext() const {
+bool UnicharScanner::hasNext() {
   return utf8.hasNext();
 }
 
@@ -159,7 +157,7 @@ Unichar UnicharScanner::next(){
 }
 
 
-bool UnicharReader::hasNext() const {
+bool UnicharReader::hasNext() {
   return utf8.hasNext();
 }
 
