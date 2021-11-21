@@ -5,7 +5,7 @@
 
 /** a numeric value that may have unlimited side effects when set.
 *  Numeric should have an operator != Numeric, operator !=[0,1]
-the side effect is provided to objects of this class via @see onChange().
+the side effect is provided to objects of this class via @see onAnyChange().
 */
 
 template<typename Numeric> class Demonic {
@@ -51,7 +51,7 @@ void onAnyChange(SetterFn ademon,bool kickme=false){
 
 
 operator Numeric() const {
-  return( thing);
+  return thing;
 }
 
 Numeric set(const Numeric &newvalue){
@@ -60,34 +60,34 @@ Numeric set(const Numeric &newvalue){
     thing = newvalue;
     demon(newvalue, was);
   }
-  return( thing);
+  return thing;
 }
 
 template<typename OtherNumeric> Numeric operator =(const OtherNumeric &other){
-  return( set(Numeric(other)));
+  return set(Numeric(other));
 }
 
 template<typename OtherNumeric> Numeric operator *=(const OtherNumeric &other){
-  if (other != 1) {
-    return( set(thing * Numeric(other)));
+  if (other != 1) {//4performance and debug
+    return set(thing * Numeric(other));
   } else {
-    return( thing);
+    return thing;
   }
 }
 
 template<typename OtherNumeric> Numeric operator +=(const OtherNumeric &other){
-  if (other != 0) {
-    return( set(thing + Numeric(other)));
+  if (other != 0) {//4performance and debug
+    return set(thing + Numeric(other));
   } else {
-    return( thing);
+    return thing;
   }
 }
 
 template<typename OtherNumeric> Numeric operator -=(const OtherNumeric &other){
-  if (other != 0) {
-    return( set(thing - Numeric(other)));
+  if (other != 0) {//4performance and debug
+    return set(thing - Numeric(other));
   } else {
-    return( thing);
+    return thing;
   }
 }
 

@@ -87,6 +87,7 @@ public:
 /** assign a value to variable on block exit, regardless of how the exit happens, including exceptions.
  * NB: it records the value to use at time of this object's creation */
 template<typename Scalar> class AssignOnExit:public ModifyOnExit<Scalar> {
+  using ModifyOnExit<Scalar>::ModifyOnExit;
   using ModifyOnExit<Scalar>::zipperatus;
   /** value to assign to zipperatus on exit */
   Scalar onexit;
@@ -129,6 +130,9 @@ public:
     zipperatus = onexit;
   }
 
+  operator Scalar() const noexcept{
+    return zipperatus;
+  }
   /** @returns the change that would occur to the target should the exit occur now */
   Scalar delta(void) const noexcept{
     return onexit - zipperatus;
