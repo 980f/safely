@@ -1,5 +1,5 @@
 #ifndef MULTILOCK_H
-#define MULTILOCK_H
+#define MULTILOCK_H "(C) Andrew L. Heilveil, 2017"
 
 /**
 when many agents wish to lock a resource, and each must remove its own lock.

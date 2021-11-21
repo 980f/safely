@@ -1,13 +1,14 @@
 #include "testabstractjsonparser.h"
 
 
-TAJParser::TAJParser(Indexer<const char> &data):AbstractJSONparser(core),core(data){
+TAJParser::TAJParser(Indexer<char> &data):AbstractJSONparser(core),core(data){
   //default inits of members NOT happening!
   stats.reset();
   parser.reset(true);
 }
 
-TestAbstractJsonConstructor::TestAbstractJsonConstructor(Indexer<const char> &data):data(data){
+TestAbstractJsonConstructor::TestAbstractJsonConstructor(Indexer<char> &data):data(data)
+{
 
 }
 
@@ -15,7 +16,7 @@ Text TestAbstractJsonConstructor::extract(Span &span) {
   return Text(data.internalBuffer(),span);
 }
 
-Storable *TestAbstractJsonConstructor::insertNewChild(Storable *parent, Text &name, bool haveValue, Text &value, bool valueQuoted) {
+Storable *TestAbstractJsonConstructor::applyToChild(Storable *parent, Text &name, bool haveValue, Text &value, bool valueQuoted) {
   Storable *nova=parent? &parent->addChild(name): (root = new Storable(name));
   if(nova){
     if(haveValue){

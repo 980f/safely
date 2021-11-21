@@ -5,7 +5,7 @@
 void PolledTimer::check(){
   if(running){
     if(--systicksRemaining==0){
-      onDone();
+      onDone();//default method clears running, i.e. simple PolledTimers are one-shots.
     }
   }
 }

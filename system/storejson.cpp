@@ -1,17 +1,16 @@
-#include "safely.h"
+//"(C) Andrew L. Heilveil, 2017"
 #include "storejson.h"
 #include "textpointer.h"
 #include "cheaptricks.h"
 
 
-StoreJsonParser::StoreJsonParser(Indexer<u8> &data):AbstractJSONparser(core),core(data){
-  //default inits of members NOT happening!
+StoreJsonParser::StoreJsonParser(Indexer<char> &data):AbstractJSONparser(core),core(data){
   stats.reset();
   parser.reset(true);
 }
 
-StoreJsonConstructor::StoreJsonConstructor(Indexer<u8> &data):
-  data(data){
+
+StoreJsonConstructor::StoreJsonConstructor(Indexer< char> &data):data(data){//might want to getHead or Tail vs copy construct.
   //#nada
 }
 
@@ -19,8 +18,18 @@ Text StoreJsonConstructor::extract(Span &span) {
   return Text(reinterpret_cast<const char*>(data.internalBuffer()),span);
 }
 
-Storable *StoreJsonConstructor::insertNewChild(Storable *parent, Text &name, bool haveValue, Text &value, bool valueQuoted) {
-  Storable *nova=parent? &parent->child(name): (root = new Storable(name));//maydo: access Stored::Groot
+Storable *StoreJsonConstructor::applyToChild(Storable *parent, Text &name, bool haveValue, Text &value, bool valueQuoted) {
+  Storable *nova=nullptr;
+  if(parent){
+    if(name.empty()){
+      nova=&parent->addChild("");//typically an array element, do NOT make all nameless entities the same entity.
+    } else {
+      nova=parent->findChild(name,true);
+    }
+  } else {
+    root = new Storable(name);
+    nova=root;
+  }
   if(nova){
     if(haveValue){//todo: if node already initialized change value according to type. i.e. preserve node.type
       nova->setImage(value,Storable::Parsed);

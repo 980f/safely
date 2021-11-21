@@ -1,4 +1,4 @@
-#ifndef POLYFILTER_H
+#ifndef POLYFILTER_H  //(C) 2017 Andrew L.Heilveil.
 #define POLYFILTER_H
 
 #include "centeredslice.h"

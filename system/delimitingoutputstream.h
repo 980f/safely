@@ -21,6 +21,8 @@ public:
   DelimitingOutputStream &put(const Text &text);
   DelimitingOutputStream &put(const char *text);
   DelimitingOutputStream &put(int val);
+  DelimitingOutputStream &put(unsigned val);
+
   DelimitingOutputStream &put(float val,int sigfig = 8);
   DelimitingOutputStream &put(double val,int sigfig = 17);
   DelimitingOutputStream &endl();

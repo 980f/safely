@@ -1,5 +1,4 @@
-#ifndef LOCALONEXIT_H
-#define LOCALONEXIT_H
+#pragma once
 
 
 /** helpers to make sure something gets done regardless of how the enclosing block exits.
@@ -46,7 +45,9 @@ public:
   AutoFlag(bool &toBeCleared);
 };
 
+#ifndef SETGUARD
 #define SETGUARD(boolvarb) AutoFlag coe_ ## boolvarb(boolvarb)
+#endif
 
 template<typename Scalar> class IncrementOnExit:public ModifyOnExit<Scalar> {
 public:
@@ -137,6 +138,8 @@ public:
  * You can DeleteOnExit <X> shortliveditem( new X()) and when that item goes out of scope it will be deleted.
  * That is almost the same as X shortliveditem(), but allocates on the heap rather than the stack.
  */
+//legacy name was at odds with other similar functionality class' names
+#define DeleteOnReturn DeleteOnExit
 template<typename Deletable> class DeleteOnExit {
   Deletable*something;
 public:
@@ -187,5 +190,3 @@ public:
   LocalOnExit(const SimpleFunction &deffered);
   ~LocalOnExit();
 };
-
-#endif // LOCALONEXIT_H

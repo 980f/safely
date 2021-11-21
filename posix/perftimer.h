@@ -12,8 +12,7 @@ struct PerfTimer {
   Text note;
   bool enabled;
 public:
-  /** global/master enable */
-  static bool all;
+  static bool showStarts;
 public:
   /** NB: the @param note content is copied.*/
   PerfTimer(TextKey note, bool enabled = true);

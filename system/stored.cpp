@@ -2,7 +2,7 @@
 
 /////////////////
 
-Storable &Stored::Groot(TextKey pathname){  
+Storable &Stored::Groot(TextKey pathname){
   if(Cstr(pathname).empty()){
     return groot;
   }
@@ -51,27 +51,27 @@ void Stored::legacy(TextKey oldname, TextKey newname, bool purgeOld){//purgeOld 
 
 /** parent (0) is self, return own index ,if a member of a StoredGroup then this is index within group
  *  parent (1) is node containing the node of interest*/
-int Stored::parentIndex(int generations) const {
+unsigned Stored::parentIndex(int generations) const {
   Storable *parent = &(node);
 
   while(generations-- > 0) {
     if(!parent) {
-      return -1;
+      return BadIndex;
     }
     parent = parent->parent;
   }
-  return parent ? parent->ownIndex() : -1;
+  return parent ? parent->ownIndex() : BadIndex;
 } // parentIndex
 
-int Stored::index() const {
+unsigned Stored::index() const {
   return node.ownIndex();
 }
 
-bool Stored::indexIs(int which) const {
+bool Stored::indexIs(unsigned which) const {
   return index() == which;
 }
 
-sigc::slot<int> Stored::liveindex() const {
+sigc::slot<unsigned> Stored::liveindex() const {
   //  return MyHandler(Stored::index);//obvious
   return mem_fun(node, &Storable::ownIndex); //faster
 }

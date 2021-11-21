@@ -1,6 +1,5 @@
 #ifndef CHAR_H
-#define CHAR_H
-
+#define CHAR_H "(C) Andrew L. Heilveil, 2017"
 
 /** like strchr but with idiot checks on the parameters */
 bool isPresent(const char *flags, char flag);
@@ -42,6 +41,13 @@ public:
 
   /** @returns whether this is a decimal digit */
   bool isDigit() const noexcept;
+
+  bool isLower() const noexcept;
+  char asLower() const noexcept;
+  bool isUpper() const noexcept;
+  char asUpper() const noexcept;
+
+
 
   bool isControl() const noexcept;
   /** @returns whether this is first char of an number image, per JSON and C++ rules */
@@ -102,7 +108,6 @@ public:
 /** @returns the c-escape partner of this. 'n' goes to newline, a newline goes to 'n' */
   char slashee()const noexcept;
 
-  char asUpper() const noexcept;
 };
 
 #endif // CHAR_H

@@ -1,9 +1,6 @@
+//"(C) Andrew L. Heilveil, 2017"
 #include "converter.h"
 #include "cstr.h"
-
-Converter::~Converter(){
-  //#nada
-}
 
 unsigned Converter::length(const char *source)const{
   return Cstr(source).length();

@@ -1,11 +1,10 @@
-#ifndef BUFFER_H
-#define BUFFER_H
+#pragma once //"(C) Andrew L. Heilveil, 2017-2018 "
 
 #include "eztypes.h"
 #include "minimath.h"
 #include "sequence.h"
 #include "ordinator.h"
-
+#include "index.h"
 
 /**
  *  This class is used to prevent buffer overflows.
@@ -63,7 +62,7 @@ private:
   /** copy @param qty from start of source to end of this. This is a raw copy, no new objects are created */
   void catFrom(Indexer<Content> &source, unsigned qty){
     if(stillHas(qty) && qty <= source.used()) {
-      movem(source.pointer, pointer, qty);
+      copyObject(source.internalBuffer(), this->internalBuffer(), qty* sizeof(Content));
       source.skip(qty);
       skip(qty);
     }
@@ -90,15 +89,28 @@ public:
     //#nada
   }
 
-  /* if @param rewind is negative then the new indexer covers just the data before the old one's pointer minus the ~rewind value, i.e. data already visited excluding
-   * the most recent. NB that a clip of ~0 gets everything beneath the pointer (same values as getHead), ~1 ends the new Indexer one shy of the oldone's pointer (such as removing a comma).
-   * a rewind of 0 gets you the equivalent of rewind(all) then clone() i.e. it ignores the other's pointer and gives you the construction time view of the other.
+  /* if @param clip is negative then the new indexer covers just the data before the old one's pointer minus the ~clip value, i.e. data already visited excluding the most recent. NB that a clip of ~0 gets everything beneath the pointer (same values as getHead), ~1 ends the new Indexer one shy of the oldone's pointer (such as removing a comma).
+   * a rewind of 0 gets you the equivalent of getTail
    * a rewind>0 gets you the unvisited part of the other, with the given number of already visited elements.
    * e.g. a value of 1 after reading a comma will get you a buffer starting with that comma */
-  Indexer(const Indexer &other, int rewind = 0) : //default value is clone of created state of other.
-    Ordinator(other, rewind),
+  Indexer(const Indexer &other, int clip) : //default value is clone of created state of other.
+    Ordinator(other, clip),
     //if 0 or ~clipsome start is same as start of other, else start offset from this one's current location
-    buffer(rewind<=0 ? other.buffer : other.buffer + (other.pointer - rewind)){
+    buffer(0){
+    if(clip<=0){
+     buffer= other.buffer ;
+    } else {
+      buffer= (other.buffer + (other.pointer + clip));
+    }
+  }
+
+  /** simple copy constructor */
+  Indexer(const Indexer &other)=default;
+
+  /** deallocate contents, set tracking to reflect that. This is NEVER called from within this class, only call it if you know the content was allocated for this object and not remembered elsewhere */
+  void freeContent(){
+    delete [] buffer;
+    forget();
   }
 
   /** @returns whether this seems to be a useful object. Note that it might have no freespace(), but it will have content.
@@ -189,6 +201,15 @@ public:
     }
   }
 
+  /** @returns an indexer which covers the leading part of this one. */
+  Indexer<Content> getHead() const{
+    return view(0,pointer);
+  }
+
+  /** @returns an indexer which covers the trailing part of this one. once upon a time called 'remainder' */
+  Indexer<Content> getTail() const{
+    return view(pointer,allocated());
+  }
 
   /** reworks this to move start of buffer to be @param howmany past present start.
    * does sensible things if you trim past the current pointer, wipes the whole thing if you trim all of it.
@@ -203,9 +224,7 @@ public:
       pointer = 0;//make it valid
       length -= howmany;
     } else {//kill the whole thing
-      buffer = nullptr;
-      pointer = 0;
-      length = 0;
+     forget();
     }
   } // trimLeading
 
@@ -215,6 +234,13 @@ public:
     while(ender < pointer) {
       buffer[ender++] = 0;
     }
+  }
+
+  void clipRange(Index high, Index low=0){
+    if(high<length){
+      length=high;
+    }
+    skip(low);//todo: alter buffer address so that rewind is clipped
   }
 
   /** reworks this one to be a byte accessor of the filled portion of another one,
@@ -260,16 +286,16 @@ public:
   }
 
   //publish parts of ordinator, without these derived classes are deemed abstract.
-  virtual bool hasNext(void) const {
+  virtual bool hasNext(void) override {//const removed to allow derived classes to lookahead and cache
     return Ordinator::hasNext();
   }
 
-  bool hasPrevious(void) const {
+  bool hasPrevious(void) const override {
     return Ordinator::hasPrevious();
   }
 
   /** on overrun of buffer returns last valid entry*/
-  virtual Content &next(void){
+  virtual Content &next(void) override{
     CppExtBufferFailureGuard
     return buffer[pointer < length ? pointer++ : length - 1];
   }
@@ -286,7 +312,7 @@ public:
   }
 
   //syntactic sugar:
-  operator bool() const {
+  operator bool()  {
     return hasNext();
   }
 
@@ -301,7 +327,7 @@ public:
   }
 
   /** @return current object ('s reference), rigged for sensible behavior when buffer is used circularly*/
-  Content &peek(void) const {
+  Content &peek(void) const override {
     CppExtBufferFailureGuard
     return buffer[pointer < length ? pointer : 0];
   }
@@ -322,7 +348,7 @@ public:
   }
 
   /** needed to resolve between Sequence::skip and Ordinator::skip*/
-  virtual void skip(unsigned int amount){
+  virtual void skip(unsigned int amount=1){
     Ordinator::skip(amount);
   }
 
@@ -353,41 +379,57 @@ public:
 
   /** remove bytes from the start of the allocation, actually moving data.
  This method does NOT alter the allocation. This only makes sense for a receive buffer as you peel items off the front. */
-  Indexer &removeFirst(unsigned amount){
+  Indexer &removeHead(unsigned amount){
     if(amount>=pointer){//remove all
-      pointer=0;
+      pointer=0;//simple ignore what we had
     } else {
-      movem(amount,0,amount);
-      pointer -=amount;
+      movem(amount,0,pointer-=amount);
     }
     return *this;
   }
 
-  /** if you lookedahead and instead of just skipping you want to move data in the buffer  */
-  bool removeNext(unsigned amount){
-    //data start is pointer+amount
-    unsigned start=pointer+amount;
+  /** use: if you lookedahead and instead of just skipping you want to move data in the buffer.
+   @returns whether the move was done, which will only happen if the @param amount is reasonable.
+ @param andShrink tells whether the buffer should be shrunk to reflect removed content. */
+  bool removeNext(unsigned amount,bool andShrink=true){
+    unsigned start=pointer+amount;//what should be next when we are done.
     if(canContain(start)){//don't pull from past end
       //data quantity is freespace-amount being removed since we are removing from the freespace
       unsigned quantity=freespace()-amount;
       if(canContain(quantity)){//slightly bogus, but a negative quantity will fail this test.
         movem(start,pointer,quantity);
+        if(andShrink){
+          length-=quantity;
+        }
         return true;
       }
     }
     return false;
   }
 
-  /** seeks in used portion of buffer for something that operator=='s @param item.
+  /** seeks in head of buffer for something that operator=='s @param item.
 @deprecated untested */
-  unsigned findFirst(const Content &item){
-    for(int peek=0;peek<pointer;++peek){
+  unsigned findInHead(const Content &item){
+    for(unsigned peek=0;peek<pointer;++peek){
       if(item==buffer[peek]){
         return peek;
       }
     }
     return BadIndex;
   }
+
+  /** seeks in tail of buffer for something that operator=='s @param item.
+   * pointer is not moved, typically you will skip in some fashion.
+@deprecated untested */
+  unsigned findInTail(const Content &item){
+    for(unsigned peek=pointer;peek<allocated();++peek){
+      if(item==buffer[peek]){
+        return peek;
+      }
+    }
+    return BadIndex;
+  }
+
 
   /** if next() has been called at least once then replace the item that next() returned with the given one.
    * this is only safe to call with Content that tolerates 'operator='
@@ -412,8 +454,8 @@ public:
 
   /** append @param other 's pointer through length-1 to this, but will append all or none.
    * Suitable for picking up the end of a partially copied buffer */
-  Indexer appendRemaining(Indexer<Content> &other){
-    int qty = other.emptySpace();
+  Indexer appendRemaining(Indexer<Content> &other){//append tail of other
+    int qty = other.freespace();
     if(stillHas(qty)) {
       catFrom(other, qty);
     }
@@ -463,15 +505,20 @@ public:
     }
   }
 
-  //free contents and forget them. Only safe todo if you know this buffer is created from a malloc.
-  void destroy(){
-    if(length){//# testing for debug, delete[] can handle a zero.
-      delete []buffer;
-    }
-    //and now forget we ever saw those
+  /** */
+  void forget(){
     length=0;
     pointer=0;
     buffer=nullptr;
+  }
+
+  //free contents and forget them. Only safe todo if you know this buffer is created from a malloc.
+  void destroy(){
+    if(length){//# testing 4debug, delete[] can handle a zero.
+      delete []buffer;
+    }
+    //and now forget we ever saw those
+    forget();
   }
 
   /** YOU must arrange to delete the contents of what this function returns. The @see destroy() method is handy for that.
@@ -503,4 +550,3 @@ public:
 //raw (bytewise) access to object
 #define IndexBytesOf(indexer, thingy) Indexer<u8> indexer(reinterpret_cast<u8 *>(&thingy), sizeof(thingy))
 
-#endif // bufferH

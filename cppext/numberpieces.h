@@ -1,5 +1,5 @@
 #ifndef NUMBERPIECES_H
-#define NUMBERPIECES_H
+#define NUMBERPIECES_H "(C) Andrew L. Heilveil, 2017"
 
 #include "eztypes.h"
 
@@ -18,11 +18,11 @@ public:
   /** digits left of decimal point */
   u64 predecimal;
   /** additional zeros to append to predecimal. If not zero then can ignore postdecimal and div10 */
-  int pow10;
+  unsigned pow10;
   /** digits after zero, divide by 10^div10 for their mathematical value */
   u64 postdecimal;
   /** how many post decimal digits are represented by 'postdecimal' value */
-  int div10;
+  unsigned postDigits;
   /** whether an explicit exponents was encountered */
   bool hasEterm;
   /** whether an explicit exponent was negative*/

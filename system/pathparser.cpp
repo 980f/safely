@@ -72,8 +72,8 @@ Rules PathParser::parseInto(SegmentedName &pieces, Indexer<const char> &scan, ch
       }
     }
   }
-  //the following is suspect
-  if(scan.contains(cutter.lowest)){
+
+  if(scan.contains(cutter.lowest)){//probably can be 'lowest.isValid() and highest is not'
     cutter.highest=scan.ordinal();
     if(cutter.empty()){
       bracket.after=true;

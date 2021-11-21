@@ -1,3 +1,4 @@
+//"(C) Andrew L. Heilveil, 2017"
 #include "textformatter.h"
 #include "textpointer.h"
 #include "stdlib.h"
@@ -5,7 +6,7 @@
 /*
  *  The algorithm:
  *  scan the format string processing FormatControls and computing the length of each item referenced.
- *  sum that all up and allocate once a buffer big enough to hold all.
+ *  sum that all up and allocate once a buffer big enough to hold all. (needs to handle temporary max).
  *  scan the format string again inserting processed strings.
  *
  *  Data lifetimes:
@@ -22,8 +23,12 @@
 
 
 TextFormatter::TextFormatter(TextKey mf) :
-  Text(mf){//strdup argument, so that it may evaporate
+  Text(mf){//strdup's argument, so that it may evaporate
   body.wrap(violated(),length());
+}
+
+Indexer<u8> TextFormatter::asBytes(){
+  return Indexer<u8> (reinterpret_cast<u8*>(body.internalBuffer()),body.used());
 }
 
 TextFormatter::~TextFormatter(){
@@ -32,7 +37,9 @@ TextFormatter::~TextFormatter(){
 
 bool TextFormatter::processing(){
   if(sizing) {
-    sizer += width - substWidth;
+    int delta=width - substWidth;
+    sizer += delta>0?delta:0;//max temporary size
+    termloc +=delta; //actual final size
     return false;
   } else {
     return true;
@@ -41,7 +48,6 @@ bool TextFormatter::processing(){
 
 void TextFormatter::substitute(CharFormatter buf){
   width = buf.allocated();
-
   CharFormatter workspace = makeWorkspace();
   if(workspace.isUseful()) {
     if(!workspace.appendAll(buf)) {
@@ -51,7 +57,6 @@ void TextFormatter::substitute(CharFormatter buf){
     }
     reclaimWaste(workspace);
   }
-
 } // TextFormatter::substitute
 
 void TextFormatter::substitute(Cstr stringy){
@@ -63,10 +68,11 @@ void TextFormatter::substitute(TextKey stringy){
 }
 
 bool TextFormatter::openSpace(){
-  if(body.move(width - substWidth)) {//2: dollar and digit
-    termloc += width - substWidth;
+  int delta=width - substWidth;
+  int section=dataend-body.used();
+  if(body.move(delta,section)) {//just moves data needing preservation to after workspace we are about to create.
     //point to '$'
-    body.rewind(width);
+    body.rewind(substWidth);
     return true;
   } else {
     return false;
@@ -75,9 +81,10 @@ bool TextFormatter::openSpace(){
 
 void TextFormatter::reclaimWaste(const CharFormatter &workspace){
   body.skip(workspace.used());
+  dataend+=workspace.used();
+  dataend-=substWidth;
   //pull data back down over unused stuff
   unsigned excess = workspace.freespace();
-  termloc -= excess;
   body.removeNext(excess);
 }
 
@@ -106,8 +113,9 @@ void TextFormatter::substitute(double value){
   nf.onUse();
 } // TextFormatter::substitute
 
+
 void TextFormatter::substitute(u64 value){
-  //not using double, we don't want its formatting rules applied to actual integers
+  //not punting to double, we don't want its formatting rules applied to actual integers
   width = Zguard(1 + ilog10(value));
   CharFormatter workspace = makeWorkspace();
   if(workspace.isUseful()) {
@@ -115,12 +123,17 @@ void TextFormatter::substitute(u64 value){
       onFailure(workspace);
     }
     reclaimWaste(workspace);
-  } 
+  }
 }
 
 void TextFormatter::substitute(u8 value){
   substitute(u64(value));//need this to distinguish char * from implied char &
 } // TextFormatter::substitute
+
+void TextFormatter::substitute(bool value){
+  substitute(u64(value));//need this to distinguish char * from implied char &
+} // TextFormatter::substitute
+
 
 void TextFormatter::substitute(const NumberFormat &item){
   //this should not actually get called. we migth still use it to relocate some code from header to here should this ever become more than an assignment.
@@ -131,14 +144,14 @@ bool TextFormatter::onSizingCompleted(){
   sizing = false;
   sizer = Zguard(sizer);//because we dropped the null on our format string.
   body.wrap(reinterpret_cast<char*>(malloc(sizer)),sizer);  //wrap new allocation
+  body.zguard();
   if(body.isUseful()) {  //if malloc worked
     body.cat(c_str(),length());  //copy in present stuff
-    body.clearUnused();  //emphatic nulling
-//      this->operator =(body.internalBuffer());//release original (copy of) format and hold on to new
-    clear();
-    this->ptr = body.internalBuffer();
+    dataend=body.used();
+    body.clearUnused();  //prophylactic nulling
+    clear(); //release original arg.
+    ptr = body.internalBuffer();//needed for the eventual 'free'
     return true;
   }
-
   return false;
 } // TextFormatter::onSizingCompleted

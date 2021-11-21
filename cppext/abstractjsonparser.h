@@ -1,5 +1,5 @@
 #ifndef ABSTRACTJSONPARSER_H
-#define ABSTRACTJSONPARSER_H
+#define ABSTRACTJSONPARSER_H "(C) 2017 Andrew L. Heilveil"
 
 /** an abstract json parser.
  *  @see StoredJSONparser.
@@ -22,13 +22,13 @@ public: //needs accessor
 protected:
   /** must supply and track source data, and be able to recover it from values of ordinal */
   virtual bool hasNext(void) = 0;
-  virtual u8 next(void) = 0;
+  virtual char next(void) = 0;
 
   /** @returns an object suitable for passing to insertNewChild */
   virtual TextClass extract(Span &span)=0;
-  /** name and value are here, make a new node.
-   * if parent is null then create node out of the blue and record it in root, else add as child to the parent */
-  virtual Storable *insertNewChild(Storable *parent,TextClass &name,bool haveValue,TextClass &value,bool valueQuoted)=0;
+  /** name and value are here, apply to node, creating a new child as needed.
+   * if parent is null then use root as parent (deals with parsing top element in a file)*/
+  virtual Storable *applyToChild(Storable *parent,TextClass &name,bool haveValue,TextClass &value,bool valueQuoted)=0;
   /** Illegal character encountered */
   virtual void exclaim(PushedJSON::Parser::Diag &){
 //    wtf("Bad char 0x%02X at row:%u, col:%u, offset:%u",d.last,d.row,d.column,d.location);
@@ -43,7 +43,9 @@ public:
 
   /** process the block */
   void parse(){
-    parseChild(data.root);
+    while(parseChild(data.root)){
+      //todo: added looping here to deal with the given node already having seen its opening brace.
+    }
   }
 
   /** some useless info about the parsed data */
@@ -61,7 +63,7 @@ protected:
     if(evenIfEmpty || haveValue){ //checking haveValue here ignores extraneous ',' in the source
       TextClass name(parser.haveName?data.extract(parser.name):"");
       TextClass value(data.extract(parser.value));
-      nova=data.insertNewChild(parent,name,haveValue,value,parser.wasQuoted);
+      nova=data.applyToChild(parent,name,haveValue,value,parser.wasQuoted);
       stats.onNode(haveValue);
     }
     parser.itemCompleted();//ensure we don't reuse old data on next item.
@@ -78,6 +80,10 @@ protected:
       case PushedJSON::BeginWad: {//open brace encountered
         //special treatment for node that matches top level of file
         Storable *nova = ((parent==data.root)&&flagged(data.treatRootSpecial))? parent : assembleItem(parent,true);
+        if(parser.orderedWad && nova){
+          nova->isOrdered=true;
+          nova->parserstate=0;//next item will be 0th item.
+        }
         while(parseChild(nova)) {
           //#recurse while there are more to be found
         }
@@ -89,9 +95,16 @@ protected:
 
       case PushedJSON::Done:
         //we probably don't get this as the 'while' will exit instead of passing an EOF to the parser.
-        //#JOIN to try to finish off a trailing not quite closed wad. If multiple open
+        //#JOIN to try to finish off a trailing not quite closed wad. If multiple open ???
       case PushedJSON::EndWad:   //closing wad
         assembleItem(parent);
+        //can detect mismatched brace types here.
+        if(!parser.orderedWad && parent->parserstate!=BadIndex){
+          //end curly used with open square
+        }
+        if(parent){
+          parent->parserstate=BadIndex;
+        }
         return false;
 
       case PushedJSON::Illegal: //unexpected char

@@ -1,51 +1,46 @@
+//(C) 2017 Andrew Heilveil
 #include "logger.h"
 #include "eztypes.h"
 #include "textkey.h"
 #include "stdarg.h"
 
 /** you must implement these two functions somewhere in your project */
-extern void logmessage(const char *prefix,const char *msg,va_list &args);
+extern void logmessage(const char *prefix,const char *msg,va_list &args,bool moretocome);
 extern void dumpStack(const char *prefix);
 
-Logger::Logger(const char *location,bool enabled):prefix(location),enabled(enabled){
-#if LoggerManagement == 1
-  root.append(this);
-#endif
-}
-
-#if LoggerManagement == 1
-void Logger::listLoggers(Logger &dbg){
-  Chained<Logger> *scan=Logger::root.root;
-  while(scan->peer){
-    scan=scan->peer;
-    Logger *log=dynamic_cast<Logger *>(scan);
-    dbg("Logger.%s=%d",log->prefix,log->enabled);
+Logger::Manager *Logger::manager = nullptr;
+//LoadJSON,DBG,Filewriter,IFT,WTF,FSA,FileReader,FileWriter
+Logger::Logger(const char *location,bool enabled) : prefix(location),enabled(enabled){
+  if(manager) {
+    manager->onCreation(*this);
   }
 }
-#endif
 
 Logger::~Logger(){
-#if LoggerManagement == 1
-  root.remove(this);
-#endif
+  if(manager) {
+    manager->onDestruction(*this);
+  }
 }
 
 void Logger::operator() (const char *fmt, ...){
-  if(enabled){
+  if(enabled) {
     va_list args;
     va_start(args, fmt);
-    logmessage(prefix, fmt, args);
+    logmessage(prefix, fmt, args,combining);
     va_end(args);
   }
 }
 
+void Logger::flushline(){
+  logmessage(prefix,nullptr,NullRef(va_list),false);
+}
+
 void Logger::varg(const char *fmt, va_list &args){
-  if(enabled){
-    logmessage(prefix, fmt, args);
+  if(enabled) {
+    logmessage(prefix, fmt, args,combining);
   }
 }
 
 void Logger::dumpStack(const char *prefix){
   ::dumpStack(prefix);
 }
-

@@ -101,21 +101,20 @@ u64 i64pow10(unsigned power){
   }
 } // i64pow10
 
-
 u64 keepDecimals(u64 p19,unsigned digits){
-  return rate(p19,i64pow10(19-digits));
+  return rate(p19,i64pow10(19 - digits));
 }
 
 u64 truncateDecimals(u64 p19,unsigned digits){
-  if(digits<=19){
-    return p19/i64pow10(19-digits);
+  if(digits<=19) {
+    return p19 / i64pow10(19 - digits);
   }
   return 0;
 }
 
 //uround and sround are coded to be like they will in optimized assembly
 u16 uround(float scaled){
-  if(scaled < 0.5) { //fp compares are the same cost as integer.
+  if(scaled < 0.5F) { //fp compares are the same cost as integer.
     return 0;
   }
   scaled *= 2; //expose rounding bit
@@ -127,14 +126,14 @@ u16 uround(float scaled){
 } /* uround */
 
 s16 sround(float scaled){ //#this would be so much cleaner and faster in asm!
-  if(scaled > 32766.5) {
+  if(scaled > 32766.5F) {
     return 32767;
   }
-  if(scaled < -32767.5) {
+  if(scaled < -32767.5F) {
     return -32768;
   }
   scaled += scaled >= 0 ? 0.5 : -0.5; //round away from 0. aka round the magnitude.
-  return int(scaled);
+  return s16(scaled);
 }
 
 int modulus(int value, unsigned cycle){
@@ -151,9 +150,12 @@ int modulus(int value, unsigned cycle){
   return value;
 } // modulus
 
-u16 saturated(unsigned quantity, float fractionThereof){
+unsigned saturated(unsigned quantity, double fractionThereof){
   double dee(quantity * fractionThereof);
-  unsigned rawbins(dee);//todo:2 is truncating rather than rounding
+  if(dee<0) {
+    return 0;
+  }
+  unsigned rawbins(dee + 0.5);
 
   if(rawbins >= quantity) {
     return quantity - 1;
@@ -184,9 +186,23 @@ int fexp(double d){ //todo:1 remove dependence on cmath.
   return ret;
 }
 
-double pow10(int exponent){
-  return pow(double(10), exponent);
+double dpow10(unsigned uexp){
+  if(uexp<countof(Decimal1)) {
+    return double(Decimal1[uexp]);
+  }
+  if(uexp<countof(Decimal2) + countof(Decimal1)) {
+    return double(Decimal2[uexp - countof(Decimal1)]);
+  }
+  return 0;
 }
+
+double dpow10(int exponent){
+  if(exponent>=0) {
+     dpow10(unsigned(exponent));
+  }
+  //todo: see if std lib uses RPE to compute this.
+  return pow(double(10), exponent);
+} // dpow10
 
 //linux has this, firmware doesn't have ANY coeffs in its math.h
 #ifndef M_PI
@@ -373,6 +389,12 @@ int splitter(double &d){
   return int(eye);
 }
 
+unsigned splitteru(double &d){
+  double eye;
+  d = modf(d,&eye);  //todo:2 this can be done very efficiently via bit twiddling. "modf()" has an inconvenient argument order and return type.
+  return unsigned(eye);
+}
+
 } //end extern C for potentially assembly coded routines.
 
 
@@ -387,3 +409,13 @@ int splitter(double &d){
 //template <> int intbin<int,double>(double &d);
 //template <> long intbin<long,double>(double &d);
 //template <> u64 intbin<u64,double>(double &d);
+
+unsigned digitsAbove(unsigned int value, unsigned numDigits){
+  unsigned digit = value / i32pow10(numDigits);
+  value -= digit * i32pow10(numDigits);
+  return digit;
+}
+
+int ilog10(double value){
+  return ilog10(u64(fabs(value)));
+}

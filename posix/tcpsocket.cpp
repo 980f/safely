@@ -1,36 +1,28 @@
 #include "tcpsocket.h"
-#include <netinet/in.h>
 #include <unistd.h>
-#include <sys/socket.h>
-#include "logger.h"
-#include <errno.h>
-#include "netinet/tcp.h"
-#include "cheaptricks.h"
 
 #include "microseconds.h"
 
-
-TcpSocketBase::TcpSocketBase(int fd, u32 remoteAddress, int port):
+TcpSocketBase::TcpSocketBase(int fd, u32 remoteAddress, int port) :
   socketStats(),
   connectArgs(remoteAddress,port),
-  fd("SOCKET")
-{
+  fd("SOCKET"){
   this->fd.preopened(fd);
 }
 
-TcpSocketBase::~TcpSocketBase()
-{
+TcpSocketBase::~TcpSocketBase(){
+  //#done
 }
 
 bool TcpSocketBase::isConnected() const {
   return fd.isOpen();
 }
 
-TcpSocket::TcpSocket(int fd, u32 remoteAddress, int port):
+TcpSocket::TcpSocket(int fd, u32 remoteAddress, int port) :
   TcpSocketBase(fd,remoteAddress,port),
   autoConnect(false),
   sendbuf(){
-  if(this->fd.isOpen()){
+  if(this->fd.isOpen()) {
     startReception();
   }
 }
@@ -40,7 +32,7 @@ u32 TcpSocketBase::remoteIpv4(){
 }
 
 bool TcpSocketBase::disconnect(){
-  if(isConnected()){//#checking for debug purposes
+  if(isConnected()) {//#checking for debug purposes
     fd.close();
   }
   return false;
@@ -49,17 +41,24 @@ bool TcpSocketBase::disconnect(){
 //////////////////////////////
 
 bool TcpSocket::connect(unsigned ipv4, unsigned port){
-  connectArgs.ipv4=ipv4;
-  connectArgs.port=port;
-  autoConnect=connectArgs.isPossible();
+  connectArgs.ipv4 = ipv4;
+  connectArgs.port = u16(port);
+  autoConnect = connectArgs.isPossible();
   return autoConnect&&reconnect();
+}
+
+bool TcpSocket::setNodelay(){
+//  if(?.setTCPopt(TCP_NODELAY, 1)){
+//    dbg("Set TCP no delay returned %d",errno);
+//  }
+  return false;
 }
 
 void TcpSocket::startReception(){
 }
 
 bool TcpSocket::reconnect(){
-  bool wasConnected=isConnected();
+  bool wasConnected = isConnected();
   if(wasConnected) {
     disconnect(false);//don't notify since notify is likely to call connect and hence infinite loop.
   }
@@ -69,18 +68,13 @@ bool TcpSocket::reconnect(){
     //Setting the socket to reuse the address if we fail and restart
     ::setsockopt(fd,SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
 
-    if(wasConnected){
+    if(wasConnected) {
       ++socketStats.disconnects;//failure to make socket, so number in diags grows if problem persists.
       notifyConnected(false);
     }
   } else {
     return false;
   }
-
-  //#setting the following should probaby be optional.
-//  if(sock.setTCPopt(TCP_NODELAY, 1)){
-//    dbg("Set TCP no delay returned %d",errno);
-//  }
 
   //todo:1 research whether the default so_linger is false, we'd like a reset() rather than a gentle close() when we disconnect.
   SocketAddress sad(connectArgs);
@@ -95,11 +89,11 @@ bool TcpSocket::reconnect(){
   startReception();
   notifyConnected(true);
   return true;
-}
+} // TcpSocket::reconnect
 
 void TcpSocket::disconnect(bool andNotify){
   TcpSocketBase::disconnect();
-  if(andNotify){
+  if(andNotify) {
     ++socketStats.disconnects;
     notifyConnected(false);
   }
@@ -109,17 +103,17 @@ void TcpSocket::flush(){
   //there is no flush in TCP.
   u8 bytes[4096] = {0};
   //can we stat a socket fd?
-  int notforever=10000;
-  while(fd.read(bytes, sizeof(bytes))==sizeof(bytes)){
+  int notforever = 10000;
+  while(fd.read(bytes, sizeof(bytes))&&fd.lastRead==sizeof(bytes)) {
     //a debug message here might slow us down enough to never catch up with the source and hence make this an infinite loop.
-    if(--notforever<=0){
+    if(--notforever<=0) {
       return;
     }
   }
-}
+} // TcpSocket::flush
 
-bool TcpSocket::readable() {
-  u8 bytes[4096] = {0};
+bool TcpSocket::readable(){
+  u8 bytes[4096] = {0};//null first byte to keep debugger from spewing.
 
   fd.read(bytes, sizeof(bytes));
   if(fd.lastRead < 0) {
@@ -137,12 +131,11 @@ bool TcpSocket::readable() {
     reader(chunk);
   }
   return true;
-}
+} // TcpSocket::readable
 
-/** argument ignored as it is always the one value we allow it to be in the create() call.*/
-bool TcpSocket::writeable() {
-  if(sendbuf.hasNext() || writer(sendbuf)){
-   fd.lastWrote = write(fd, &sendbuf.peek(), sendbuf.freespace());
+bool TcpSocket::writeable(){
+  if(sendbuf.hasNext() || writer(sendbuf)) {
+    fd.lastWrote = write(fd, &sendbuf.peek(), sendbuf.freespace());
     if(fd.lastWrote<0) {
       dbg("write err: %d on %08X:%d", -fd.lastWrote,connectArgs.ipv4, connectArgs.port);
       disconnect(true);
@@ -158,7 +151,7 @@ bool TcpSocket::writeable() {
     sendbuf.dump();//in case writer() was sloppy.
     return false;//nothing to send, sleep until writeInterest is called.
   }
-}
+} // TcpSocket::writeable
 
 /** expect this when far end of socket spontaneously closes*/
 bool TcpSocket::hangup(){
@@ -166,27 +159,27 @@ bool TcpSocket::hangup(){
   return true;//todo:0 this probably should be false, may be moot.
 }
 
-
 TcpSocket::~TcpSocket(){
   disconnect(false);
 }
 
 sigc::connection TcpSocket::whenConnectionChanges(const BooleanSlot &nowConnected,bool kickme){
-  if(kickme){
+  if(kickme) {
     nowConnected(isConnected());
   }
   return notifyConnected.connect(nowConnected);
 }
+
 ///////////////////////////
 TcpSocketBase::Stats::Stats(){
   clear();
 }
 
 void TcpSocketBase::Stats::clear(){
-  connects=0;
-  disconnects=0;
-  reads=0;
-  writes=0;
+  connects = 0;
+  disconnects = 0;
+  reads = 0;
+  writes = 0;
 }
 
 ///////////////////////////
@@ -194,15 +187,15 @@ bool TcpSocket::ConnectArgs::isPossible(){
   return port || ipv4;
 }
 
-TcpSocket::ConnectArgs::ConnectArgs(int ipv4, int port):
+TcpSocket::ConnectArgs::ConnectArgs(int ipv4, int port) :
   ipv4(ipv4),
-  port(port)
-{
+  port(port){
+  //#done
 }
 
 void TcpSocket::ConnectArgs::erase(){
-  ipv4=0;
-  port=0;
+  ipv4 = 0;
+  port = 0;
 }
 
 //////////////////////////////
@@ -229,7 +222,7 @@ const sockaddr *SocketAddress::addr() const {
   return reinterpret_cast<const sockaddr*>(&sin);
 }
 
-sockaddr *SocketAddress::addr() {
+sockaddr *SocketAddress::addr(){
   return reinterpret_cast<sockaddr*>(&sin);
 }
 
@@ -242,12 +235,11 @@ bool SocketAddress::connect(int fd){
   return Fildes::BADFD==::connect(fd, reinterpret_cast<sockaddr *>(&sin), sizeof(sin));
 }
 
-
 BlockingConnectSocket::BlockingConnectSocket(int fd, u32 remoteAddress, int port) :
   TcpSocketBase(fd,remoteAddress,port),
   autoConnect(false),
   sendbuf(){
-  if(this->fd.isOpen()){
+  if(this->fd.isOpen()) {
     startReception();
   }
 }
@@ -256,12 +248,12 @@ BlockingConnectSocket::~BlockingConnectSocket(){
   disconnect(false);
 }
 
-void BlockingConnectSocket::startReception() {
+void BlockingConnectSocket::startReception(){
 //    source.incoming= sock.input(MyHandler(BlockingConnectSocket::readable));
 //    source.hangup= sock.hangup(MyHandler(BlockingConnectSocket::hangup));
 }
 
-void BlockingConnectSocket::disconnect(bool notify) {
+void BlockingConnectSocket::disconnect(bool notify){
   TcpSocketBase::disconnect();
   if (notify) {
     ++socketStats.disconnects;
@@ -269,12 +261,12 @@ void BlockingConnectSocket::disconnect(bool notify) {
   }
 }
 
-bool BlockingConnectSocket::hangup() {
+bool BlockingConnectSocket::hangup(){
   disconnect(true);
   return true;
 }
 
-bool BlockingConnectSocket::readable() {
+bool BlockingConnectSocket::readable(){
   u8 bytes[4096] = {0};
 
   fd.read(bytes, sizeof(bytes));
@@ -290,23 +282,23 @@ bool BlockingConnectSocket::readable() {
   }
   // last read > 0
   //if(socketStats.lastRead > 0) {//skip 0 to get better stats. NO! zero is returned for a closed connection
-    ByteScanner chunk(bytes,fd.lastRead);
-    ++socketStats.reads+=1;
-    reader(chunk);
+  ByteScanner chunk(bytes,fd.lastRead);
+  ++socketStats.reads += 1;
+  reader(chunk);
   //}
   return true;
-}
+} // BlockingConnectSocket::readable
 
 bool BlockingConnectSocket::connect(unsigned ipv4, unsigned port){
-  connectArgs.ipv4=ipv4;
-  connectArgs.port=port;
-  autoConnect=connectArgs.isPossible();
+  connectArgs.ipv4 = ipv4;
+  connectArgs.port = port;
+  autoConnect = connectArgs.isPossible();
   return autoConnect&&reconnect();
 }
 
 // This method will emulate a "timeout" on the connect
 bool BlockingConnectSocket::reconnect(){
-  bool wasConnected=isConnected();
+  bool wasConnected = isConnected();
   if(wasConnected) {
     disconnect(false);//don't notify since notify is likely to call connect and hence infinite loop.
   }
@@ -320,14 +312,10 @@ bool BlockingConnectSocket::reconnect(){
   //Setting the socket to reuse the address if we fail and restart
   ::setsockopt(fd,SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
 
-  if(wasConnected){
+  if(wasConnected) {
     ++socketStats.disconnects;//failure to make socket, so number in diags grows if problem persists.
     notifyConnected(false);
   }
-  //#setting the following should probaby be optional.
-  //  if(sock.setTCPopt(TCP_NODELAY, 1)){
-  //    dbg("Set TCP no delay returned %d",errno);
-  //  }
 
   //todo:1 research whether the default so_linger is false, we'd like a reset()
   // rather than a gentle close() when we disconnect.
@@ -341,15 +329,14 @@ bool BlockingConnectSocket::reconnect(){
       fd_set myset;
       int result;
       while (1) {
-        tv=3;
+        tv = 3;
         FD_ZERO(&myset);
         FD_SET(fd, &myset);
-        result = select(fd+1, NULL, &myset, NULL, &tv);
+        result = select(fd + 1, NULL, &myset, NULL, &tv);
         if (result < 0 && errno != EINTR) {
           disconnect(true);
           return false;
-        }
-        else if (result > 0) {
+        } else if (result > 0) {
           lon = sizeof(int);
           if (getsockopt(fd, SOL_SOCKET, SO_ERROR, (void*)(&valopt), &lon) < 0) {
             disconnect(true);
@@ -361,15 +348,13 @@ bool BlockingConnectSocket::reconnect(){
             return false;
           }
           break;
-        }
-        else {
+        } else {
           fprintf(stderr, "Timeout in select() - Cancelling!\n");
           disconnect(true);
           return false;
         }
       }
-    }
-    else { // not a "EINPROGRESS"
+    } else { // not a "EINPROGRESS"
       disconnect(true);
       return false;
     }
@@ -379,10 +364,10 @@ bool BlockingConnectSocket::reconnect(){
   startReception();
   notifyConnected(true);
   return true;
-}
+} // BlockingConnectSocket::reconnect
 
-bool BlockingConnectSocket::writeable() {
-  if (sendbuf.hasNext() || writer(sendbuf)){
+bool BlockingConnectSocket::writeable(){
+  if (sendbuf.hasNext() || writer(sendbuf)) {
     fd.write( &sendbuf.peek(), sendbuf.freespace());
     if(fd.lastWrote<0) {
       dbg("write err: %d on %08X:%d", -fd.lastWrote,connectArgs.ipv4, connectArgs.port);
@@ -399,4 +384,4 @@ bool BlockingConnectSocket::writeable() {
     sendbuf.dump();//in case writer() was sloppy.
     return false;//nothing to send, sleep until writeInterest is called.
   }
-}
+} // BlockingConnectSocket::writeable

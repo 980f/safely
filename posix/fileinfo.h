@@ -1,5 +1,5 @@
 #ifndef FILEINFO_H
-#define FILEINFO_H
+#define FILEINFO_H "(C) Andrew L. Heilveil, 2017"
 
 #include "sys/stat.h"
 #include "posixwrapper.h"

@@ -1,7 +1,6 @@
 #ifndef HALFOPEN_H
-#define HALFOPEN_H
+#define HALFOPEN_H "(C) Andrew L. Heilveil, 2017"
 
-#include "safely.h"
 /** a simple range class, simpler than Range and optimized for first use of HalfOpen(arrayIndex) */
 
 template <typename Integrish> struct HalfOpen {
@@ -21,7 +20,6 @@ public:
   /** quantity to operate upon */
   Integrish span() const {
     return ordered()? highest-lowest : 0;
-
   }
 
   /** @returns whether the two bounds are in natural order. virtual to allow checking for validity of each element */
@@ -40,10 +38,11 @@ public:
 
 };
 
+#include "index.h"
 struct Span: public HalfOpen<Index> {
   Span(Index low,Index high);
   Span();
-  virtual ~Span();
+//  virtual ~Span();
   bool ordered() const override;
   /** move span to next possible one. default of 1 is for cutting out single character seperators */
   void leapfrog(unsigned skip=1);
@@ -53,6 +52,14 @@ struct Span: public HalfOpen<Index> {
   void shift(unsigned offset);
   /** take values from other, clear() other */
   void take(Span &other);
+  /** @returns whether span lowest is reasonable but highest inValid, started but not compeleted */
+  bool started() const noexcept;
+
+  bool nonTrivial() const noexcept;
+  /** intersection */
+  static Span overlap(const Span &one,const Span&other);
+  /** make it @param more bigger. @returns if this makes span become semi-valid */
+  bool stretchUp(unsigned more=1);
 };
 
 #endif // HALFOPEN_H

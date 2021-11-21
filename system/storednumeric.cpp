@@ -1,7 +1,7 @@
 #include "storednumeric.h"
 
 /////////////////
-void adjustIndex(int removed,StoredInt &index){
+void adjustIndex(unsigned removed, StoredCount&index){
   if(index.native()>removed){
     --index;
   } else if(index.native()==removed){

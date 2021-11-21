@@ -1,6 +1,7 @@
 #ifndef LINEARSMOOTHER_H
 #define LINEARSMOOTHER_H
 #include "minimath.h"
+#include "cycler.h"
 
 /**
   * polynomial smoothing of integer equally-spaced data stream
@@ -9,7 +10,7 @@
   */
 
 template <int hwidth> class LinearSmoother {
-  static const unsigned fullWidth = 1 + 2 * hwidth;
+  enum{ fullWidth = 1 + 2 * hwidth};
   static const double invS0 = 1.0 / fullWidth;
   static const double invS1 = 1.0 / ((hwidth + 1) * fullWidth); //== invS0/(hw+1)
   static const double invS2 = 3.0 / (hwidth * (hwidth + 1) * fullWidth); //==invS0*3/()(+1)
@@ -19,7 +20,9 @@ template <int hwidth> class LinearSmoother {
   int Y0;
   int Y1;
 
-  LinearSmoother(void): phaser(fullWidth){}
+  LinearSmoother(): phaser(fullWidth){
+    init(0);//4debug
+  }
   /** initialize with a nominal dc value, after 1+2*hwidth updates the value won't matter*/
   void init(int dc){
     Y0 = dc * (fullWidth);

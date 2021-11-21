@@ -12,12 +12,14 @@
 /** for multple references into the item: const Groupie &item(list.next()); */
 #define ForGroupConstly(group) for(auto list((group).all()); list.hasNext(); )
 
-#define ForCount(group) for(int i = (group).quantity(); i-- > 0; )
-#define ForCountInOrder(group) for(int i = 0, ForCountInOrder_end = (group).quantity(); i < ForCountInOrder_end; ++i)
+#define ForCount(group) for(unsigned i = (group).quantity(); i-- > 0; )
+#define ForCountInOrder(group) for(unsigned i = 0, ForCountInOrder_end = (group).quantity(); i < ForCountInOrder_end; ++i)
 /////////////////////////////////////
 
-//this is  probably gratuitous since we don't seem to be able to get away from sigc, which has greater functionality:
-#include <functional>
+//this is probably gratuitous since we don't seem to be able to get away from sigc, which has greater functionality:
+#include <functional>  //for lambdas
+
+void callme(bool removed,unsigned which);
 
 
 /**
@@ -46,7 +48,7 @@ template<class Groupie> class StoredGroup : public Stored {
   sigc::signal1<bool, Groupie &, AndUntilFalse> preremoval;
 
   /** for removal we want to have already destroyed object before calling some of the change watchers.
-   * so this tells you the number of the one that has already been removed. The object is already deleted.
+   * so this tells you the number of the one that has already been removed. The object is already deleted and ordinals adjusted.
    */
   sigc::signal<void, int> onremoval;
 
@@ -116,19 +118,33 @@ public:
     if(node.setType(Storable::Wad)) { //needed in case group is presently empty, so that proper change watching is set up.
       dbg("Empty group?");
     }
-    for(int ni = 0; ni < node.numChildren(); ++ni) { //#must be in order
+    for(unsigned ni = 0; ni < node.numChildren(); ++ni) { //#must be in order
       wrapNode(node[ni]);
+    }
+    node.wadWatchers.connect(MyHandler(StoredGroup::backdoored));
+//debug stuff:    node.wadWatchers.connect(&callme);
+  }
+
+  /** someone has just deleted the node one of our members is connected to, it must die quickly or there will be use-after-free faults.*/
+  void backdoored(bool removed,unsigned which){
+    if(removed){
+      //we can't use remove(which) as it asks for permission and it is too late to stop the process.
+      pod.removeNth(which); //deletes Stored entity
+      onremoval(which);   //high priority notifications
+      dependents(true, which);//lower priority notifications
+    } else {
+      wrapNode(node.nth(which));
     }
   }
 
-  /** every new must have a delete*/
+  /** every new must have a delete ;) */
   virtual ~StoredGroup(){
     pod.clear();
     //don't do this, we don't signal when the whole group is being ditched: removeAll();
     //we don't touch the Storable nodes, they will go away when their root is destructed.
   }
 
-  int quantity() const {
+  unsigned quantity() const {
     return pod.quantity();
   }
 
@@ -219,7 +235,8 @@ public:
       Storable::Freezer autothaw(node, true, true); //#must NOT allow change watchers to execute on node add until we create the
                                                     // object that they may come looking for. Without this the change actions would
                                                     // execute before the new object exists instead of after.
-      wrapNode(node.addChild(prename));
+      //wrapNode(node.child(prename));//old code presumed that the node didn't exist unless created here. ParamSet in DP5 violated that.
+      node.child(prename);//just making a node now makes Groupies via backdoor.
     }
     return last();
   }
@@ -243,7 +260,7 @@ public:
 
   /** create enough records that quantity() == size
    * @returns the number of additions (if positive) or removals (if negative), 0 on no change.*/
-  int setSize(int size){
+  int setSize(unsigned size){
     int changes(0);
 
     while(quantity() < size) {
@@ -263,10 +280,10 @@ public:
                      // bad. And now preremoval depends on this check.
       if(preremoval(operator [](which))) {//if not vetoed
         //We actually delete the objects before we signal removal so iterations show it already gone
-        pod.removeNth(which); //deletes Stored entity
-        node.remove(which); //deletes underlying node, which may have its own watchers
-        onremoval(which);   //high priority notifications
-        dependents(true, which);//lower priority notifications
+//        pod.removeNth(which); //deletes Stored entity
+        node.remove(which); //deletes underlying node, which may have its own watchers, and which deletes the Groupie via backdoor();
+//        onremoval(which);   //high priority notifications
+//        dependents(true, which);//lower priority notifications
         return true;
       }
     }
@@ -395,9 +412,7 @@ public:
   /** for when all you need is the item: */
   void forEachItem(const sigc::slot<void, Groupie &> &action){
     ForValues(list){
-      Groupie &item(list.next());
-
-      action( item);
+      action( list.next());
     }
   }
 
@@ -413,7 +428,6 @@ public:
   /** faster than using slot's when the method is simple enough:*/
   void forEach(void (Groupie::*method)(void)){
     ForValues(list){
-//      Groupie &item();
       (list.next().*method)();
     }
   }
@@ -421,7 +435,6 @@ public:
   /** experimental, to see if syntax is tolerable: */
   void forall(std::function<void(Groupie &)> action){
     ForValues(list){
-//      Groupie &item();
       action(list.next());
     }
   }
@@ -440,7 +453,7 @@ private:
 
   /** @param addee can not be const as the Groupie constructor often adds members (such as for version upgrades). */
   void wrapNode(Storable &addee){ //formerly was called 'instantiate'
-    int which = addee.ownIndex();
+    unsigned which = addee.ownIndex();
 
     if(quantity() != which) {
       wtf("Expected new node to be at end of list");
@@ -451,15 +464,8 @@ private:
     dependents(false, which);
   } // wrapNode
 
-//Glib
-//  /** when called via the dependents signal schedule an action:*/
-//  static void doLater(bool removal, int arg, Watcher watcher){
-//    doSoon(sigc::bind(watcher, removal, arg), 0, 1);
-//  }
-
 }; // class StoredGroup
 
 #define INDEXER(group) *group.basecast()
-
 
 #endif // STOREDGROUP_H

@@ -1,5 +1,4 @@
-#ifndef NUMBERFORMAT_H
-#define NUMBERFORMAT_H
+#pragma once // "(C) Andrew L. Heilveil, 2017-2018"
 
 #include "countdown.h"
 #include "numberpieces.h"
@@ -9,8 +8,9 @@
  * There is a feature 'usages' that causes it to reset to default values after a specified number of uses.@see onUse()
  *
  * when one of these is an arg... list we just store its attributes to another one, so copy-assign must be cheap. */
+
 struct NumberFormat {
-  /** number of digits after radix */
+  /** number of digits after radix, if negative then add zeroes before the radix point */
   int decimals;
   /** minimum width, pad with spaces */
   unsigned fieldWidth;
@@ -36,4 +36,4 @@ struct NumberFormat {
   void onUse();
 };
 
-#endif // NUMBERFORMAT_H
+

@@ -1,18 +1,19 @@
+//"(C) Andrew L. Heilveil, 2017"
 #include "numberparser.h"
 
 #include "minimath.h"
 #include "cheaptricks.h"
-
 #include "ctype.h"
 
 void PushedNumberParser::reset(){
   NumberPieces::reset();
   processed = 0;
   phase=Start;
+  lastParsed=Nan;//don't reset until after you have saved this away.
 }
 
 bool PushedNumberParser::applydigit(u64 &accum,char ch){
-  //todo: check for accumulator overflow. If so then we don't shift in digits, just inc pow10 as relevent.
+  //check for accumulator overflow. If so then we don't shift in digits, just inc pow10 as relevent.
   if(accum > DecimalCutoff){
     return false;
   }
@@ -110,7 +111,7 @@ bool PushedNumberParser::next(char u){
     if(isdigit(u)){
       if(pow10==0){//if we dropped digits then we ignore the AfterDecimal content
         if (applydigit(postdecimal,u)){
-          ++div10;
+          ++postDigits;
         }
       }
       return true;

@@ -1,3 +1,4 @@
+//"(C) Andrew L. Heilveil, 2017"
 #include "incrementalfiletransfer.h"
 #include "logger.h"
 
@@ -7,7 +8,7 @@ IncrementalFileTransfer::IncrementalFileTransfer(bool reader, Fildes &fd, ByteSc
   amReader(reader),
   fd(fd),
   buf(buf){
-
+  //#nada
 }
 
 

@@ -98,7 +98,7 @@ bool ReportSet::setFrom(ConstArgSet &args){
   return isModified();
 }
 
-int ReportSet:: numParams()const {
+unsigned ReportSet::numParams()const {
   return allocated();
 }
 

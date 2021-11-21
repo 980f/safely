@@ -1,3 +1,4 @@
+//"(C) Andrew L. Heilveil, 2017"
 #include "numberpieces.h"
 
 #include "math.h"  //must precede minimath for intbin to have access to modf
@@ -5,7 +6,8 @@
 #include "cheaptricks.h"
 #include "char.h"
 
-static const double p19=::pow10(19);
+static const unsigned maxDigits=19; /*(floor(log10(2^64)*/
+static const double p19=dpow10(maxDigits);
 
 template <>double intbin<double,double>(double&);
 
@@ -22,12 +24,11 @@ double NumberPieces::packed() const {
 
   double number = predecimal;
   if(pow10 > 0) { //then trailing digits of predecimal part were lopped off
-    number *= ::pow10(pow10);
+    number *= dpow10(pow10);
     //ignore all postdecimal processing as numerically insignificant.
   } else {
-    //have to figure out how many digits the fractional part had
     double fract = postdecimal;
-    fract /= p19;
+    fract /= dpow10(postDigits);
     number += fract;
   }
   if(hasEterm){
@@ -37,13 +38,13 @@ double NumberPieces::packed() const {
       exp = -exp;
     }
 //      exp is now the scientific notation exponent
-    number *= ::pow10(exp);//and apply user provide power
+    number *= dpow10(exp);//and apply user provide power
   }
   return negative ? -number : number;
 }
 
 NumberPieces::NumberPieces(double d){
-  reset();
+//  reset();
   decompose(d);
 }
 
@@ -68,7 +69,7 @@ void NumberPieces::reset(void){
   predecimal = 0;
   pow10 = 0;
   postdecimal = 0;
-  div10 = 0;
+  postDigits = 0;
   hasEterm = false;
   exponent = 0;
   negativeExponent = false;
@@ -92,32 +93,25 @@ void NumberPieces::decompose(double d){
     return;
   }
   if(isNormal(d)){
-    double fraction=d;
     double exp=log10(d);
     negativeExponent=signabs(exp)<0;
-    exponent=int(exp);
+    exponent=unsigned(exp);
 
     //todo:0 check against DecimalCutoff, intbin will truncate if d>than that.
-    u64 whole=intbin<u64,double>(fraction);
-
-    if(negativeExponent){//number less than 1
-      div10=exponent-19;
-      postdecimal=fraction * p19;
-      //should loop or somesuch to deal with really small values.
-    } else if(exponent>19 /*(floor(log10(2^64)*/){
+    double fraction=d;
+    predecimal=intbin<u64,double>(fraction);
+    postdecimal=u64(fraction * p19);//as many digits as we dare
+    postDigits=19;
+    if(!negativeExponent && exponent>maxDigits){//predecimal was truncated by intbin
       //divide by 10 until it fits
-      pow10=exponent-19;
-      fraction=d * ::pow10(pow10);
-      whole=intbin<u64,double>(fraction);
-      predecimal=unsigned(whole);
+      pow10=unsigned(exponent-maxDigits);
+      fraction=d * dpow10(-pow10);
+      predecimal=intbin<u64,double>(fraction);
+      postdecimal=0;//anything here is garbage
+      postDigits=0;//
       hasEterm=true;
-    } else {
-      pow10=0;
-      predecimal=unsigned(whole);
-      div10=0;
-      postdecimal=fraction * p19;//as many digits as we dare
     }
   } else {
-    //todo:wtf?
+    //todo:wtf do we do with deNorms?
   }
 }

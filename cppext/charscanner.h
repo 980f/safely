@@ -15,7 +15,7 @@ public:
   /** risks calling strlen on content. Caller must ensure @param content is a null terminated string. */
   static CharScanner infer(TextKey content);
   CharScanner(char  * content, unsigned size);
-  virtual ~CharScanner();
+  virtual ~CharScanner() = default;
   /** explicit copy constructor helps compiler out, better than defaulting portion to 0*/
   CharScanner(const CharScanner &other);
   CharScanner(const Indexer<char>&other);
@@ -49,22 +49,37 @@ public:
   void operator =(CharScanner &&other);
   bool isBlank();
 
-  /** @return a null terminated subset of this, modifying this to omit the returned part and the separator */
-  CharScanner split(char separator); // split
+  /** @return a null terminated subset of this, modifying this to omit the returned part and the separator.
+   *  If the separator is not found then the remainder of the buffer is returned.*/
+  CharScanner cut(char separator); //may have once been name 'split'
 
+  /** added this modality instead of dusting off yet another variant of this class (Bigendianer) */
+  bool bigendian = false;
+  bool putBytes(unsigned value, unsigned numBytes);
+  u32 getU(unsigned numBytes, u32 def);
+  /**for embedded binary data */
+  u16 getU16(u16 def = 0);
+  u32 getU24(u32 def = 0);
+  u32 getU32(u32 def = 0);
+
+  /**for embedding binary data */
+  bool putU16(unsigned value);
+  bool putU24(unsigned value);
+  bool putU32(unsigned value);
 };
 
 /** concrete class wrapped around a template, for added functions*/
-struct ByteScanner : public Indexer<u8> {
+class ByteScanner : public Indexer<u8> {
+public:
   ByteScanner(void);
   ByteScanner(u8  * content, unsigned size);
   ByteScanner(const ByteScanner &other, int clip = 0);
   //casting constructor, pointer to existing content like a snap().
   ByteScanner(const CharScanner &other);
-  ~ByteScanner();
+  virtual ~ByteScanner() = default;
 
   /** added this modality instead of dusting off yet another variant of this class (Bigendianer) */
-  bool bigendian=false;
+  bool bigendian = false;
   /**for embedded binary data */
   u16 getU16(u16 def = 0);
   u32 getU24(u32 def = 0);
@@ -82,7 +97,7 @@ struct ByteScanner : public Indexer<u8> {
   /**had to copy from the base class, couldn't figure out how to cast one template into another.*/
   void getTail(CharScanner&other);
 
-  void getTail(ByteScanner&other){
+  void getTail(const ByteScanner&other){
     Indexer<u8>::getTail(other);
   }
 
@@ -102,10 +117,10 @@ struct ByteScanner : public Indexer<u8> {
 
   /** if this contains other then move past the value and @returns true. else this is unchanged and @returns false */
   bool find(Indexer<const char> other);//yes. copy the argument
-};
+}; // class ByteScanner
 
 struct ByteLooker : public Indexer<const u8> {
-  ~ByteLooker();
+  virtual ~ByteLooker() = default;
   ByteLooker(const u8 * content, unsigned size);
   ByteLooker(const ByteLooker &other, int clip = 0);
   //casting constructor, pointer to existing content like a snap().

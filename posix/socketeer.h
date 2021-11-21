@@ -1,5 +1,5 @@
 #ifndef socketeer_h
-#define socketeer_h
+#define socketeer_h "(C) Andrew L. Heilveil, 2017"
 
 #include "fildes.h"
 #include "textpointer.h" //for textual hostname
@@ -16,10 +16,10 @@ struct SockAddress {
 
 /** wrapper to make sure we free any we fetch*/
 class HostInfo {
-  bool gotten;
-  int getError;
+  bool gotten=false;
+  int getError=0;
 public: //
-  int lastErrno;//like posixwrapper, migth refactor to use it.
+  int lastErrno=0;//like posixwrapper, migth refactor to use it.
 public:
   Index lastipv4;//which res member is an ipv4, -1 if none
   bool haveIpv4(){
@@ -28,7 +28,7 @@ public:
 
   addrinfo *anIpv4();
 
-  addrinfo *res;
+  addrinfo *res=nullptr;
   addrinfo hints;
 
   /** the only part of addrinfo that we need to hold on to */
@@ -53,7 +53,7 @@ public:
 };
 
 
-/** this started life as a blocking socket, now it is an extension to the Fildes class that knows about the special opening of sockets */
+/** this is an extension to the Fildes class that knows about the special opening of sockets */
 class Socketeer: public Fildes {
 private:
   Text hostname;//name as either a URL name, or dotted decimal IPV4 or hex:IPV6
@@ -70,27 +70,28 @@ private:
 
 public:
   Socketeer ();
+  Socketeer(const Socketeer &other)=delete;
   /** build one around a client that a server has accepted */
   Socketeer (int newfd,SockAddress &sadr);
   /** record connection parameters but don't do anything with them. @returns this */
   Socketeer &init(TextKey hostname, unsigned portnum, TextKey service);
-//  /** record connection parameters but don't do anything with them. @returns this */
-//  Socketeer &init(unsigned hostip, unsigned port);
 
   bool isConnected();
 
   bool isDead();
-
+  /** @returns whether socket might be in blocking mode, not the same as willBlock, this checks the mode setting not the state. */
+  bool isBlocking();
   /** connect using stored host parameters, @returns nullptr on success else it is an error message. */
-  const char * connect();//returns error message or null string pointer
-
-  void disconnect(); //forcefully close, release resources
+  const char * connect();
+  /** forcefully close, release resources */
+  void disconnect();
   /** note that some socket options are settable in the socket() call.
-*/
+   @returns whether the value @param optval was set on the socket option selected by @param optionEnum and @param level */
   template <typename ArgType> bool setSocketOption(unsigned optionEnum, ArgType optval,unsigned level=SOL_SOCKET){
     return ok(::setsockopt(fd,level, optionEnum, &optval, sizeof(ArgType)));
   }
 
+  /** @returns whether it successfully got the socket option selected by @param optionEnum and @param level, if so that value has been stored into @param optval. */
   template <typename ArgType> bool getSocketOption(unsigned optionEnum, ArgType &optval,unsigned level=SOL_SOCKET){
     socklen_t len=sizeof(ArgType);
     return ok(::getsockopt(fd,level, optionEnum, optval, &len));
@@ -107,13 +108,8 @@ public:
    * @param blocking determines the blocking state of any newly spawned client connection. */
   bool accept(const Spawner &spawner,bool blocking=false);
 
-  unsigned atPort(){
-    return isConnected()? this->portnumber:BadIndex;
-  }
-//maydo: but so far we don't have a need for 'flags'
-//  bool receive(Indexer<u8> &p,int flags){
-//    recv(fd,&p.peek(),p.freespace(),flags);
-//  }
+  /** @returns portnumber if it is valid and connected else BadIndex. */
+  unsigned atPort();
 };
 
 #endif

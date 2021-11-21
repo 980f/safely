@@ -65,11 +65,11 @@ public:
 template<typename Scalar,bool negatory=false,bool preferLatter=false> class Extremer: public SimpleExtremer<Scalar,negatory,preferLatter> {
   typedef SimpleExtremer<Scalar,negatory,preferLatter> Simple;//compiler would NOT recognize the base class references without this aid.
 public: //could make these read-only
-  int location=~0;//default for debug
+  unsigned location=~0;//default for debug
 
 public:
   /** @returns whether the extremum or location was updated */
-  bool inspect(int loc,const Scalar&value){
+  bool inspect(unsigned loc,const Scalar&value){
     if(Simple::inspect(value)){
       location = loc;
       return true;

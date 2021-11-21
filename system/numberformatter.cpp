@@ -1,7 +1,7 @@
+//"(C) Andrew L. Heilveil, 2017"
 #include "numberformatter.h"
 
 #include "charformatter.h"
-
 
 NumberFormatter::NumberFormatter(int precision, TextKey postfix) :
   postfix(postfix){
@@ -13,7 +13,7 @@ unsigned NumberFormatter::needs(double value) const {
 }
 
 Text NumberFormatter::format(double value,bool addone) const {
-  char widest[Zguard(needs(value)+addone)];
+  char widest[50];//Zguard(needs(value)+addone)];
   CharFormatter workspace(widest,sizeof(widest));
   workspace.zguard();//protect our null
   if(workspace.printNumber(value,nf,addone)) {//testing so that we don't add units if number failed to print

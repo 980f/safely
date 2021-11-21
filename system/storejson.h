@@ -1,5 +1,5 @@
 #ifndef STOREJSON_H
-#define STOREJSON_H
+#define STOREJSON_H "(C) Andrew L. Heilveil, 2017"
 
 #include "storable.h"
 #include "buffer.h"
@@ -11,8 +11,8 @@
 class StoreJsonConstructor: public JsonConstructor<Storable,Text> {
 public:
   /** pointer to data source, exposed for module testing convenience */
-  Indexer<u8> data;
-  StoreJsonConstructor(Indexer<u8> &data);
+  Indexer<char> data;
+  StoreJsonConstructor(Indexer<char> &data);
 
   virtual ~StoreJsonConstructor()=default;
 
@@ -20,7 +20,7 @@ public:
     return data.hasNext();
   }
 
-  u8 next(void) override {
+  char next(void) override {
     return data.next();
   }
 
@@ -29,18 +29,17 @@ public:
 
   /** name and value are here, make a new node.
    * if parent is null then create node out of the blue and record it in root, else add as child to the parent */
-  Storable *insertNewChild(Storable *parent,Text &name,bool haveValue,Text &value,bool valueQuoted) override;
+  Storable *applyToChild(Storable *parent,Text &name,bool haveValue,Text &value,bool valueQuoted) override;
 
   /** Illegal character encountered */
   void exclaim(PushedJSON::Parser::Diag &d) override;
 
 };
 
-class StoreJsonParser: public AbstractJSONparser<Storable, Text> {
-public: //accessing root when done, should also set it for some usages.
+struct StoreJsonParser: public AbstractJSONparser<Storable, Text> {
   StoreJsonConstructor core;
-public:
-  StoreJsonParser(Indexer<u8> &data);
-} ;
+  /** @param data links to buffer of content to parse. */
+  StoreJsonParser(Indexer<char>&data);
+};
 
 #endif // STOREJSON_H

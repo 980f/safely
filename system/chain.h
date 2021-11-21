@@ -198,7 +198,7 @@ public:
   ChainScanner(Chain<T> &list) : list(list),steps(0){
   }
 
-  bool hasNext() const {
+  bool hasNext() {
     return steps<list.quantity();
   }
 
@@ -239,6 +239,8 @@ public:
     list.remove(which);
   }
 
+  //todo: detect c++14 and add a forEach
+
 }; // class ChainScanner
 
 /** scan a const chain, one that doesn't tolerate adds or removes */
@@ -252,7 +254,7 @@ public:
     steps(0){
   }
 
-  bool hasNext() const {
+  bool hasNext() {
     return steps<list.quantity();
   }
 
@@ -276,6 +278,8 @@ public:
       steps = 0;
     }
   }
+
+  //todo: detect c++14 and add a forEach
 
 }; // class ConstChainScanner
 
@@ -318,6 +322,8 @@ public:
   void removeLastNext(){//which is typically the same as current.
     remove(steps);
   }
+
+  //todo: detect c++14 and add a forEach
 
 }; // class ChainReversed
 #endif // CHAIN_H

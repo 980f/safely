@@ -1,8 +1,8 @@
 #ifndef ARGSET_H
 #define ARGSET_H
 
-#include "buffer.h"
 #include "safely.h"       //ArgsPerMessage maximum copyable set
+#include "buffer.h"
 
 /** used as an intermediate representation of a struct made of only numbers (no text) */
 class ArgSet : public Indexer<double> {
@@ -27,13 +27,25 @@ public:
   virtual ~ArgSet();
 }; // class ArgSet
 
-#define makeArgs(qty) double argv[qty]; fillObject(argv, sizeof(argv), 0); ArgSet args(argv, sizeof(argv))
 
-//the following macros expect you to have #defined ArgsPerMessage, which is usually done in art.h
-#define MessageArgs makeArgs(ArgsPerMessage)
-//for those rare occasions where two guys are in play at the same time.
-#define MessageArgs2 double argv2[ArgsPerMessage]; ArgSet args2(argv2, sizeof(argv2))
+/** replacing macro with real class */
+template<unsigned qty> class ArgBlock : public ArgSet {
+  double argv[qty];
 
+public:
+  ArgBlock() : ArgSet(argv,sizeof(argv)){
+  }
+
+  /** @returns a reference to a value, the first if arg is bad. */
+  double &operator [](unsigned which){
+    return argv[which<qty ? which : 0];
+  }
+
+  void reset(){
+    wrap(argv,sizeof(argv));
+  }
+
+}; // class ArgBlock
 
 /** appears to be incomplete, need to look for usages */
 class ConstArgSet : public Indexer<const double> {
@@ -41,6 +53,7 @@ public:
   ConstArgSet(const double *d, int sizeofd);
   ConstArgSet(const ArgSet &other);
   ConstArgSet(const ConstArgSet &other);
+  ~ConstArgSet() = default;
 };
 
 

@@ -7,7 +7,7 @@
 template< typename Numeric > class StoredNumeric: public Stored {
 public:
   StoredNumeric(Storable &node,Numeric fallback=Numeric(0)): Stored(node) {
-    node.convertToNumber(false);
+    node.convertToNumber(false,detail<Numeric>());
     setDefault(fallback);
   }
 
@@ -21,8 +21,13 @@ public:
   }
 
   Numeric assign(Numeric newnum) {
-    //    onThisNull(0);
     return node.setNumber< Numeric >(newnum);
+  }
+
+  /** try to make sense of @param value as a number and if it seems to be one set this to that value, else no change.
+ @returns the actual value of the node, which may not be the value passed in. */
+  Numeric setFromText(Cstr value){
+    return assign(value.cvt<Numeric>(native()));
   }
 
   Numeric operator = (Numeric newnum) {
@@ -144,9 +149,7 @@ public:
 
 typedef StoredNumeric<double> StoredReal;
 typedef StoredNumeric<int> StoredInt;
-//got tired of gratuitous int->unsigned warnings:
 typedef StoredNumeric<unsigned> StoredCount;
-
 
 #if cppGetsFixedOnDerivingFromTemplate //presently have to republish the whole interface
 struct StoredBoolean:public StoredNumeric<bool>{
@@ -166,7 +169,7 @@ sigc::connection whenCleared(StoredBoolean &thing,SimpleSlot action);
 #endif
 
 /** lamda for fixing up a group which contains an integer index into some other group*/
-void adjustIndex(int removed, StoredInt &index);
+void adjustIndex(unsigned removed, StoredCount &index);
 
 
 

@@ -1,5 +1,5 @@
 #ifndef TEXTFORMATTER_H
-#define TEXTFORMATTER_H
+#define TEXTFORMATTER_H "(C) Andrew L. Heilveil, 2017"
 
 #include "textpointer.h"
 #include "charformatter.h"
@@ -22,8 +22,9 @@ public://4diagnostics
   /** stateful number formatting, an inline NF item applies to all higher indexed values */
   NumberFormat nf;
 protected:
-  /** where a terminator should be */
+  /** where a terminator should be after formatting */
   unsigned termloc=BadIndex;
+  unsigned dataend=BadIndex;
   /** whether we are computing size of final string or assembling it */
   bool sizing=true;
   /** tag of next argument to format+insert */
@@ -43,10 +44,10 @@ private:
   void substitute(CharFormatter buf);
   void substitute(Cstr stringy);
   void substitute(TextKey stringy);
-  //at the moment int's get rolled in with doubles.
   void substitute(double value);
   void substitute(u64 value);
   void substitute(u8 value);
+  void substitute(bool value);
 
 
   /** compiler insists we have this, needed in case the format string references this non-printable item.*/
@@ -60,12 +61,10 @@ private:
    *  for arguments that have a substitute method that will get called.
    *  Each substitute method eventually inserts a string.
    */
-
-
   template<typename NextArg, typename ... Args> void compose_item( NextArg&item, const Args& ... args){
     body.rewind();
     bool slashed=false;
-    while(body.hasNext()&&body.ordinal()<termloc) {
+    while(body.hasNext()&&body.ordinal()<dataend) {
       char c = body.next();
       if(flagged(slashed)){
         continue;
@@ -111,25 +110,26 @@ private:
 public:
   TextFormatter(TextKey mf);
 
-//  /** apply destroys the memory of the format. To reuse this object (?why bother?) */
-//  void setFormat(TextKey another);
-
   /** applys args, @returns whether it actually did so. This object *is* Text so it has c_str() etc. if needed. */
   template<typename ... Args> bool apply(const Args ... args){
     which=0;
     sizing=true;
-    termloc=sizer=body.allocated();//instead of adding one for each simple char we will subtract for the substititution tags.
+    termloc=sizer=body.allocated();
     compose_item(args ...);
     if(onSizingCompleted()){
       which=0;
       compose_item(args ...);
-      body[termloc]=0;//clip trash from overallocating workspace for numbers.
+      if(body.canContain(termloc)){//if we did a perfect job then the buffer is perfect as is.
+        body[termloc]=0;//clip trash from overallocating workspace for numbers.
+      }
       return true;
     } else {
       //couldn't allocate a buffer or the string to build is empty.
       return false;
     }
   }
+
+  Indexer<u8> asBytes();
 
   /** @returns composition of arguments using NumberFormatter rules */
   template<typename ... Args> static Text compose(TextKey format, const Args ... args){

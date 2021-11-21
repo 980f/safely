@@ -13,4 +13,7 @@ svnbranch.txt
 .qmake.stash
 Makefile
 tests/tests
-usb/
+.fslckout
+safely.qws
+git.branch
+git.hash

@@ -7,7 +7,7 @@ void Cycler::unwrap(){
   }
 }
 
-Cycler::Cycler(int length):value(0) {
+Cycler::Cycler(unsigned length):value(0) {
   setLength(length);//invoke constraint logic
 }
 
@@ -21,6 +21,10 @@ void Cycler::setLength(unsigned length) {
   }
   this->length = length;
   unwrap();
+}
+
+bool Cycler::contains(unsigned index) const{
+  return this->length>index;
 }
 
 unsigned Cycler::operator =(int force) {
@@ -41,7 +45,7 @@ Cycler::operator unsigned(void)const {
 }
 
 /** @returns true once per cycle, and not until the end of the first cycle if used in a typical fashion*/
-Cycler::operator bool(void) {
+bool Cycler::next(void) {
   return increment() == 0;
 }
 

@@ -12,7 +12,7 @@ public:
 
   BigEndianer(Indexer<u8> other, int clip = 0);
  virtual ~BigEndianer();
-  int getU16(void);
+  unsigned getU16(void);
   int getI16(void);
   void hilo(u16 datum);
   u32 getu32(void);

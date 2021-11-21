@@ -17,6 +17,7 @@
 #include "gatedsignal.h"
 
 #include "textpointer.h"
+#include "numericalvalue.h"
 
 //class used for communicating keys, once was also for the actual storage.
 typedef TextKey NodeName;
@@ -32,19 +33,22 @@ typedef Text TextValue;
  *
  * Storable supports both polled change detection via ChangeMonitored and change notification callbacks via sigc.
  *
- *
  * Made sigctrackable as these are often the objects of watched updates.
  *
- * Todo: global Root node static herein, 'Stored' base recognizes type changes and invokes parse.
+ * todo:1 writing a string to a wad creates a child by that name.
+ * todo:1 writing a negative number to a wad removes the indicated child
+ * todo:1 writing a positive number to a wad increase its size to that value.
  */
 
 class Storable : public ChangeMonitored, SIGCTRACKABLE {
   friend class Stored; //access to q and the like.
   friend class StoredLabel; //ditto
   friend class StoredEnum;
+  //needed to be a template, not worth figuring out the syntax friend class StoredGroup;
+  template<typename> friend class StoredGroup;
 public:
-//  /** number of storables in existence.  For debug of memory leaks. */
-//  static unsigned instances;
+  /** allow value sets to a wad create and delete children */
+//  static bool AllowRemoteWadOperations;
 
   enum Type {  //referring to the type of data in the node
     NotKnown,   //construction error, parse error
@@ -73,10 +77,16 @@ public:
   SimpleSignal preSave;
 
 private: //#the watchers must be mutable because sigc needs to be able to cull dead slots from its internal lists.
-  /** sent when value changes, or quantity of wad changes*/
+  /** sent when value changes */
   mutable GatedSignal watchers; //# mutable so that we can freeze and thaw
-  /** sent when any child changes, allows setting a watch on children that may not exist. */
+  /** sent when any child's value changes, allows setting a watch on children that may not exist at the time of registration of the watcher. */
   mutable GatedSignal childwatchers; //# mutable, see @watchers.
+public: //needed only by StoredGroup, but that being a template made friending it difficult.
+  /** bool remove (else add at end) , int which
+   * called when an item is added or removed.
+   * This only matters to StoredGroup and was first needed by socket access for remote editing of StoredGroups.
+   */
+  mutable  sigc::signal<void, bool, unsigned> wadWatchers;
 
 protected:
   /** stored value is like a union, although we didn't actually use a union so that a text image of the value can be maintained for debug of parsing and such. */
@@ -84,7 +94,7 @@ protected:
   /** for debug of file read and write stuff, not used in application logic (as far as we know) */
   Quality q;
   /** value if type is numeric or enum */
-  double number;
+  NumericalValue number;
   /** value if type is textual or enum, also used for class diagnostics */
   TextValue text;
 public:   //made public for sibling access, could hide it with some explicit sibling methods.
@@ -98,7 +108,6 @@ protected:
   /** set by StoredEnum when one is created, maintains parallel text.*/
   const Enumerated *enumerated; //expected to be a globally shared one
 
-
   /** calls watchers */
   void notify() const;
   void recursiveNotify() const;
@@ -110,8 +119,6 @@ private:
   Storable &precreate(TextKey name);
 public:
   const TextValue name;
-//private:
-//  void setName(TextKey name);
 public:
   /** @param isVolatile was added here to get it set earlier for debug convenience */
   Storable(TextKey name, bool isVolatile = false);
@@ -133,7 +140,7 @@ public:
 
   /** @returns whether the text value was converted to a number. @param ifPure is whether to restrict the conversion to strings that are just a number, or whether
    * trailing text is to be ignored. */
-  bool convertToNumber(bool ifPure);
+  bool convertToNumber(bool ifPure,NumericalValue::Detail numtype=NumericalValue::Detail::Floating);
 /** convert an Unknown to either Numerical or Text depending upon purity, for other types @returns false */
   bool resolve(bool recursively);
 
@@ -147,7 +154,7 @@ public:
 
 #if StorableDebugStringy
   /** @return number of changes */
-  int listModified(sigc::slot<void, Ustring> textViewer) const;
+  unsigned listModified(sigc::slot<void, Ustring> textViewer) const;
 #endif
   Text fullName() const;
 
@@ -190,11 +197,15 @@ public:
    * numerical with gay disregard for its previous type. */
   template<typename Numeric> Numeric setNumber(Numeric value, Quality quality = Edited){
     setValue(static_cast<double>(value), quality);
-    return static_cast<Numeric>(number);
+    return number;
+  }
+
+  void setNumber(NumericalValue other){
+    number=other;
   }
 
   template<typename Numeric> Numeric getNumber() const {
-    return static_cast<Numeric>(number);
+    return number;
   }
 
   /** if no value has been set from parsing a file or program execution then set a value on the node. Defaults are normally set via ConnectChild macro. */
@@ -230,10 +241,13 @@ public:
   /** @return whether text value of node textually equals @param zs (at one time a null terminated string) */
   bool operator ==(TextKey zs);
 
-  /** @returns number of child nodes. using int rather than size_t to reduce number of casts required */
-  int numChildren() const { //useful with array-like nodes.
+  /** @returns number of child nodes. using unsigned rather than size_t to reduce number of casts required */
+  unsigned numChildren() const { //useful with array-like nodes.
     return wad.quantity();
   }
+
+  /** just for fun- count the number of actual values in this node and its children. */
+  unsigned numLeaves() const;
 
   /** @returns an iterator over the children, in ascending order*/
   ChainScanner<Storable> kinder();
@@ -241,8 +255,8 @@ public:
   /** @returns an iterator over the children, in ascending order*/
   ConstChainScanner<Storable> kinder() const;
 
-  bool has(int ordinal) const {
-    return ordinal >= 0 && ordinal < numChildren();
+  bool has(unsigned ordinal) const {
+    return ordinal < numChildren();
   }
 
   /** @returns null pointer if no child by given name exists, else pointer to the child*/
@@ -272,11 +286,13 @@ public:
   /** syntactic sugar for @see child(NodeName) */
   Storable &operator ()(TextKey name);
   //these give nth child
-  Storable &operator [](int ordinal);
+  Storable &operator [](unsigned ordinal);
 
-  const Storable &operator [](int ordinal) const;
+  const Storable &operator [](unsigned ordinal) const;
   /** named version of operator [] const */
-  const Storable &nth(int ordinal) const;
+  const Storable &nth(unsigned ordinal) const;
+  Storable &nth(unsigned ordinal);
+
 private:
   /** find the index of a child node. @returns BadIndex if not a wad or not found in the wad.*/
   unsigned indexOf(const Storable &node) const;
@@ -288,9 +304,9 @@ public:
   Storable &createChild(const Storable &other);
 
   //combined presize and addChild to stifle trivial debug spew when adding a row to a table.
-  Storable &addWad(int qty, Storable::Type type = NotKnown, TextKey name = "");
+  Storable &addWad(unsigned qty, Storable::Type type = NotKnown, TextKey name = "");
   /** add a bunch of null-named children of the given type to this node. Probably not good to use outside of this class cloning an object.*/
-  void presize(int qty, Storable::Type type = NotKnown);
+  void presize(unsigned qty, Storable::Type type = NotKnown);
 
   /** remove a child of the wad, only makes sense for use with StoredGroup (or legacy cleanup) */
   bool remove(unsigned which);
@@ -307,6 +323,10 @@ public:
 
   /** @returns rootnode of this node, this if this is a root node.*/
   Storable &getRoot();
+  /** force size of wad. */
+  unsigned setSize(unsigned qty);
+  /** find/create from an already parsed path. Honors '#3' notation for child [3]*/
+  Storable *getChild(ChainScanner<Text> &progeny, bool autocreate);
 private:
   Storable &finishCreatingChild(Storable &noob);
 }; // class Storable
@@ -316,17 +336,16 @@ private:
 #define ForKinderConstly(node) for(auto list(node.kinder()); list.hasNext(); )
 
 
-
 /** auto creating iterator that provides for deleting the unscanned items.
  * todo:2 construction option to invoked done() in destructor. Handy for for loops, but not not always desired..*/
 class StoredListReuser {
   Storable &node;
-  int wadding;
-  int pointer;
+  unsigned wadding;
+  unsigned pointer;
 public:
   StoredListReuser(Storable &node, int wadding = 0);
   Storable &next();
-  int done();
+  unsigned done();
 };
 
 #endif // STORABLE_H

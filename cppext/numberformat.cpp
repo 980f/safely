@@ -1,3 +1,4 @@
+//"(C) Andrew L. Heilveil, 2017"
 #include "numberformat.h"
 #include "index.h"
 
@@ -41,7 +42,7 @@ unsigned NumberFormat::needs(double value, NumberPieces *preprint) const {
     necessary+=10;//todo:00 finish this!
   } else {
     //leading zero if number <0, else add room
-    necessary+=decimals+(decimals>0);
+    necessary+=decimals+(decimals>0);//todo:00 suspicious for negative decimals.
     if(preprint->negativeExponent){
       ++necessary;
     } else {
@@ -58,11 +59,11 @@ unsigned NumberFormat::needs(double value, NumberPieces *preprint) const {
       //will print some blanks and proceed, we only implement right-align in fixed fields.
       return fieldWidth;
     } else {
-      if(preprint->div10>0 && (necessary-preprint->div10)<fieldWidth){
+      if(preprint->postDigits>0 && (necessary-preprint->postDigits)<fieldWidth){
         //truncate precision since we can
-        int trunc=necessary-fieldWidth;
-        preprint->postdecimal/= pow10(trunc);
-        preprint->div10-=trunc;
+        unsigned trunc=necessary-fieldWidth;
+        preprint->postdecimal/= i64pow10(trunc);
+        preprint->postDigits-=trunc;
       }
     }
   }

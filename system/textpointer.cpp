@@ -64,7 +64,7 @@ Text::operator TextKey() const {
   return Cstr::c_str();
 }
 
-void Text::take(Text &other){
+void Text::take(Text &&other){
   if(ptr != other) { //# if not passed self as a pointer to this' storage.
     tbg("taking by ref %p:%p  <-%p:%p",this,ptr,&other,other.ptr);
     clear();
@@ -73,7 +73,7 @@ void Text::take(Text &other){
   }
 }
 
-void Text::take(const TextKey &other){
+void Text::setto(const TextKey &other){
   if(ptr != other) { //# if not passed self as a pointer to this' storage.
     tbg("taking by cstr %p:%p  <-%p",this,ptr,other);
     clear();

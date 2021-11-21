@@ -1,3 +1,4 @@
+//(C) 2017 Andrew Heilveil
 #include "filename.h"
 
 FileName::FileName(){

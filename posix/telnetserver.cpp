@@ -1,3 +1,4 @@
+//"(C) Andrew L. Heilveil, 2017"
 #include "telnetserver.h"
 
 //called from socketeer accept
@@ -9,17 +10,21 @@ bool TelnetServer::enroll(int newfd, SockAddress &sadr){
 
   //purge dead ones, then try to add newone
   purge();
-  if(clients.quantity()<maxClients){
-    Socketeer &newby=*clients.append(new Socketeer(newfd,sadr));
-    newby.setBlocking(false);
-    return true;
-  } else {
-    return false;
+  while(clients.quantity()>=maxClients){
+    clients.removeNth(0);
   }
+  Socketeer &newby=*clients.append(factory(newfd,sadr));
+  newby.setBlocking(false);
+  return true;
 }
 
-TelnetServer::TelnetServer(){
+Socketeer *TelnetServer::simpleFactory(int newfd, SockAddress &sadr){
+  return new Socketeer(newfd,sadr);
+}
 
+TelnetServer::TelnetServer(Factory aFactory):
+factory(nullptr,aFactory){
+  //#nada
 }
 
 bool TelnetServer::isStarted(){
@@ -54,6 +59,12 @@ void TelnetServer::purge(){
       clients.remove(&sock);
     }
   });
+}
+
+void TelnetServer::close(){
+  forEach([](Socketeer &sock){sock.close();});//close clients
+  Socketeer::close();//close server itself
+  //don't need to purge, destructor will automatically do that.
 }
 
 Socketeer *TelnetServer::newest(){
