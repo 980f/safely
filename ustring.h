@@ -71,7 +71,7 @@ private: //template varargs majick
         compose_item(which + 1, format, args ...);
       }
     } catch(...) {
-//      wtf("Stifled exception in L10n::compose");
+//      wtf("Stifled exception in Ustring::compose");
     }
   } // compose_item
 
