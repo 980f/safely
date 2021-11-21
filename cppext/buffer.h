@@ -505,14 +505,15 @@ public:
     }
   }
 
-  /** */
+  /** point to nothing */
   void forget(){
     length=0;
     pointer=0;
     buffer=nullptr;
   }
 
-  //free contents and forget them. Only safe todo if you know this buffer is created from a malloc.
+  /** You probably want  @see forget!
+   * free contents and forget them. Only safe todo if you know this buffer is created from a malloc. */
   void destroy(){
     if(length){//# testing 4debug, delete[] can handle a zero.
       delete []buffer;

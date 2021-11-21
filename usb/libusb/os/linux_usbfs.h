@@ -189,10 +189,7 @@ void linux_netlink_hotplug_poll(void);
 void linux_hotplug_enumerate(uint8_t busnum, uint8_t devaddr, const char *sys_name);
 void linux_device_disconnected(uint8_t busnum, uint8_t devaddr);
 
-int linux_get_device_address (struct libusb_context *ctx, int detached,
-	uint8_t *busnum, uint8_t *devaddr, const char *dev_node,
-	const char *sys_name);
-int linux_enumerate_device(struct libusb_context *ctx,
-	uint8_t busnum, uint8_t devaddr, const char *sysfs_dir);
+int linux_get_device_address (struct libusb_context *ctx, int detached, uint8_t *busnum, uint8_t *devaddr, const char *dev_node, const char *sys_name);
+int linux_enumerate_device(struct libusb_context *ctx,  uint8_t busnum, uint8_t devaddr, const char *sysfs_dir);
 
 #endif
