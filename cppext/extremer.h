@@ -1,8 +1,7 @@
-#ifndef EXTREMER_H
-#define EXTREMER_H
+#pragma once  //Copyright 2018 Andy Heilveil (github/980f)
 
-/** classes for finding minima and maxima in a push environment (as data arrives in event driven system), versus the typical pull environment (a for loop iterating over
- * data that is all present)
+/** classes for finding minima and maxima in a push environment (as data arrives in event driven system), 
+ * versus the typical pull environment (a for loop iterating over data that is all present)
  *
  * There are two variants, one which records location information, one which does not.
  */
@@ -91,5 +90,3 @@ class MaxDouble: public SimpleExtremer<double,false,false>{};
 class MinDouble: public SimpleExtremer<double,true,false>{};
 
 //add more wrapped specializations here.
-
-#endif // EXTREMER_H
