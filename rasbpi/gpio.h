@@ -27,7 +27,7 @@ class GPIO {
 public:
   GPIO();
   /** @param pull is +1 for up, -1 for down, 0 for float */
-  GPIO(unsigned pinIndex,unsigned af,int pull);
+  GPIO(unsigned pinIndex,unsigned af=0,int pull=0);
 
   GPIO& connectTo(unsigned pinIndex);
   /* write bit */

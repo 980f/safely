@@ -66,3 +66,12 @@ Span PathIterator::next(Indexer<const char> &scan){
   }
   return cutter;
 }
+
+PathIterator::Rules::Rules(char slash, bool after, bool before, bool coalesce):
+slash(slash)
+,after(after)
+,before(before)
+,coalesce(coalesce)
+{
+  //do nothing
+}

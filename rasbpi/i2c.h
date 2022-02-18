@@ -17,7 +17,7 @@ class I2C : public Fildes {
 
 public:
     /** just record relevant numbers, call connect() to gain access to I2C */
-  I2C(unsigned devaddress,unsigned busnumber=0);
+  I2C(unsigned devaddress,unsigned busnumber=1);//bus 0 is the hat eeprom bus, to be avoided.
   /** get a file descriptor, @returns whether that was successful. You can also check isOpen() after the fact. */
   bool connect();
   /** and reading and writing are done as to a file, but leave out the device address from your block to send. */

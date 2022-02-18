@@ -1,5 +1,5 @@
 #include "SSD1306.h"
-
+#include "memory.h"
 
 SSD1306::FrameBuffer::FrameBuffer(unsigned pixwidth, unsigned pixheight)
   : comspan(pixwidth), segspan(pixheight), // bounds
@@ -9,7 +9,11 @@ SSD1306::FrameBuffer::FrameBuffer(unsigned pixwidth, unsigned pixheight)
   //#nada
 }
 
-SSD1306::SSD1306(SSD1306::Display &&displaydefinition) : oled(displaydefinition), dev(oled.i2c_bus, 0x3C + oled.altaddress), pages(oled.pages()) {}
+void SSD1306::FrameBuffer::clear(bool ink){
+  memset(fb+1,ink?255:0,databytes);//leave control bytes unchanged.
+}
+
+SSD1306::SSD1306(SSD1306::Display &&displaydefinition) : oled(displaydefinition), dev(0x3C + oled.altaddress,oled.i2c_bus), pages(oled.pages()) {}
 
 bool SSD1306::connect() {
   if(oled.resetPin!=~0U){
@@ -194,4 +198,10 @@ void SSD1306::Pen::step(bool which, int direction) {
       }
     }
   }
+}
+
+SSD1306::Display::Display(unsigned segments, unsigned commons, bool swcapvcc, unsigned resetPin):
+  segments(segments),commons(commons),swcapvcc(swcapvcc),resetPin(resetPin)
+{
+  //do nothing
 }
