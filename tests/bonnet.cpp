@@ -1,4 +1,4 @@
-#define fehtid 0
+#define fehtid 1
 
 #include "stdio.h"
 #include <initializer_list>  //for inline test data sets
@@ -41,7 +41,7 @@ public:
     }
 
     void connect(){
-      if(pinnum!=~0U){
+      if(pinnum!=~0U){//if valid pin number
         pin.beGpio(pinnum,0,1);
       }
     }
@@ -130,6 +130,10 @@ public:
 #if fehtid
         dbg("Feh: %d",fehpid);
 #endif
+        for(unsigned pi=countof(but);pi-->0;){
+          ButtonTracker &it(but[pi]);
+          dbg("%c:%d for %d %s",it.id, it.isPressed, it.steady,(it.id==watched)?"<-":"");
+        }
         break;
       case 'x'://gently quit this application
         cout.write(bybye,sizeof(bybye));
@@ -156,20 +160,21 @@ public:
 #endif
     for(unsigned pi=countof(but);pi-->0;){
       ButtonTracker &it(but[pi]);
-      if(it.changed()){
-        if(it.id==watched){
-          if(it.steady==200){
-            if(it.isPressed){
+      if(it.changed()){        
+        dbg("%c[%d] is now %d, toggled: %d",it.id,it.pinnum,it.isPressed,take(it.toggles));
+      }
+      if(it.id==watched){
+        if(it.steady>=333){
+          if(it.isPressed){
+            it.steady=0;//auto repeat at debounce rate.
+            dbg("Firing %c",it.id);
 #if fehtid
-              if(fehpid) {//checking, although kill process 0 is probably ignored, and even if not then it will ignore sigusr1
-                kill(fehpid,SIGUSR1);
-                it.steady=0;//auto repeat at debounce rate.
-              }
-#endif
+            if(fehpid) {//checking, although kill process 0 is probably ignored, and even if not then it will ignore sigusr1
+              kill(fehpid,SIGUSR1);
             }
+#endif
           }
         }
-        dbg("%c[%d] is now %d, toggled: %d",it.id,it.pinnum,it.isPressed,take(it.toggles));
       }
     }
 
