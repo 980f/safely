@@ -76,7 +76,7 @@ public:
   ,fb(64)
   ,cin("console")
   ,cout("console")
-  ,feh("feh"){
+  ,feh(0){
     cin.preopened(STDIN_FILENO,false);//let us not close the console, let the OS tend to that.
     cin.setBlocking(false);//since available() is lying to us ...
     cout.preopened(STDOUT_FILENO,false);
@@ -87,24 +87,10 @@ public:
   char watched='B';
 
 #if fehtid
-  Spawner feh;
-  bool spawnit(){
-    static const char* argv[]={
-      "-q","-p","-x","-Z","-F","-Y","-D","-999999","-f","images.lis",nullptr
-    };
-    static const char* envp[]={
-      "DISPLAY=:0.0","XAUTHORITY=/home/pi/.Xauthority",nullptr
-    };
-    return feh("/usr/bin/feh",const_cast<char **>(argv),const_cast<char **>(envp));
-  }
-
-  bool shellit(){
-    char *argv[1];
-    argv[0]=nullptr;
-
-    feh.env("DISPLAY",":0.0",false);
-    feh.env("XAUTHORITY","/home/pi/.Xauthority",false);
-    return feh("/home/pi/show.sh",argv,environ);
+  pid_t feh;
+  bool shellit(const char *pidtext){
+    feh=atoi(pidtext);
+    return feh>0;
   }
 
 #endif
@@ -114,8 +100,14 @@ public:
     dbg("grabbing pins");
     grabPins();
     dbg("spawning slide shower");
-    if(!shellit()){
-      dbg("Failed to spawn:%d  %s",feh.errornumber,feh.errorText());
+    arglist.next();//disacrd program name
+    if(!arglist.hasNext()){
+      dbg("usage:  %s `pidof -s feh`",arglist.previous());
+      return 4;
+    }
+    if(!shellit(arglist.next())){
+//      dbg("Failed to spawn:%d  %s",feh.errornumber,feh.errorText());
+      dbg("pid of feh from command line args not reasonable: %s",arglist.previous());
       return 3;
     }
     dbg("starting loop");
@@ -140,7 +132,7 @@ public:
       switch(cmd[0]){
       case ' ':
 #if fehtid
-        dbg("Feh: %d",feh.pid());
+        dbg("Feh: %d",feh);
 #endif
         for(unsigned pi=countof(but);pi-->0;){
           ButtonTracker &it(but[pi]);
@@ -159,7 +151,7 @@ public:
       }
     }
 #if fehtid
-    if(!feh.pid()){
+    if(!feh){
       //do we dare try to respawn it?
     } else {
       //todo: check exit status
@@ -176,7 +168,7 @@ public:
             it.steady=0;//auto repeat at debounce rate.
             dbg("Firing %c",it.id);
 #if fehtid
-            feh.killby(SIGUSR1);
+            kill(feh,SIGUSR1);
 #endif
           }
         }
