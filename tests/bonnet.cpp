@@ -21,7 +21,7 @@ static const u8 bybye[]="Bye Bye!";
 
 #if fehtid
 #include "signal.h"
-#include "piper.h"
+#include "spawner.h"
 #endif
 
 struct BonnetDemo: Application {
@@ -71,12 +71,12 @@ public:
   Fildes cin;
   Fildes cout;
 
-  BonnetDemo(unsigned argc, char *argv[]):Application(argc,argv),
-  hat({128,64,true,~0U}),
-  fb(64),
-  cin("console"),
-  cout("console"),
-  popener("popen"){
+  BonnetDemo(unsigned argc, char *argv[]):Application(argc,argv)
+  ,hat({128,64,true,~0U})
+  ,fb(64)
+  ,cin("console")
+  ,cout("console")
+  ,feh("feh"){
     cin.preopened(STDIN_FILENO,false);//let us not close the console, let the OS tend to that.
     cin.setBlocking(false);//since available() is lying to us ...
     cout.preopened(STDOUT_FILENO,false);
@@ -87,33 +87,41 @@ public:
   char watched='B';
 
 #if fehtid
-  pid_t fehpid=0;
-  Piper popener;
-  bool pidByName(){
-    Piper::Reuser piddler(popener,"pidof -s feh");
-    if(!piddler){
-      return false;
-    }
-    char buf[20];//how big can pid's get these days?
-    char *pidtext=piddler.read(buf,sizeof(buf));
-    if(!pidtext){
-      fehpid= 0;
-      popener.failure(errno);//prints debug message on change of error
-      return false;
-    }
-    fehpid=strtoul(pidtext,nullptr,10);
-    return true;
+  Spawner feh;
+  bool spawnit(){
+    static const char* argv[]={
+      "-q","-p","-x","-Z","-F","-Y","-D","-999999","-f","images.lis",nullptr
+    };
+    static const char* envp[]={
+      "DISPLAY=:0.0","XAUTHORITY=/home/pi/.Xauthority",nullptr
+    };
+    return feh("/usr/bin/feh",const_cast<char **>(argv),const_cast<char **>(envp));
   }
+
+  bool shellit(){
+    char *argv[1];
+    argv[0]=nullptr;
+    return feh("/home/pi/show.sh",argv,environ);
+  }
+
 #endif
 
   /** like Arduino setup() */
   int main(){
+    dbg("grabbing pins");
     grabPins();
+    dbg("spawning slide shower");
+    if(!shellit()){
+      dbg("Failed to spawn:%d  %s",feh.errornumber,feh.errorText());
+      return 3;
+    }
+    dbg("starting loop");
     if(hat.connect()){
       hat.begin();
       period=0.001;//want millisecond timing to match Arduino best practice.
       return Application::run();//all activity from this point on is via callbacks arranged in the previous few lines.
     } else {
+      dbg("could not connect to OLED display");
       return 2;//hat.dev.errornumber;
     }
   }
@@ -129,7 +137,7 @@ public:
       switch(cmd[0]){
       case ' ':
 #if fehtid
-        dbg("Feh: %d",fehpid);
+        dbg("Feh: %d",feh.pid());
 #endif
         for(unsigned pi=countof(but);pi-->0;){
           ButtonTracker &it(but[pi]);
@@ -148,15 +156,10 @@ public:
       }
     }
 #if fehtid
-
-    if(!fehpid){
-      if(pidByName()){
-        dbg("Feh is %d",fehpid);
-      }
+    if(!feh.pid()){
+      //do we dare try to respawn it?
     } else {
-      if(!pidByName()){
-        dbg("Feh went offline");
-      }
+      //todo: check exit status
     }
 #endif
     for(unsigned pi=countof(but);pi-->0;){
@@ -170,9 +173,7 @@ public:
             it.steady=0;//auto repeat at debounce rate.
             dbg("Firing %c",it.id);
 #if fehtid
-            if(fehpid) {//checking, although kill process 0 is probably ignored, and even if not then it will ignore sigusr1
-              kill(fehpid,SIGUSR1);
-            }
+            feh.killby(SIGUSR1);
 #endif
           }
         }
@@ -206,9 +207,7 @@ public:
 
 };
 
-
-
-
+/////////////////////
 int main(int argc, char *argv[]){
 BonnetDemo demo(argc,argv);
   demo.main();
