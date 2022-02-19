@@ -5,8 +5,8 @@
 #include "posixwrapper.h"
 
 class Spawner : public PosixWrapper {
+public:
   class Attr :PosixWrapper{
-
       posix_spawnattr_t attr;
 public:
       Attr();
@@ -24,6 +24,7 @@ public:
       bool setFlags(short flags);
 
   };
+
   class FileActions:public PosixWrapper {
       posix_spawn_file_actions_t factions;
   public:
@@ -39,11 +40,13 @@ public:
 
       bool addClose(int fileno);
   };
+private:
   pid_t childpid;
 public:
   pid_t pid() const {
     return childpid;
   }
+  //let user whack these in order to detect updates
   int status;
   int exitstatus;
   int exitsignal;
@@ -54,6 +57,9 @@ public:
 
   /** @returns whether child is still running */
   operator bool ();
+
+  /** set environment variable, updating this object's errno*/
+  bool env(const char * name, const char *value,bool force=true);
 
   void killby(int signal);
 };

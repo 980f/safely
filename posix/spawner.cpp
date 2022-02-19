@@ -1,5 +1,7 @@
+//(C) 2022 Andy Heilveil (github/980f)
 #include "spawner.h"
-#include "wait.h"
+#include "wait.h" //waitpid
+#include "stdlib.h" //setenv
 
 Spawner::Spawner(const char *tracer):PosixWrapper(tracer){
 
@@ -9,6 +11,10 @@ bool Spawner::operator()(const char *path, char **argv, char **envp){
   exitstatus=0;
   exitsignal=0;
   return posix_spawnp(&childpid,path,factions,attrs,argv,envp);
+}
+
+bool Spawner::env(const char *name, const char *value, bool force){
+  return failed(setenv(name,value,force));
 }
 
 void Spawner::killby(int signal){

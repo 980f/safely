@@ -101,6 +101,9 @@ public:
   bool shellit(){
     char *argv[1];
     argv[0]=nullptr;
+
+    feh.env("DISPLAY",":0.0",false);
+    feh.env("XAUTHORITY","/home/pi/.Xauthority",false);
     return feh("/home/pi/show.sh",argv,environ);
   }
 
