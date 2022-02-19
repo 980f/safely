@@ -21,6 +21,7 @@ static const u8 bybye[]="Bye Bye!";
 
 #if fehtid
 #include "signal.h"
+#include "piper.h"
 #endif
 
 struct BonnetDemo: Application {
@@ -74,7 +75,8 @@ public:
   hat({128,64,true,~0U}),
   fb(64),
   cin("console"),
-  cout("console"){
+  cout("console"),
+  popener("popen"){
     cin.preopened(STDIN_FILENO,false);//let us not close the console, let the OS tend to that.
     cin.setBlocking(false);//since available() is lying to us ...
     cout.preopened(STDOUT_FILENO,false);
@@ -86,21 +88,20 @@ public:
 
 #if fehtid
   pid_t fehpid=0;
-
+  Piper popener;
   bool pidByName(){
-    char buf[512];
-    FILE * cmd_pipe=popen("pidof -s feh","r");
-    if(!cmd_pipe){
+    Piper::Reuser piddler(popener,"pidof -s feh");
+    if(!piddler){
       return false;
     }
-
-    char *pidtext=fgets(buf,sizeof(buf),cmd_pipe);
+    char buf[20];//how big can pid's get these days?
+    char *pidtext=piddler.read(buf,sizeof(buf));
     if(!pidtext){
-      fehpid=0;//by clearing here we can poll the pid to see if the program is still running.
+      fehpid= 0;
+      popener.failure(errno);//prints debug message on change of error
       return false;
     }
     fehpid=strtoul(pidtext,nullptr,10);
-    pclose(cmd_pipe);
     return true;
   }
 #endif
