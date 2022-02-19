@@ -1,3 +1,4 @@
+#define fehtid 0
 
 #include "stdio.h"
 #include <initializer_list>  //for inline test data sets
@@ -10,15 +11,17 @@
 #include "cheaptricks.h"
 
 #include "textpointer.h"
-//rpi i2c
+//rpi i2c interface to commonly used OLED driver chip
 #include "SSD1306.h"
+
 #include "din.h"
 #include "application.h"
 
-
 static const u8 bybye[]="Bye Bye!";
 
-
+#if fehtid
+#include "signal.h"
+#endif
 
 struct BonnetDemo: Application {
 
@@ -27,6 +30,8 @@ struct BonnetDemo: Application {
   public:
     bool isPressed=false;
     unsigned toggles=0;
+    //how many calls to changed did not result in a change
+    unsigned steady=0;
     const char id;//A,B,C,D,L,R,U;
     const unsigned pinnum=~0U;
 public:
@@ -44,8 +49,10 @@ public:
     bool changed(){
       if(::changed(isPressed,pin.readpin())){
         ++toggles;
+        steady=0;
         return true;
       } else {
+        ++steady;
         return false;
       }
     }
@@ -75,6 +82,29 @@ public:
     fb.clear(1);
   }
 
+  char watched='B';
+
+#if fehtid
+  pid_t fehpid=0;
+
+  bool pidByName(){
+    char buf[512];
+    FILE * cmd_pipe=popen("pidof -s feh","r");
+    if(!cmd_pipe){
+      return false;
+    }
+
+    char *pidtext=fgets(buf,sizeof(buf),cmd_pipe);
+    if(!pidtext){
+      fehpid=0;//by clearing here we can poll the pid to see if the program is still running.
+      return false;
+    }
+    fehpid=strtoul(pidtext,nullptr,10);
+    pclose(cmd_pipe);
+    return true;
+  }
+#endif
+
   /** like Arduino setup() */
   int main(){
     grabPins();
@@ -96,22 +126,49 @@ public:
       cin.read(cmd,incoming);
       cmd[incoming]=0;//guarantee null terminator so we can use naive string routines.
       switch(cmd[0]){
-      case 'x':
+      case ' ':
+#if fehtid
+        dbg("Feh: %d",fehpid);
+#endif
+        break;
+      case 'x'://gently quit this application
         cout.write(bybye,sizeof(bybye));
         return false;
       case 'z':
         dirty|=zebra();//single bar OR so that zebra is called even if we have already buffered something to show.
-
         break;
       case '.':
         dirty=true;
         break;
       }
     }
+#if fehtid
 
+    if(!fehpid){
+      if(pidByName()){
+        dbg("Feh is %d",fehpid);
+      }
+    } else {
+      if(!pidByName()){
+        dbg("Feh went offline");
+      }
+    }
+#endif
     for(unsigned pi=countof(but);pi-->0;){
       ButtonTracker &it(but[pi]);
       if(it.changed()){
+        if(it.id==watched){
+          if(it.steady==200){
+            if(it.isPressed){
+#if fehtid
+              if(fehpid) {//checking, although kill process 0 is probably ignored, and even if not then it will ignore sigusr1
+                kill(fehpid,SIGUSR1);
+                it.steady=0;//auto repeat at debounce rate.
+              }
+#endif
+            }
+          }
+        }
         dbg("%c[%d] is now %d, toggled: %d",it.id,it.pinnum,it.isPressed,take(it.toggles));
       }
     }
