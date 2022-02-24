@@ -1,4 +1,3 @@
-#define fehtid 1
 
 #include "stdio.h"
 #include <initializer_list>  //for inline test data sets
@@ -19,12 +18,11 @@
 
 static const u8 bybye[]="Bye Bye!";
 
-#if fehtid
-#include "signal.h"
-#include "spawner.h"
-#endif
+static unsigned keydelay=30;
 
 struct BonnetDemo: Application {
+
+  char lastFired=0;
 
   class ButtonTracker {
     Din pin;
@@ -62,58 +60,43 @@ public:
       return pin.readpin();
     }
   };
-
-  ButtonTracker but[7]={{'A',5},{'B',6},{'C',4},{'D',22},{'L',27},{'R',23},{'U',17}};//
+//values set for use with feh
+  ButtonTracker but[7]={{'L',5},{'F',6},{'C',4},{'D',22},{'L',27},{'R',23},{'U',17}};//
   SSD1306 hat;
   SSD1306::FrameBuffer fb;
 
-  //avoiding reliance on stdin and stdout since we intend in using WiFi or ethernet to talk to devices.
+  //avoiding reliance on stdin and stdout since we intend to use WiFi or ethernet to talk to devices.
   Fildes cin;
   Fildes cout;
+  Fildes feh;
 
   BonnetDemo(unsigned argc, char *argv[]):Application(argc,argv)
   ,hat({128,64,true,~0U})
   ,fb(64)
   ,cin("console")
   ,cout("console")
-  ,feh(0){
+  ,feh("stderr"){
     cin.preopened(STDIN_FILENO,false);//let us not close the console, let the OS tend to that.
     cin.setBlocking(false);//since available() is lying to us ...
     cout.preopened(STDOUT_FILENO,false);
     cout.setBlocking(false);
+    feh.preopened(STDERR_FILENO,false); //stderr is by default unbuffered
+    feh.setBlocking(false);
     fb.clear(1);
   }
-
-  char watched='B';
-
-#if fehtid
-  pid_t feh;
-  bool shellit(const char *pidtext){
-    feh=atoi(pidtext);
-    return feh>0;
-  }
-
-#endif
 
   /** like Arduino setup() */
   int main(){
     dbg("grabbing pins");
     grabPins();
-    dbg("spawning slide shower");
-    arglist.next();//disacrd program name
-    if(!arglist.hasNext()){
-      dbg("usage:  %s `pidof -s feh`",arglist.previous());
-      return 4;
-    }
-    if(!shellit(arglist.next())){
-//      dbg("Failed to spawn:%d  %s",feh.errornumber,feh.errorText());
-      dbg("pid of feh from command line args not reasonable: %s",arglist.previous());
-      return 3;
-    }
     dbg("starting loop");
+    arglist.next();//drop command name
+    if(arglist.hasNext()){
+      keydelay = atoi(arglist.next());
+    }
     if(hat.connect()){
       hat.begin();
-      period=0.001;//want millisecond timing to match Arduino best practice.
+      period = 0.001;//want millisecond timing to match Arduino best practice.
       return Application::run();//all activity from this point on is via callbacks arranged in the previous few lines.
     } else {
       dbg("could not connect to OLED display");
@@ -131,12 +114,9 @@ public:
       cmd[incoming]=0;//guarantee null terminator so we can use naive string routines.
       switch(cmd[0]){
       case ' ':
-#if fehtid
-        dbg("Feh: %d",feh);
-#endif
         for(unsigned pi=countof(but);pi-->0;){
           ButtonTracker &it(but[pi]);
-          dbg("%c:%d for %d %s",it.id, it.isPressed, it.steady,(it.id==watched)?"<-":"");
+          dbg("%c:%d for %d %s",it.id, it.isPressed, it.steady,(it.id==lastFired)?"<-":"");
         }
         break;
       case 'x'://gently quit this application
@@ -145,34 +125,29 @@ public:
       case 'z':
         dirty|=zebra();//single bar OR so that zebra is called even if we have already buffered something to show.
         break;
+      default:
+        feh.writeChars(incoming,1);
+        break;
       case '.':
         dirty=true;
         break;
       }
     }
-#if fehtid
-    if(!feh){
-      //do we dare try to respawn it?
-    } else {
-      //todo: check exit status
-    }
-#endif
     for(unsigned pi=countof(but);pi-->0;){
       ButtonTracker &it(but[pi]);
       if(it.changed()){        
         dbg("%c[%d] is now %d, toggled: %d",it.id,it.pinnum,it.isPressed,take(it.toggles));
       }
-      if(it.id==watched){
-        if(it.steady>=333){
-          if(it.isPressed){
-            it.steady=0;//auto repeat at debounce rate.
-            dbg("Firing %c",it.id);
-#if fehtid
-            kill(feh,SIGUSR1);
-#endif
+
+      if(it.isPressed){
+        if(it.steady>=keydelay){
+          if(changed(lastFired,it.id)){
+            dbg("Firing %c",lastFired);
+            feh.writeChars(lastFired,1);
           }
         }
       }
+
     }
 
     if(!hat.busy()){
