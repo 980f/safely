@@ -16,6 +16,8 @@
 #include "din.h"
 #include "application.h"
 
+#include "xdowrapper.h"
+
 static const u8 bybye[]="Bye Bye!";
 
 static unsigned keydelay=30;
@@ -61,7 +63,7 @@ public:
     }
   };
 //values set for use with feh
-  ButtonTracker but[7]={{'L',5},{'F',6},{'C',4},{'D',22},{'L',27},{'R',23},{'U',17}};//
+  ButtonTracker but[7]={{'L',5},{'F',6},{'C',4},{'D',22},{'B',27},{'R',23},{'U',17}};//
   SSD1306 hat;
   SSD1306::FrameBuffer fb;
 
@@ -69,11 +71,16 @@ public:
   Fildes cin;
   Fildes cout;
 
+  XdoWrapper feh;
+  XdoWrapper::Keystroker fehk;
+
   BonnetDemo(unsigned argc, char *argv[]):Application(argc,argv)
   ,hat({128,64,true,~0U})
   ,fb(64)
   ,cin("console")
-  ,cout("console"){
+  ,cout("console")
+  ,feh()
+  ,fehk(feh){
     cin.preopened(STDIN_FILENO,false);//let us not close the console, let the OS tend to that.
     cin.setBlocking(false);//since available() is lying to us ...
     cout.preopened(STDOUT_FILENO,false);
@@ -122,7 +129,7 @@ public:
         dirty|=zebra();//single bar OR so that zebra is called even if we have already buffered something to show.
         break;
       default:
-        cout.writeChars(incoming,1);
+        fehk(incoming);
         break;
       case '.':
         dirty=true;
@@ -139,11 +146,10 @@ public:
         if(it.steady>=keydelay){
           if(changed(lastFired,it.id)){
             dbg("Firing %c",lastFired);
-            cout.writeChars(lastFired,1);
+            fehk(lastFired);
           }
         }
       }
-
     }
 
     if(!hat.busy()){
