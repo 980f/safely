@@ -68,20 +68,16 @@ public:
   //avoiding reliance on stdin and stdout since we intend to use WiFi or ethernet to talk to devices.
   Fildes cin;
   Fildes cout;
-  Fildes feh;
 
   BonnetDemo(unsigned argc, char *argv[]):Application(argc,argv)
   ,hat({128,64,true,~0U})
   ,fb(64)
   ,cin("console")
-  ,cout("console")
-  ,feh("stderr"){
+  ,cout("console"){
     cin.preopened(STDIN_FILENO,false);//let us not close the console, let the OS tend to that.
     cin.setBlocking(false);//since available() is lying to us ...
     cout.preopened(STDOUT_FILENO,false);
     cout.setBlocking(false);
-    feh.preopened(STDERR_FILENO,false); //stderr is by default unbuffered
-    feh.setBlocking(false);
     fb.clear(1);
   }
 
@@ -120,13 +116,13 @@ public:
         }
         break;
       case 'x'://gently quit this application
-        cout.write(bybye,sizeof(bybye));
+        dbg("%s",bybye);
         return false;
       case 'z':
         dirty|=zebra();//single bar OR so that zebra is called even if we have already buffered something to show.
         break;
       default:
-        feh.writeChars(incoming,1);
+        cout.writeChars(incoming,1);
         break;
       case '.':
         dirty=true;
@@ -143,7 +139,7 @@ public:
         if(it.steady>=keydelay){
           if(changed(lastFired,it.id)){
             dbg("Firing %c",lastFired);
-            feh.writeChars(lastFired,1);
+            cout.writeChars(lastFired,1);
           }
         }
       }
