@@ -10,23 +10,29 @@
 #include "cheaptricks.h"
 
 #include "textpointer.h"
-//rpi i2c
+//rpi i2c interface to commonly used OLED driver chip
 #include "SSD1306.h"
+
 #include "din.h"
 #include "application.h"
 
+#include "xdowrapper.h"
 
 static const u8 bybye[]="Bye Bye!";
 
-
+static unsigned keydelay=30;
 
 struct BonnetDemo: Application {
+
+  char lastFired=0;
 
   class ButtonTracker {
     Din pin;
   public:
     bool isPressed=false;
     unsigned toggles=0;
+    //how many calls to changed did not result in a change
+    unsigned steady=0;
     const char id;//A,B,C,D,L,R,U;
     const unsigned pinnum=~0U;
 public:
@@ -36,7 +42,7 @@ public:
     }
 
     void connect(){
-      if(pinnum!=~0U){
+      if(pinnum!=~0U){//if valid pin number
         pin.beGpio(pinnum,0,1);
       }
     }
@@ -44,8 +50,10 @@ public:
     bool changed(){
       if(::changed(isPressed,pin.readpin())){
         ++toggles;
+        steady=0;
         return true;
       } else {
+        ++steady;
         return false;
       }
     }
@@ -54,20 +62,25 @@ public:
       return pin.readpin();
     }
   };
-
-  ButtonTracker but[7]={{'A',5},{'B',6},{'C',4},{'D',22},{'L',27},{'R',23},{'U',17}};//
+//values set for use with feh
+  ButtonTracker but[7]={{'L',5},{'F',6},{'C',4},{'D',22},{'B',27},{'R',23},{'U',17}};//
   SSD1306 hat;
   SSD1306::FrameBuffer fb;
 
-  //avoiding reliance on stdin and stdout since we intend in using WiFi or ethernet to talk to devices.
+  //avoiding reliance on stdin and stdout since we intend to use WiFi or ethernet to talk to devices.
   Fildes cin;
   Fildes cout;
 
-  BonnetDemo(unsigned argc, char *argv[]):Application(argc,argv),
-  hat({128,64,true,~0U}),
-  fb(64),
-  cin("console"),
-  cout("console"){
+  XdoWrapper feh;
+  XdoWrapper::Keystroker fehk;
+
+  BonnetDemo(unsigned argc, char *argv[]):Application(argc,argv)
+  ,hat({128,64,true,~0U})
+  ,fb(64)
+  ,cin("console")
+  ,cout("console")
+  ,feh()
+  ,fehk(feh){
     cin.preopened(STDIN_FILENO,false);//let us not close the console, let the OS tend to that.
     cin.setBlocking(false);//since available() is lying to us ...
     cout.preopened(STDOUT_FILENO,false);
@@ -77,12 +90,19 @@ public:
 
   /** like Arduino setup() */
   int main(){
+    dbg("grabbing pins");
     grabPins();
+    dbg("starting loop");
+    arglist.next();//drop command name
+    if(arglist.hasNext()){
+      keydelay = atoi(arglist.next());
+    }
     if(hat.connect()){
       hat.begin();
-      period=0.001;//want millisecond timing to match Arduino best practice.
+      period = 0.001;//want millisecond timing to match Arduino best practice.
       return Application::run();//all activity from this point on is via callbacks arranged in the previous few lines.
     } else {
+      dbg("could not connect to OLED display");
       return 2;//hat.dev.errornumber;
     }
   }
@@ -96,23 +116,39 @@ public:
       cin.read(cmd,incoming);
       cmd[incoming]=0;//guarantee null terminator so we can use naive string routines.
       switch(cmd[0]){
-      case 'x':
-        cout.write(bybye,sizeof(bybye));
+      case ' ':
+        for(unsigned pi=countof(but);pi-->0;){
+          ButtonTracker &it(but[pi]);
+          dbg("%c:%d for %d %s",it.id, it.isPressed, it.steady,(it.id==lastFired)?"<-":"");
+        }
+        break;
+      case 'x'://gently quit this application
+        dbg("%s",bybye);
         return false;
       case 'z':
         dirty|=zebra();//single bar OR so that zebra is called even if we have already buffered something to show.
-
+        break;
+      default:
+        fehk(incoming);
         break;
       case '.':
         dirty=true;
         break;
       }
     }
-
     for(unsigned pi=countof(but);pi-->0;){
       ButtonTracker &it(but[pi]);
-      if(it.changed()){
+      if(it.changed()){        
         dbg("%c[%d] is now %d, toggled: %d",it.id,it.pinnum,it.isPressed,take(it.toggles));
+      }
+
+      if(it.isPressed){
+        if(it.steady>=keydelay){
+          if(changed(lastFired,it.id)){
+            dbg("Firing %c",lastFired);
+            fehk(lastFired);
+          }
+        }
       }
     }
 
@@ -143,9 +179,7 @@ public:
 
 };
 
-
-
-
+/////////////////////
 int main(int argc, char *argv[]){
 BonnetDemo demo(argc,argv);
   demo.main();

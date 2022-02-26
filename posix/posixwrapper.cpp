@@ -1,7 +1,7 @@
 #include "posixwrapper.h"
 #include "cheaptricks.h" //changed()
-#include "string.h"      //for strerror
 #include <errno.h>
+#include "string.h" //for strerror
 
 PosixWrapper::PosixWrapper(const char *prefix) : dbg(prefix) {
   //#nada
@@ -46,4 +46,6 @@ bool PosixWrapper::failed(int zeroorminus1) {
   }
 }
 
-bool PosixWrapper::isWaiting() { return errornumber == EAGAIN || errornumber == EWOULDBLOCK; }
+bool PosixWrapper::isWaiting(){
+  return errornumber==EAGAIN || errornumber== EWOULDBLOCK;
+}

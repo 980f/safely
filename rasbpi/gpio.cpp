@@ -14,7 +14,8 @@ GPIO::GPIO() :
   //#non yet usable
 }
 
-GPIO::GPIO(unsigned pinIndex, unsigned af, int pull){
+/** default for active level is that the pullup makes a signal inactive. For default of 'don't pull it' a legacy of high active is set */
+GPIO::GPIO(unsigned pinIndex, unsigned af, int pull):active(pull<=0){
   connectTo(pinIndex);
   configure(af);
   pullit(pull);
@@ -28,12 +29,11 @@ GPIO &GPIO::connectTo(unsigned pinIndex){
 }
 
 void GPIO::operator =(bool value) const noexcept {
-  base.reg[offset + (value ? SetBits : ClearBits)] = mask;
+  base.reg[offset + ((value==active) ? SetBits : ClearBits)] = mask;
 }
 
-
 bool GPIO::readpin() const noexcept {
-  return (base.reg[offset + Read] & mask)!=0;
+  return active==((base.reg[offset + Read] & mask)!=0);
 }
 
 GPIO& GPIO::configure(unsigned af){

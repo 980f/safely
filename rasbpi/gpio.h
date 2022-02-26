@@ -5,12 +5,14 @@
 #include "peripheral.h"
 /** raspbery pi version of making a pin look like a bool.
  *  This module subtly inits the memory mapping module via static construction of the gpioBase.
+ *
+ * added 'active' default high ~Feb2022
  */
 class GPIO {
   unsigned pinIndex;
   unsigned mask;  //32 bits per register
   unsigned offset;//
-
+  bool active;
   static Peripheral base;
 
   enum RegisterAsIndex {
@@ -27,7 +29,7 @@ class GPIO {
 public:
   GPIO();
   /** @param pull is +1 for up, -1 for down, 0 for float */
-  GPIO(unsigned pinIndex,unsigned af,int pull);
+  GPIO(unsigned pinIndex,unsigned af=0,int pull=0);//default for active is opposite of pull, 1 for 'float'
 
   GPIO& connectTo(unsigned pinIndex);
   /* write bit */
@@ -38,7 +40,7 @@ public:
   }
   /* flip bit */
   void toggle() const noexcept {
-    *this = 1 - *this;
+    *this = !*this;
   }
 
   /** af=0 for input, 1 for output, remaining values are alternate function select and the meaning depends upon the pin */

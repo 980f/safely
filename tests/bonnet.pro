@@ -7,7 +7,11 @@ CONFIG+=usbSafely
 CONFIG+=rpiSafely
 include("../consoleapp.pro")
 
+#apparently xdo packager did not supply one of these: unix: PKGCONFIG += libxdo-dev
+
+LIBS += -lxdo
 
 SOURCES += bonnet.cpp
+
 
 

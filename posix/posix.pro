@@ -39,7 +39,9 @@ SOURCES += \
     $$posixdir/filewatcher.cpp \
     $$posixdir/worstcase.cpp \
     $$posixdir/threader.cpp \
-    $$posixdir/directorywalker.cpp
+    $$posixdir/directorywalker.cpp \
+    $$posixdir/piper.cpp \
+    $$posixdir/spawner.cpp
 
 HEADERS += \
     $$posixdir/timerfd.h \
@@ -67,7 +69,9 @@ HEADERS += \
     $$posixdir/filewatcher.h \
     $$posixdir/worstcase.h \
     $$posixdir/threader.h \
-    $$posixdir/directorywalker.h
+    $$posixdir/directorywalker.h \
+    $$posixdir/piper.h \
+    $$posixdir/spawner.h
 
 #for async IO (aio_*), as used in filereader: rt:"glibc runtime"
 LIBS += -lrt

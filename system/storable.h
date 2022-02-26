@@ -63,7 +63,7 @@ public:
   bool isOrdered=false;
   /** a non-dedicated field for helping a parser maintain some context.
 First use is as an array indexer for json array parsing, without which reloads add to end of wad duplicating entries. */
-  unsigned parserstate=~0U;
+  unsigned parserstate=BadIndex;
 
   /** hook to force tree node to save all pending changes prior to output.
    * NB: this does not recurse for wads, the caller of this must recurse if the entity is a wad.

@@ -3,14 +3,13 @@
 
 #include "safely.h"
 #include <vector>  //an STL class that is dangerous for naive users (as is all of the STL)
-#include <cstring>
+
 
 /**
  * Safe(r) and convenient wrapper around a vector of pointers.
  * It is very suited for container managed persistence, i.e. all objects of a class can be tracked herein and removal from here results in deletion of object.
  *
- * Since all references to the content class are pointer-like this container handles polymorphic sets of classes with ease. All such usages should have virtual
- *destructors.
+ * Since all references to the content class are pointer-like this container handles polymorphic sets of classes with ease. All such usages should have virtual destructors.
  *
  * a const Chain is one that cannot have additions and deletions, a Chain of const items is a different thing.
  * const Chain<T> &things is a set of T's that cannot be added to or removed from
@@ -318,7 +317,7 @@ public:
     rewind();
   }
 
-  bool hasNext() {
+  bool hasNext() const {
     return steps>0;
   }
 

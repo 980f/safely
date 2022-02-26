@@ -2,6 +2,8 @@
 #include <charscanner.h>
 #include "bitwise.h"
 
+//only thing needed from Index.h, and using new name for it "Not a Value":
+#define NaV ~0U
 #include <ostream>
 
 const char *JsonStore::Lexer::separator(":,{}[]"); //maydo: bare newline is a comma.const char
@@ -23,19 +25,19 @@ u32 parseHex(unsigned pointer, const std::string&image, unsigned numDigits){
       } else if(c >= 'a' && c <= 'f') {
         packed |= c - 'a' + 10;
       } else {
-        return u32(-1); //bad hex constant!  No biscuit!
+        return NaV; //bad hex constant!  No biscuit!
       }
     }
     return packed;
   }
-  return u32(-1); //all ones
+  return NaV; 
 } // parseHex
 
 /** in=place conversion of escape sequences to utf8 sequences */
 void replaceUEscape(std::string&tokenImage, unsigned&pointer, unsigned numDigits){
   u32 packed(parseHex(pointer, tokenImage, numDigits));
 
-  if(packed != u32(-1)) { //now expand packed to utf8:
+  if(packed != NaV) { //now expand packed to utf8:
     pointer -= 2;
     tokenImage.erase(pointer, numDigits + 2); //erase sequence
 
@@ -62,7 +64,7 @@ void processEscapes(std::string&tokenImage){
     if(utf8 == '\\') {
       switch(tokenImage.at(pointer)) { //one past slash
       case '\\':
-      case '\'': //some poeple just like escaping any kind of quote char.
+      case '\'': //some people just like escaping any kind of quote char.
       case '"':
         //keep char at pointer
         tokenImage.erase(pointer - 1); //erase slash, pointer now points to char past escaped one

@@ -14,7 +14,8 @@ SOURCES += \
     $$pidir/clockgenerator.cpp \
     $$pidir/peripheral.cpp \
     $$pidir/i2c.cpp \
-    $$pidir/SSD1306.cpp
+    $$pidir/SSD1306.cpp \
+    $$pidir/xdowrapper.cpp
 
 
 HEADERS += \
@@ -26,4 +27,5 @@ HEADERS += \
     $$pidir/clockgenerator.h \
     $$pidir/peripheral.h \
     $$pidir/i2c.h \
-    $$pidir/SSD1306.h
+    $$pidir/SSD1306.h \
+    $$pidir/xdowrapper.h

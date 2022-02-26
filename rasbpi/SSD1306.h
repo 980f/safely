@@ -54,6 +54,7 @@ public:
 
     /** the number of 'pages' of display ram used. We are using terms from the manual even if they are stilted */
     unsigned pages() const { return (commons + 7) / 8; }
+    Display( unsigned segments , unsigned commons,bool swcapvcc,unsigned resetPin);
   };
 
   /** processor memory with image of what will be put onto display.
@@ -74,9 +75,7 @@ public:
 
     ~FrameBuffer() { delete[] fb; }
 
-    void clear(bool ink=false){
-      memset(fb+1,ink?255:0,databytes);//leave control bytes unchanged.
-    }
+    void clear(bool ink=false);
 
     u8 &operator()(unsigned page,unsigned segment){
       return fb[1+page+stride*segment];
@@ -178,7 +177,7 @@ private: // expose only the ones that make sense, such as contrast, through code
   Reg<0xD9, 8, 2> precharge;    // actually two nibbles, high is phase 2 of timing low nibble phase 1.
   Reg<0xDB, 3, 2, 4> vcomh;     // some kind of reset trigger maybe?
   Reg<0xA8, 6, 2> muxratio;     // minimum of 15 not enforced, resets to all ones==63
-  Reg<0x2c0, 2, 2, 4> compins;
+  Reg<0x2C0, 2, 2, 4> compins;
   Reg<0x8C> something;        //!!WAG, hard coded 8D and no matching document.
                               // viewport controls
   Reg<0x20, 2, 2> memoryMode; // 0=horizontal like Epson printer, 1=Vertical the most natural, 2= not reasonable for serial interface.
