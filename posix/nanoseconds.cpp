@@ -116,7 +116,7 @@ int NanoSeconds::signabs(double *dub) const {
   return 1;
 } // NanoSeconds::signabs
 
-NanoSeconds &NanoSeconds::atLeast(const NanoSeconds &other){//todo:1 named function instead of operator
+NanoSeconds &NanoSeconds::atLeast(const NanoSeconds &other){
   if(*this<other) {
     *this = other;
   } else if(isNever()) {
@@ -125,7 +125,7 @@ NanoSeconds &NanoSeconds::atLeast(const NanoSeconds &other){//todo:1 named funct
   return *this;
 }
 
-NanoSeconds &NanoSeconds::atMost(const NanoSeconds &other){//todo:1 named function instead of operator
+NanoSeconds &NanoSeconds::atMost(const NanoSeconds &other){
   if(isNever()) {
     *this = other;
   } else if(*this>other) {
