@@ -72,7 +72,7 @@ public:
   Fildes cout;
 
   XdoWrapper feh;
-  XdoWrapper::Keystroker fehk;
+  XdoWrapper::Windoe fehk;
 
   BonnetDemo(unsigned argc, char *argv[]):Application(argc,argv)
   ,hat({128,64,true,~0U})
@@ -110,32 +110,47 @@ public:
   /** like Arduino loop() */
   bool keepAlive() override {
     bool dirty=false;
-    int incoming=cin.available();
+    unsigned incoming=cin.available();
     if(incoming>0){
       u8 cmd[incoming+1];
       cin.read(cmd,incoming);
       cmd[incoming]=0;//guarantee null terminator so we can use naive string routines.
-      switch(cmd[0]){
-      case ' ':
-        for(unsigned pi=countof(but);pi-->0;){
-          ButtonTracker &it(but[pi]);
-          dbg("%c:%d for %d %s",it.id, it.isPressed, it.steady,(it.id==lastFired)?"<-":"");
+      for (unsigned argi=0;argi<incoming;++argi){
+        char sea=cmd[argi];
+        switch(sea){
+        case 10://ignore enter that cin is requiring since we somehow have failed to turn off linebuffering
+          break;
+        case ' ':
+          for(unsigned pi=countof(but);pi-->0;){
+            ButtonTracker &it(but[pi]);
+            dbg("%c:%d for %d %s",it.id, it.isPressed, it.steady,(it.id==lastFired)?"<-":"");
+          }
+          break;
+        case 'x'://gently quit this application
+//maybe:          fehk('q');
+          dbg("%s",bybye);
+          return false;
+        case 'z':
+          dirty|=zebra();//single bar OR so that zebra is called even if we have already buffered something to show.
+          break;
+        default:
+          fehk(sea);
+          break;
+        case '.':
+          dirty=true;
+          break;
         }
-        break;
-      case 'x'://gently quit this application
-        dbg("%s",bybye);
-        return false;
-      case 'z':
-        dirty|=zebra();//single bar OR so that zebra is called even if we have already buffered something to show.
-        break;
-      default:
-        fehk(incoming);
-        break;
-      case '.':
-        dirty=true;
-        break;
       }
     }
+
+    if(!feh){
+      feh.attach(":0");
+    }
+
+    if(!fehk){
+      fehk.attachClass("feh");
+    }
+
     for(unsigned pi=countof(but);pi-->0;){
       ButtonTracker &it(but[pi]);
       if(it.changed()){        
