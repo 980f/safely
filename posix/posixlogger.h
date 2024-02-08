@@ -13,8 +13,9 @@ void PosixLoggerInit(bool trapSignals = false);
 void logmessage(const char *prefix, const char *msg, va_list &args, bool moretocome = false);
 void dumpStack(const char *prefix);
 
+#ifndef IgnoreGlib
 /** how to record an error from glib that you are ignoring. Useful in catch phrases. */
 #define IgnoreGlib(err) dbg("%s ignoring %s",__PRETTY_FUNCTION__, err.what().c_str())
-
+#endif
 
 #endif // POSIXLOGGER_H

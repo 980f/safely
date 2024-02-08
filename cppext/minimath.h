@@ -86,7 +86,7 @@ template< typename mathy > int compareof(mathy lhs,mathy rhs){
   return signof(lhs - rhs);
 }
 
-/** 'round to nearest' ratio of integers*/
+/** 'round to nearest' ratio of integers, 0/0 -> 1 */
 template<typename Integer> Integer rate(Integer num, Integer denom){
   if(denom == 0) {
     return num == 0 ? 1 : 0; //pathological case
@@ -98,15 +98,15 @@ inline unsigned half(unsigned sum){
   return (sum + 1) / 2;
 }
 
-//#rate() function takes unsigned which blows hard when have negative numbers
+//#rate() function takes unsigned which blows hard when given negative numbers
 inline int half(int sum){
   if(sum<0) {//truncate towards larger magnitude
     return -half(-sum);//probably gratuitous but we also shouldn't be calling this with negatives so we can breakpoint here to detect that.
-  }
+  }//# do not inline with a ternary, we want to be able to breakpoint on above line.
   return (sum + 1) / 2;
 }
 
-/** quantity of bins needed to hold num items at denom items per bin*/
+/** @return the quantity of bins needed to hold num items at denom items per bin. Is susceptible to integer overflow if num and denom are greater than half the integer range */
 template<typename Integer,typename Inttoo> Integer quanta(Integer num, Inttoo denom){
   if(denom == 0) {
     return num == 0 ? 1 : 0; //pathological case
@@ -114,13 +114,14 @@ template<typename Integer,typename Inttoo> Integer quanta(Integer num, Inttoo de
   return (num + denom - 1) / denom;
 }
 
-/** protect against garbage in (divide by zero) note: 0/0 is 1*/
+/** quantity of bins needed to hold num items at denom items per bin */
+u32 chunks(double num, double denom);
+
+
+/** protect against garbage in (divide by zero) note: 0/0 is 0, NOT what rate() returns for the similar case
+*/
 inline double ratio(double num, double denom){
-<<<<<<< HEAD
-  if(denom == 0) { //pathological case
-=======
   if(denom == 0) { //#exact compare for pathological case
->>>>>>> amptek
     return num; //attempt to make 0/0 be 1 gave us 1.0 cps for unmeasured spectra  may someday return signed inf.
   }
   return num / denom;
@@ -128,21 +129,15 @@ inline double ratio(double num, double denom){
 
 /** protect against garbage in (divide by zero) note: 0/0 is 0, at one time this returned 1 for that.*/
 inline float ratio(float num, float denom){
-<<<<<<< HEAD
-  if(denom == 0) { //pathological case
-=======
   if(denom == 0) { //#exact compare for pathological case
->>>>>>> amptek
     return num;//may someday return signed inf.
   }
   return num / denom;
 }
 
-/** @returns whether d is a numerical value, excludes signalling values but includes zero.*/
+/** @returns whether d is a special value, zero is not special */
 bool isSignal(double d);
 
-/** quantity of bins needed to hold num items at denom items per bin*/
-u32 chunks(double num, double denom);
 
 /** round to a quantum, to kill trivial trailing DECIMAL digits*/
 inline double rounder(double value, double quantum){
@@ -150,10 +145,11 @@ inline double rounder(double value, double quantum){
 }
 
 /** @returns canonical value % cycle, minimum positive value
- *  0<= return <cycle;
+ *  0 <= return < cycle; (the returned value is always in the half-open range defined by 'cycle'
+ *
  *  Note: the C '%' operator gives negative out for negative in.
  */
-int modulus(int value, unsigned cycle);
+int modulus(int value, unsigned cycle);//todo:1 return type should be unsigned, check use cases.
 
 /** @param accum is reduced to a number less than @param length, @returns the number of subtractions that were necessary to do so.
  * Named for use in reporting rotary position from encoder without an index pulse to pick out the revolutions.
@@ -162,7 +158,7 @@ template<typename Integrish, typename Integrash> Integrish revolutions(Integrish
   if(length==0) {
     return accum;
   }
-  //todo: see if std::div or std::remquo can be applied here, for greater portability or whatever.
+  //todo:1 see if std::div or std::remquo can be applied here, for greater portability or whatever.
   Integrish cycles = accum / length;
   accum %= length;
   return cycles;
@@ -184,19 +180,15 @@ template<typename floating> bool nearly(floating value, floating other, int bits
   int f2 = fexp(other);
   //if either is zero absolute compare the other to 2^-bits;
   if(value == 0.0) { //fexp on 0 isn't sanitizable.
-    return f2 + bits < 0;
+      return (f2 + bits) < 0;
   }
   if(other == 0.0) {
-    return f1 + bits < 0;
+      return (f1 + bits) < 0;
   }
   int cf = fexp(diff);
   cf += bits;
-  return cf <= f1 && cf <= f2;
+  return (cf <= f1) && (cf <= f2);
 } // nearly
-
-//tables were tricky to access, let's see who needs them.
-//extern const u32 Decimal1[];
-//extern const u64 Decimal2[];
 
 /** @returns The base 10 exponent of @param value. Note that the number of digits for values >0 is 1+ilog10().
  * For zero this returns -1, most logic will have problems if you don't check that. */
@@ -230,7 +222,7 @@ template<typename mathy> double squared(mathy x){
 double degree2radian(double theta);
 
 /** n!/r!(n-r)! combinatorial function.
- * Was formerlry named and documented as Pnr, but implementation was correct for Cnr and so was its usages.
+ * Was formerly named and documented as Pnr, but implementation was correct for Cnr and so was its usages.
  */
 u32 Cnr(unsigned n, unsigned r);
 
@@ -242,9 +234,9 @@ inline u32 min(u32 a, u32 b){
   }
 }
 
-/** if a is greater than b set it to b and @return whether a change was made.
- *  if orequal is true then also return true if args are equal.
- *  if a is Nan then do the assign and return true */
+/** if @param a is greater than @param b set it to b and @return whether a change was made.
+ *  if @param orequal is true then also return true if args are equal.
+ *  if @param a is Nan then do the assign and return true */
 template< typename S1, typename S2 > bool depress(S1 &a, S2 b,bool orequal = false){
   if(isNan(b)) {
     return false;
@@ -254,12 +246,12 @@ template< typename S1, typename S2 > bool depress(S1 &a, S2 b,bool orequal = fal
     a = b1;
     return true;
   }
-  return orequal && a==b1;
+  return orequal && (a==b1);
 } // depress
 
-/** if a is less than b set it to b and @return whether a change was made.
- *  if orequal is true then also return true if args are equal.
- *  if a is Nan then do the assign and return true */
+/** if @param a is less than @param b set it to b and @return whether a change was made.
+ *  if @param orequal is true then also return true if args are equal.
+ *  if @param a is Nan then do the assign and return true */
 template< typename S1, typename S2 > bool elevate(S1 &a, S2 b,bool orequal = false){
   if(isNan(b)) {
     return false;
@@ -293,7 +285,7 @@ template< typename S1, typename S2 > S1 greater(S1 a, S2 b){
   }
 }
 
-template< typename Scalar > void swap(Scalar &a, Scalar &b){
+template< typename Scalar > void swap(Scalar &a, Scalar &b){//todo:0 see if all users have upgraded to a c++ with swap in the std library, and if so kill this one.
   Scalar noxor;//don't trust that xor is non corrupting for all scalars.
   noxor = a;
   a = b;
@@ -307,7 +299,7 @@ int splitter(double &d);
 /** like splitter but has an extra bit of output range by presuming input is non-negative. */
 unsigned splitteru(double &d);
 
-/** the time delay given by ticks is ambiguous, it depends upon processor clock. @72MHz 1000 ticks is roughly one microsecond.*/
+/** the time delay given by ticks is ambiguous, it depends upon processor clock. @72MHz CortexM3 1000 ticks is roughly one microsecond.*/
 void nanoSpin(unsigned ticks);
 
 /** rounded and overflow managed 'multiply by ratio' */
@@ -329,18 +321,19 @@ u32 log2Exponent(u32 number);
 float shiftScale(float eff, int pow2);
 
 double flog(u32 number);
-/** @return the natural logarithm of the ratio of @param over over @param under.
+/** @return the natural logarithm of the ratio of @param over @param under.
  * This is computable as the difference of their logs, but we wrap that here so that some fancy fidding can reduce the number of logarithms executed.  */
 double logRatio(u32 over, u32 under);
 
+//sane truncations:
 u16 uround(float scaled);
 s16 sround(float scaled);
 
-/**NB: copyObject() and fillObject() can NOT be used with objects that contain polymorphic objects*/
+/** NB: copyObject() and fillObject() can NOT be used with objects that contain polymorphic objects */
 void copyObject(const void *source, void *target, u32 length);
 void fillObject(void *target, u32 length, u8 fill);
 
-//EraseThing only works on non-polymorphic types. On polymorphs it also  kills the vtable!
+//EraseThing only works on non-polymorphic types. On polymorphs it also kills the vtable!
 #define EraseThing(thing) fillObject(&(thing), sizeof(thing), 0);
 //see warning for EraseThing.
 #define CopyThing(thing1,thing2) copyObject(thing1,thing2,min(sizeof(thing1),sizeof(thing2)))

@@ -1,35 +1,31 @@
 #include "tcpsocket.h"
-#include "glibmm/refptr.h"
-#include "glibmm/main.h" //timeout
 #include <netinet/in.h>
 #include <unistd.h>
 #include <sys/socket.h>
+#include "fdset.h"
 #include "logger.h"
 #include <errno.h>
 #include "netinet/tcp.h"
-#include "cheapTricks.h"
+#include "cheaptricks.h"
 #include <cstdio>
 
-#ifdef ImportBetterLoggerFromSafely
-Logger spamme;
-#else
-#define spamme(ignoreit)
-#endif
+Logger spamme("TcpSocket",false);
 
 void TcpSocketBase::connectionEvent(bool connected){
   if(connected){
     ++stats.connects;
   } else {
     ++stats.disconnects;
-    spamme("Disconnected from head.");
+    spamme("Disconnected.");
   }
 }
 
 TcpSocketBase::TcpSocketBase(int fd, u32 remoteAddress, int port):
   stats(),
   connectArgs(remoteAddress,port),
-  sock(fd),
-  source(sock){
+  sock(fd)
+    // , source(sock)
+{
   //#nada
 }
 
@@ -51,7 +47,7 @@ TcpSocket::TcpSocket(int fd, u32 remoteAddress, int port):
   newConnections(0),
   connectionInProgress(false){
   whenConnectionChanges(MyHandler(TcpSocket::connectionEvent),false);//use notifier to manage connection counters
-  if(sock.isValid()){
+  if(sock.isOpen()){
     startReception();
   }
 }
@@ -60,7 +56,7 @@ u32 TcpSocketBase::remoteIpv4(){
   return connectArgs.ipv4;
 }
 
-bool TcpSocketBase::disconnect(){
+bool TcpSocketBase::disconnect(bool ignored){
   source.disconnect();
   if(isConnected()){//#checking for debug purposes
     sock.close();
@@ -81,8 +77,8 @@ bool TcpSocket::connect(unsigned ipv4, unsigned port,bool noDelay,bool block){
 }
 
 void TcpSocket::startReception(){
-  source.incoming= sock.input(MyHandler(TcpSocket::readable));
-  source.hangup= sock.hangup(MyHandler(TcpSocket::hangup));
+  // source.incoming= sock.input(MyHandler(TcpSocket::readable));
+  // source.hangup= sock.hangup(MyHandler(TcpSocket::hangup));
 }
 
 void TcpSocket::connectionFailed(int error){
@@ -99,7 +95,7 @@ bool TcpSocket::reconnect(){
   if(wasConnected) {
     disconnect(false);//don't notify since notify is likely to call connect and hence infinite loop.
   }
-  sock.fd = ::socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);
+  sock.preopened(::socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0));
   if(sock.isValid()) {
     //Setting the socket to reuse the address if we fail and restart
     sock.setOption(SOL_SOCKET, SO_REUSEADDR, int(1));
@@ -148,11 +144,12 @@ bool TcpSocket::reconnect(){
   return true; //we didn't fail, doesn't mean 'actually connected'
 }
 
-void TcpSocket::disconnect(bool andNotify){
-  TcpSocketBase::disconnect();
+bool TcpSocket::disconnect(bool andNotify){
+  bool toReturn=TcpSocketBase::disconnect(andNotify);
   if(andNotify){
     notifyConnected(false);
   }
+  return toReturn;
 }
 
 void TcpSocket::flush(){
@@ -160,7 +157,7 @@ void TcpSocket::flush(){
   u8 bytes[4096] = {0};
   //can we stat a socket fd?
   int notforever=10000;
-  while(sock.read(bytes, sizeof(bytes))==sizeof(bytes)){
+  while(sock.read(bytes, sizeof(bytes)) && sock.lastRead == sizeof(bytes)){ //todo:00 inform library we imported this from of its gross error!
     //a debug message here might slow us down enough to never catch up with the source and hence make this an infinite loop.
     if(--notforever<=0){
       return;
@@ -170,18 +167,9 @@ void TcpSocket::flush(){
 
 bool TcpSocket::readable() {
   u8 bytes[4096] = {0};
-  int moxaunit=connectArgs.ipv4>>8==0x0A650B ? connectArgs.ipv4&0xff :0;
-  if(moxaunit){//moxa group
-      stats.lastRead =-moxaunit;//breakpoint
-  }
 
-  stats.lastRead = sock.read(bytes, sizeof(bytes));
-  if(stats.lastRead < 0) {
-    if(moxaunit){
-      auto fault= strerror(-stats.lastRead);
-      bytes[0]=fault[0];//something to breakpoint on
-    }
-    //    dbg("read err: %d on %08X:%d",-stats.lastRead,connectArgs.ipv4, connectArgs.port); //useful for debug, but it will spam you
+  if(!sock.read(bytes, sizeof(bytes))) {//todo:00 glib instance had bad bug here
+    dbg("read err: %d on %08X:%d",-stats.lastRead,connectArgs.ipv4, connectArgs.port); //useful for debug, but it will spam you
     disconnect(true);
     return false;
   } else if (stats.lastRead == 0) {//read returns zero when a client cleanly disconnects
@@ -197,16 +185,15 @@ bool TcpSocket::readable() {
 }
 
 bool TcpSocket::writeable() {
-
   if(flagged(connectionInProgress)){//then we are finishing up connecting
     connectionTimer.stop();
-  dbg("Completing connection.");
+    dbg("Completing connection.");
     int socketError(0);
     if(int error=sock.getOption(SOL_SOCKET,SO_ERROR,socketError)){
       connectionFailed(error);
       return false;
     }
-    //leave this and the above separate for debug.
+    //#leave this and the above separate for debug.
     if(socketError){
       connectionFailed(socketError);
       return false;
@@ -217,20 +204,15 @@ bool TcpSocket::writeable() {
   }
   //else socket is ready for write data
   eagerToWrite=0;
-  if(sendbuf.hasNext() || writer(sendbuf)){
-    int moxaunit=connectArgs.ipv4>>8==0x0A650B ? connectArgs.ipv4 & 0xff : 0;
-    if(moxaunit){
-      stats.lastWrote=-moxaunit;//something to breakpoint on.
-    }
-    stats.lastWrote = write(sock.fd, &sendbuf.peek(), sendbuf.freespace());
-    if(stats.lastWrote<0) {
-      connectionFailed(errno);
+  if(sendbuf.hasNext() || writer(sendbuf)){//if have data in hand else call writer() to see if it wants to add more and if so then ...
+    if(!sock.write(sendbuf)) {//todo:00 glib instance had bad bug here
+      connectionFailed(-stats.lastWrote);
       dbg("write errno: %d on %08X:%d", -stats.lastWrote,connectArgs.ipv4, connectArgs.port);
       return false; //failure, lose data, drop connection and sleep until reconnected and writeInterest is called.
-    } else if(stats.lastWrote>0) {
+    }
+    if(stats.lastWrote>0) {
       ++stats.writes;//logs attempts
-      sendbuf.skip(stats.lastWrote);
-      bool more=sendbuf.hasNext();//usually false
+      bool more=sendbuf.hasNext();//often false
       if(more){
         ++eagerToWrite;
       }
@@ -247,8 +229,7 @@ bool TcpSocket::writeable() {
 
 /** expect this when far end of socket spontaneously closes*/
 bool TcpSocket::hangup(){
-  disconnect(true);
-  return true;//todo:0 this probably should be false, may be moot.
+  return disconnect(true);
 }
 
 void TcpSocket::writeInterest() {
@@ -357,17 +338,17 @@ void BlockingConnectSocket::startReception() {
     source.hangup= sock.hangup(MyHandler(BlockingConnectSocket::hangup));
 }
 
-void BlockingConnectSocket::disconnect(bool notify) {
-    TcpSocketBase::disconnect();
+bool BlockingConnectSocket::disconnect(bool notify) {
+    bool useless = TcpSocketBase::disconnect(notify);
     if (notify) {
       ++stats.disconnects;
       notifyConnected(false);
     }
+    return useless;
 }
 
 bool BlockingConnectSocket::hangup() {
-  disconnect(true);
-  return true;
+  return disconnect(true);
 }
 
 bool BlockingConnectSocket::readable() {
@@ -406,15 +387,15 @@ bool BlockingConnectSocket::reconnect(){
     if(wasConnected) {
       disconnect(false);//don't notify since notify is likely to call connect and hence infinite loop.
     }
-    sock.fd = ::socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);
+    sock.preopened( ::socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0));
 
-    if(!sock.isValid()) {
+    if(!sock.isOpen()) {
         return false;
     }
     int optval(1);
 
     //Setting the socket to reuse the address if we fail and restart
-    ::setsockopt(sock.fd,SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
+    sock.setOption(SOL_SOCKET, SO_REUSEADDR, optval);
 
     if(wasConnected){
         ++stats.disconnects;//failure to make socket, so number in diags grows if problem persists.
@@ -428,27 +409,26 @@ bool BlockingConnectSocket::reconnect(){
     //todo:1 research whether the default so_linger is false, we'd like a reset()
     // rather than a gentle close() when we disconnect.
     SocketAddress sad(connectArgs);
-    if(sad.connect(sock.fd)) {
+    if(sad.connect(sock.asInt())) {
         // we did not immediately connect!  now emulate blocking socket with timeout!
         if (EINPROGRESS == errno) {
+            SelectorSet selector;
             socklen_t lon;
-            struct timeval tv;
+            // struct timeval tv;
             int valopt;
-            fd_set myset;
+            // fd_set myset;
             int result;
+            selector.setTimeout(3.0);////todo:1 symbol or class option for this timeout
             while (1) {
-                tv.tv_sec = 3;
-                tv.tv_usec = 0;
-                FD_ZERO(&myset);
-                FD_SET(sock.fd, &myset);
-                result = select(sock.fd+1, NULL, &myset, NULL, &tv);
-                if (result < 0 && errno != EINTR) {
+                selector.include(sock);
+                // FD_SET(sock.asInt(), &myset);
+                result =  selector.select("w");
+                if (result < 0 && sock.errornumber != EINTR) {
                    disconnect(true);
                    return false;
                 }
                 else if (result > 0) {
-                    lon = sizeof(int);
-                    if (getsockopt(sock.fd, SOL_SOCKET, SO_ERROR, (void*)(&valopt), &lon) < 0) {
+                    if (sock.getOption(SOL_SOCKET, SO_ERROR, valopt) && valopt<0) {//todo:1 can we fale to get SO_ERROR?
                        disconnect(true);
                        return false;
                     }

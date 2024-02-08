@@ -53,9 +53,10 @@ bool FDset::exclude(int fd){
   }
 } /* exclude */
 
-SelectorSet::SelectorSet(){
+SelectorSet::SelectorSet():PosixWrapper("SelectorSet"){
+  //default timeout is 0, instant return if nothing of interest is active.
   timeout.tv_usec = 0;
-  timeout.tv_sec = 1;
+  timeout.tv_sec = 0;
 }
 
 fd_set *SelectorSet::prepared(fd_set&fds, bool check){
@@ -63,18 +64,22 @@ fd_set *SelectorSet::prepared(fd_set&fds, bool check){
     fds = group;
     return &fds;
   } else {
-    FD_ZERO(&fds); //# in case callers checks whatever this is post select() despite having said here that they would not.
+    FD_ZERO(&fds); //# in case caller checks whatever this is post select() despite having said here that they would not.
     return 0;
   }
 }
 
 
 int SelectorSet::select(const char *rwe){
-  return ::select(maxfd + 1,
-                  prepared(readers, isPresent(rwe, 'r')),
-                  prepared(writers, isPresent(rwe, 'w')),
-                  prepared(troublers, isPresent(rwe, 'e')),
-                  &timeout);
+  int quantity=0;
+  if(okValue(quantity,::select(maxfd + 1,
+                                 prepared(readers, isPresent(rwe, 'r')),
+                                 prepared(writers,isPresent(rwe, 'w')),
+                                 prepared(troublers, isPresent(rwe, 'e')),
+                                 &timeout))){
+    return quantity;
+  }
+  return quantity;//# keep separate for debug
 }
 
 bool SelectorSet::isReadable(int fd) const {

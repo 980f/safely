@@ -6,12 +6,11 @@
 #include "iosource.h"
 #include "stopwatch.h" //for blocking connection timeout use
 
-/** common part of client and server sockets. server socket itself is declared elsewhere.
-  made sgc::trackable as its extensions all want to be. */
-class TcpSocketBase: SIGCTRACKABLE {
+/** common part of client and server sockets. server socket itself is declared elsewhere. */
+class TcpSocketBase {
 public:
-    /** diagnostic counters */
-    struct Stats {
+  /** diagnostic counters */
+  struct Stats {
       /** successful connection */
       u32 connects;
       /** failed attempt or lost connection after succeeded */
@@ -26,9 +25,9 @@ public:
       int lastWrote;
       Stats();
       void clear();
-    } stats;
-    /** a slot to track connects and disconnects */
-    void connectionEvent(bool connected);
+  } stats;
+  /** a slot to track connects and disconnects */
+  void connectionEvent(bool connected);
   /** host ordered connection parameters */
   struct ConnectArgs {
     u32 ipv4;
@@ -46,8 +45,8 @@ public:
   } connectArgs;
 
 protected:
-  IoSource sock;
-  IoConnections source;
+  IoSource sock; //socket fd with socket queries added over basic fd operation
+  IoConnections source; //stream connections to sock.
   /** create from an fd of an open (connected) socket or use the default arg and call connect() */
   TcpSocketBase(int fd=~0,u32 remoteAddress=0,int port=0);
 
@@ -59,7 +58,7 @@ public:
   bool isConnected() const;
   /** call this to disconnect the socket.
  @returns false so that it easily drops into a TcpSocket::Slot*/
-  virtual bool disconnect();
+  virtual bool disconnect(bool ignoredathislevel);
 };
 
 //////////////////////////////////////////////
@@ -80,14 +79,14 @@ protected:
   bool hangup();
   /** call this when you would like to write something, get called back for the data inside writeable*/
   void writeInterest();
-  /** called by glib when data can be written (after writeInterest has recently been called) */
+  /** called by aio when data can be written (after writeInterest has recently been called) */
   bool writeable();
 public:
   virtual ~TcpSocket();
   /** @returns isConnected() */
   bool connect(unsigned ipv4, unsigned port, bool noDelay, bool block);
   /** disconnect and release socket, if @param andNotify then call 'onConnectionChange' actions*/
-  void disconnect(bool andNotify);
+  bool disconnect(bool andNotify)override;
   /** throw away all pending input, best effort-some bytes might sneak in right after it returns.
    * this is BLOCKING, but due to the way Glib works it will leave in a finite amount of time.
    * added to dump the qchardware incoming queue when the logic is way behind */
@@ -168,7 +167,7 @@ public:
   bool connect(unsigned ipv4, unsigned port);
 
   // disconnect and release socket, if @param andNotify then call 'onConnectionChange' actions
-  void disconnect(bool andNotify);
+  bool disconnect(bool andNotify);
 
   // throw away all pending input, best effort-some bytes might sneak in right after it returns.
   // this is BLOCKING, but due to the way Glib works it will leave in a finite amount of time.

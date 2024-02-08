@@ -48,8 +48,7 @@ public:
   static Manager *manager;
 }; // class Logger
 
-/** you must instantiate these two objects somewhere in your project */
-
+// you must instantiate these two objects somewhere in your project:
 /** a globally shared logger, for when you are too lazy to create one for your context */
 extern Logger dbg;
 /** a globally shared logger, for really egregious problems */
@@ -57,7 +56,7 @@ extern Logger wtf;
 
 #define IgnoreGlib(err) dbg("%s ignoring %s",__PRETTY_FUNCTION__, err.what().c_str())
 
-//typical allocation of a managed logger
+//typical allocation of a managed logger, deals with concern of warning non-POD static
 #define SafeLogger(loggerName,deflevel) \
   __attribute__((init_priority(202)))  \
   static Logger loggerName( #loggerName, deflevel )

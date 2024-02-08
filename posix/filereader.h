@@ -1,10 +1,11 @@
 #ifndef FILEREADER_H
-#define FILEREADER_H "(C) Andrew L. Heilveil, 2017"
+#define FILEREADER_H "(C) Andrew L. Heilveil, 2017,2024"
 
 #include "fileasynchio.h"
+#include "charscanner.h"
 
 class FileReader{
-  u8 buffer[2049];//how shall we make this user programmable?-> malloc the buffer based on input block size from FileInfo (via caller)
+  u8 buffer[2049];//todo:1 how shall we make this user programmable?-> malloc the buffer based on input block size from FileInfo (via caller)
   Fildes fd;
 protected:
   ByteScanner buf;
@@ -15,7 +16,7 @@ protected://starting with overloads, will replace with delegates once it is test
   virtual void onCompletion();
 public:
   FileReader();
-  virtual ~FileReader();//ensure fildes is released.
+  virtual ~FileReader();//ensures fildes is released.
   bool process(TextKey fname);
   /** hang around until transfer seems complete.
    * implemented for module testing.  */

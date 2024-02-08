@@ -1,7 +1,7 @@
 #ifndef FILDES_H
 #define FILDES_H
 
-#include "charscanner.h"   //safe buffer
+#include "buffer.h"   //safe buffer
 #include "posixwrapper.h"  //manage errno
 struct FDset;//forward reference, we may be relocating this logic elsewhere as we purge select() in favor of poll() #include "fdset.h"
 #include "stdio.h"  //FILE
@@ -9,10 +9,13 @@ struct FDset;//forward reference, we may be relocating this logic elsewhere as w
 #include <sys/ioctl.h> //ioctl in a template, would have to gyrate quite a bit to isolate this to the cpp, can be done with some nasty typecasting.
 
 #include <textpointer.h>
-/** wrapper around file descriptors, especially noteworthy is that it closes the file on destruction, so best use is to create and use locally.*/
+/** wrapper around file descriptors, especially noteworthy is that it closes the file on destruction, so best use is to create and use locally.
+ * It includes the concept of 'owning' the fd, so that only the owning class will do things like close the file.
+ * It retains a lot of debug info, such as independent record of last read and write results.
+*/
 class Fildes : public PosixWrapper {
 public:
-  //make a true variable for something that is usuall #defined.
+  //make a true variable for something that is usually #defined:
   static const int BADFD = ~0;
   static const ssize_t BadSize = ~0;
   //retain for post-mortem debug. using practical type vs posix type to minimize compiler warnings

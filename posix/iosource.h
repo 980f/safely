@@ -1,8 +1,7 @@
 #ifndef IOSOURCE_H
-#define IOSOURCE_H
+#define IOSOURCE_H (C) 2024 Andrew L. Heilveil, aka github/980F
 
 #include <unistd.h>
-#include <errno.h>  //errno isn't necessarily a simple extern'd global any more, it is a macro.
 #include <netinet/in.h>
 
 #include "sigcuser.h"
@@ -17,10 +16,7 @@ struct IoSource: public Fildes, SIGCTRACKABLE {
   ~IoSource();
 //  /** in all the slot<bool>s below the return value if false drops the connection (normally return true) */
 //  sigc::connection watcher(int opts, sigc::slot<bool, int /*Glib::Iocondition enum */ > action);
-//  typedef sigc::slot<bool> Slot;//IoSource::Slot
-//  sigc::connection input(Slot reader);
-//  sigc::connection output(Slot writeable);
-//  sigc::connection hangup(Slot handler);
+  typedef sigc::slot<bool> Slot;//IoSource::Slot
 //  ssize_t read (void *__buf, size_t __nbytes);
 //  ssize_t write (const void *__buf, size_t __n);
   /** merge return from read or write with errno, @return negative errno for most errors, 0 for errors worthy of simple retry (same as 0 bytes read or written) else the number of bytes successfully operated upon */
@@ -37,20 +33,24 @@ struct IoSource: public Fildes, SIGCTRACKABLE {
 
 };
 
-//struct IoConnections: SIGCTRACKABLE {
-//  IoConnections(IoSource &source);
-//  IoSource &source;
-//  sigc::connection incoming;
-//  sigc::connection outgoing;
-//  sigc::connection hangup;
-//  /** drop all callback registrations.
-//Note: that is automatic on destruction of each member, we don't need an explicit destructor.*/
-//  void disconnect();
-//  /** call this when you have something to send.
-// @returns whether it took some action to enable the write notification */
-//  bool writeInterest(IoSource::Slot action);
-//  void hookup(IoSource::Slot readAction,IoSource::Slot hangupAction);
-//  //write slurpInput() -- calls input function until we run out of input
-//};
+class IoConnections: SIGCTRACKABLE {
+public:
+  IoConnections(IoSource &source);
+  IoSource &source;
+  sigc::connection incoming;
+  sigc::connection outgoing;
+  sigc::connection hangup;
+  /** drop all callback registrations.
+   *  Note: that is automatic on destruction of each member, we don't need an explicit destructor.
+   */
+  void disconnect();
+  /** call this when you have something to send.
+   *  @returns whether it took some action to enable the write notification
+   */
+  bool writeInterest(IoSource::Slot action);
+  /** set listeners, was named hookup in a prior incarnation */
+  void listen(IoSource::Slot readAction, IoSource::Slot hangupAction);
+  //write slurpInput() -- calls input function until we run out of input
+};
 
 #endif // IOSOURCE_H

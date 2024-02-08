@@ -45,7 +45,9 @@ template<typename Scalar> Scalar take(Scalar&varb){//replaces all but boolean us
   return postAssign(varb,Scalar(0));
 }
 
-/** given pointer to a pointer to something that was dynamically allocated delete that thing and null the pointer. This gets more consistent segfaults on use-after-free */
+/** given pointer to a pointer to something that was dynamically allocated delete that thing and null the pointer. This gets more consistent segfaults on use-after-free
+ * @param p2p is a pointer to the pointer to the memory being freed/deleted
+ */
 template<typename Scalar> void Free(Scalar **p2p){
   if(p2p) {
     delete *p2p;

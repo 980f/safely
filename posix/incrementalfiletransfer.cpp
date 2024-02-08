@@ -1,8 +1,8 @@
-//"(C) Andrew L. Heilveil, 2017"
+//"(C) Andrew L. Heilveil, 2017,2024"
 #include "incrementalfiletransfer.h"
 #include "logger.h"
 
-static Logger trace("IncrementalFile",true);
+SafeLogger(incrementalFile,true);
 
 IncrementalFileTransfer::IncrementalFileTransfer(bool reader, Fildes &fd, ByteScanner &buf):PosixWrapper ("IFT"),
   amReader(reader),
@@ -43,19 +43,19 @@ bool IncrementalFileTransfer::onChunk(__ssize_t amount){
       return false;//normal exit
     }
   } else {
-    trace("onchunk: %s",errorText());
+    incrementalFile("onchunk: %s",errorText());
   }
   return false;//abnormal exit
 }
 
 //stub virtual functions.
 bool IncrementalFileTransfer::onEachBlock(__ssize_t amount){
-  trace("block: %d \tbytes: %ld \tchunk:%ld",blockstransferred,transferred,amount);
+  incrementalFile("block: %d \tbytes: %ld \tchunk:%ld",blockstransferred,transferred,amount);
   return true;
 }
 
 void IncrementalFileTransfer::onDone(){
-  trace("block: %d/%d \tbytes: %ld/%ld",blockstransferred,blocksexpected,transferred,expected);
+  incrementalFile("block: %d/%d \tbytes: %ld/%ld",blockstransferred,blocksexpected,transferred,expected);
 }
 
 IncrementalFileTransfer::~IncrementalFileTransfer(){

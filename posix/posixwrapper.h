@@ -1,7 +1,7 @@
 #ifndef POSIXWRAPPER_H
-#define POSIXWRAPPER_H "(C) Andrew L. Heilveil 2017-2018"
+#define POSIXWRAPPER_H "(C) Andrew L. Heilveil 2017-2018,2024"
 
-#include "errno.h" //because we templated a function that needs it
+#include "errno.h" //ignore unused warning as we templated a function that needs it and every using class will refer to it (errornumber member)
 #include "logger.h"
 /**
  * handy things for wrapping a POSIX C API with a C++ class, if only for errno management.
@@ -62,16 +62,7 @@ public:
 }; // class PosixWrapper
 
 
-
-/** free data and clear the pointer so that an attempted double-free doesn't occur. 
- This is a dance that is popular in Glib but occasionally forgotten.
-*/
-template <typename ObjType> void Free(ObjType **pointer){
-  if(pointer){
-    delete *pointer;
-    *pointer=nullptr;
-  }
-}
+// migrated up the source tree to cheaptricks.h: template <typename ObjType> void Free(ObjType **pointer){}
 
 
 #endif // POSIXWRAPPER_H
