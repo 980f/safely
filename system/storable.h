@@ -5,8 +5,8 @@
 
 #include "enumerated.h"
 
-#include "logger.h"
-#include "numberformatter.h"
+// #include "logger.h"
+// #include "numberformatter.h"
 #include "sigcuser.h"
 
 #include "gatedsignal.h"
@@ -249,8 +249,8 @@ public:
 
   /** this method is not const as we lazily reuse text for image of non-text instances */
   Cstr image();
- /** this uses whatever the text presently is, if stale then you will have to find out why. */
- Cstr getText() const;
+  /** this uses whatever the text presently is, if stale then you will have to find out why. */
+  Cstr getText() const;
 
   void setDefault(TextKey value);
 
@@ -372,7 +372,8 @@ public:
 }; // class Storable
 
 
-struct StorageWalker {
+class StorageWalker {
+public:
   Storable *p;
 
   explicit StorageWalker(Storable *p) : p(p) {

@@ -2,6 +2,7 @@
 #define STOREDGROUP_H
 
 #include "stored.h"
+#include "logger.h" //wtf()
 #include "chain.h"
 
 ////////////////////////////////
