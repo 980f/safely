@@ -1,4 +1,4 @@
-==== BASE ====
+
 ## QT project file fragment with things common to libraries  and applications using the 'safely' project
 safelydir=$$PWD
 
@@ -41,4 +41,8 @@ rpiSafely {
   include("$$safelydir/rasbpi/rasbpi.pro")
 }
 
+#add networkSafely to CONFIG in projects's own .pro file
+networkSafely {
+  include("$$safelydir/network/network.pro")
+}
 #any headers or source declarations following this line are a user-error via qtcreator, move to appropriate pro file.
