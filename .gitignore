@@ -13,6 +13,7 @@ svnbranch.txt
 .qmake.stash
 Makefile
 tests/tests
+tests/.qtc_clangd/
 .fslckout
 safely.qws
 git.branch
