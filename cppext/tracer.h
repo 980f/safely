@@ -49,7 +49,7 @@ public:
   /** the argument type passed to this is usually a member of the TraceItem class, so usage involves wrapping in {} so that a constructor can fill out the object and timestamp it for classes that support Ticked.*/
   void operator()(TraceItem &&braced) {
     if(!disabled){
-      auto newtick = SystemTimer::snapTickTime();
+      auto newtick = SystemTimer::tocks();
       braced.tick = newtick - prior;
       prior = newtick;
       looper.next() = braced;

@@ -3,7 +3,7 @@
 
 //platform differences manager, named for repo it was first created for "980F/ezcpp"
 
-#include <stdint.h>  //<cstdint> not available on micro.
+#include <cstdint>
 
 typedef uint8_t u8;
 //old std lib stuff wants plain char *'s, grrr:
