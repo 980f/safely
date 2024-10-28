@@ -41,6 +41,12 @@ public:
     return argv[which<qty ? which : 0];
   }
 
+  /** @returns a reference to a value, the first if arg is bad. */
+  double operator [](unsigned which) const{
+    return argv[which<qty ? which : 0];
+  }
+
+
   void reset(){
     wrap(argv,sizeof(argv));
   }

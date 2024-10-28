@@ -60,7 +60,7 @@ def qdump__Storable(d, value):
     d.putBetterType(onion.type)
 
 def safely__StorableWad(d,storable):
-    innerType = 'Storable *'  #our wad is always mroe of us
+    innerType = 'Storable *'      #our wad is always more of us
     value = storable['wad']['v']  #named for what I copied out of stdtypes.py
     # the next chunk is pulled from std__vector
     (start, finish, alloc) = value.split("ppp")
@@ -76,7 +76,7 @@ def safely__StorableWad(d,storable):
     if d.isExpanded():
         keyType = 'Text'  #our text class is used for name members
         valueType = 'Storable *'  #and this is what the vector is filled with, value.type[0] might be the same thing.
-        with Children(d, size, maxNumChild=1000):
+        with Children(d, size, maxNumChild=100):
             # node = value["_M_t"]["_M_impl"]["_M_header"]["_M_left"]
             # nodeSize = node.dereference().type.size()
             # typeCode = "@{%s}@{%s}" % (keyType.name, valueType.name)
