@@ -1,7 +1,8 @@
 #ifndef EXTREMER_H
 #define EXTREMER_H
 
-/** classes for finding minima and maxima in a push environment (as data arrives in event driven system), versus the typical pull environment (a for loop iterating over
+/**
+ * Classes for finding minima and maxima in a push environment (as data arrives in event driven system), versus the typical pull environment (a for loop iterating over
  * data that is all present)
  *
  * There are two variants, one which records location information, one which does not.
