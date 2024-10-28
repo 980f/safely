@@ -1,5 +1,4 @@
 //"(C) Andrew L. Heilveil, 2017"
-#include "safely.h"
 #include "storejson.h"
 #include "textpointer.h"
 #include "cheaptricks.h"

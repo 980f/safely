@@ -2,6 +2,7 @@
 #define CHAIN_H
 
 #include "safely.h"
+#include "index.h"
 #include <vector>  //an STL class that is dangerous for naive users (as is all of the STL)
 #include <cstring>
 
@@ -103,10 +104,11 @@ public:
   }
 
   /** presizes chain for faster insertions via adding nullptr entries. This violates some of the expectations of other member functions */
-  void allocate(unsigned howmany){
+  unsigned allocate(unsigned howmany){
     if(howmany>quantity()) {
-      v.resize(howmany,0);//adds null entries, generally not a desirable thing.
+      v.reserve(howmany);//adds null entries, generally not a desirable thing.
     }
+    return howmany;
   }
 
   /** @returns whether chain has an entry for @param ordinal. Entry itself might be nullptr if @see allocate was used/*/
@@ -171,7 +173,7 @@ public:
    *  @deprecated needs test! had bug so must not have been compiled, ever? */
   bool relocate(unsigned from, unsigned to){
     if(has(from)&&has(to)) {
-      int dir = to - from;//positive if moving towards end
+      int dir = int(to - from);//positive if moving towards end
       if(dir==0) {
         return false;
       }

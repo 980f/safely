@@ -54,7 +54,7 @@ bool Stored::indexIs(unsigned which) const {
 }
 
 sigc::slot<unsigned> Stored::liveindex() const {
-  //  return MyHandler(Stored::index);//obvious
+  //#  return MyHandler(Stored::index);//obvious
   return mem_fun(node, &Storable::ownIndex); //faster
 }
 
@@ -63,7 +63,10 @@ bool Stored::isNamed(TextKey name){
 }
 
 bool Stored::isEmpty() const {
-  return this == nullptr || &node == nullptr || node.q == Storable::Empty;//#first two terms avert NPE's on horribly bad code, should never fire. (they were added due to gtk using void *'s and occasionally a null leaking into those).
+  //#ONNULLS are due to gtk using void *'s and occasionally a null leaking into those.
+  ONNULLTHIS(true);
+  ONNULLREF(node,true);
+  return node.q == Storable::Empty;
 }
 
 void Stored::triggerWatchers(){

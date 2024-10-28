@@ -1,6 +1,5 @@
 #include "settable.h"
 
-//#include "art.h"
 #ifndef MAXARGS
 #define MAXARGS 10
 #endif
@@ -19,9 +18,7 @@ bool Settable::differs(const Settable &other)const{
 }
 
 void Settable::copy(const Settable &other){
-  if(!&other){//compiler generated an operator = with a null 'other'
-    return;
-  }
+  ONNULLREF(other,);//compiler generated an operator = with a null 'other'
   ArgBlock<MAXARGS> args;
   other.getParams(args);
   args.freeze();

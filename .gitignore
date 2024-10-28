@@ -14,3 +14,6 @@ svnbranch.txt
 Makefile
 tests/tests
 .fslckout
+safely.qws
+git.branch
+git.hash

@@ -143,6 +143,7 @@ public:
 
   /** @returns whether the text value was converted to a number.  */
   bool convertToNumber(NumericalValue::Detail numtype=NumericalValue::Detail::Floating);
+
 /** convert an Unknown to either Numerical or Text depending upon purity, for other types @returns false */
   bool resolve(bool recursively);
 
@@ -153,7 +154,6 @@ public:
   bool isModified() const override;
   // more involved functions
   bool wasModified() override;
-
   Text fullName() const;
 
   /** the index is often not meaningful, but always is valid. It is -1 for a root node.*/
@@ -216,8 +216,8 @@ public:
     return noteQuality(quality,notifeye);
   }
 
-  template<typename Numeric=double> Numeric getNumber() const {
-    return number;
+  template<typename Numeric> Numeric getNumber() const {
+    return number.cast<Numeric>();
   }
 
   /** if no value has been set from parsing a file or program execution then set a value on the node. Defaults are normally set via ConnectChild macro. */
@@ -332,8 +332,8 @@ public:
 
   /** remove all children */
   void filicide(bool notify = false);
-  /** remove from parent */
-  void suicide(bool andDelete=false);//don't normally delete as someone is looking for the removal and they do the delete.
+  /** remove from parent, conditionally delete it on @param andDelete */
+  bool suicide(bool andDelete=false);//don't normally delete as someone is looking for the removal and they do the delete.
   /** @returns rootnode of this node, 'this' if 'this' is a root node. (i.e a root is its own parent using this method) */
   Storable &getRoot();
   /** force size of wad. */

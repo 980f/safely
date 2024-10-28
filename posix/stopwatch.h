@@ -12,12 +12,11 @@ private:
 
   bool readit(timespec &ts);
   const int CLOCK_something;
-protected:
+public:
   NanoSeconds started;
   NanoSeconds stopped;
 
   bool running;
-public:
   /** @param beRunning is whether to start timer upon construction.
       @param realElseProcess is whether to track realtime or thread-active-time.
 NB: thread time is only sane if the StopWatch stays associated with the same physical CPU in a SMP system.

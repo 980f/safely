@@ -18,11 +18,13 @@ public:
 
   bool init();
   void setDebugLevel(int lusbLevel= LIBUSB_LOG_LEVEL_WARNING);
+
   /** an obscure item used by event poller, public solely for debug */
   int completed=0;
   /** must be called periodically, or when related fd changes.
    * @returns seconds til next calback required. if Nan or < 0 then ignore value.*/
   MicroSeconds doEvents();
+
   /** last configuration explicitly set by methods of this class */
   int configuration=0;
 
@@ -62,6 +64,7 @@ public: //three ways to hook up with a device, depending upon your knowledge of 
   /** once you @see find the device you must claim an interface @returns success */
   bool claim(int desiredInterfacenumber=0);
   /** initiate a xfer */
+
   bool submit(libusb_transfer *xfer);
   /** call when you are truly finished with xfer */
   bool ack(libusb_transfer *xfer);
@@ -79,8 +82,5 @@ public://for thunking
   /** @returns whether it actually did anything */
   bool close();
 };
-
-
-
 
 #endif // LIBUSB_H

@@ -288,7 +288,7 @@
                   <td><br>
                   </td>
                   <td>19</td>
-                  <td>pwm1<br>
+                  <td>pwm??<br>
                   </td>
                   <td style="background-color: #cccccc;">35</td>
                   <td style="background-color: #cccccc;">36</td>
@@ -338,20 +338,28 @@
           </td>
           <td>Raspberry Pi hookup worksheet
             <ol>
-              <li>Suppliers of 5V on these pins need to protect against the board driving into them, <br>
+              <li>Suppliers of 5V on these pins need to protect against the
+                board driving into them, <br>
                 the board itself has protection. <br>
-                You should strongly consider fusing and filtering your drive into these pins.</li>
-              <li>You can program a pullup or a pulldown independent of input vs output.<br>
-                Said pullups/or downs are supposed to persist through power cycles. <br>
+                You should strongly consider fusing and filtering your drive
+                into these pins.</li>
+              <li>You can program a pullup or a pulldown independent of input vs
+                output.<br>
+                Said pullups/or downs are supposed to persist through power
+                cycles. <br>
                 The setting procedure is similar to programming eeprom.</li>
               <li>pwm1 and pwm0 are not fully independent, <br>
                 they share the timebase that gives them their update rate. </li>
               <li>"ID_SC,ID_SD are reserved for a HAT ID EEPROM.<br>
-                At boot time this I2C interface is interrogated to look for an EEPROM that identifies the attached board and<br>
-                allows automagic setup of the GPIOs (and optionally, Linux drivers).<br>
-                DO NOT USE these pins for anything other than attaching an I2C ID EEPROM. <br>
+                At boot time this I2C interface is interrogated to look for an
+                EEPROM that identifies the attached board and<br>
+                allows automagic setup of the GPIOs (and optionally, Linux
+                drivers).<br>
+                DO NOT USE these pins for anything other than attaching an I2C
+                ID EEPROM. <br>
                 Leave unconnected if ID EEPROM not required."<br>
-                Which means it is safe to use them as digital outputs if your load doesn't mind them being wiggled a bit at bootup.</li>
+                Which means it is safe to use them as digital outputs if your
+                load doesn't mind them being wiggled a bit at bootup.</li>
               <li>gclk1 and gclk2 are usually not documented. Don't know why.</li>
               <li>There are other mappings possible.:</li>
             </ol>
@@ -359,5 +367,201 @@
         </tr>
       </tbody>
     </table>
+    Logical layout (useful for bitfields)<br>
+    <table border="1">
+      <tbody>
+        <tr>
+          <td>0</td>
+          <td>ID_SD</td>
+          <td rowspan="2" colspan="1">i2c reserved for ID eprom</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>1</td>
+          <td>ID_SC</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td>SDA1</td>
+          <td rowspan="2" colspan="1">i2c-1</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>3</td>
+          <td>SCL1</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>4</td>
+          <td>GCLK0</td>
+          <td><br>
+          </td>
+          <td rowspan="4" colspan="1">4 bits if single spi user</td>
+        </tr>
+        <tr>
+          <td>5</td>
+          <td>gclk1</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>6</td>
+          <td>gclk2</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>7</td>
+          <td>CE1</td>
+          <td rowspan="5" colspan="1">SPI, physically close</td>
+        </tr>
+        <tr>
+          <td>8</td>
+          <td>CE0</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>9</td>
+          <td>MISO</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>10</td>
+          <td>MOSI</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>11</td>
+          <td>SCLK</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>12</td>
+          <td>pwm0</td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>13</td>
+          <td>pwm1</td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>14</td>
+          <td>TXD</td>
+          <td rowspan="2" colspan="1">uart<br>
+          </td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>15</td>
+          <td>RXD</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>16</td>
+          <td>ce2</td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>17</td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>18</td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>19</td>
+          <td>pwm??</td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>20</td>
+          <td>gclk0</td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>21</td>
+          <td>gclk1</td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>22</td>
+          <td><br>
+          </td>
+          <td rowspan="6">no special functions</td>
+          <td rowspan="4" colspan="1">physically close nibble</td>
+        </tr>
+        <tr>
+          <td>23</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>24</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>25</td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>26</td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+        </tr>
+        <tr>
+          <td>27</td>
+          <td><br>
+          </td>
+          <td><br>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <br>
   </body>
 </html>

@@ -4,25 +4,25 @@
 #include "string.h" //for strerror
 
 
-PosixWrapper::PosixWrapper(const char *prefix):dbg(prefix){
+PosixWrapper::PosixWrapper(const char *prefix) : dbg(prefix){
   //#nada
 }
 
 const char *PosixWrapper::errorText() const {
-  if(errornumber<0){
-    if(alttext&&numalts){
-      if(unsigned(-errornumber)<numalts){
+  if(errornumber<0) {
+    if(alttext&&numalts) {
+      if(unsigned(-errornumber)<numalts) {
         return alttext[-errornumber];
       } else {
-        return alttext[numalts-1];
+        return alttext[numalts - 1];
       }
     }
   }
   return strerror(errornumber);
-}
+} // PosixWrapper::errorText
 
 bool PosixWrapper::setFailed(bool passthrough){
-  if(passthrough){
+  if(passthrough) {
     failure(errno);
   }
   return passthrough;
@@ -31,7 +31,7 @@ bool PosixWrapper::setFailed(bool passthrough){
 bool PosixWrapper::failure(int errcode){
   if(changed(errornumber,errcode)) {//only log message if different than previous, prevents spam at the loss of occasional meaningful duplicates.
     // If you think you might repeat an error then clear errornumber before such a call.
-    if(errcode!=0){
+    if(errcode!=0 && !(stifleEAGAIN && errcode == EAGAIN)) {
       dbg("Failed: %s",errorText());//former code only worked when errno was the actual source of the error.
     }
   }
@@ -50,4 +50,3 @@ bool PosixWrapper::failed(int zeroorminus1){
 bool PosixWrapper::isWaiting(){
   return errornumber==EAGAIN || errornumber== EWOULDBLOCK;
 }
-

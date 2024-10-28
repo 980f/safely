@@ -5,28 +5,41 @@
 #include <execinfo.h> //backtrace
 #include "cstr.h" //nonTrivial
 
-__attribute__ ((init_priority (202))) //after manager is created, but before much of anything else
+__attribute__((init_priority(202)))   //after manager is created, but before much of anything else
 Logger dbg("DBG");
 Logger wtf("WTF");
 
 #define stdf stderr
 
-void logmessage(const char *prefix,const char *msg,va_list &args){
+static NanoSeconds * stamper = nullptr;
+
+void setStamper(NanoSeconds * stamp){
+  stamper = stamp;
+}
+
+void logmessage(const char *prefix,const char *msg,va_list &args,bool moretocome){
+  if(msg==nullptr) {//for Logger.flushline, need to implement logging provider.
+    fputc('\n', stdf);
+    fflush(stdf);
+  }
+  if(stamper){
+    fprintf(stdf,"%6d ",stamper->ms() %1000000);
+  }
   if(nonTrivial(prefix)) {
     fputs(prefix,stdf);
     fputs("::",stdf);
   }
   vfprintf(stdf, msg, args);
-  fputc('\n', stdf);
-  fflush(stdf); //else debug messages from just before croaking aren't seen.
-}
+  if(!moretocome) {
+    fputc('\n', stdf);
+    fflush(stdf); //else debug messages from just before croaking aren't seen.
+  }
+} // logmessage
 
 void dumpStack(const char *prefix){
   dbg("StackTrace requested by %s",prefix);
-  //todo:0 ++ restore this functionality
-  raise(SIGUSR1);
+//gdb no longer is sane with respect to signals:   raise(SIGUSR1);
 }
-
 
 /** a signal handler */
 void fatalHandler(int signal, siginfo_t *signalInfo, void *data){//#don't hide 'data', some platforms access it.
@@ -67,7 +80,6 @@ void fatalHandler(int signal, siginfo_t *signalInfo, void *data){//#don't hide '
   }
 } // fatalHandler
 
-
 void PosixLoggerInit(bool trapSignals){
   if(trapSignals) {
     struct sigaction sa;
@@ -82,4 +94,3 @@ void PosixLoggerInit(bool trapSignals){
     sigignore(SIGPIPE);
   }
 } // Logger::ClassInit
-

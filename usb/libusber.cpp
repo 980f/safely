@@ -84,16 +84,15 @@ MicroSeconds LibUsber::doEvents(){
   } else {
     return 0;
   }
-}
+} // LibUsber::doEvents
 
 int LibUsber::buriedError() const {
 //  if(ctx){ //too hidden at the moment.
 //    return ctx->debug_fixed;
 //  } else {
-    return 0;
+  return 0;
 //  }
 } // LibUsber::doEvents
-
 
 #define RecordIds devid.id.vendor = idVendor; devid.id.product = idProduct
 
@@ -143,10 +142,10 @@ bool LibUsber::open(uint16_t idVendor, uint16_t idProduct){
     plugWatcher(true);
     return true;
   } else {
-    this->errornumber=buriedError();
+    this->errornumber = buriedError();
     return false;
   }
-}
+} // LibUsber::open
 
 bool LibUsber::claim(int desiredInterfacenumber){
   //we are trusting that there is only one configuration and that it has our desiredInterfacenumber
@@ -160,7 +159,7 @@ bool LibUsber::claim(int desiredInterfacenumber){
 }
 
 bool LibUsber::submit(libusb_transfer *xfer){
-  if(devh==nullptr){
+  if(devh==nullptr) {
     return false;//segv on power down.
   }
   if(xferInProgress) {
@@ -198,10 +197,10 @@ bool LibUsber::ack(libusb_transfer *xfer){
   } else {
     return xfer==nullptr;
   }
-}
+} // LibUsber::ack
 
 void LibUsber::releaseHandle(){
-  if(devh){
+  if(devh) {
     ++disconnects;
   }
   libusb_close(take(devh));//fail fast on use after close
@@ -212,7 +211,7 @@ int LibUsber::onPlugEvent(libusb_hotplug_event event){
   switch(event) {
   case LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED:
     dbg("Hotplug arrival:[%04X:%04X]",devid.id.vendor,devid.id.product);
-    if(devh){
+    if(devh) {
       wtf("Hotplug while still plugged");
       releaseHandle();
     }
@@ -220,16 +219,16 @@ int LibUsber::onPlugEvent(libusb_hotplug_event event){
     break;
   case LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT:
     dbg("Hotplug departure: [%04X:%04X]",devid.id.vendor,devid.id.product);
-    if(xferInProgress){
+    if(xferInProgress) {
       libusb_cancel_transfer(xferInProgress);
       //which should call our callback which should clear xferInProgress
       //but in case that fails
-      xferInProgress=nullptr;//forget all state related to device.
+      xferInProgress = nullptr;//forget all state related to device.
     }
     releaseHandle();
     plugWatcher(false);
     break;
-  }
+  } // switch
   return 0;//keep ourselves around.
 } // LibUsber::onPlugEvent
 
@@ -241,7 +240,7 @@ static int plugcallback(struct libusb_context */*ctx*/, struct libusb_device */*
 
 bool LibUsber::watchplug(uint16_t idVendor, uint16_t idProduct,Hook<bool> hooker){
   RecordIds;
-  plugWatcher=hooker;
+  plugWatcher = hooker;
   if(failure(libusb_hotplug_register_callback(ctx,libusb_hotplug_event( LIBUSB_HOTPLUG_EVENT_DEVICE_ARRIVED | LIBUSB_HOTPLUG_EVENT_DEVICE_LEFT),LIBUSB_HOTPLUG_ENUMERATE,devid.id.vendor, devid.id.product,LIBUSB_HOTPLUG_MATCH_ANY,  plugcallback, this, &hotplugger))) {
     dbg("Failed to register hotplug watcher");
     return false;
@@ -263,7 +262,7 @@ bool LibUsber::close(){
   } else {
     return false;
   }
-}
+} // LibUsber::close
 
 LibUsber::~LibUsber(){
   close();

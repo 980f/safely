@@ -6,9 +6,9 @@
 
 static Logger bug("FileWriter",false);
 
-FileWriter::FileWriter():
+FileWriter::FileWriter() :
   fd("FileWriter"),
-  fmover(false/*write*/,fd,buf){
+  fmover(false /*write*/,fd,buf){
   //#nada
 }
 
@@ -17,11 +17,11 @@ FileWriter::~FileWriter(){
 }
 
 bool FileWriter::process(TextKey fname, const ByteScanner &source,unsigned blocksize){
-  if(fd.open(fname,O_CREAT|O_WRONLY|O_TRUNC)){
+  if(fd.open(fname,O_REWRITE)) {
     bug("Launching xfer of file %s",fname);
-    buf=source;
+    buf = source;
     fmover.prepare(blocksize);
-    if(fmover.go()){
+    if(fmover.go()) {
       return true;
     } else {
       return false;
@@ -29,7 +29,7 @@ bool FileWriter::process(TextKey fname, const ByteScanner &source,unsigned block
   } else {
     return false;
   }
-}
+} // FileWriter::process
 
 unsigned FileWriter::remaining() const {
   return buf.freespace();
