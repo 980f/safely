@@ -25,6 +25,9 @@ typedef int64_t s64;
 //lord it would be nice if C would make a standard operator for this:
 #define countof(array) (sizeof(array) / sizeof((array)[0]))
 
+//for when you need an extra step of replacement
+#define MACRO_cat(head,tail) head##tail
+
 /** instantiate one of these as a local variable at the start of a compound statement to ensure the given 'lock' bit is set to !polarity for all exit paths of that
  * block
  */
