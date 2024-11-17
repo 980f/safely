@@ -1,18 +1,22 @@
 #ifndef TEXTKEY_H
 #define TEXTKEY_H
 
-/** marker for internal tag for text, especially useful in getting 'const' onto the correct place */
-typedef const char* TextKey;
+/** marker for internal tag for const text, especially useful in getting 'const' onto the correct place
+ *
+ * There is no check to see if the pointed to memory is actually ram rather than rom (or MMU read-only section).
+ * As such some of the routines may return a pointer into a string that you then later free. You must assume that the lifetime of any returned value is the same as that of the argument.
+ */
+using TextKey = const char *;
 
 /** for converting text as bytes to bytes */
-inline const unsigned char *raw(const char *ptr){
+inline const unsigned char *raw(const char *ptr) {
   return reinterpret_cast<const unsigned char *>(ptr);
 }
 
 /** add 1 to reserve space for null terminator
  * this is a marker for '1+' or '+1'
  */
-inline unsigned Zguard(unsigned allocation){
+inline unsigned Zguard(unsigned allocation) {
   return 1 + allocation;
 }
 
@@ -20,7 +24,7 @@ inline unsigned Zguard(unsigned allocation){
 //////////// inline stringy stuff /////////////
 #define ERRLOC(moretext) __FILE__ "::" moretext
 
-// some unicode chars frequently used by us mathematical types:
+// some Unicode chars frequently used by us mathematical types:
 #define Degree "\u00b0"
 #define DegreeC Degree "C"
 #define Sup2   "\u00B2"
@@ -36,16 +40,19 @@ inline unsigned Zguard(unsigned allocation){
 /** @returns whether the @param string is null or just a null terminator */
 bool isTrivial(TextKey key);
 
-/** @returns whether @param  t is not null and the first char is not the null terminator*/
+/** @returns whether @param  key is not null and the first char is not the null terminator*/
 bool nonTrivial(TextKey key);
+
+/** alters @param t to point to a zero length string if it presently is the null pointer */
 void denull(TextKey &t);
 
 /** compare for equality, with rational behavior when either pointer is null */
-bool same(TextKey a,TextKey b);
+bool same(TextKey a, TextKey b);
 
 /** wraps strtod() to regularize use of its 2nd parameter.
  * @param impure if not null gets set to whether the numerical part of the string was followed by more text.*/
-double toDouble(TextKey rawText, bool* impure = nullptr);
+double toDouble(TextKey rawText, bool *impure = nullptr);
+
 unsigned toIndex(TextKey rawText, bool *impure = nullptr);
 
 #endif // TEXTKEY_H

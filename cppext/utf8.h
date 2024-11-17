@@ -2,18 +2,17 @@
 #define UTF8_H
 
 #include "eztypes.h"  //~stdint
-#include "ignoresignwarnings.h"  //much type mangling is done herein, so you don't have to in your code :)
+//this file has been lost! #include "ignoresignwarnings.h"  //much type mangling is done herein, so you don't have to in your code :)
 
-/** an int that can hold a UTF32 character
- * replace Glib gunichar usages */
-typedef u32 Unichar;
-
-#include "cheaptricks.h" //isPresent
+/** an int that can hold a UTF32 character */
+using Unichar=uint32_t;
 
 #include "char.h" //makes a character like an object
 
 /** represents one byte of a UTF8 multibyte character, not to be confused with a Unicode character which is a 32 bit entity
  * in addition to utf8 info this wraps ctype functions making them members of a char.
+
+
 */
 class UTF8: public Char {
 public:

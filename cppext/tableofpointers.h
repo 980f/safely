@@ -2,11 +2,15 @@
 #define TABLEOFPOINTERS_H
 
 /* sometimes you want a bunch of items to be processed in a group, without them having to know of the existence of that group.
- * "Bunder" was a class that you could add as a base class and that would put all members of that class into a list.
+ * "Bundler" was a class that you could add as a base class and that would put all members of that class into a list.
  * That however required that all objects be mutable as the mechanism involved a linkedlist that is modified during construction.
  *
  * This set of macro's lets you build a table in rom of pointers to members of the list, the objects can themselves be const (mostly).
  * Pointers are used so that polymorphic assemblages can be made.
+ *
+ * this requires linker support in the form of KEEP(SORT(.table.*)) in the segment that is used for storage of the table itself.
+ *
+ *
 */
 
 //the table is of pointers, the pointers are const, the object pointed to is not.

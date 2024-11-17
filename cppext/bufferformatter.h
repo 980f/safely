@@ -68,6 +68,8 @@ private:
     }
   }
 
+/** probably unused since we did the size check in next(...args) else
+* terminate varags processing */
   template<typename ... Args> void next(){
     //done
   }

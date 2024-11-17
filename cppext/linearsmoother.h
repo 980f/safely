@@ -4,18 +4,20 @@
 #include "cycler.h"
 
 /**
-  * polynomial smoothing of integer equally-spaced data stream
+  * SVG order 1 smoothing of integer equally-spaced data stream
   * templated for filter width for execution efficiency, especially as the
   * 'memory' is part of this object.
   */
 
 template <int hwidth> class LinearSmoother {
   enum{ fullWidth = 1 + 2 * hwidth};
-  static const double invS0 = 1.0 / fullWidth;
-  static const double invS1 = 1.0 / ((hwidth + 1) * fullWidth); //== invS0/(hw+1)
-  static const double invS2 = 3.0 / (hwidth * (hwidth + 1) * fullWidth); //==invS0*3/()(+1)
 
-  int memory[fullWidth]; // 0..2*hwidth
+  constexpr static double invS0 = 1.0 / fullWidth;
+  constexpr static const double invS1 = 1.0 / ((hwidth + 1) * fullWidth); //== invS0/(hw+1)
+  constexpr static const double invS2 = 3.0 / (hwidth * (hwidth + 1) * fullWidth); //==invS0*3/()(+1)
+
+  int memory[fullWidth];
+
   Cycler phaser;
   int Y0;
   int Y1;
