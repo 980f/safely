@@ -28,27 +28,6 @@ typedef int64_t s64;
 //for when you need an extra step of replacement
 #define MACRO_cat(head,tail) head##tail
 
-/** instantiate one of these as a local variable at the start of a compound statement to ensure the given 'lock' bit is set to !polarity for all exit paths of that
- * block
- */
-class BitLock {
-  /** the (naturally atomic) item being used as a mutex */
-  u32&locker; //for a cortex-M* mcu this is usually the bit band address of something
-  /** whether 'locked' is represented by a 1 */
-  u32 polarity;
-  /** construction assigns to the lock bit*/
-  BitLock( u32 & lockBit, u32 _polarity) : locker(lockBit), polarity(_polarity){
-    locker = polarity;
-  }
-
-  /** destruction assigns to opposite of original assignment, blowing away any interim assignments */
-  ~BitLock(){
-    locker = !polarity;
-  }
-
-}; // class BitLock
-
-
 /** delete an object and zero the pointer that pointed to it.
  *  attempts to make it a function were painful. Should try templating
  */
@@ -57,7 +36,7 @@ class BitLock {
 //in case some other compiler is used someday, this is gcc specific:
 #define PACKED __attribute__((packed))
 
-#if OptimizeSafely && (isQCU || isPCU)
+#if OptimizeSafely
 //function is used in an isr, should be speed optimized:
 #define ISRISH __attribute__((optimize(3)))
 #else
