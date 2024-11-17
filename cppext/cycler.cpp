@@ -1,80 +1,82 @@
 #include "cycler.h"
 
-void Cycler::unwrap(){
+constexpr unsigned Cycler::unwrap(int value) const {
+  if (length == 0) {
+    return ~0;
+  }
   value %= length;
-  while(value>length){//has wrapped
-    value+=length;//wrap it back
+  while (value < 0) {
+    value += length;
   }
-}
-
-Cycler::Cycler(unsigned length):value(0) {
-  setLength(length);//invoke constraint logic
-}
-
-unsigned Cycler::cycle()const {
-  return length;
-}
-
-void Cycler::setLength(unsigned length) {
-  if(length<=0){
-    length=1;
+  while (value > length) { //has wrapped
+    value += length; //wrap it back
   }
-  this->length = length;
-  unwrap();
+  return value;
 }
 
-bool Cycler::contains(unsigned index) const{
-  return this->length>index;
+Cycler::Cycler(unsigned length): length(length), value(length ? 0 : ~0) {}
+
+
+bool Cycler::contains(unsigned index) const {
+  return length ? length > index : false;
 }
 
 unsigned Cycler::operator =(int force) {
-  value = force;
-  unwrap();
-  return value;
+  return value = unwrap(force);
 }
 
-unsigned Cycler::increment(void) {
-  if(++value >= length) {
-    value = 0;
+unsigned Cycler::increment() {
+  if (length > 0) {
+    if (++value >= length) {
+      value = 0;
+    }
   }
   return value;
 }
 
-Cycler::operator unsigned(void)const {
+unsigned Cycler::decrement() {
+  if (length > 0) {
+    if (value == 0) {
+      value = length;
+    }
+    --value;
+  }
   return value;
 }
 
-/** @returns true once per cycle, and not until the end of the first cycle if used in a typical fashion*/
-bool Cycler::next(void) {
+/** @returns true once per cycle, and not until the end of the first cycle if used in a typical fashion */
+bool Cycler::next() {
   return increment() == 0;
 }
 
-unsigned Cycler::operator +(int offset) const{
-  if(!length) {
-    return offset;
-  }
-  int signedMod = (value + offset) % length;
-  if(signedMod < 0) {
-    return signedMod + length;
-  }
-  return unsigned(signedMod);
+unsigned Cycler::operator +(int offset) const {
+  return unwrap(value + offset);
 }
 
-unsigned Cycler::operator +=(int offset){
-  return operator =(operator +(offset));
+unsigned Cycler::operator +=(int offset) {
+  return operator =(value + offset);
 }
 
 unsigned Cycler::operator -(int offset) const {
-  //todo: needs validation
-  return (*this + -offset)%length;
+  return unwrap(value - offset);
 }
 
-unsigned Cycler::operator++ (void) { ///pre increment
+unsigned Cycler::operator++() { ///pre increment
   return increment();
 }
 
-unsigned Cycler::operator++ (int /*dummy*/) { ///post increment
+unsigned Cycler::operator++(int /*dummy*/) { ///post increment
   unsigned was = value;
   increment();
+  return was;
+}
+
+unsigned Cycler::operator--() { ///pre
+  return decrement();
+}
+
+unsigned Cycler::operator--(int /*dummy*/) { // post
+  unsigned was = value;
+  decrement();
   return was;
 }
