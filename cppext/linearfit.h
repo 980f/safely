@@ -4,15 +4,18 @@
 #include "realstatistic.h"
 #include "linear.h"
 
-class LinearFit:public RealCorrelation {
+/** adds generation of a formula for a line to RealCorrelation's fitting. */
+
+class LinearFit {
 public:
+  RealCorrelation correlation;
   LinearFit();
-  Linear equation();
-  int N()const{
-    return xx.N();
+  Linear equation(){//#Linear's are cheap enough to copy, hence no '&' in the return.
+    return Linear(correlation.offset(),correlation. slope());
   }
-  /** @returns whether stats are significant or if @param barely then or's whether A and B are significant */
-  bool isMeaningful(bool barely)const;
+  unsigned N()const{
+    return correlation.N();
+  }
 };
 
 #endif // LINEARFIT_H

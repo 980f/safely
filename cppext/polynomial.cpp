@@ -25,6 +25,6 @@ unsigned effectiveDegree(const double *a,unsigned degree){
       return eff;
     }
   }
-  return BadIndex;//indicates poly will always return 0;
+  return ~0;//indicates poly will always return 0;
 }
 

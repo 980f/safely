@@ -1,4 +1,4 @@
-#ifndef LINEAR_H
+#pragma once
 #define LINEAR_H
 
 #include "settable.h"
@@ -6,7 +6,7 @@
 /** linear mapping with persistence support.
 
 todo:2 use new Nnomial class to replace this.
-  Exists because the Polynomial class from firmware (/cppext/) leaks horribly on a real OS.*/
+  Exists because the Polynomial class from firmware (/cppext/) leaks horribly on a real OS. */
 class Linear: public Settable {
   double a[2];
 public:
@@ -38,5 +38,3 @@ public:
     return y(x);
   }
 };
-
-#endif // LINEAR_H
