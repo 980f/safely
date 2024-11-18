@@ -30,7 +30,7 @@ bool Application::keepAlive(){
 }
 
 
-Application::Application(unsigned argc, char *argv[]):PosixWrapper ("APP"),//todo:1 name from arg0 last member
+Application::Application(unsigned argc, char *argv[]):PosixWrapper ("APP"),//todo:1 name logstream from arg0 last member
   arglist(const_cast<const char **>(argv),argc*sizeof (const char *)),
   looper(32), //maydo: figure out size of maximum reasonable poll set.
   period(NanoSeconds(0.1)), //start at 10 Hz, a rather slow value.

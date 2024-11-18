@@ -27,7 +27,7 @@
     </ol>
     <p>general system stuff, dynamic memory used (malloc() and new )</p>
     <ol>
-      <li>DOM with change detection callback lists</li>
+      <li>DOM with change detection callback lists (Stored and friends)</li>
       <ol>
         <li>template class wrapping of DOM scalars so that they appear as their native type</li>
         <li>pathname access to members</li>
@@ -58,10 +58,10 @@
         <li>provides much std::vector functionality, but with java-like syntax, for instance...</li>
         <li>... iterator with bool hasNext() and Obj&amp; next() api.</li>
       </ol>
-      <li>class that makes char* act like an object</li>
+      <li>class that makes char* act like an object (see textpointer.h) </li>
       <ol>
         <li>str functions as member:&nbsp;&nbsp; text.cat(othertext) instead of strcat(text, othertext)</li>
-        <li>transfer of ownership variation (makes it easy to not leak, or use-after-free)</li>
+        <li>transfer of ownership variation (makes it easy to not leak or use-after-free)</li>
       </ol>
       <li>class that makes char act like an object</li>
       <ol>

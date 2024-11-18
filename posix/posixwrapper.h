@@ -13,7 +13,7 @@
 class PosixWrapper {
 
 protected:
-  //added for libusb, extends error numbers in the negative direction.
+  //libusbwrapper extends error numbers in the negative direction.
   const char **alttext=nullptr;
   unsigned numalts=0;
 public:
@@ -60,9 +60,5 @@ public:
    */
   bool setFailed(bool passthrough);
 }; // class PosixWrapper
-
-
-// migrated up the source tree to cheaptricks.h: template <typename ObjType> void Free(ObjType **pointer){}
-
 
 #endif // POSIXWRAPPER_H

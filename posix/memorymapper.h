@@ -1,7 +1,6 @@
-#ifndef MEMORYMAPPER_H
+#pragma once
 #define MEMORYMAPPER_H "(C) Andrew L. Heilveil, 2017"
 
-////////////////////
 #include "fildes.h"
 
 
@@ -36,7 +35,7 @@ template <typename Any> class Mapped {
   Any *ptr;
   /** number of Any's, not number of bytes*/
   unsigned quantity;
-  /** is module is not init we allocate some ram */
+  /** if module is not init we allocated some ram */
   bool simulated;
 public:
   Mapped(unsigned physical,unsigned quantity):ptr(nullptr),quantity(quantity){
@@ -55,7 +54,7 @@ public:
     } else {
       MemoryMapper::Mmap->free(ptr,quantity*sizeof (Any));
     }
-    ptr=nullptr;
+    ptr=nullptr;//in case someone explicitly calls delete, or uses a stale reference
   }
 
   /** call this to disable access for the remainder of the program run.
@@ -78,13 +77,12 @@ public:
   }
 
 private:
-  void operator =(Any *other)=delete;//do not allow
+  void operator =(Any *other)=delete;//do not allow copying
+  Mapped(&&Mapped thing)=delete;
 public:
   /** bad index results in whacking the 0th element, hopefully you will notice that. */
   Any &operator [](unsigned index)const {
     return ptr[index<quantity?index:0];
   }
-  //no inc's, no operator =,
+  //do not bother with inc's
 };
-
-#endif // MEMORYMAPPER_H

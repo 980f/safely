@@ -6,6 +6,14 @@
 #include "textkey.h" //maybe base on Textpointer, or Indexer<u8>
 
 
+#ifdef SAFELY_debug_Ustring
+#include "logger.h" //for wtf
+#else
+void wtf(const char *fmt, ...){
+  // a place to breakpoint.
+}
+#endif
+
 /** wrapper for common subset of classes like Glib::ustring and std::string
  *  the implementation file here is a simple one, but may integrate with UTF* processing classes.
  * the 'std' implementations are very fat albeit very functional.
@@ -42,27 +50,32 @@ public:
   /** format a number with its units. Not sure where precision comes from!*/
   static Ustring format(double,const char*space,const Ustring &uom);
   /** format a number, Not sure where precision comes from!*/
-  static Ustring format(...);//NYI
+  static Ustring format(...);//NYI, add variants
 
 
 private: //template varargs majick
 
   /** @param which is the ordinal of @param ref in the original function call. @param args is uninspected rest of arguments.
-   *  arguments are process in order, the format string is looked at to find matching ordinal and format spec is replaced with formatted value.
+   *  arguments are processed in order, the format string is looked at to find matching ordinal and format spec is replaced with formatted value.
+   *  Which is to say that the @param format string is altered via replacing its markers with rendered parameters. This is why the public entry point for this copies the given format string, then alters and returns that copy.
+   *  The algorithm takes the args in order and replaces them within the 'format' string. It is not an error if an argument is not referenced.
+   *
    *  todo: field with limiter
    */
-  template<typename NextArg, typename ... Args> static void compose_item(unsigned which, Ustring &format, NextArg&ref, const Args& ... args){
+  template<typename NextArg, typename ... Args> static void compose_item(unsigned which, Ustring &workspace, NextArg&ref, const Args& ... args){
     try {
-      for(unsigned pointer = 0; pointer < format.length(); ) {
-        Unichar c = format.at(pointer++);
+      for(unsigned pointer = 0; pointer < workspace.length(); ) {
+        Unichar c = workspace.at(pointer++);
         if(c == '%') {
-          Unichar d = format.at(pointer++);
+          Unichar d = workspace.at(pointer++);
           if(d - '0' == which) { //splice in ref
             pointer -= 2;  //2 = % and digit
-            format.erase(pointer, 2);
-            unsigned beforeaddition = format.length();
-            format.insert(pointer, Ustring::format(ref));
-            pointer += format.length() - beforeaddition; //else we try to replace things in the replaced text :)
+            workspace.erase(pointer, 2);
+            unsigned beforeaddition = workspace.length();
+            workspace.insert(pointer, Ustring::format(ref));
+            //we could drop the next line if we want to allow strange usages, an earlier argument can insert markers for a later one, such as arg 3 being "%4%4" causing argument 4 to appear twice where %3 was.
+            // the danger is that if the replacement string for an argument includes that argument we loop forever, or until we exhaust ram.
+            pointer += workspace.length() - beforeaddition; //else we try to replace things in the replaced text :)
             //by not returning here we allow for multiple substitutions of one argument.
           }
         }
@@ -71,11 +84,12 @@ private: //template varargs majick
         compose_item(which + 1, format, args ...);
       }
     } catch(...) {
-//      wtf("Stifled exception in Ustring::compose");
+     wtf("Stifled exception in Ustring::compose");
+     //and we stop processing but return what we managed to do before the exception. If you have unsubstituted arg references then suspect the associated argument blows up when formatted.
     }
   } // compose_item
 
-  /** Terminates template iteration */
+  /** Terminates template iteration. It is never called because of the sizeof ... bit in the that is, but the compiler can't figure that out. */
   static void compose_item(unsigned /*which*/, Ustring & /*format*/){
     //#nada
   } // compose_item

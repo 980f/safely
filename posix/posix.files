@@ -1,3 +1,4 @@
+#qt .pro fragment: file list for building a static lib from tested bits of the posix folder of the 'safely' repo
 
 DEPENDPATH += ../posix
 INCLUDEPATH += ../posix

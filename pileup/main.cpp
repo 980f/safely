@@ -6,7 +6,7 @@
 #include "minimath.h"
 
 
-/** simulation of deatime tracking amptek DP5 SCA signals on a tiny3.0 class controller */
+/** simulation of deadtime tracking amptek DP5 SCA signals on a tiny3.0 class controller */
 class CounterIsr {
 public:
   double quantum;//processor clock rate,  1 / Hz
