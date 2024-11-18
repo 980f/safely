@@ -1,15 +1,18 @@
-#ifndef FILDES_H
-#define FILDES_H
+#pragma once
+#define FILDES_H (C) 2024 (and bits earlier) Andrew L. Heilveil, github/980f
 
 #include "buffer.h"   //safe buffer
 #include "posixwrapper.h"  //manage errno
 struct FDset;//forward reference, we may be relocating this logic elsewhere as we purge select() in favor of poll() #include "fdset.h"
 #include "stdio.h"  //FILE
 
-#include <sys/ioctl.h> //ioctl in a template, would have to gyrate quite a bit to isolate this to the cpp, can be done with some nasty typecasting.
+#include <sys/ioctl.h> //ioctl in a template, would have to gyrate quite a bit to isolate this to the cpp, could be done with some nasty typecasting.
 
 #include <textpointer.h>
-/** wrapper around file descriptors, especially noteworthy is that it closes the file on destruction, so best use is to create and use locally.
+
+/** wrapper around OS file descriptors.
+* Especially noteworthy is that it closes the file on destruction, so best use is to create and use locally, as best use is to open a file and consume it all right away, else use asynch io.
+*
  * It includes the concept of 'owning' the fd, so that only the owning class will do things like close the file.
  * It retains a lot of debug info, such as independent record of last read and write results.
 */
@@ -36,7 +39,7 @@ public:
   /** since we close on going out of scope if you share an fd you must take care to use pointer or reference*/
   virtual ~Fildes();
   bool open(const char *devname, int O_stuff); //open a named file
-  /** takes ownership of an FD, if @param urit is true ("You are it")*/
+  /** takes ownership of an FD, if @param urit is true ("You are it"), else just copy it and probably shoud not call close() as that will piss off the actual owner, making it lose track of the fd's state. */
   bool preopened(int fd,bool urit = true);
   /** set/clear a fcntl accessible flag, @returns success of operation */
   bool setSingleFlag(int bitfield, bool one);
@@ -79,11 +82,12 @@ public:
 
   bool write(const u8* buf,unsigned len);//placeholder
   /** write a character a bunch of times. Handy for things like indenting a nested text printout. */
-  bool writeChars(char c, unsigned repeats);//a default arg makes this and write(Indexer<u8>) ambiguous
+  bool writeChars(char c, unsigned repeats);//adding a default arg makes this and write(Indexer<u8>) ambiguous
 
-  /** @returns isOpen()*/
-  bool mark(FDset&fdset) const;
-  /** @returns whether bit associated with this is a one in the fdset.*/
+  /** set the associated flag given this guy's fd.
+  * @returns @see isOpen() */
+  bool mark(FDset &fdset) const;
+  /** @returns whether bit associated with this guy is a one in the fdset.*/
   bool isMarked(const FDset &fdset) const;
   /** moves all bytes pending on this' OS read buffer to the other file.
    *
@@ -98,9 +102,8 @@ public:
   /** thin wrapper around ioctl calls */
   template <typename Scalar> bool ioctl(unsigned code ,Scalar datum){
     //pre-test isopen so as to not overwrite the error code from that.
-    return isOpen() && ok(::ioctl(asInt(),code, datum));
+    return isOpen() && ok(::ioctl(asInt(), code, datum));
   }
-
 
 protected:
   Text name;//not always valid, call getName to ensure.
@@ -108,5 +111,3 @@ public:
   /** recover name from OS. Uses linux PROC file system specific routine, and is not cheap. */
   Text &getName();
 }; // class Fildes
-
-#endif // FILDES_H
