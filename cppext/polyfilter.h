@@ -3,7 +3,7 @@
 
 #include "centeredslice.h"
 
-/** polynomial filter, first implemenations use Savitsky-Golay algorithm as optimized by Andy Heilveil */
+/** polynomial filter, first implementations use Savitsky-Golay algorithm as optimized by Andy Heilveil */
 class PolyFilter {
 protected:
   PolyFilter(unsigned hw);

@@ -48,7 +48,7 @@ void UTF8::moreBits(Unichar &uch) const noexcept {
    uch<<=(6*followers);
  }
 
-unsigned UTF8::numFollowers(u32 unichar) noexcept{
+unsigned UTF8::numFollowers(Unichar unichar) noexcept{
   if(unichar < (1U << 7)) {//quick exit for ascii
     return 0;
   }
@@ -62,7 +62,7 @@ unsigned UTF8::numFollowers(u32 unichar) noexcept{
   return 0;//not yet implementing invalid extensions.
 } // UTF8::numFollowers
 
-u8 UTF8::firstByte(u32 unichar, unsigned followers) noexcept{
+u8 UTF8::firstByte(Unichar unichar, unsigned followers) noexcept{
   if(followers) {
     u8 prefix(0xFC);
     prefix <<= (5 - followers);//1->C0, 2->E0 3->F0 4->F8
@@ -73,7 +73,7 @@ u8 UTF8::firstByte(u32 unichar, unsigned followers) noexcept{
   }
 }
 
-u8 UTF8::nextByte(u32 unichar, unsigned followers) noexcept{
+u8 UTF8::nextByte(Unichar unichar, unsigned followers) noexcept{
   unsigned shift = 6 * followers;
   unichar >>= shift;
   unichar &= fieldMask(6);

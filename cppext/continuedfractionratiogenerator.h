@@ -1,5 +1,4 @@
-#ifndef CONTINUEDFRACTIONRATIOGENERATOR_H
-#define CONTINUEDFRACTIONRATIOGENERATOR_H
+#pragma once
 
 /** find a ratio of integers which best matches a floating point number.
  * This is useful for tuning a PWM.
@@ -15,7 +14,6 @@ class ContinuedFractionRatioGenerator {
 public:
   double fraction;
   unsigned an;
-  //begin repeated fractions algorithm to get best integer ratio, iteration stopped by exceeding bits of divisor.
   unsigned h[3];//recursion relationship refers to 0,-1,-2 indices.
   unsigned k[3];
   /** how large the numerator or denominator may be.
@@ -61,4 +59,3 @@ private:
   bool bump(unsigned hk[]);
 }; // class ContinuedFractionRatioGenerator
 
-#endif // CONTINUEDFRACTIONRATIOGENERATOR_H

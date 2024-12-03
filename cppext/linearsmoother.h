@@ -48,17 +48,19 @@ template <int hwidth> class LinearSmoother {
     Y0 += Ynew;
   }
 
-  double mean(void){
+  /** @returns the average over the range */
+  double mean() const {
     return Y0 * invS0;
   }
 
-  double drift(void){
+  /** @returns the rate of change */
+  double drift() const{
     return Y1 * invS2;
   }
 
-  //compute central fit coefficients, then apply them to hwidth
-  double now(void){
-    //return mean()+drift()*hwidth;
+  /** @returns estimate of central value, fit if the whole range evaluated at the center */
+  double now() const {
+    //return mean()+drift()*hwidth;  //compute central fit coefficients, then apply them to hwidth
     return (Y0 * (hwidth + 1) + 3 * Y1) * invS1; //same as above, minimizing integer -> float conversions.
   }
 };

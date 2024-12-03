@@ -15,7 +15,7 @@ protected:
 
 // Sequence interface
 public:
-  virtual TextBlock &next() override;
+  TextBlock &next() override;
   virtual void seek()=0;
 };
 

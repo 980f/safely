@@ -13,7 +13,7 @@ public:
   static const TextKey InvalidToken;
 
   /** useful for presizing enum indexed storage:*/
-    virtual unsigned numTokens() const = 0;
+  virtual unsigned numTokens() const = 0;
 
   /** @returns internal key for present integral value, InvalidToken if @param value isn't valid */
   virtual TextKey token(unsigned value) const = 0;

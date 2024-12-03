@@ -9,7 +9,7 @@
 template<int Size> class SafeStr : public CharFormatter {
   char content[Size];
 public:
-  SafeStr(void) : CharFormatter(content, Size){
+  SafeStr() : CharFormatter(content, Size){
     //#nada
   }
 

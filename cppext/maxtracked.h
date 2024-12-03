@@ -8,7 +8,7 @@ template <typename Scalar> class MaxTracked:public SimpleExtremer<Scalar,false,f
 
   using Base = SimpleExtremer<Scalar,false,false>;
 public:
-  /** @param initValue is a starting value, @param andInspect is whether to including this in the determination of maximum */
+  /** @param initValue is a starting value, @param andInspect is whether to including this in the determination of maximum. A reason to NOT include it in the tracking is if it is a default value to use when nothing was presented to the tracker and the point of use didn't check like is should.*/
   MaxTracked(Scalar initValue=0,bool andInspect=true){
     latestValue=initValue;
     if(andInspect){
@@ -16,12 +16,16 @@ public:
     }
   }
 
-  unsigned operator =(Scalar value){
+  /** @returns the value received so that this object can be used in a pass through situation such as somefun(object=newest) when somefun should see the new value.
+   * This was buggy until late in 2024, unless template type was unsigned or value compatible with that type.
+   */
+  Scalar operator =(Scalar value){
     latestValue=value;
     Base::inspect(value);
     return latestValue;
   }
 
+  /** @returns last value, @see operator = for why we do this. */
   operator Scalar()const {
     return latestValue;
   }

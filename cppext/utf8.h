@@ -1,12 +1,11 @@
-#ifndef UTF8_H
-#define UTF8_H
+#pragma once
 
 #include "eztypes.h"  //~stdint
 #include "ignoresignwarnings.h"  //much type mangling is done herein, so you don't have to in your code :)
 
 /** an int that can hold a UTF32 character
  * replace Glib gunichar usages */
-typedef u32 Unichar;
+using Unichar=uint32_t;
 
 #include "cheaptricks.h" //isPresent
 
@@ -41,27 +40,27 @@ public:
     return raw & 0x80; //treating illegals as multibyte.
   }
 
-  /** only valid if first char of a UTF8 sequence */
-  unsigned numFollowers(void) const noexcept;
+  /** only valid if this is first char of a UTF8 sequence */
+  unsigned numFollowers() const noexcept;
 
-  /** bits extracted from this byte, @param nf is value from numFollers, ~0 means call numFollowers else if already done pass tha back in.*/
+  /** bits extracted from this byte, @param nf is value from numFollowers, ~0 means to call numFollowers else if you already called it then pass that back in here.*/
   void firstBits(Unichar &uch, unsigned nf=~0) const noexcept;
-  /** merges bits from tihs presumed to be continuation byte into @param uch */
+  /** merges bits from this presumed to be continuation byte into @param uch */
   void moreBits(Unichar &uch) const noexcept;
   /** pretend remaining bytes were all zeroes */
   static void pad(Unichar &uch, unsigned followers) noexcept;
 
   /** @returns number of 10xxxxxx bytes needed for given @param unichar unicode char.*/
-  static unsigned numFollowers(u32 unichar)noexcept;
+  static unsigned numFollowers(Unichar unichar)noexcept;
 
   /** @returns 1st byte of sequence given @param followers value returned from @see numFollowers(u32)*/
-  static u8 firstByte(u32 unichar,unsigned followers)noexcept;
+  static u8 firstByte(Unichar unichar,unsigned followers)noexcept;
 
   /** @returns intermediate or final byte, @param followers is 0 for the final one */
-  static u8 nextByte(u32 unichar,unsigned followers) noexcept;
+  static u8 nextByte(Unichar unichar,unsigned followers) noexcept;
 
+  /** @returns Ascii hex character for the @param sb'th nibble of @param uch. Useful for rendering html entities.*/
   static char hexNibble(Unichar uch,unsigned sb) noexcept;
-
 
 }; // class UTF8
 
@@ -76,8 +75,8 @@ while(followers-->0) {
 }
 
 coalescing utf8 stream into a unichar:
-
-int numfollowers=utf8.numFollowers();
+utf8=next();
+unsigned numfollowers=utf8.numFollowers();
 if(numfollowers>0){
   Unichar uch=0;
   utf8.firstBits(uch);
@@ -85,8 +84,10 @@ if(numfollowers>0){
     utf8=next();
     utf8.moreBits(uch);
   }
+  //output uch
+} else {
+  //output zero extended utf8 as unicode char.
 }
 
-#endif
 
-#endif // UTF8_H
+#endif

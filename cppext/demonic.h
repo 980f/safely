@@ -20,7 +20,7 @@ DeltaFn demon;
 
 public:
   /** default init for value, not coercing '0' */
-Demonic(void) : thing(){
+Demonic() : thing(){
    //#nada
 }
 
@@ -70,25 +70,22 @@ template<typename OtherNumeric> Numeric operator =(const OtherNumeric &other){
 template<typename OtherNumeric> Numeric operator *=(const OtherNumeric &other){
   if (other != 1) {//4performance and debug
     return set(thing * Numeric(other));
-  } else {
-    return thing;
   }
+  return thing;
 }
 
 template<typename OtherNumeric> Numeric operator +=(const OtherNumeric &other){
   if (other != 0) {//4performance and debug
     return set(thing + Numeric(other));
-  } else {
-    return thing;
   }
+  return thing;
 }
 
 template<typename OtherNumeric> Numeric operator -=(const OtherNumeric &other){
   if (other != 0) {//4performance and debug
     return set(thing - Numeric(other));
-  } else {
-    return thing;
   }
+  return thing;
 }
 
 }; // class Watched

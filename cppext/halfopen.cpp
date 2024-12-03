@@ -52,9 +52,8 @@ bool Span::stretchUp(unsigned more){
   if(lowest.isValid()){
     highest.up(more);
     return false;
-  } else {
-    lowest=0;
-    highest=more;//ignores highest value if lowest was not valid.
-    return true;
   }
+  lowest=0;
+  highest=more;//ignores highest value if lowest was not valid.
+  return true;
 }

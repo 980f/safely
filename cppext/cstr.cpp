@@ -187,7 +187,7 @@ Index Cstr::trailingZeroes() const {
       //p is the last '0' and is preceded by something other than a '.'
       for(unsigned dp = p; dp-->0;) {
         if(ptr[dp]=='.') {
-          //then the trailin zeroes were actually post decimal point
+          //then the trailing zeroes were actually post decimal point
           return Index(p);//#yes, p not dp. we also remove the dp
         }
       }

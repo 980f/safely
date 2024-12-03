@@ -3,7 +3,7 @@
 
 
 /** compute determinant of a subset of a matrix.
- *  This api has some candy to make it easy to use for regression analysis, specifically it provides for passing the 'X' matrix and 'Y' vector and then computing the
+ *  This api has some syntactic sugar to make it easy to use for regression analysis, specifically it provides for passing the 'X' matrix and 'Y' vector and then computing the
  * determinant with an option to replace one of the X columns with the Y column. This allows one to build the regression matrix and Y data and do subsets of the
  * possible regressions without shuffling that data around into smaller matrices.
  *  This was first implemented for use in a not particularly large microcontroller.
@@ -12,10 +12,10 @@
 
 /** not template portion of Determinator*/
 class DeterminatorCore {
-  int size;
+  unsigned size;
   bool *rower;
   bool *columner;
-  bool *ignorer;
+  const bool *ignorer;
 
   double *Y;
   double **X;
@@ -24,33 +24,33 @@ class DeterminatorCore {
   bool yish; //whether we are processing a numerator of a Cramer's rule solution.
 
   DeterminatorCore(
-    int size,
+    unsigned size,
     bool *rower,
     bool *columner,
-    bool *ignorer,
+    const bool *ignorer,
     double ys[], double **xs);
   /** which column might be replaced with Y data, and whether to do so,
    * @returns determinant of submatrix */
-  double descend(void);
+  double descend();
 public:
-  double compute(int which, bool yish);
+  double compute(unsigned which, bool yish);
 }; // class DeterminatorCore
 
 /** this template exists to coordinate allocating related structures */
 template<int MaxProblem = 4> //maximum matrix size, defaulted to the smallest that isn't hard coded as pre-computed case.
-class Determinator : private DeterminatorCore {
+class Determinator : DeterminatorCore {
   typedef bool Gater[MaxProblem];
   typedef double Column[MaxProblem];
 
-  Gater&ignorer; //caller can clip the problem
+  const Gater &ignorer; //caller can clip the problem
   Gater rower;   //tracks progress in processing rows
   Gater columner;//tracks progress in processing columns
 
 //  double *Y;
 //  Column *X;
 public:
-  Determinator(Gater&ignore, double ys[], Column xs[]) :
-    DeterminatorCore(MaxProblem,rower,columner,ignore,ys,xs){
+  Determinator(const Gater&ignore, double ys[], Column xs[]) :
+    DeterminatorCore(MaxProblem,rower,columner,ignore,ys,xs),ignorer(ignorer){
     //this class exists to allocate the right sized data and then pass it all to the core.
   }
 

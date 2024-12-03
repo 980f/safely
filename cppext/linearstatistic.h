@@ -16,18 +16,21 @@ public:
     reset();
   }
 
-  void reset(void){
+  /** forget any data */
+  void reset(){
     count = 0;
     sum = 0;
     sumSquares = 0;
   }
 
+  /** include another datum into the set being evaluated, without actually storing it.*/
   void insert(Numeric datum){
     ++count;
     sum += datum;
     sumSquares += squared(datum);
   }
 
+  /** removes a value, presuming that it was once supplied via insert */
   void remove(Numeric datum){
     if(count) {
       --count;
@@ -36,20 +39,26 @@ public:
     }
   }
 
+  /** replace one value with another, such as when doing a moving fit to a series of values  */
   void replace(Numeric older, Numeric newer){
     sum += newer - older;
     sumSquares += squared(newer) - squared(older);
   }
 
-  Numeric Lform(void){
+  /** @returns a common subexpression of many other computations */
+  Numeric Lform() const {
     return count * sumSquares - squared(sum);
   }
 
-  double average(void){
+  /** @returns the average */
+  double average() const {
     return ratio(sum, count);
   }
 
-  double varsquared(void){ //todo:2 verify!
+  /** @returns the square of the variance
+  *  todo:2 verify implementation!
+   */
+  double varsquared() const {
     return ratio(Lform(), count);
   }
 };
@@ -69,11 +78,13 @@ public:
     sumCross += x * y;
   }
 
-  Numeric Lcross(void){
+  /** @returns a common subexpression */
+  Numeric Lcross() const {
     return xx.count * sumCross - xx.sum * yy.sum;
   }
 
-  double crossCorrelation(void){
+  /** @returns the cross correlation of its data pairs. Depending on your definition this might be the square of what you expect this name to be providing. */
+  double crossCorrelation() const {
     return ratio(squared(Lcross()), xx.Lform() * yy.Lform());
   }
 };

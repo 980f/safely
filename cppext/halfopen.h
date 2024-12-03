@@ -1,7 +1,10 @@
 #ifndef HALFOPEN_H
 #define HALFOPEN_H "(C) Andrew L. Heilveil, 2017"
 
-/** a simple range class, simpler than Range and optimized for first use of HalfOpen(arrayIndex) */
+/** a simple range class, simpler than Range and optimized for first use of HalfOpen(arrayIndex)
+ * IE it is intended for walking a view across an array with no overlaps.
+ * At the moment some stupid cases are not handled well.
+ */
 
 template <typename Integrish> struct HalfOpen {
   Integrish lowest;
@@ -15,7 +18,7 @@ public:
     lowest=highest=0; //all Integrish types have a zero.
   }
 
-  virtual ~HalfOpen(){}
+  virtual ~HalfOpen()=default;
 
   /** quantity to operate upon */
   Integrish span() const {
@@ -39,12 +42,12 @@ public:
 };
 
 #include "index.h"
-struct Span: public HalfOpen<Index> {
+struct Span: HalfOpen<Index> {
   Span(Index low,Index high);
   Span();
 //  virtual ~Span();
   bool ordered() const override;
-  /** move span to next possible one. default of 1 is for cutting out single character seperators */
+  /** move span to next possible one. default of 1 is for cutting out single character separators */
   void leapfrog(unsigned skip=1);
   /** set both ends to 'invalid'*/
   void clear();
@@ -52,13 +55,17 @@ struct Span: public HalfOpen<Index> {
   void shift(unsigned offset);
   /** take values from other, clear() other */
   void take(Span &other);
-  /** @returns whether span lowest is reasonable but highest inValid, started but not compeleted */
+  /** @returns whether span lowest is reasonable but highest inValid, started but not completed */
   bool started() const noexcept;
-
+  /** @returns whether the span has a non-zero length, which includes testing for valid endpoints. */
   bool nonTrivial() const noexcept;
   /** intersection */
-  static Span overlap(const Span &one,const Span&other);
-  /** make it @param more bigger. @returns if this makes span become semi-valid */
+  static Span overlap(const Span &one,const Span &other);
+  /** make it @param more bigger. @returns if this makes span become semi-valid.
+   * if neither bound is set you get 0..more.
+   * if lower is valid but upper is not you get lower to more, which is often a bad idea and perhaps this function should be redefined!
+   * if lower and upper are valid you get lower to upper+more.
+   */
   bool stretchUp(unsigned more=1);
 };
 

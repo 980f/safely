@@ -4,6 +4,7 @@
 #include "eztypes.h"
 #include "minimath.h"
 
+/** class for converting ADC/DAC values to engineering units. */
 class Scaler {
 public:
   double gain;

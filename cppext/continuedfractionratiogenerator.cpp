@@ -32,12 +32,10 @@ static void shift(unsigned hk[3]){
 
 bool ContinuedFractionRatioGenerator::step(){
   if(split()) {
-    if(bump(h)&& bump(k)) {
+    if(bump(h)&& bump(k)) {//only try second if first works, only do the shifts if both worked.
       shift(h);
       shift(k);
       return true;
-    } else {
-      return false;
     }
   }
   return false;
@@ -49,7 +47,8 @@ double ContinuedFractionRatioGenerator::approximation(){
 
 double ContinuedFractionRatioGenerator::best(){
   //we use a counter to guard against bad input parameters. Termination is normally done due to the 'limit' value which is default set to note overflow in the computation.
-  for (unsigned steps = 32; steps-->0&&step();) {
+  for (unsigned steps = 32; steps-->0 && step();) {
+    //step() does all the work
   }
   return approximation();
 } // ContinuedFractionRatioGenerator::step

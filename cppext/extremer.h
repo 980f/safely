@@ -9,7 +9,7 @@
 
 
 /** negatory is whether we are seeking smallest else largest
- * preferLatter exists for use by Extremer class, so that it can share more code with this one even though the concept is only slightly interesting in this class.
+ * preferLatter exists for use by derived class, so that they can share more code with this one even though the concept is only slightly interesting in this class, it controls handling of location information when a point equals the extreme-so-far.
  */
 template<typename Scalar,bool negatory=false,bool preferLatter=false> class SimpleExtremer {
 public: //for convenience.
@@ -41,7 +41,7 @@ public:
           }
         } else {
           if(value<=extremum){
-            return  false;
+            return false;
           }
         }
       }
@@ -52,10 +52,19 @@ public:
     return true;
   } // inspect
 
+  /** @returns whether the value is valid, versus nothing having ever been inspected*/
+  operator bool() const {
+    return started;
+  }
+
+  /** @returns the extreme value IFFI there is one, else potentially garbage, always check the validity first */
+  operator Scalar() const {
+    return extremum;
+  }
   /** to reuse */
   void reset(){
-    started=false;
-    extremum=0;//for debug
+    started=false;//essential and sufficient
+    extremum=0;   //added for debug, and canonicalize GIGO.
   }
 }; // class Extremer
 
@@ -63,9 +72,9 @@ public:
  * preferLatter is how to deal with ties between new value and reigning champion, whether to have the latest one take the crown.
  */
 template<typename Scalar,bool negatory=false,bool preferLatter=false> class Extremer: public SimpleExtremer<Scalar,negatory,preferLatter> {
-  typedef SimpleExtremer<Scalar,negatory,preferLatter> Simple;//compiler would NOT recognize the base class references without this aid.
+  using Simple = SimpleExtremer<Scalar,negatory,preferLatter>; //compiler would NOT recognize the base class references without this aid.
 public: //could make these read-only
-  unsigned location=~0;//default for debug
+  unsigned location=~0;//default is for debug
 
 public:
   /** @returns whether the extremum or location was updated */
@@ -73,9 +82,8 @@ public:
     if(Simple::inspect(value)){
       location = loc;
       return true;
-    } else {
-      return false;
     }
+    return false;
   } // inspect
 
   void reset(){
@@ -84,11 +92,11 @@ public:
   }
 }; // class Extremer
 
-//prebuild the common ones:
-class MaxDoubleFinder : public Extremer<double,false,false>{};
-class MinDoubleFinder : public Extremer<double,true,false>{};
+//prebuild the common ones: (so as to not rely upon LTO to figure out two instances are identical)
 class MaxDouble: public SimpleExtremer<double,false,false>{};
 class MinDouble: public SimpleExtremer<double,true,false>{};
+class MaxDoubleFinder : public Extremer<double,false,false>{};
+class MinDoubleFinder : public Extremer<double,true,false>{};
 
 //add more wrapped specializations here.
 

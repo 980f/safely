@@ -25,9 +25,9 @@ public:
   void freeze(bool on = false);
 
   /** @returns a bit the average of which is the ratio of the above and below members */
-  bool pwm(void);
+  bool pwm();
 
-  operator bool (void){
+  operator bool (){
     return pwm();
   }
 };
@@ -39,9 +39,9 @@ public:
   using IntegerTwiddler::setRatio;//this was supposed to give access to setRatio(unsigned,unsigned,..._) but that quit working.
   void setRatio(double ratio);
   /**@return amount of time that twiddler is 'true' */
-  double getRatio(void);
+  double getRatio();
   /** @return 1/getRatio()*/
-  double getDivider(void)const;
+  double getDivider()const;
 
 };
 
@@ -53,10 +53,10 @@ class PwmModulator : public Twiddler {
 public:
   PwmModulator();
   void setRatio(double ratio);
-  double getRatio(void);
-  unsigned pwm(void);
+  double getRatio();
+  unsigned pwm();
   /** this value will vary such that its average will approach the ratio.*/
-  operator unsigned(void) {
+  operator unsigned() {
     return pwm();
   }
   /** noFloat gives a rougher estimate but doesn't use floating point, relevent to an ISR*/

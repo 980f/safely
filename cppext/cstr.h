@@ -38,7 +38,7 @@ public:
   TextKey c_str() const;
 
   /** as byte vs human readable character */
-  const unsigned char*raw() const;
+  const unsigned char *raw() const;
 
   const char *notNull() const;
 
@@ -55,7 +55,7 @@ public:
   /** @returns whether last character exists and is same as @param isit. an empty string will positively match char(0) */
   bool endsWith(char isit) const noexcept;
 
-  /** @returns whether @param other exactly matches this' content, with nullptr matching the same or "" */
+  /** @returns whether @param other exactly matches this' content, with nullptr matching nullptr or "" */
   bool is(TextKey other) const noexcept;
 
   char operator [](const Index &index) const noexcept;
