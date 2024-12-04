@@ -23,7 +23,7 @@ public:
 
   /** point of destruction pops that value */
   ~Stacked(){
-    object=oldvalue;
+    object = oldvalue;
   }
   //and for convenience let this stand in for the thing pushed, which might have an annoying to type name.
   operator Scalar &() const {

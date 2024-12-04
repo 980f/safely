@@ -8,7 +8,7 @@ double polysum(double x,const double *a,int degree,unsigned prime=0);
 /** given an array of coefficients of a polynomial return the ordinal of the highest non-zero one, ~0 if null polynomial */
 unsigned effectiveDegree(const double *a,unsigned degree);
 
-template <unsigned degree> class Polynomial:public Settable {
+template <unsigned degree> class Polynomial: public Settable {
   
 protected:
   double a[degree + 1];

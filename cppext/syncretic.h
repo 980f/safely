@@ -3,7 +3,7 @@
 
 /**
   * When all the instances of a class need to be accessed as a group then derive from this class.
-  * Deriviation forces the constructor call which in turn records the objects existence.
+  * Derivation forces the constructor call which in turn records the object's existence.
   * While not apparently needing to be templated the template forces a separate lister
   * per using class, else all using classes would get dropped into one list. I.E. templating is needed for a static member to be specific to each class that derives from this one.
   *
@@ -29,20 +29,22 @@ protected:
   }
   
   virtual ~Syncretic(){
-    if(lister == 0) {//pathological case, deleting one that didn't get listed in the first place
+    if(lister == nullptr) {//pathological case, deleting one that didn't get listed in the first place
       return;
     }
     if(lister == this) {//last one, often nice to know and makes the for loop that follows simpler.
-      lister = 0;
+      lister = nullptr;
       return;
     }
-    for(K *scan = lister; scan != 0; scan = scan->next) {
+    for(K *scan = lister; scan != nullptr; scan = scan->next) {
       if(scan->next == this) {
         scan->next = this->next;
         break;
       }
     }
   }
+
+  //todo: add iterator function which takes a lambda and applies to every element, the return is "keep alive" else the object is deleted.
 };
 
 

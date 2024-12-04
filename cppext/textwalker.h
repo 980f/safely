@@ -3,6 +3,7 @@
 #include "sequence.h"
 #include "textchunk.h"
 
+/** this class provides a series of non overlapping blocks, each of which is a view into the given source */
 class TextWalker: public Sequence<TextBlock>{
 protected:
   TextChunk source;
@@ -20,7 +21,7 @@ public:
 };
 
 
-///////////////
+/** core of a simple-minded csv parser */
 class SimpleTextWalker:public TextWalker{
 public:
   SimpleTextWalker(const TextBlock &source, char comma=',');

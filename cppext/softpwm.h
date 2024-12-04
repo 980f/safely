@@ -12,7 +12,7 @@ protected:
   bool phase;
 
   /** we override the 'count complete' event and switch to the other interval time value */
-  void onDone(void) override;
+  void onDone() override;
 public:
   operator bool() const {
     return phase;

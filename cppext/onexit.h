@@ -1,14 +1,17 @@
-#ifndef ONEXIT_H
-#define ONEXIT_H
+#pragma once
 
 /** arrange to do things when exiting block scope */
 
-/** clear a variable on block exit, regardless of how the exit happens, including exceptions */
+/** clear a variable on block exit, regardless of how the exit happens, including exceptions.
+ * The variable being cleared should not be declared in the same block as this agent.
+ *
+ */
 template <typename Scalar> class ClearOnExit {
   Scalar&zipperatus;
 public:
   ClearOnExit(Scalar & toBeCleared): zipperatus(toBeCleared){}
-  operator Scalar(void){
+
+  operator Scalar(){
     return zipperatus;
   }
 
@@ -33,12 +36,12 @@ public:
     return zipperatus;
   }
   /** @returns eventual value - present value , the change that will be imposed at exit */
-  Scalar delta(void){
+  Scalar delta(){
     return onexit - zipperatus;
   }
 };
 
-//todo: conditionalize this on lib being handy:
+#if __has_include<functional>
 #include <functional>
 struct OnExit {
   typedef std::function<void(void)> Lamda;

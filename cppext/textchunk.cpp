@@ -28,7 +28,7 @@ TextBlock::TextBlock(const TextBlock &other):
   allocated(other.allocated),
   amOwner(false)
 {
-
+  //neither copy nor move are owners.
 }
 
 int TextBlock::cmp(const char *other) const noexcept {
