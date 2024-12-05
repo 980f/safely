@@ -45,7 +45,7 @@ MatrixInverter::Matrix::Matrix(unsigned size) :
 void MatrixInverter::clear(){
   forSize(rw){
     forSize(cl){
-      xs[rw][cl] = 0;
+      xs[rw][cl] = 0;//todo:M perhaps we should have an identity matrix rather than a zeroed one?
     }
   }
 }
@@ -53,6 +53,7 @@ void MatrixInverter::clear(){
 double MatrixInverter::compute(){
   mdbg("Inverting matrix");
   if(size == 1) { //special case to expedite debug of non-special cases
+    //ignoring 'ignores'
     double norm = xs[0][0];
     inv[0][0] = ratio(1.0, norm);
     return norm;
@@ -68,6 +69,7 @@ double MatrixInverter::compute(){
       inv[1][1] = ratio(1.0, norm);
       return norm;
     }
+    //todo:1 failed to handle case of both ignored.
     double norm = xs[0][0] * xs[1][1] - xs[0][1] * xs[1][0];
     if(isNormal(norm)) {
       forSize(rw){
@@ -79,7 +81,7 @@ double MatrixInverter::compute(){
       return norm;
     }
     //else fall through to get identical failed state info as before.
-  }
+  }//end size 2, aka linear fit.
   forSize(rw){
     forSize(cl){
       inv[rw][cl] = xs[rw][cl]; //using separate before and after matrices for debuggability
@@ -147,5 +149,6 @@ bool MatrixInverter::test(){
       }
     }
   }
+  //todo:0 use mdbg() to dump matrix one, which should be the identity matrix.
   return true;//could do some sort of check for identity.
 } // MatrixInverter::test

@@ -2,7 +2,7 @@
 
 /** this is a very simple implementation of the determinant process */
 
-double DeterminatorCore::compute(int which, bool yish){
+double DeterminatorCore::compute(unsigned which, bool yish){
   for(unsigned rw = size; rw-- > 0; ) { //exclude extraneous data.
     columner[rw] = rower[rw] = ignorer[rw];
   }
@@ -11,14 +11,14 @@ double DeterminatorCore::compute(int which, bool yish){
   return descend();
 }
 
-DeterminatorCore::DeterminatorCore(int size, bool *rower, bool *columner, bool *ignorer, double ys[], double **xs):
+DeterminatorCore::DeterminatorCore(unsigned size, bool *rower, bool *columner, bool *ignorer, double ys[], double **xs):
   size(size),rower(rower),columner(columner),ignorer(ignorer)
 {
   Y = ys;
   X = xs;
 }
 
-double DeterminatorCore::descend(void){
+double DeterminatorCore::descend(){
   for(unsigned cl = size; cl--> 0; ) {
     if(!columner[cl]) { //1st usable column is one we will sum on
       double summer = 0;
