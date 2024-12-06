@@ -20,7 +20,7 @@ double polysum(double x,const double *a,int degree, unsigned prime){
 }
 
 unsigned effectiveDegree(const double *a,unsigned degree){
-  for(int eff=degree;eff>=0;--eff){
+  for(unsigned eff=degree;eff>=0;--eff){
     if(a[eff]!=0){
       return eff;
     }
