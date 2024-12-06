@@ -53,6 +53,10 @@ template <> unsigned NumericalValue::cast<unsigned>() const noexcept{
   }
 }
 
+template <> unsigned short NumericalValue::cast<unsigned short>() const noexcept{
+  return cast<unsigned>();
+}
+
 /** @returns value saturatedly converted to int */
 template <> int NumericalValue::cast<int>() const noexcept{
   switch (is) {

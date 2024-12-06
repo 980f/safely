@@ -9,9 +9,9 @@ FileWatcher::FileWatcher(bool blocking) :
   }
 }
 
-int FileWatcher::addWatch(const char *pathname, uint32_t mask){
-  int wd = BadIndex;//value given for debug.
-  if(fd.okValue(wd,inotify_add_watch( fd, pathname, mask))) {
+WatchMarker FileWatcher::addWatch(const char *pathname, uint32_t mask){
+  unsigned wd=BadIndex;//4debug.
+  if(fd.okValue(wd,inotify_add_watch( fd, pathname, mask))){
     return wd;
   } else {
     return BadIndex;
@@ -19,7 +19,7 @@ int FileWatcher::addWatch(const char *pathname, uint32_t mask){
 }
 
 bool FileWatcher::removeWatch(FileEvent &fe){
-  return !fd.failed(inotify_rm_watch(fd,fe.wd));
+  return ! fd.failed(inotify_rm_watch(fd,int(fe.wd)));//maydo: don't call rm_watch if wd is badIndex.
 }
 
 bool FileWatcher::hasEvent(){

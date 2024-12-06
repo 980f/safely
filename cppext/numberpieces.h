@@ -17,6 +17,8 @@ public:
   bool hadRadixPoint;
   /** digits left of decimal point */
   u64 predecimal;
+//  /** how many pre decimal digits are represented by 'predecimal' value. Earlier versions without this ended up computing the log to count what we can count here */
+//  unsigned preDigits;
   /** additional zeros to append to predecimal. If not zero then can ignore postdecimal and div10 */
   unsigned pow10;
   /** digits after zero, divide by 10^div10 for their mathematical value */

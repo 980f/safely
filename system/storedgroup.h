@@ -93,8 +93,8 @@ public:
     }
     this->indexer=&indexer;
     //by using these instead of registering a dependent using onReorg, all onAdditions take place before any
-    // whenReorganized's are invoked, so dependent objects are all created before whenReorganized's are invoked. Must check that all
-    // non-creation onAddition stuff doesn't need to wait.
+    // whenReorganized's are invoked, so dependent objects are all created before whenReorganized's are invoked. 
+    //todo:1 check that all non-creation onAddition stuff doesn't need to wait.
     indexer.onRemoval(sigc::hide_return(MyHandler(StoredGroup<Groupie>::remove)));
     indexer.onAddition(MyHandler(StoredGroup<Groupie>::createFor<PrimeContent> ), false);
     setSize(indexer.quantity()); //at time of attachment we resize the indexed entity
@@ -122,7 +122,7 @@ public:
   bool autocreate;
 
   StoredGroup(Storable &node) : Stored(node), autocreate(false){
-    node.isOrdered=true;//until we find a counterexample for this.
+    node.isOrdered=true;//matches initial implementations, application can decide to override this.
     if(node.setType(Storable::Wad)) { //needed in case group is presently empty, so that proper change watching is set up.
       dbg("Empty group?");
     }
@@ -300,7 +300,7 @@ public:
 
   /** remove something from given place in list. This DELETES the item, beware of use-after-free.*/
   bool removeItem(Groupie &member){
-    if(&member!=nullptr) {
+    if(&member!=nullptr) {//#gtk fed us nullptr's here, ignore compiler warnings about it not being possible!
       return remove(ordinalOf(&member));
     }
     return false;

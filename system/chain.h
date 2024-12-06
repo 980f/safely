@@ -107,6 +107,15 @@ public:
       v.resize(howmany,0);//adds null entries, generally not a desirable thing.
     }
   }
+#if 0  //from a different branch:
+ unsigned allocate(unsigned howmany){
+    if(howmany>quantity()) {
+      v.reserve(howmany);//adds null entries, generally not a desirable thing.
+    }
+    return howmany;
+  }
+
+#endif
 
   /** @returns whether chain has an entry for @param ordinal. Entry itself might be nullptr if @see allocate was used/*/
   bool has(unsigned ordinal) const {

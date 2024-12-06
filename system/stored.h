@@ -8,15 +8,14 @@
  * wrapper instead of extending Storable, to lighten each instance's memory footprint.
  **/
 class Stored : SIGCTRACKABLE {
-  Stored() = delete;//# we must attache to a storable, we exist to wrap access to one with type-safety.
+  Stored() = delete;//# we must attach to a storable, we exist to wrap access to one with type-safety.
   Stored(const Stored &cantbecopied) = delete;//can't copy a subset of a tree, not generically.
 protected:
   /** used to per-class disable notification causing onParse' to be called before all children exist.
    * Only a few situations have needed to do this.
    */
   bool duringConstruction;
-  // you must add the following lines to your constructor, can't be a base class function as the virtual table isn't operational
-  // yet:
+  // you must add the following lines to your constructor, can't be a base class function as the virtual table isn't operational yet:
   //    duringConstruction=false;
   //    onParse();
 

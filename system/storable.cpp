@@ -201,8 +201,7 @@ void Storable::setEnumerizer(const Enumerated *enumerated){
         number = enumerated->valueOf(text.c_str()); //reconcile numeric value
       } else {
         if(type <= Uncertain) {
-          setType(Storable::Textual); //todo:0 probably should be numeric and numeric should check for presence of enumerated, or add a specific Storable::Enumerated to
-                                      // reduce redundant checks.
+          setType(Storable::Textual); //todo:0 probably should be numeric and numeric should check for presence of enumerated, or add a specific Storable::Enumerated to reduce redundant checks.
         }
         text = enumerated->token(number);
       }
@@ -223,13 +222,14 @@ bool Storable::convertToNumber(NumericalValue::Detail subtype){
   if(setType(Storable::Numerical)){
     reinterpret();
     return true;
-  } else
+  } else {
   return number.changeInto(subtype);
+  }
 } // Storable::convertToNumber
 
 bool Storable::resolve(bool recursively){
   if(is(Storable::Uncertain)) {
-    if(false ) {//todo: if needed do a chr scan for numerical appearance.
+    if(false ) {//todo:00 if needed do a chr scan for numerical appearance.
       return true;
     } else {//it must be text
       setType(Storable::Textual);
@@ -269,9 +269,8 @@ bool Storable::isModified() const {
         return true;
       }
     }
-  //#JOIN
-  case Numerical:
-  //#JOIN
+    JOIN
+  case Numerical:    
   case Textual:
     return ChangeMonitored::isModified();
   default:
@@ -303,9 +302,8 @@ bool Storable::wasModified(){
     }
     return changes > 0 || thiswas;
   }
-  //#JOIN;
+  JOIN;
   case Numerical:
-  //#JOIN;
   case Textual:
     return thiswas;
   } // switch
@@ -359,7 +357,6 @@ void Storable::clone(const Storable&other){ //todo:2 try to not trigger false ch
   number = other.number;
   text.copy(other.text);//want independent copy
   switch(other.type) {
-  //trust compiler to bitch if case missing:--  default:
   case NotDefined:
     dbg("!Unknown node in tree being copied");
     return; //
@@ -395,9 +392,8 @@ void Storable::reparent(Storable &newparent){
 void Storable::assignFrom(Storable&other){
   ONNULLREF(other,)
   switch(type) {
-//  default:
   case Uncertain:
-  //#JOIN
+    JOIN;
   case NotDefined:
     if(other.is(Numerical)) {
       setNumber(other.number);

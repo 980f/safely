@@ -7,15 +7,15 @@
 */
 class StoredLabel : public Stored {
 public:
-  StoredLabel(Storable &node, const char *fallback = nullptr);
-  void setDefault(const char *deftext);
+  StoredLabel(Storable &node, const TextValue  &fallback = TextValue());
+  void setDefault(const TextValue  &deftext);
   /**pointer to storage, not safe to use to manipulate it,*/
   TextKey c_str() const;
   /** your own self-deleting copy of the storage.
    * IE manipuating this does not affect the stored value.  */
   Text toString() const;
   /** syntactic sugar for toString() */
-  operator TextKey() const {
+  operator TextValue() const {
     return toString();
   }
   /** @returns whether the image of this label has zero length */
@@ -23,14 +23,14 @@ public:
 
   /** copy value from ... */
   void operator =(const StoredLabel &other);
-  void operator =(const Text &zs);
+  void operator =(const TextValue  &zs);
   void operator =(TextKey zs);
   /** convert integer to text and set this to that image */
   void operator =(int value);
 
   /** compare values, ignore names */
   bool operator ==(const StoredLabel &other) const;
-  bool operator ==(const Text  &zs) const;
+  bool operator ==(const TextValue  &zs) const;
   bool operator ==(TextKey zs) const;
 
   /** calls the given slot with this.c_str() as its argument */

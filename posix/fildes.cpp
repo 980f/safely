@@ -55,7 +55,7 @@ FILE *Fildes::getfp(const char *fargs){
 
 unsigned Fildes::available(){ //was buggy prior to 25apr2018
   unsigned bytesAvailable = 0;
-  if(!(ioctl(FIONREAD,&bytesAvailable))) {
+  if(failure(ioctl(fd, FIONREAD,&bytesAvailable))) {//missing third arg did amazing damage to caller
     return 0;//a place to breakpoint
   } else {
     return bytesAvailable;

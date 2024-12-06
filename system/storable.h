@@ -14,6 +14,9 @@
 #include "textpointer.h"
 #include "numericalvalue.h"
 
+//class for text value storage.
+typedef Text TextValue;
+
 /**
  * non-volatile key-value storage and transport mechanism.
  * The key is text and is non-mutable from outside the class.
@@ -95,7 +98,7 @@ protected:
   Text text;
 protected: //if you need access add a method
   /** used primarily for debugging, don't have to unwind stack to discover source of a wtf herein. */
-  Storable *parent;
+  Storable *parent;//cached back link.
 protected:
   /** cached coordinate of this item in its parent's wad, updated by parent when that parent reorganizes its wad.*/
   Index index;

@@ -64,6 +64,9 @@ bool PushedNumberParser::next(char u){
         //first digit of predecimal
         phase=BeforeDecimal;
         applydigit(predecimal,u);
+ //       if(applydigit(predecimal,u)){
+ //         ++preDigits;
+ //       }
         return true;
       } else if(isspace(u)){
         return true;
@@ -80,6 +83,7 @@ bool PushedNumberParser::next(char u){
       }
       if(applydigit(predecimal,u)){
         //copacetic
+        //++preDigits;
       } else {//count dropped digits
         if(!pow10){
           if(u>='5'){
