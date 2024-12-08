@@ -141,11 +141,11 @@ s16 sround(float scaled){ //#this would be so much cleaner and faster in asm!
   return s16(scaled);
 }
 
-int modulus(int value, unsigned cycle){
-  /* since most use cases are within one cycle we use add/sub rather than try to make divide work.*/
+unsigned modulus(int value, unsigned cycle){
   if(cycle<=1) {
-    return value;
+    return value;//GIGO
   }
+  /* since most use cases are within one cycle we use add/sub rather than try to make divide work.*/
   while(value < 0) {
     value += cycle;
   }
@@ -185,7 +185,8 @@ u32 chunks(double num, double denom){
 int fexp(double d){ //todo:1 remove dependence on cmath.
   int ret;
   if(d == 0.0) { //frexp returns 0, which makes it look bigger than numbers between 0 and 1.
-    return -1023;//one less than any non-zero number will give
+    return std::numeric_limits<decltype(d)>::min_exponent -1;
+    // return -1023;//one less than any non-zero number will give
   }
   frexp(d, &ret);
   return ret;
@@ -341,7 +342,7 @@ double logRatio(u32 over, u32 under){
 /** n!/r!(n-r)! = n*(n-1)..*(n-r+1)/r*(r-1)..
  *  This is done in a complicated fashion to increase the range over what could be done if the factorials were computed then divided.
  */
-u32 Cnr(unsigned n, unsigned r){
+unsigned Cnr(unsigned n, unsigned r){
   if(r<=0) {//frequent case and avert naive divide by zero
     return 1;
   }
@@ -357,8 +358,8 @@ u32 Cnr(unsigned n, unsigned r){
     }
   }
 
-  u32 num = n;
-  u32 denom = r;
+  unsigned num = n;
+  unsigned denom = r;
   //optimize range by removing power of 2 from factorials while computing them
   int twos = 0;
   while(r-->0) {
@@ -375,7 +376,7 @@ u32 Cnr(unsigned n, unsigned r){
     }
     denom *= rterm;
   }
-  //twos should be a small
+  //twos should be a small value
   if(twos>=0) {
     num <<= twos;
   } else {
@@ -383,8 +384,6 @@ u32 Cnr(unsigned n, unsigned r){
   }
   return rate(num,denom);
 } // Cnr
-
-extern "C" {
 
 /* @return integer part of d, modify d to be its fractional part.
  */
@@ -399,8 +398,6 @@ unsigned splitteru(double &d){
   d = modf(d,&eye);  //todo:2 this can be done very efficiently via bit twiddling. "modf()" has an inconvenient argument order and return type.
   return unsigned(eye);
 }
-
-} //end extern C for potentially assembly coded routines.
 
 
 ///** version of @see splitter that allows for long or long-long etc integer types.

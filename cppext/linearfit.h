@@ -2,8 +2,8 @@
 #define LINEARFIT_H
 
 #include "realstatistic.h"
-#include "linear.h"
-
+#include "polynomial.h"
+using Linear = Polynomial<2>;
 /** adds generation of a formula for a line to RealCorrelation's fitting. */
 
 class LinearFit {

@@ -2,6 +2,7 @@
 #include "minimath.h"
 
 /**
+
 parts of C startup routine of microcontroller were exposed for use application use,
 but then that code was used on a linux system so we need to map the C-startup stuff to standard library stuff.
 
@@ -9,7 +10,6 @@ some other platform optimizations seem to have slipped in ...
 */
 
 //todo:2 figure out some #define's to switch between os's
-extern "C" {
   void copyObject(const void *source, void *target, u32 length) {
     memmove(target, source, length);
   }
@@ -26,5 +26,3 @@ extern "C" {
   void nanoSpin(unsigned clocks){
     while(clocks-->0); //todo: platform specific code
   }
-
-}

@@ -81,6 +81,7 @@ inline int polarity(bool positive){
 
 /** @return negative if lhs is < rhs, 0 if lhs==rhs, +1 if lhs>rhs .
  *  to sort ascending if returns + then move lhs to higher than rhs.
+ *  todo:1 punt to <=> if it exists.
  */
 template< typename mathy > int compareof(mathy lhs,mathy rhs){
   return signof(lhs - rhs);
@@ -94,7 +95,7 @@ template<typename Integer> Integer rate(Integer num, Integer denom){
   return (num + (denom / 2)) / denom;
 }
 
-inline unsigned half(unsigned sum){
+unsigned half(unsigned sum){
   return (sum + 1) / 2;
 }
 
@@ -149,9 +150,10 @@ inline double rounder(double value, double quantum){
  *
  *  Note: the C '%' operator gives negative out for negative in.
  */
-int modulus(int value, unsigned cycle);//todo:1 return type should be unsigned, check use cases.
+unsigned modulus(int value, unsigned cycle);
 
-/** @param accum is reduced to a number less than @param length, @returns the number of subtractions that were necessary to do so.
+/** @param accum is reduced to a number less than @param length,
+ * @returns the number of subtractions that were necessary to do so.
  * Named for use in reporting rotary position from encoder without an index pulse to pick out the revolutions.
  */
 template<typename Integrish, typename Integrash> Integrish revolutions(Integrish &accum, Integrash length){
@@ -223,16 +225,9 @@ double degree2radian(double theta);
 
 /** n!/r!(n-r)! combinatorial function.
  * Was formerly named and documented as Pnr, but implementation was correct for Cnr and so was its usages.
+ * has greater range than naive implementation of ratio of factorials.
  */
-u32 Cnr(unsigned n, unsigned r);
-
-inline u32 min(u32 a, u32 b){
-  if(a < b) {
-    return a;
-  } else {
-    return b;
-  }
-}
+unsigned Cnr(unsigned n, unsigned r);
 
 /** if @param a is greater than @param b set it to b and @return whether a change was made.
  *  if @param orequal is true then also return true if args are equal.
@@ -285,15 +280,19 @@ template< typename S1, typename S2 > S1 greater(S1 a, S2 b){
   }
 }
 
-template< typename Scalar > void swap(Scalar &a, Scalar &b){//todo:0 see if all users have upgraded to a c++ with swap in the std library, and if so kill this one.
-  Scalar noxor;//don't trust that xor is non corrupting for all scalars.
+template< typename Scalar > void swap(Scalar &a, Scalar &b) noexcept {//todo:0 see if all users have upgraded to a c++ with swap in the std library, and if so kill this one.
+  Scalar noxor;//don't trust that xor is non-corrupting for all scalars.
   noxor = a;
   a = b;
   b = noxor;
 }
 
-/** Things that are coded in assembler on some platforms, due to efficiency concerns. In 2009 one version of the GCC compiler for ARM often produced horrible and sometimes incorrect code. Time permitting these should be compiled from the C equivalents and compared to the hand coded assembler to see if we can abandon the assembler source due to compiler improvements. */
-extern "C" {
+/** Things that are coded in assembler on some platforms, due to efficiency concerns.
+ * In 2009 one version of the GCC compiler for ARM often produced horrible and sometimes incorrect code.
+ * Time permitting these should be compiled from the C equivalents and compared to the hand coded assembler to see if we can abandon the assembler source due to compiler improvements.
+ * extern "C" removed as we can use [[naked]] attribute and inline asm to code these.
+ */
+
 /* @returns integer part of d, modify d to be its fractional part.*/
 int splitter(double &d);
 /** like splitter but has an extra bit of output range by presuming input is non-negative. */
@@ -305,7 +304,8 @@ void nanoSpin(unsigned ticks);
 /** rounded and overflow managed 'multiply by ratio' */
 u32 muldivide(u32 arg, u32 num, u32 denom);
 
-/** @param fractionalThereof */
+/** @returns static_cast<unsigned>(ceil( quantity * @param fractionThereof ))
+ */
 unsigned saturated(unsigned quantity, double fractionThereof);
 
 /** fraction is a fractional multiplier, with numbits stating how many fractional bits it has.*/
@@ -320,10 +320,10 @@ u32 log2Exponent(u32 number);
 /** @returns eff * 2^pow2  where pow2 is signed. This can be done rapidly via bitfiddling*/
 float shiftScale(float eff, int pow2);
 
-double flog(u32 number);
+double flog(unsigned number);
 /** @return the natural logarithm of the ratio of @param over @param under.
- * This is computable as the difference of their logs, but we wrap that here so that some fancy fidding can reduce the number of logarithms executed.  */
-double logRatio(u32 over, u32 under);
+ * This is computable as the difference of their logs, but we wrap that here so that some fancy fiddling can reduce the number of logarithms executed. */
+double logRatio(unsigned over, unsigned under);
 
 //sane truncations:
 u16 uround(float scaled);
@@ -341,16 +341,6 @@ void fillObject(void *target, u32 length, u8 fill);
 void memory_copy(const void *source, void *target, void *sourceEnd);
 
 void memory_set(void *target, void *targetEnd, u8 value);
-
-#if 0 //  fixmelater //!defined( QT_CORE_LIB ) && !defined() //std lib's differ between pc and arm.
-//the difference of two u16's should be a signed int. test your compiler.
-inline u16 abs(int value){
-  return value > 0 ? value : -value;
-}
-
-#endif
-
-} //end extern C for assembly coded routines.
 
 /** variants of splitter, allowing for greater range. @see splitter is optimized for numbers less than 32k
  *  @param d is replaced with its fractional part, the function @returns the integer part, @see standard math lib's modf for edge cases.

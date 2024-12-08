@@ -22,10 +22,10 @@ public:
   Cycler(unsigned length);
 
   /** @returns whether @param index is within the defined cycle*/
-  constexpr bool contains(unsigned index) const;
+  constexpr bool contains(unsigned index) const ;
 
   /** @returns the cycle length */
-  constexpr unsigned Cycler::cycle() const {
+  constexpr unsigned cycle() const {
     return length;
   }
 

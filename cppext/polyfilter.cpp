@@ -1,24 +1,22 @@
 #include "polyfilter.h"
 
+
 PolyFilter::PolyFilter(unsigned hw):hw(hw){
   //#nada
 }
 
-PolyFilter::Inflection::Inflection(){
-  location=0;
-  maxrmin=0;
-  delta=0;
+PolyFilter::Inflection::Inflection():estimate(0),delta(0){
+
 }
 
-double PolyFilter::Inflection::absolute(int offset){
-  return offset+location-ratio(double(delta),double(maxrmin));
+double PolyFilter::Inflection::absolute(int offset)const{
+  return offset+point.location-ratio(double(delta),double(point.amplitude));
 }
 
 /** use return to reduce cost of computing the tweak */
-bool PolyFilter::Inflection::recordif(bool changeit,int newvalue,int newlocation){
+bool PolyFilter::Inflection::recordif(bool changeit,const Datum &testpoint){
   if(changeit){
-    maxrmin=newvalue;
-    location=newlocation;
+    point = testpoint;
     return true;
   } else {
     return false;
@@ -26,11 +24,11 @@ bool PolyFilter::Inflection::recordif(bool changeit,int newvalue,int newlocation
 }
 
 /** use return to reduce cost of computing the tweak */
-bool PolyFilter::Inflection::morePositive(int newvalue,int newlocation){
-  return recordif(maxrmin<newvalue,newvalue,newlocation);
+bool PolyFilter::Inflection::morePositive(const Datum & testpoint){
+  return recordif(point.amplitude<testpoint.amplitude,testpoint);
 }
 
-bool PolyFilter::Inflection::moreNegative(int newvalue,int newlocation){
-  return recordif(maxrmin>newvalue,newvalue,newlocation);
+bool PolyFilter::Inflection::moreNegative(const Datum & testpoint){
+  return recordif(point.amplitude>testpoint.amplitude,testpoint);
 }
 

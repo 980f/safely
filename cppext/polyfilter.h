@@ -1,29 +1,39 @@
-#ifndef POLYFILTER_H  //(C) 2017 Andrew L.Heilveil.
+#ifndef POLYFILTER_H  //(C) 2017,2024 Andrew L.Heilveil.  AKA github/980f.
 #define POLYFILTER_H
 
 #include "centeredslice.h"
 
-/** polynomial filter, first implemenations use Savitsky-Golay algorithm as optimized by Andy Heilveil */
+/** polynomial filter, base class with support for tracking filter progress and dataset interesting parts*/
 class PolyFilter {
 protected:
+  /** @param hw is half width of data span, full width is 2*hw+1. Odd width is forced due to significant performance gains */
   PolyFilter(unsigned hw);
+  virtual ~PolyFilter();
 public:
-  const int hw;
+  const unsigned hw;
+  struct Datum {
+    int amplitude = 0; //discriminant for "biggest" whatever determination.
+    int location = 0; //not unsigned as this is an abstract user coordinate
+    Datum() = default;
+  };
+  /** places where derivatives are zero or maximum is often the main goal in filtering. */
   struct Inflection {
-    int location;
-    int maxrmin; //discriminant for "biggest" whatever determination.
-
+    Datum point;
     int estimate;//running estimate, scaled by something to make it an integer
     int delta; //running estimate, scaled by something to make it an integer
 
     Inflection();
     /** the stored location is relative to some external point @param offset*/
-    double absolute(int offset);
-    /** use return to reduce cost of computing the tweak */
-    bool recordif(bool changeit,int newvalue,int newlocation);
-    /** use return to reduce cost of computing the tweak */
-    bool morePositive(int newvalue,int newlocation);
-    bool moreNegative(int newvalue,int newlocation);
+    double absolute(int offset) const;
+  public:
+    /** use return to reduce cost of computing the tweak
+    @returns whether the inflection was updated */
+    bool morePositive(const Datum &testpoint);
+    bool moreNegative(const Datum &testpoint);
+  protected:
+    /** @returns @param changeit,  code common to morePositive and moreNegative, use them. */
+    bool recordif(bool changeit, const Datum &testpoint);
+
   };
 
   virtual double slope() const = 0;
@@ -33,7 +43,7 @@ public:
   virtual void step(CenteredSlice &slice) = 0;
 
   struct ScanReport {
-    bool meaningful;
+    bool meaningful = false;
     Inflection low;
     Inflection high;
     Inflection top;

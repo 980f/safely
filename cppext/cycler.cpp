@@ -17,7 +17,7 @@ constexpr unsigned Cycler::unwrap(int value) const {
 Cycler::Cycler(unsigned length): length(length), value(length ? 0 : ~0) {}
 
 
-bool Cycler::contains(unsigned index) const {
+constexpr bool Cycler::contains(unsigned index) const {
   return length ? length > index : false;
 }
 
@@ -49,7 +49,7 @@ bool Cycler::next() {
   return increment() == 0;
 }
 
-unsigned Cycler::operator +(int offset) const {
+constexpr unsigned Cycler::operator +(int offset) const {
   return unwrap(value + offset);
 }
 
@@ -57,7 +57,7 @@ unsigned Cycler::operator +=(int offset) {
   return operator =(value + offset);
 }
 
-unsigned Cycler::operator -(int offset) const {
+constexpr unsigned Cycler::operator -(int offset) const {
   return unwrap(value - offset);
 }
 

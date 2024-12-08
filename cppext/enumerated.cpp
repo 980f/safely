@@ -26,5 +26,5 @@ unsigned SequentialEnumeration::valueOf(TextKey token) const {
       return ordinal;
     }
   }
-  return BadIndex;
+  return ~0;
 }

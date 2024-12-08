@@ -1,5 +1,5 @@
-#ifndef LINEARSMOOTHER_H
-#define LINEARSMOOTHER_H
+#pragma once  //(C) 2017 by Andrew L Heilveil, github/980f
+
 #include "minimath.h"
 #include "cycler.h"
 
@@ -12,24 +12,31 @@
 template <int hwidth> class LinearSmoother {
   enum{ fullWidth = 1 + 2 * hwidth};
 
+  /** the filter can work in integers, with integer scaling parameters that apply to all points and as such can often be ignored.
+    'inv' stands for 'inverse' Sx is "sum of integers raised to the power x over the range -hw to +hw".
+  */
   constexpr static double invS0 = 1.0 / fullWidth;
   constexpr static const double invS1 = 1.0 / ((hwidth + 1) * fullWidth); //== invS0/(hw+1)
   constexpr static const double invS2 = 3.0 / (hwidth * (hwidth + 1) * fullWidth); //==invS0*3/()(+1)
 
+  /** we are allowing for bipolar input data, although all testing was done with positive-only data. */
   int memory[fullWidth];
-
   Cycler phaser;
+  /** Yx is the some of the input amplitudes times the xth power of the integer position in the filter.
+  Y0 is simple the sum of the inputs over the range, Y1 is the sum with each input multiplied by relative position in the filtered range. 
+  */
   int Y0;
   int Y1;
 
   LinearSmoother(): phaser(fullWidth){
-    init(0);//4debug
+    init(0);//4debug set the memory to all zero, which also lets us set Y0 and Y1 to zero.
   }
+  
   /** initialize with a nominal dc value, after 1+2*hwidth updates the value won't matter*/
   void init(int dc){
     Y0 = dc * (fullWidth);
     Y1 = 0;
-    for(int i = fullWidth; i-- > 0; ) {
+    for(int i = fullWidth; i-- > 0; ) { //some compilers recognize this as a memset :)
       memory[i] = dc;
     }
   }
@@ -42,24 +49,26 @@ template <int hwidth> class LinearSmoother {
 
   void update(int Ynew){
     int Yold = memory[phaser];
-
     memory[phaser++] = Ynew;
+    //order of the following is quite important:
     Y0 -= Yold;
     Y1 -= Y0;
     Y1 += hwidth * (Ynew + Yold);
     Y0 += Ynew;
   }
 
-  double mean(void){
+  /** @returns average of the data. You may wish to multiply this by the quantum of the input integer data. */
+  double mean(){
     return Y0 * invS0;
   }
 
-  double drift(void){
+/** @returns engineering value of slope (1st derivative) at center of timeframe. You may wish to multiply this by the quantum of the input data divided by the unit of time sampling. */
+  double drift(){
     return Y1 * invS2;
   }
 
-  //compute central fit coefficients, then apply them to hwidth
-  double now(void){
+  /** @returns fitted value of most recent point added, using lagging filter from center of timeframe. */
+  double now(){
     //return mean()+drift()*hwidth;
     return (Y0 * (hwidth + 1) + 3 * Y1) * invS1; //same as above, minimizing integer -> float conversions.
   }

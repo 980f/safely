@@ -1,8 +1,8 @@
-#ifndef QUADRATICFILTER_H
-#define QUADRATICFILTER_H
+#pragma once
 
 #include "polyfilter.h"
 
+/** fit parabola to data */
 class QuadraticFilter : public PolyFilter {
   //cached dependents on hw:
   const unsigned hw2;//hw*hw
@@ -41,11 +41,9 @@ public:
   void step(CenteredSlice &slice) override;
 
 protected:
-  void recordInflection(PolyFilter::Inflection &flect) const;
+  void recordInflection(Inflection &flect) const;
   /** @param slice is search window, presumed to have a filter's worth of channels outside on each side
    * @param report records the most interesting points in the range*/
   void scan(const CenteredSlice &slice,ScanReport &report) override;
 
 }; // class QuadraticFilter
-
-#endif // QUADRATICFILTER_H

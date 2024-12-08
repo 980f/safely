@@ -111,20 +111,20 @@ void QuadraticFilter::scan(const CenteredSlice &slice, ScanReport &report){
 // Y[0],Y[1],Y[2],delta[0],delta[1],delta[2],est[0],est[1],est[2],amplitude(),slope(),curvature());
     if (y2waspos) {
       if(est[2]<0) {
-        if(report.low.morePositive(est[1],location)) {
+        if(report.low.morePositive({est[1],location})) {
           recordInflection(report.low);
         }
       }
     } else {
       if(est[2]>0) {
-        if(report.high.moreNegative(est[1],location)) {
+        if(report.high.moreNegative({est[1],location})) {
           recordInflection(report.high);
         }
       }
     }
 
     if(y1waspos && est[1]<0 ) {//slope at peak
-      if(report.top.morePositive(est[0],location)) {
+      if(report.top.morePositive({est[0],location})) {
         report.top.delta = delta[1];
         report.top.estimate = est[1];
       }

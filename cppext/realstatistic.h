@@ -1,10 +1,13 @@
 #pragma once
 
 /** standard statistics on a real number */
-class RealCorrelation;
+// class RealCorrelation;
+// class StoredStatistic;
 
 class RealStatistic {
-  friend class RealCorrelation;
+  // friend class RealCorrelation;
+  // friend class StoredStatistic;
+public://friending wasn't working well enough.
   /** sum of data */
   double sum;
   /** sum of squares of data */
@@ -44,8 +47,10 @@ public:
   }
 }; // class RealStatistic
 
+class StoredCorrelation;
 /** standard statistics on paired data */
 class RealCorrelation {
+  friend class StoredCorrelation;
 protected:
   RealStatistic xx;
   RealStatistic yy;
