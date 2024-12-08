@@ -53,7 +53,7 @@ bool Stored::indexIs(unsigned which) const {
   return index() == which;
 }
 
-sigc::slot<unsigned> Stored::liveindex() const {
+sigc::slot<unsigned()> Stored::liveindex() const {
   //  return MyHandler(Stored::index);//obvious
   return mem_fun(node, &Storable::ownIndex); //faster
 }

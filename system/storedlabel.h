@@ -1,5 +1,4 @@
-#ifndef STOREDLABEL_H
-#define STOREDLABEL_H
+#pragma once
 
 #include "stored.h"
 
@@ -33,15 +32,14 @@ public:
   bool operator ==(const TextValue  &zs) const;
   bool operator ==(TextKey zs) const;
 
+  using Receiver=sigc::slot<void( TextKey)>;
   /** calls the given slot with this.c_str() as its argument */
-  void applyTo(sigc::slot<void, TextKey> slotty);
+  void applyTo(Receiver slotty);
   /** on a change to the value will call applyTo with the given slot */
-  sigc::connection onChange(sigc::slot<void, TextKey> slotty, bool kickme=false);
+  sigc::connection onChange(Receiver slotty, bool kickme=false);
   /** a slot that will set the value of this */
-  sigc::slot<void, TextKey> setter();
+  Receiver setter();
 
   /** set from a double, rendering with @param decimals. if decimals==0 render as integer, if <0 then with that many zeroes. ie -1 is the nearest multuple of 10.  */
   void setFrom(double value, int decimals);
 }; // class StoredLabel
-
-#endif // STOREDLABEL_H

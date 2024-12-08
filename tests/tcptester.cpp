@@ -39,7 +39,7 @@ void TcpTester::TestService::goneQuiet(){
   //todo:2 can we get remote ip?
 }
 
-TcpTester::TestService::TestService(int fd, u32 ipv4, sigc::slot<void, TcpTester::TestService *> container):
+TcpTester::TestService::TestService(int fd, u32 ipv4, TestSlot container):
   TcpSocket(fd,ipv4),
   onDisconnect(container),
   buffer(bufferAllocation,sizeof(bufferAllocation)),

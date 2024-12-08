@@ -1,4 +1,6 @@
 
+#include <cstring>
+
 #include "dout.h" //reset pin
 #include "i2c.h"  //safely wrapper, not the OS's
 
@@ -96,7 +98,9 @@ public:
     u8 mask;
     unsigned offset;
     FrameBuffer &fb;
-
+    enum Code {
+      DataMarker=0x40 , //first byte of I2C payload, indicates that the remainder goes to ram.
+    };
   public:
     Pen(FrameBuffer &fb) : fb(fb) { jumpto({0, 0}); }
 
@@ -106,7 +110,7 @@ public:
     /** move coordinates, but don't alter image */
     void jumpto(PixelCoord &&random);
 
-    /** just move one cell in any of 8 directions, with a 9th option to not move at all.
+    /** just move one cell in any of 4 directions, with a 5th option to not move at all.
      * we'll add step0 and step1 functions later that always step but just along the buitin-to-name axis.
      */
     void step(bool which, int direction);
@@ -163,8 +167,7 @@ private:
   } bgact = Idle;
   unsigned bgdelay = 0;
 
-private: // expose only the ones that make sense, such as contrast, through code that remembers to send the value.
-  // once we know which are dynamically used we can ditch most of this via building a struct with bit fields.
+private://todo: inline each of these in accessor functions which convert from application data types to that of the display
 
   Reg<0x21, 6, 3, 8> windowSeg; // address pointer for refresh.
                                 //  Reg windowSeg = {0x21, 6, 3, 8}; // actually 2 6 bit operands each in own byte but the first is always 0 for our use so we can cheat.
@@ -189,7 +192,7 @@ private: // expose only the ones that make sense, such as contrast, through code
 
 public:
   /** you can init inline with braces: {128,64 and so on}*/
-  SSD1306(Display &&displaydefinition);
+  SSD1306(const Display &&displaydefinition);
 
   /** tell the OS we want to use this hardware */
   bool connect();

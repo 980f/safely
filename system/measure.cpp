@@ -1,6 +1,9 @@
 #include "measure.h"
+
+#include <ustring.h>
+
 #include "numberformatter.h"
-#include "uicore.h"
+// #include "uicore.h"
 
 Measure::Measure(Storable &node) :
   Stored(node),

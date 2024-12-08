@@ -63,9 +63,12 @@ template<class Groupie> class StoredGroup : public Stored {
   Stored *indexer=nullptr;
 
 public:
-  using Watcher = sigc::slot<void( bool /*removing*/, size_t /* which*/)>;
+  using Watcher = sigc::slot<void( bool /*removing*/, unsigned /* which*/)>;
+  using Receiver=sigc::slot<void( Groupie &)>;
+  using Authorizer=sigc::slot<bool( Groupie &)>;
+
   /** attach a filter to determine if an item in the group is allowed to be removed */
-  sigc::connection permissionToRemove(sigc::slot<bool(Groupie &)> tester){
+  sigc::connection permissionToRemove(Authorizer tester){
     return preremoval.connect(tester);
   }
 
@@ -225,7 +228,7 @@ public:
     return dependents.connect(listner);
   }
 
-  sigc::connection onAddition(sigc::slot<void, Groupie &> action, bool addAllNow = false){
+  sigc::connection onAddition(Receiver action, bool addAllNow = false){
     if(addAllNow) {
       ForValues(list){
         action(list.next());
@@ -312,7 +315,7 @@ public:
   }
 
   /** remove any member for which the slot is true, @return quantity removed. This DELETES the item, beware of use-after-free.*/
-  unsigned removeIf(const sigc::slot<bool, Groupie &> &killit){
+  unsigned removeIf(const Authorizer &killit){
     unsigned deaths = 0; //nice diagnostic versus a simple bool.
 
     //since node watch doesn't know what is removed wait until possibly multiple removes are done before triggering its watchers (important when some watchers are gui redraws)
@@ -336,7 +339,7 @@ public:
   }
 
   /** @return ordinal of first entity meeting @param predicate, -1 for none.*/
-  unsigned first(const sigc::slot<bool, const Groupie &> &predicate) const {
+  unsigned first(const Authorizer &predicate) const {
     ForValuesConstly(list){
       if(predicate(list.next())) {
         return list.ordinal() - 1; //#already bumped to next entry
@@ -364,7 +367,7 @@ public:
   }
 
   /** @returns nullptr or first entity that positively meets the predicate */
-  Groupie *findFirst(const sigc::slot<bool, Groupie &> &predicate){
+  Groupie *findFirst(const Authorizer &predicate){
     ForValues(list){
       Groupie &item(list.next());
 
@@ -376,7 +379,7 @@ public:
   }
 
   /** @returns nullptr or first entity that positively meets the predicate */
-  const Groupie *findFirst(const sigc::slot<bool, const Groupie &> &predicate) const {
+  const Groupie *findFirst(const Authorizer &predicate) const {
     ForValuesConstly(list){
       const Groupie &item(list.next());
 
@@ -425,14 +428,14 @@ public:
   }
 
   /** for when all you need is the item: */
-  void forEachItem(const sigc::slot<void, Groupie &> &action){
+  void forEachItem(const Receiver &action){
     ForValues(list){
       action( list.next());
     }
   }
 
 //  /** @deprecated need to get rid of these as they generate warnings:*/
-//  void forEach(const sigc::slot<void, const TextKey &, const Groupie &, unsigned> &action) const {
+//  void forEach(const sigc::slot<void(const TextKey &, const Groupie &, unsigned)> &action) const {
 //    ForValuesConstly(list){
 //      Groupie &item(list.next());
 //      action(item.node.name, item, item.index());
@@ -440,7 +443,7 @@ public:
 //  }
 
   /** faster than using slot's when the method is simple enough:*/
-  void forEach(void (Groupie::*method)(void)){
+  void forEach(void (Groupie::*method)()){
     ForValues(list){
       (list.next().*method)();
     }

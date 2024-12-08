@@ -6,6 +6,9 @@
 
 #include "safely.h"
 //#include "l10n.h" //for options that must persist when this guy's artfile is lost.
+#include <cstdio>
+#include <filename.h>
+
 #include "range.h"
 
 #include "chainsorter.h"    //for unihan filtering
@@ -322,7 +325,7 @@ struct KanjiLookup : public ArtFile {
     }
   } // parseHanziList
 
-  void parseUnihan(FILE *fp,int maxline,sigc::slot<void,Unichar, const char *> action){
+  void parseUnihan(FILE *fp,int maxline,sigc::slot<void(Unichar, const char *)> action){
     char line[maxline * 2 + 1];//factor of 2 in case we blew the manual search via wc for the longest line.
     while (fgets(line,sizeof(line),fp)) {//for each line
       const char *mark(line);

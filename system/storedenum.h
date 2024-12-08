@@ -15,18 +15,20 @@ public:
 
   Cstr toString();
 
+  using Receiver=sigc::slot<void(unsigned)>;
+  using Transmitter=sigc::slot<unsigned()>;
   /** @return a functor that when invoked will set this object's value to what is passed at this time.*/
   SimpleSlot setLater(unsigned value);
   /** a slot that will set the value of this */
-  sigc::slot<void, unsigned> setter();
+  Receiver setter();
   /** @return a functor that when invoked will return this object's value at that time.*/
-  sigc::slot<unsigned> getLater();
+  Transmitter getLater();
 
   /** useful for sending value changes */
-  SimpleSlot applyTo(sigc::slot<void,unsigned> functor);
+  SimpleSlot applyTo(Receiver functor);
 
   /** hook up to send changes to the @param given functor, and if @param kickme call that functor now*/
-  sigc::connection sendChanges(sigc::slot<void,unsigned> functor,bool kickme = false);
+  sigc::connection sendChanges(Receiver functor,bool kickme = false);
 
   /** added for a semi-pathological case in physicalSignal stuff*/
 //--  void reEnumerate(const Enumerated &enumerated);

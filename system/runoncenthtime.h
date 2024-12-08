@@ -5,7 +5,7 @@
 /** execute function after given (and manipulatable) number of 'hits'.
  *  Inspired by DAB*/
 template<typename ... Args> class RunOnceNthTime : SIGCTRACKABLE {
-  typedef sigc::slot< void, Args ... > Action;
+  using Action = sigc::slot< void( Args ...) >;
   Action action;
   int count;
 
@@ -38,7 +38,7 @@ public:
  *  The runOnce variations on this theme delete themselves after running, which may also leak if the slot they were given doesn't delete objects when it is deleted.
  */
 template<typename ... Args> class RunEvery : SIGCTRACKABLE {
-  typedef sigc::slot< void, Args ... > Action;
+  using Action = sigc::slot< void( Args ... )>;
   Action action;
   int cycle;
   int count;

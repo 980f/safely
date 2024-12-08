@@ -12,7 +12,7 @@
 template< typename T > class ChainSorter {
   Chain<T> &list;
   /** it only makes sense to have a single compare function applied to a sorted list */
-  typedef  sigc::slot<int,const T*,const T*> Sortation;
+  using Sortation = sigc::slot<int(const T*,const T*)>;
   Sortation comparator;
   /** whether a newly inserted item should follow an existing item */
   bool laterAfter=false;
@@ -101,7 +101,7 @@ public:
    * if there is no such element then @returns ~ of where it should be if the ordinator matches this class's comparator.
    * if the ordinator is not compatible with the comparator then the return value when <0 has no meaning other than 'none found'.
    */
-  int indexFor(sigc::slot<int,const T*> ordinator){
+  int indexFor(sigc::slot<int(const T*)> ordinator){
     int top = list.quantity();
     if(top--==0) {
       return ~0;

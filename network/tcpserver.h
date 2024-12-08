@@ -3,13 +3,10 @@
 
 #include "tcpsocket.h"
 #include "sigcuser.h"
-#include <giomm/inetsocketaddress.h>
-#include <giomm/socketlistener.h>
-#include <giomm/socketservice.h>
 
 class TcpServer: SIGCTRACKABLE {
   //@see spawnClient
-  typedef sigc::slot<void,int /*fd*/,u32 /*ipv4*/> Spawner;
+  using Spawner = sigc::slot<void(int /*fd*/,u32 /*ipv4*/)>;
 
   class ServerSocket:public TcpSocketBase, SIGCTRACKABLE {
     friend class TcpServer;

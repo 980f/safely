@@ -7,19 +7,19 @@
  *  Sorting would have required fancy manipulation in this class.
  */
 class CachedIndexToStored {
-  int index;
-  void fixIndex(int which);
+  unsigned index;
+  void fixIndex(unsigned which);
 
 public:
   CachedIndexToStored();
   /** call on creation de novo*/
-  void init(int value,StoredGroup<Stored> &group);
+  void init(unsigned value,StoredGroup<Stored> &group);
   /** call on load from file */
   void link(StoredGroup<Stored> &group){
     group.onRemoval(MyHandler(CachedIndexToStored::fixIndex));
   }
 
-  operator int() const {
+  operator unsigned() const {
     return index;
   }
 }; // class CachedIndexToStored

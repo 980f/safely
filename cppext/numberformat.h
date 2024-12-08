@@ -32,7 +32,7 @@ struct NumberFormat {
   /** set to standard values */
   void clear();
 
-  /** every time this is used to actuall process a number someone should call this method*/
+  /** every time this is used to actually process a number someone should call this method */
   void onUse();
 };
 

@@ -234,7 +234,7 @@ public:
   }
 
   /** @return a functor that when invoked will get this object's value. */
-  template<typename Numeric> sigc::slot<Numeric> getLater(){
+  template<typename Numeric> sigc::slot<Numeric()> getLater(){
     return MyHandler(Storable::getNumber<Numeric> );
   }
 
@@ -275,7 +275,7 @@ public:
   ConstChainScanner<Storable> kinder() const;
 
   /** experimental, to see if syntax is tolerable: */
-  void forChildren(sigc::slot<void, Storable &> action);
+  void forChildren(sigc::slot<void( Storable &)> action);
 
   bool has(unsigned ordinal) const {
     return ordinal < numChildren();

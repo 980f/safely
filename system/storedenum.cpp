@@ -24,22 +24,22 @@ Cstr StoredEnum::toString(){
 }
 
 SimpleSlot StoredEnum::setLater(unsigned value){
-  return sigc::hide_return(sigc::bind(sigc::mem_fun< unsigned, unsigned >(this, &StoredEnum::operator =), value));
+  return sigc::hide_return(sigc::bind(sigc::mem_fun( StoredEnum::operator =), value));
 }
 
-sigc::slot<void, unsigned> StoredEnum::setter(){
+sigc::slot<void( unsigned)> StoredEnum::setter(){
   return sigc::hide_return( MyHandler(StoredEnum::setto));
 }
 
-sigc::slot<unsigned> StoredEnum::getLater(){
+sigc::slot<unsigned()> StoredEnum::getLater(){
   return MyHandler(StoredEnum::native);
 }
 
-SimpleSlot StoredEnum::applyTo(sigc::slot<void, unsigned> functor){
+SimpleSlot StoredEnum::applyTo(sigc::slot<void( unsigned)> functor){
   return sigc::compose(functor,getLater());
 }
 
-sigc::connection StoredEnum::sendChanges(sigc::slot<void, unsigned> functor, bool kickme){
+sigc::connection StoredEnum::sendChanges(sigc::slot<void(unsigned)> functor, bool kickme){
   return onAnyChange(applyTo(functor),kickme);
 }
 

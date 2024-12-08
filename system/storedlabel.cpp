@@ -59,15 +59,15 @@ bool StoredLabel::operator ==(const StoredLabel&other) const {
   return node.image() == other.node.image();
 }
 
-void StoredLabel::applyTo(sigc::slot<void, TextKey> slotty){
+void StoredLabel::applyTo(Receiver slotty){
   slotty(c_str());
 }
 
-sigc::connection StoredLabel::onChange(sigc::slot<void, TextKey> slotty, bool kickme){
+sigc::connection StoredLabel::onChange(Receiver slotty, bool kickme){
   return node.addChangeWatcher(bind(MyHandler(StoredLabel::applyTo), slotty),kickme);
 }
 
-sigc::slot<void, TextKey> StoredLabel::setter(){
+StoredLabel::Receiver StoredLabel::setter(){
   return bind(mem_fun(node, &Storable::setImageFrom), Storable::Edited);
 }
 

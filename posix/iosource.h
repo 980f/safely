@@ -1,5 +1,4 @@
-#ifndef IOSOURCE_H
-#define IOSOURCE_H (C) 2024 Andrew L. Heilveil, aka github/980F
+#pragma once // (C) 2024 Andrew L. Heilveil, aka github/980F
 
 #include <unistd.h>
 #include <netinet/in.h>
@@ -16,10 +15,8 @@ struct IoSource: public Fildes, SIGCTRACKABLE {
   ~IoSource();
 //  /** in all the slot<bool>s below the return value if false drops the connection (normally return true) */
 //  sigc::connection watcher(int opts, sigc::slot<bool, int /*Glib::Iocondition enum */ > action);
-  typedef sigc::slot<bool> Slot;//IoSource::Slot
-//  ssize_t read (void *__buf, size_t __nbytes);
-//  ssize_t write (const void *__buf, size_t __n);
-  /** merge return from read or write with errno, @return negative errno for most errors, 0 for errors worthy of simple retry (same as 0 bytes read or written) else the number of bytes successfully operated upon */
+  using Slot=BooleanSlot;
+  /** merge return from read or write with errno, @returns negative errno for most errors, 0 for errors worthy of simple retry (same as 0 bytes read or written) else the number of bytes successfully operated upon */
   static int recode(ssize_t rwreturn);
 
   template <typename OptionArgument> bool setOption (int optFamily, int optname, OptionArgument optval){
@@ -53,4 +50,3 @@ public:
   //write slurpInput() -- calls input function until we run out of input
 };
 
-#endif // IOSOURCE_H

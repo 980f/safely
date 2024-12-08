@@ -4,14 +4,20 @@
 
 #include "tcpserver.h"
 #include "chain.h"
-
+#if __has_include("deferedexecutor.h")
 #include "deferedexecutor.h"
+#else
+ class DeferedExecutor{
+ //todo: recover code and migrate to using some sort of POSIX timer for the deferal, class was dropped due to glib timer usage.
+ };
+#endif
 
 class TcpTester: public TcpServer {
   class TestService : public TcpSocket {
     friend class TcpTester;
     //notify on disconnects, including on destructor
-    sigc::slot<void,TestService *> onDisconnect;
+    using TestSlot= sigc::slot<void(TestService *)>;
+    TestSlot onDisconnect;
 
     /** expect this to be called with connected==false only when remote disconnects. */
     void connectionChanged(bool connected);
@@ -28,7 +34,7 @@ class TcpTester: public TcpServer {
     /** remote has gone quiet*/
     void goneQuiet();
   public:
-    TestService(int fd,u32 ipv4,sigc::slot<void,TestService *>container);
+    TestService(int fd,u32 ipv4,TestSlot container);
 
     /** */
     bool disconnect(void);

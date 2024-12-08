@@ -1,6 +1,8 @@
 #ifndef MEASURE_H
 #define MEASURE_H
 
+#include <ustring.h>
+
 #include "stored.h"
 #include "storednumeric.h"
 #include "storedlabel.h"

@@ -15,24 +15,24 @@ public:
 
   /** whether mantissa had a decimal point*/
   bool hadRadixPoint;
-  /** digits left of decimal point */
+  /** actual digits left of decimal point, nt teh count thereof */
   u64 predecimal;
 //  /** how many pre decimal digits are represented by 'predecimal' value. Earlier versions without this ended up computing the log to count what we can count here */
 //  unsigned preDigits;
   /** additional zeros to append to predecimal. If not zero then can ignore postdecimal and div10 */
   unsigned pow10;
-  /** digits after zero, divide by 10^div10 for their mathematical value */
+  /** actual digits after zero, divide by 10^postDigits for their mathematical value */
   u64 postdecimal;
   /** how many post decimal digits are represented by 'postdecimal' value */
   unsigned postDigits;
-  /** whether an explicit exponents was encountered */
+  /** whether an explicit exponent was encountered */
   bool hasEterm;
   /** whether an explicit exponent was negative*/
   bool negativeExponent;
   /** true exponent */
-  u64 exponent; //this large just so that we can easily share a function
+  u64 exponent; //this large just so that we can easily share a function, 10 bits would suffice for ieee754 double.
   /** set as if we just saw zero*/
-  void reset(void);
+  void reset();
   /** assemble pieces into an actual fp representation */
   double packed() const;
   /** @returns whether number could be an integer */

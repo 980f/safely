@@ -1,14 +1,13 @@
-#ifndef TCPSERVER_H
-#define TCPSERVER_H
+#pragma once
 
 #include "tcpsocket.h"
 #include "sigcuser.h"
 
-class TcpServer:public sigc::trackable {
+class TcpServer:SIGCTRACKABLE {
   //@see spawnClient
-  typedef sigc::slot<void,int /*fd*/,u32 /*ipv4*/> Spawner;
+  using Spawner = sigc::slot<void(int /*fd*/,u32 /*ipv4*/)>;
 
-  class ServerSocket:public TcpSocketBase, public sigc::trackable {
+  class ServerSocket:public TcpSocketBase, SIGCTRACKABLE {
     friend class TcpServer;
     ServerSocket(u32 remoteAddress=~0,int port=~0);
     Spawner spawner;//will be part of TcpServer
@@ -47,4 +46,3 @@ public:
   bool isConnected();
 };
 
-#endif // TCPSERVER_H

@@ -27,7 +27,7 @@ Ranged StoredRange::ranged() const {
   return Ranged(max,min);
 }
 
-sigc::slot<bool> StoredRange::rangeChecker() const{
+sigc::slot<bool()> StoredRange::rangeChecker() const{
   return MyHandler(StoredRange::isUseful);
 }
 

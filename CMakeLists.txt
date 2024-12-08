@@ -77,7 +77,7 @@ add_library(safely STATIC
   ./cppext/numericalvalue.cpp
   ./cppext/polyfilter.cpp
   ./system/urltext.cpp
-  ./system/cachedindextostored.cpp
+ # ./system/cachedindextostored.cpp
   ./system/storedcorrelation.cpp
   ./system/utf8transcoder.cpp
   ./system/peakfindrecords.cpp
@@ -101,8 +101,8 @@ add_library(safely STATIC
   ./system/filename.cpp
   ./system/gatedsignal.cpp
   ./system/jsonstore.cpp
-  ./system/kanjidic.cpp
-  ./system/measure.cpp
+  #needs ArtFile ./system/kanjidic.cpp
+  #formatter hierarchy seems to have evaporated ./system/measure.cpp
   ./system/pathparser.cpp
   ./system/segmentedname.cpp
   ./system/stored.cpp
@@ -260,7 +260,7 @@ add_library(safely STATIC
   ./cppext/polyfilter.h
   ./cppext/linearsmoother.h
   ./system/kanjidic.h
-  ./system/cachedindextostored.h
+  #./system/cachedindextostored.h
   ./system/delimitedinputstream.h
   ./system/measure.h
   ./system/treefile.h

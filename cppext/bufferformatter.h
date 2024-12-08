@@ -59,7 +59,7 @@ private:
   /** each argument is pulled out of the pack from left to right.
    *  if the argument is a format spec then we alter state and proceed.
    *  for arguments that have a substitute method that will get called.
-   *  Each substitue method eventually calls substitute (TextKey) which inserts a string.
+   *  Each substitute method eventually calls substitute (TextKey) which inserts a string.
    */
   template<typename ... Args> void next(const Args& ... args){
     ++which;

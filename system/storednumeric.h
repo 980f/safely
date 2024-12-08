@@ -34,6 +34,7 @@ public:
   }
 
   Numeric operator = (Numeric newnum) {
+    // sigc::sigctrackable::operator =(newnum);
     return assign(newnum);
   }
 
@@ -118,11 +119,11 @@ public:
 
   /** @returns a functor that when invoked will get this object's current value.*/
   sigc::slot<Numeric()> getLater(){
-    return MyHandler(StoredNumeric<Numeric>::native);
+    return MyHandler(StoredNumeric::native);
   }
 
   /** @returns a functor that when invoked will set this object's value to what is returned by the given @param functor invoked at that time.*/
-  SimpleSlot assignLater(sigc::slot<Numeric(void)> functor){
+  SimpleSlot assignLater(sigc::slot<Numeric()> functor){
     return sigc::hide_return(sigc::compose(MyHandler(StoredNumeric<Numeric>::assign),functor));
   }
 
@@ -151,7 +152,7 @@ public:
   }
 
   /** lamda for simple assignment. todo: replace with C++ lamda once we figure out how to make those work with StoredGroup */
-  static void Assign(StoredNumeric<Numeric> &item, Numeric value){
+  static void Assign(StoredNumeric &item, Numeric value){
     item.assign(value);
   }
 };
@@ -171,7 +172,7 @@ struct StoredBoolean:public StoredNumeric<bool>{
 #else
 
 //todo: arrange to tolerate 'true' and 'false' text on underlying node. I think an enumerizer will do it.
-typedef StoredNumeric<bool> StoredBoolean;
+using StoredBoolean = StoredNumeric<bool>;
 /** filtering adaptors on change signal */
 sigc::connection whenSet(StoredBoolean &thing,SimpleSlot action);
 sigc::connection whenCleared(StoredBoolean &thing,SimpleSlot action);

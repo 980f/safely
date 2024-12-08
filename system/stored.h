@@ -47,12 +47,12 @@ public:
   /** @returns whether this node's ordinal is @param index */
   bool indexIs(unsigned index) const;
   /** @returns a functor that when called returns the present index of this item.*/
-  sigc::slot<unsigned> liveindex() const;
+  sigc::slot<unsigned()> liveindex() const;
 
 /** @returns whether underlying storage node is named per @param name */
   bool isNamed(TextKey name);
 
-  /** The next stuff is used by stored group refresh operations, to track no-longer relevent items */
+  /** The next stuff is used by stored group refresh operations, to track no-longer relevent items, kinda like a mark-sweep GC. */
 protected:
   bool refreshed; //todo: isolate into helper class, or otherwise allow for 'refresh' to be conditionally compiled
 public:

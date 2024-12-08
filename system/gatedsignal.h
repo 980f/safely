@@ -16,7 +16,7 @@ class GatedSignal {
 public:
   GatedSignal();
   /** registers */
-  sigc::connection connect(const SimpleSlot &slot);
+  auto connect(const SimpleSlot &slot);
   /** emits signal if not gated off else arranges for signal to emit when gated back on.*/
   void send();
   /** defer any sends until after matching ungate() has been called.
@@ -67,7 +67,7 @@ public:
 
   }
 
-  sigc::connection connect(const sigc::slot< void,Arg > &slot){
+  sigc::connection connect(const sigc::slot< void(Arg) > &slot){
     return GatedSignal::connect(sigc::bind(slot,std::ref(knownArg)));//use a seperate sigc::ref for each slot
   }
 

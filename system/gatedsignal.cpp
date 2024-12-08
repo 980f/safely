@@ -7,7 +7,7 @@ GatedSignal::GatedSignal() :
   doEmit(false){
 }
 
-SimpleSignal::connection GatedSignal::connect(const SimpleSlot &slot){
+auto GatedSignal::connect(const SimpleSlot &slot){
   return mySignal.connect(slot);
 }
 

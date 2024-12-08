@@ -47,7 +47,7 @@ private:
 
 public:
 
-  sigc::connection onAnyChange(sigc::slot<void,Scalar> action,bool kickme = false){
+  sigc::connection onAnyChange(sigc::slot<void(Scalar)> action,bool kickme = false){
     if(kickme) {
       action(varb);
     }
@@ -59,7 +59,7 @@ public:
   }
 
   /** action will be called when this equals @param value.*/
-  sigc::connection onChangeTo(Scalar value,sigc::slot<void,Scalar> action,bool kickme = false){
+  sigc::connection onChangeTo(Scalar value,sigc::slot<void(Scalar)> action,bool kickme = false){
     if(kickme) {
       gater(action,value);
     }

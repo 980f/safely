@@ -1,6 +1,4 @@
-#ifndef TCPTESTER_H
-#define TCPTESTER_H
-//////////////////////////////////////////
+#pragma once
 
 #include "tcpserver.h"
 #include "chain.h"
@@ -9,7 +7,8 @@ class TcpTester: public TcpServer {
   class TestService : public TcpSocket, public sigc::trackable {
     friend class TcpTester;
     //notify on disconnects, including on destructor
-    sigc::slot<void,TestService *> onDisconnect;
+    using TestSlot=sigc::slot<void(TestService *)>;
+    TestSlot onDisconnect;
 
     /** expect this to be called with connected==false only when remote disconnects. */
     void connectionChanged(bool connected);
@@ -25,7 +24,7 @@ class TcpTester: public TcpServer {
     /** remote has gone quiet*/
     void goneQuiet();
   public:
-    TestService(int fd,u32 ipv4,sigc::slot<void,TestService *>container);
+    TestService(int fd,u32 ipv4,TestSlot container);
 
     /** */
     bool disconnect(void);
@@ -43,6 +42,3 @@ public:
   /** BLOCKING server that responds with a fixed message to any message received. */
   bool runMiniServer(int port);
 };
-
-
-#endif // TCPTESTER_H

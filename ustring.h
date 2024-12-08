@@ -1,7 +1,6 @@
 #ifndef USTRING_H
 #define USTRING_H
 
-#include "eztypes.h"
 #include "utf8.h" //
 #include "textkey.h" //maybe base on Textpointer, or Indexer<u8>
 

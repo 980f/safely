@@ -553,7 +553,7 @@ ConstChainScanner<Storable> Storable::kinder() const {
   return ConstChainScanner<Storable>(wad);
 }
 
-void Storable::forChildren(sigc::slot<void,Storable &> action){
+void Storable::forChildren(sigc::slot<void(Storable &)> action){
   ForKids(list){
     Storable&one(list.next());
     action(one);

@@ -95,7 +95,7 @@ void NumberPieces::decompose(double d){
     return;
   }
   if(isNormal(d)){
-    double exp=log10(d);
+    double exp=log10(d);//this is somewhat expensive,
     negativeExponent=signabs(exp)<0;
     exponent=unsigned(exp);
 

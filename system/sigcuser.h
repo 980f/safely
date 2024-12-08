@@ -54,12 +54,12 @@ template<typename T> sigc::slot<T> addReturn(SimpleSlot &voidly,T fixedReturn){
 }
 
 /** an adaptor to add a fixed return value to a slot that didn't have one.*/
-template<typename T,typename A> T call1AndReturn(sigc::slot<void,A> &voidly,T fixedReturn){
+template<typename T,typename A> T call1AndReturn(sigc::slot<void(A)> &voidly,T fixedReturn){
   voidly();
   return fixedReturn;
 }
 
-template<typename T,typename A> sigc::slot<T,A> addReturn1(sigc::slot<void,A> &voidly,T fixedReturn){
+template<typename T,typename A> sigc::slot<T,A> addReturn1(sigc::slot<void(A)> &voidly,T fixedReturn){
   return sigc::bind(&call1AndReturn<T,A>,voidly,fixedReturn);//#do NOT use ref here, let original slot evaporate.
 }
 
@@ -101,7 +101,7 @@ template<typename T> void assignValueTo(T value, T &target){
 BooleanSlot assigner(bool &target);
 
 /** for use bound into a slot, when invoked it calls the action if the @param source returns the @param edge */
-void onEdge(BooleanSlot source,bool edge,SimpleSlot action);
+void onEdge(sigc::slot<bool()> source,bool edge,SimpleSlot action);
 
 /** a slot that runs once, via deleting itself when run.
  * It is inadvisable to keep a reference to one of these, expected use to use @see makeInstance in the argumentlist of a signal.connect() call.

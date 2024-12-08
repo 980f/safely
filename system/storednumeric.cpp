@@ -5,14 +5,15 @@ void adjustIndex(unsigned removed, StoredCount&index){
   if(index.native()>removed){
     --index;
   } else if(index.native()==removed){
-    index=-1;
+    index=~0;
   }
 }
 
 /////////////////
 
 sigc::connection whenCleared(StoredBoolean &thing, SimpleSlot action) {
-  return thing.onAnyChange(sigc::bind(&onEdge, thing.getLater(), false, action));
+  auto thunk=bind(&onEdge, thing.getLater(), false, action);
+  return thing.onAnyChange(thunk);
 }
 
 sigc::connection whenSet(StoredBoolean &thing, SimpleSlot action) {
