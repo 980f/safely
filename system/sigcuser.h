@@ -1,7 +1,9 @@
-#ifndef SIGCUSER_H
-#define SIGCUSER_H
+#pragma once
 
 /** sigc is better than C++ functional as it has sigc::trackable and signals which manage using deletable items in slots
+ * version 3.0: arg list to slot and signal need function syntax: rettype,argtype -> rettype(argtype)
+ * sigc::ref replaced with std::ref
+ *
 */
 
 #include <sigc++/sigc++.h>
@@ -11,18 +13,18 @@
 #define SIGCTRACKABLE virtual public sigc::trackable
 
 //these describe functions
-#define MyHandler(membptr) sigc::mem_fun(this, &membptr)
+#define MyHandler(membptr) sigc::mem_fun(*this, &membptr)
 
 //these record arguments to use, rather than ones that will be filled in at time of call.
 #define CallThis(memberfun,...)  connect(sigc::bind(sigc::mem_fun(this,&memberfun), ## __VA_ARGS__ ))
 #define Call(object,memberfun,...) connect(sigc::bind(sigc::mem_fun(object,&memberfun), ## __VA_ARGS__ ))
 
 
-typedef sigc::slot<void> SimpleSlot;
-typedef sigc::signal<void> SimpleSignal;
+using SimpleSlot = sigc::slot<void()>;//sigc 3.0 needed some help here
+using SimpleSignal = sigc::signal<void()>;//sigc 3.0 needed some help here
 
-typedef sigc::slot<void,bool> BooleanSlot;
-typedef sigc::signal<void,bool> BooleanSignal;
+using BooleanSlot = sigc::slot<void(bool)>;
+using BooleanSignal = sigc::signal<void(bool)>;
 
 /** signal.connect(invertSignal(someslot)) someslot receives complement of what signal sends:*/
 BooleanSlot invertSignal(BooleanSlot slot);
@@ -75,12 +77,12 @@ template<typename T,typename A> sigc::slot<T,A> addReturn1(sigc::slot<void,A> &v
 #else // if NO_VARIADIC_TEMPLATES
 //now that we have variadic templates tamed:
 /** an adaptor to add a fixed return value to a slot that didn't have one.*/
-template<typename T,typename ... Args> T call1AndReturn(sigc::slot<void,Args ...> &voidly,T fixedReturn){
+template<typename T,typename ... Args> T call1AndReturn(sigc::slot<void(Args ...)> &voidly,T fixedReturn){
   voidly();
   return fixedReturn;
 }
 
-template<typename T,typename ... Args> sigc::slot<T,Args ...> addReturn(sigc::slot<void,Args ...> &voidly,T fixedReturn){
+template<typename T,typename ... Args> sigc::slot<T(Args ...)> addReturn(sigc::slot<void(Args ...)> &voidly,T fixedReturn){
   return sigc::bind(&call1AndReturn<T,Args ...>,voidly,fixedReturn);//#do NOT use ref here, let original slot evaporate.
 }
 
@@ -88,7 +90,7 @@ template<typename T,typename ... Args> sigc::slot<T,Args ...> addReturn(sigc::sl
 
 
 /** adaptor to call a function and assign it to a stored native-like target */
-template<typename T> void assignTo(T &target,sigc::slot<T> getter){
+template<typename T> void assignTo(T &target,sigc::slot<T()> getter){
   target = getter();
 }
 
@@ -99,13 +101,13 @@ template<typename T> void assignValueTo(T value, T &target){
 BooleanSlot assigner(bool &target);
 
 /** for use bound into a slot, when invoked it calls the action if the @param source returns the @param edge */
-void onEdge(sigc::slot<bool> source,bool edge,SimpleSlot action);
+void onEdge(BooleanSlot source,bool edge,SimpleSlot action);
 
 /** a slot that runs once, via deleting itself when run.
  * It is inadvisable to keep a reference to one of these, expected use to use @see makeInstance in the argumentlist of a signal.connect() call.
  */
 template< typename ... Args> class RunOnceSlot : SIGCTRACKABLE {
-  typedef sigc::slot< void, Args ... > Action;
+  using Action = sigc::slot< void(Args ... )>;
   Action action;
   RunOnceSlot(Action slot) :
     action(slot){
@@ -155,7 +157,7 @@ struct AndAll {
     bool sum = true;
     while(it != end) {
       if(!*it++) {
-        sum = false;
+        sum = false;//#leave this expanded so that we can breakpoint here.
       }
     }
     return sum;
@@ -176,5 +178,3 @@ struct AndUntilFalse {
   }
 
 };
-
-#endif // ifndef SIGCUSER_H

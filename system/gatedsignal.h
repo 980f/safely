@@ -16,7 +16,7 @@ class GatedSignal {
 public:
   GatedSignal();
   /** registers */
-  SimpleSignal::iterator connect(const SimpleSlot &slot);
+  sigc::connection connect(const SimpleSlot &slot);
   /** emits signal if not gated off else arranges for signal to emit when gated back on.*/
   void send();
   /** defer any sends until after matching ungate() has been called.
@@ -28,7 +28,7 @@ public:
 
   /** forget send() was called while gated off, does not affect gating */
   void kill();
-  /** @returns a slot that when invoked invokes calls send()*/
+  /** @returns a slot that when invoked calls send()*/
   SimpleSlot propagator();
 
   /** creating a Freezer object freezes triggering the signal, deleting object liberates the signal.
@@ -67,8 +67,8 @@ public:
 
   }
 
-  SimpleSignal::iterator connect(const sigc::slot< void,Arg > &slot){
-    return GatedSignal::connect(sigc::bind(slot,sigc::ref(knownArg)));//use a seperate sigc::ref for each slot
+  sigc::connection connect(const sigc::slot< void,Arg > &slot){
+    return GatedSignal::connect(sigc::bind(slot,std::ref(knownArg)));//use a seperate sigc::ref for each slot
   }
 
 };

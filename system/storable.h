@@ -85,7 +85,7 @@ public: //needed only by StoredGroup, but that being a template made friending i
    * called after an item is added or before it is removed.
    * First needed by socket access for remote editing of StoredGroups.
    */
-  mutable  sigc::signal<void, bool, unsigned> wadWatchers;
+  mutable  sigc::signal<void( bool, unsigned)> wadWatchers;
 
 protected:
   /** stored value is like a union, although we didn't actually use a union so that a text image of the value can be maintained for debug of parsing and such. */
@@ -243,7 +243,7 @@ public:
     if(kickme) {
       target = getNumber<Numeric>();
     }
-    return addChangeWatcher(sigc::bind(&assignTo<Numeric>, sigc::ref(target), getLater<Numeric>()));
+    return addChangeWatcher(sigc::bind(&assignTo<Numeric>, std::ref(target), getLater<Numeric>()));
   }
 
   // functions that apply to text

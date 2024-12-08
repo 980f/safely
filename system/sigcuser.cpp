@@ -19,10 +19,10 @@ BooleanSlot invertSignal(BooleanSlot slot){
 //end complement signal
 
 BooleanSlot assigner(bool &target){
-  return sigc::bind(&assignValueTo<bool>, sigc::ref(target));
+  return sigc::bind(&assignValueTo<bool>, std::ref(target));
 }
 
-void onEdge(slot<bool> source,bool edge,SimpleSlot action){
+void onEdge(slot<bool()> source,bool edge, SimpleSlot action){
   if(edge==source()) {
     action();
   }

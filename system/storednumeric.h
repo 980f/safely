@@ -1,6 +1,8 @@
 #ifndef STOREDNUMERIC_H
 #define STOREDNUMERIC_H
 
+#include <minimath.h>
+
 #include "stored.h"
 #include "sigcuser.h"
 //////////////////////////////
@@ -109,18 +111,18 @@ public:
     return sigc::hide_return(sigc::bind(sigc::mem_fun(this, &StoredNumeric< Numeric >::assign),value));
   }
 
-  /** a slot that will set the value of this from a double (regardless of element's actual type)*/
-  sigc::slot<void, Numeric> setter(){
+  /** @returns a slot that will set the value of this from a double (regardless of element's actual type)*/
+  sigc::slot<void(Numeric)> setter(){
     return sigc::hide_return( sigc::bind( mem_fun(node, &Storable::setNumber<Numeric>), Storable::Edited));
   }
 
-  /** @return a functor that when invoked will get this object's current value.*/
-  sigc::slot<Numeric> getLater(){
+  /** @returns a functor that when invoked will get this object's current value.*/
+  sigc::slot<Numeric()> getLater(){
     return MyHandler(StoredNumeric<Numeric>::native);
   }
 
-  /** @return a functor that when invoked will set this object's value to what is returned by the given @param functor invoked at that time.*/
-  SimpleSlot assignLater(sigc::slot<Numeric,void> functor){
+  /** @returns a functor that when invoked will set this object's value to what is returned by the given @param functor invoked at that time.*/
+  SimpleSlot assignLater(sigc::slot<Numeric(void)> functor){
     return sigc::hide_return(sigc::compose(MyHandler(StoredNumeric<Numeric>::assign),functor));
   }
 
@@ -130,7 +132,7 @@ public:
   }
 
   /** hook up to send changes to the @param given functor, and if @param kickme call that functor now*/
-  sigc::connection sendChanges(sigc::slot<void,Numeric> functor,bool kickme=false){
+  sigc::connection sendChanges(sigc::slot<void(Numeric)> functor,bool kickme=false){
     return onAnyChange(applyTo(functor),kickme);
   }
 
@@ -145,7 +147,7 @@ public:
     if(kickme){
       target=native();
     }
-    return onAnyChange(sigc::bind(&assignTo<Numeric>,sigc::ref(target),getLater()));
+    return onAnyChange(sigc::bind(&assignTo<Numeric>,std::ref(target),getLater()));
   }
 
   /** lamda for simple assignment. todo: replace with C++ lamda once we figure out how to make those work with StoredGroup */

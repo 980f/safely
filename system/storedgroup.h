@@ -34,7 +34,7 @@ template<class Groupie> class StoredGroup : public Stored {
   Chain<Groupie> pod;
 
   /** before addition we ask for permission */
-  sigc::signal<bool> preaddition;
+  sigc::signal<bool()> preaddition;
 
   /** some actions that might have been added to the dependents list need to finish before another set can be run (such as
    * subordinate creations) so in the absence of a priority mechanism in the signal we have an additional signal. Also many change
@@ -42,34 +42,34 @@ template<class Groupie> class StoredGroup : public Stored {
    *
    * passes freshly created item to slot
    */
-  sigc::signal<void, Groupie &> oncreation;
+  sigc::signal<void(Groupie &)> oncreation;
 
   /** before removal we ask for permission */
-  sigc::signal1<bool, Groupie &, AndUntilFalse> preremoval;
+  sigc::signal<bool(Groupie &, AndUntilFalse)> preremoval;
 
   /** for removal we want to have already destroyed object before calling some of the change watchers.
    * so this tells you the number of the one that has already been removed. The object is already deleted and ordinals adjusted.
    */
-  sigc::signal<void, unsigned> onremoval;
+  sigc::signal<void(unsigned)> onremoval;
 
 
   /** bool remove (else add at end) , unsigned which
    * called *after* a creation or a removal
    * this doesn't reference the item as often the watcher just wants to find a sibling
    */
-  sigc::signal<void, bool, unsigned> dependents;
+  sigc::signal<void(bool, unsigned)> dependents;
 
   /** 4debug: only one indexer can rationally be attached. We use Stored as it is the greatest common base to the indexers which are templates */
   Stored *indexer=nullptr;
 
 public:
-  typedef sigc::slot<void, bool /*removing*/, size_t /* which*/> Watcher;
+  using Watcher = sigc::slot<void( bool /*removing*/, size_t /* which*/)>;
   /** attach a filter to determine if an item in the group is allowed to be removed */
-  sigc::connection permissionToRemove(sigc::slot<bool, Groupie &> tester){
+  sigc::connection permissionToRemove(sigc::slot<bool(Groupie &)> tester){
     return preremoval.connect(tester);
   }
 
-  sigc::connection permissionToAdd(sigc::slot<bool> tester){
+  sigc::connection permissionToAdd(sigc::slot<bool()> tester){
     return preaddition.connect(tester);
   }
 
@@ -95,13 +95,13 @@ public:
     //by using these instead of registering a dependent using onReorg, all onAdditions take place before any
     // whenReorganized's are invoked, so dependent objects are all created before whenReorganized's are invoked. 
     //todo:1 check that all non-creation onAddition stuff doesn't need to wait.
-    indexer.onRemoval(sigc::hide_return(MyHandler(StoredGroup<Groupie>::remove)));
-    indexer.onAddition(MyHandler(StoredGroup<Groupie>::createFor<PrimeContent> ), false);
+    indexer.onRemoval(sigc::hide_return(MyHandler(StoredGroup::remove)));
+    indexer.onAddition(MyHandler(StoredGroup::createFor<PrimeContent> ), false);
     setSize(indexer.quantity()); //at time of attachment we resize the indexed entity
   }
 
-  typedef ChainScanner<Groupie> Scanner;
-  typedef ConstChainScanner<Groupie> ConstScanner;
+  using Scanner = ChainScanner<Groupie>;
+  using ConstScanner = ConstChainScanner<Groupie>;
 
   /** "in class" macros for StoredGroup.
    * outside of StoredGroup use the iterator factory
@@ -234,7 +234,7 @@ public:
     return oncreation.connect(action);
   }
 
-  sigc::connection onRemoval(sigc::slot<void, unsigned> action, bool doAllNow = false){
+  sigc::connection onRemoval(sigc::slot<void( unsigned)> action, bool doAllNow = false){
     if(doAllNow) {
       for(unsigned i = quantity(); i-- > 0; ) {
         action(i);
@@ -360,7 +360,7 @@ public:
   }
 
   unsigned ordinalOf(const Storable &childnode) const {
-    return first(sigc::bind(&byNode, sigc::ref(childnode)));
+    return first(sigc::bind(&byNode, std::ref(childnode)));
   }
 
   /** @returns nullptr or first entity that positively meets the predicate */
@@ -389,7 +389,7 @@ public:
 
   /** @returns nullptr or first entity who wraps the @param given node */
   Groupie *find(const Storable &childnode){
-    return findFirst(sigc::bind(&byNode, sigc::ref(childnode)));
+    return findFirst(sigc::bind(&byNode, std::ref(childnode)));
   }
 
   /** @returns address of entity whose internal name matches key, nullptr if such does not exist.
