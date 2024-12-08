@@ -1,12 +1,19 @@
 #ifndef SAFELY_H
 #define SAFELY_H
 
-/**
+/** copy this file into your 'safely' project and alter it to suit.
  * each project using the 'safely' lib can put its compile time preferences in this file,
  * code in this library that needs compiletime constants includes this header file.
  */
 
-//compiler specific way to make 'missing break' warnings go away.
+
+// controls whether json escaping rules are applied to data before being passed to Storable.
+#define STORJSON_DOESCAPES 0
+
+//////////////////////////////////////
+/// from here down are things that haven't yet found a home:
+
+/////compiler specific way to make 'missing break' warnings go away.
 #if __has_cpp_attribute(fallthrough)
 #define JOIN  [[clang::fallthrough]]
 #else
@@ -22,7 +29,5 @@
 #define ONNULLREF(ref, arg)
 #endif
 
-// controls whether json escaping rules are applied to data before being passed to Storable.
-#define STORJSON_DOESCAPES 0
 
 #endif // SAFELY_H
