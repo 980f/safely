@@ -18,3 +18,4 @@ tests/.qtc_clangd/
 safely.qws
 git.branch
 git.hash
+cmake-build-debug/
