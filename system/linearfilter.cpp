@@ -52,16 +52,16 @@ void LinearFilter::scan(const CenteredSlice &slice, ScanReport &report){
     step(slider);
     int y1 = Y[1];//FUE
 
-    if(report.low.morePositive(y1,location)) {
+    if(report.low.morePositive({y1,location})) {
       report.low.delta = 0;//NYI, needs additional history, such as the delta not yet computed.
     }
 
-    if(report.high.moreNegative(y1,location)) {
+    if(report.high.moreNegative({y1,location})) {
       report.high.delta = 0;//like low, in both cases we need to at least put something other than a Nan in the value
     }
 
     if(y1<0 && prevy>0) {
-      if(report.top.morePositive(Y[0],location)) {
+      if(report.top.morePositive({Y[0],location})) {
         report.top.delta = delta[1];
         report.top.estimate = Y[1];
       }

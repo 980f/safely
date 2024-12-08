@@ -34,7 +34,8 @@ DelimitingOutputStream &StorageExporter::exportTable(Storable &headers, Storable
   return dos;
 }
 
-DelimitingOutputStream &StorageExporter::exportSettable(Settable &wrapped){
+#if 0
+  DelimitingOutputStream &StorageExporter::exportSettable(Settable &wrapped){
   makeArgs(wrapped.numParams());
   wrapped.getParams(args);
   ArgSet writer(args);
@@ -43,6 +44,8 @@ DelimitingOutputStream &StorageExporter::exportSettable(Settable &wrapped){
   }
   return dos;
 }
+#endif
+
 
 DelimitingOutputStream &StorageExporter::exportGroup(Storable &node, const char *title){
   if(title) {//title blocks include the number of rows in the block

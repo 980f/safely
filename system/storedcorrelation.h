@@ -10,7 +10,7 @@ class StoredStatistic : public Stored {
   RealStatistic &wrapped;
   StoredReal sum;
   StoredReal sumSquares;
-  StoredInt count;
+  StoredCount count;
 public:
   StoredStatistic(Storable &node,RealStatistic &wrapped);
   void onPrint();
