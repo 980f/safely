@@ -2,6 +2,9 @@
 
 #include "textkey.h" //toDouble
 #include "storable.h"
+
+#include <safely.h>
+
 #include "charformatter.h"
 
 #include "segmentedname.h" //for debug reports
@@ -393,7 +396,8 @@ void Storable::assignFrom(Storable&other){
   ONNULLREF(other,)
   switch(type) {
   case Uncertain:
-    JOIN;
+    // JOIN;
+    [[fallthrough]];
   case NotDefined:
     if(other.is(Numerical)) {
       setNumber(other.number);

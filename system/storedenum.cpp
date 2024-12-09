@@ -24,7 +24,9 @@ Cstr StoredEnum::toString(){
 }
 
 SimpleSlot StoredEnum::setLater(unsigned value){
-  return sigc::hide_return(sigc::bind(sigc::mem_fun( StoredEnum::operator =), value));
+  auto func = sigc::mem_fun(*this,&StoredEnum::setto);
+  auto functor = sigc::bind(func, value);
+  return sigc::hide_return(functor);
 }
 
 sigc::slot<void( unsigned)> StoredEnum::setter(){

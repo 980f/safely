@@ -1,7 +1,7 @@
 #ifndef LOGGER_H
 #define LOGGER_H  "(C) 2017 Andrew Heilveil"
 
-#include "stdarg.h" //for relaying arg packs through layers
+#include <cstdarg> //for relaying arg packs through layers
 
 /** a minimalist logging facade */
 class Logger {
@@ -52,6 +52,7 @@ public:
 /** a globally shared logger, for when you are too lazy to create one for your context */
 extern Logger dbg;
 /** a globally shared logger, for really egregious problems */
+#define Safely_Have_Wtf
 extern Logger wtf;
 
 #define IgnoreGlib(err) dbg("%s ignoring %s",__PRETTY_FUNCTION__, err.what().c_str())

@@ -117,10 +117,10 @@ add_library(safely STATIC
   ./system/matrixinverter.cpp
   ./system/storable.cpp
   ./system/utf8converter.cpp
-  ./posix/vargs.cpp
+  #when did this functionality disappear? what was it? ./posix/vargs.cpp
   ./posix/activityperformance.cpp
   ./posix/directory.cpp
-  ./posix/eventloop.cpp
+  #gutted, had alternate timerfd wtf?! ./posix/eventloop.cpp
   ./posix/iosource.cpp
   ./posix/performancetimer.cpp
   ./posix/streamformatter.cpp

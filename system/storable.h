@@ -15,7 +15,7 @@
 #include "numericalvalue.h"
 
 //class for text value storage.
-typedef Text TextValue;
+using TextValue = Text;
 
 /**
  * non-volatile key-value storage and transport mechanism.

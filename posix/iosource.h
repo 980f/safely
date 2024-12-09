@@ -1,20 +1,18 @@
 #pragma once // (C) 2024 Andrew L. Heilveil, aka github/980F
 
+#include "fildes.h"
 #include <unistd.h>
-#include <netinet/in.h>
+#include <netinet/in.h> //because we template some stuff else this would have been only in the cpp file.
 
 #include "sigcuser.h"
-#include "fildes.h"
 
-/** collation of Gio stuff that interacts with int filedescriptors.
-bringing back parts of former fd wrapping class rather than hunting it down in git*/
+/** intermediate class for socket manipulation, mostly adding syntax to int fd usage */
 struct IoSource: public Fildes, SIGCTRACKABLE {
 
-  IoSource(int fd=~0);
+  IoSource(const char *traceName, int fd=~0);
   /** todo: debate closing the file when we delete this source */
   ~IoSource();
-//  /** in all the slot<bool>s below the return value if false drops the connection (normally return true) */
-//  sigc::connection watcher(int opts, sigc::slot<bool, int /*Glib::Iocondition enum */ > action);
+
   using Slot=BooleanSlot;
   /** merge return from read or write with errno, @returns negative errno for most errors, 0 for errors worthy of simple retry (same as 0 bytes read or written) else the number of bytes successfully operated upon */
   static int recode(ssize_t rwreturn);
@@ -30,6 +28,7 @@ struct IoSource: public Fildes, SIGCTRACKABLE {
 
 };
 
+/** event manager for an IoSource */
 class IoConnections: SIGCTRACKABLE {
 public:
   IoConnections(IoSource &source);

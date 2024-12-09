@@ -1,6 +1,7 @@
 //"(C) Andrew L. Heilveil, 2017"
 #include "socketeer.h"
 
+#include <charscanner.h>
 #include <sys/socket.h>  //struct sockaddr, gethostbyname_r
 
 #include "fcntlflags.h" //to open control port

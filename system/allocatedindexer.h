@@ -1,5 +1,4 @@
-#ifndef ALLOCATEDINDEXER_H
-#define ALLOCATEDINDEXER_H "(C) Andrew L. Heilveil, 2017"
+#pragma once // "(C) Andrew L. Heilveil, 2017"
 
 #include "buffer.h"
 #include <cstdlib>
@@ -21,8 +20,6 @@ public:
 
   virtual ~ AllocatedIndexer (){
     free(buffer);
+    buffer=nullptr;//make double free benign.
   }
 };
-
-
-#endif // ALLOCATEDINDEXER_H

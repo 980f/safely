@@ -1,15 +1,14 @@
 #include "iosource.h"
-//#include "glibmm/iochannel.h"
-//#include "glibmm/refptr.h"
-//#include "glibmm/main.h" //timeout and other small glib classes
 
-IoSource::IoSource(int fd):
-  fd(fd){
-  //#nada
+IoSource::IoSource(const char * tracename, int fd):
+  Fildes(tracename){
+  if (fd>=0) {
+    preopened(fd,false);//if preopened we don't own it. But creator of this IoSource can pass ownership to it later.
+  }
 }
 
 IoSource::~IoSource(){
-  //created for breakpoint
+  //make sure Fildes destructor is called.
 }
 
 
@@ -19,11 +18,8 @@ int IoSource::recode(ssize_t rwreturn){
     if(EINTR == errnum || EAGAIN == errnum || EWOULDBLOCK == errnum) {
       return 0;//still more perhaps.
     }
-    else {
-      return -errnum;
-    }
-  } else {
-    return rwreturn;
+    return -errnum;
   }
+  return rwreturn;
 }
 

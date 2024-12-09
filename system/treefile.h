@@ -1,5 +1,4 @@
-#ifndef TREEFILE_H
-#define TREEFILE_H
+#pragma once
 
 #include "filename.h"
 #include "storable.h"
@@ -8,12 +7,13 @@
 class TreeFile {
 public:
   FileName filename;
-  Storable *root;
+  Storable &root;
   StoredReal svnnumber;
-  TreeFile(TextKey fname, Storable *root);
-  TreeFile(FileName &fname, Storable *root);
 
-  bool parseTreeFile(void);
+  TreeFile(TextKey fname, Storable &root);
+  TreeFile(FileName &fname, Storable &root);
+
+  bool parseTreeFile();
   bool printTree(bool blocking, bool debug = false);
 /** version number of program which last wrote this file */
   double svn();
@@ -21,7 +21,5 @@ public:
   static bool dumpStorage(Storable&root, const char *location);
 }; // class TreeFile
 
-/** build id of this binary */
+/** build id of this binary used as a file format version */
 double svn();
-
-#endif // TREEFILE_H

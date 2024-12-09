@@ -1,5 +1,7 @@
 #include "utf8converter.h"
 
+#include <safely.h>
+
 unsigned Utf8ConverterOut::length(const char *source) const{
   if(Cstr(source).empty()) {
     return 0;

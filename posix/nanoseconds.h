@@ -2,8 +2,9 @@
 #define NANOSECONDS_H "(C) Andrew L. Heilveil, 2017"
 
 #include "microseconds.h" //existed in Posix before nanoseconds so we convert just one way.
+#include <ctime>
+#include <type_traits>
 
-#include <time.h>
 /**
 wrapper around timespec struct
 */
@@ -16,23 +17,37 @@ void parseTime(timespec &ts,double seconds);
 
 struct NanoSeconds : public timespec {
 
-  NanoSeconds(double seconds=0.0){
+  NanoSeconds(double seconds){
     this->operator= (seconds);
+  }
+
+  NanoSeconds() {
+    tv_sec = 0;
+    tv_nsec = 0;
   }
 
   NanoSeconds(const NanoSeconds &other)=default;
 
   NanoSeconds(const MicroSeconds us){
-    this->tv_sec=us.tv_sec;
-    this->tv_nsec=1000*us.tv_usec;
+    tv_sec=us.tv_sec;
+    tv_nsec=1000*us.tv_usec;
   }
 
-  NanoSeconds& operator=(double seconds){
-    parseTime (*this,seconds);
+  template<typename Scalar>
+  NanoSeconds& operator=(Scalar seconds){
+     if (std::is_floating_point<Scalar>::value) {
+      parseTime (*this,seconds);
+    } else if (std::is_integral<Scalar>::value){
+      tv_sec=seconds;
+      tv_nsec=0;
+    }
     return *this;
   }
 
-  //allow default assignment to work
+  /** somewhat like a placement new, this adds NanoSeconds logic to an existing timespec */
+  static NanoSeconds& wrap(timespec &embedded) {
+    return *reinterpret_cast<NanoSeconds *>(&embedded);
+  }
 
   operator double()const{
     return from(*this);

@@ -5,6 +5,9 @@
 #include <fstream>
 //#include <giomm.h>
 
+#include <unistd.h>
+#include <ustring.h>
+
 #include "jsonstore.h"
 #include "filer.h"
 #include "fcntl.h"
@@ -20,38 +23,40 @@ extern double svn();
 
 TreeFile::TreeFile(FileName &fname, Storable &node) :
   filename(fname),
-  root(&node),
+  root(node),
   ConnectChild(svnnumber){
 }
 
 bool TreeFile::parseTreeFile(void){
 //  PerfTimer perf(ustring::compose("parse tree %1", filename).c_str());
+  auto fname=filename.pack();
   Filer file("TreeFile");
-  if(file.openFile(filename.c_str(),O_RDONLY,false)) {
+  if(file.openFile(fname.c_str(),O_RDONLY,false)) {
     if(file.readall(20000000)) {
       JsonStore parser(root);
       ByteScanner scanner(file.contents());
       bool parsedok = parser.parse(scanner);
-      root->wasModified();//to clear flags set by parsing;
+      root.wasModified();//to clear flags set by parsing;
       return parsedok;
     } else {
-      dbg("Filename %s too big to be parsed.", filename.c_str());
+      dbg("Filename %s too big to be parsed.", fname.c_str());
       return false;
     }
   } else {
-    dbg("Cannot open file <%s>.", filename.c_str());
+    dbg("Cannot open file <%s>.", fname.c_str());
     return false;
   }
 
 } /* parseTreeFile */
 
 bool TreeFile::printTree(bool blocking, bool debug){
-  PerfTimer perf(ustring::compose("printTree %1", filename).c_str());
+  PerfTimer perf(Ustring::compose("printTree %1", filename).c_str());
   StoredReal(root("svnnumber")) = ::svn();//update to current svn.
   FileName temp_path("var/printTree.tmp");
-  fstream fs(temp_path.c_str(), fstream::out);
+  auto temp_name=temp_path.pack();
+  std::fstream fs(temp_name, std::fstream::out);
   if(!fs) {
-    dbg("Cannot open file <%s>.", temp_path.c_str());
+    dbg("Cannot open file <%s>.", temp_name.c_str());
     return false;
   }
   JsonStore::Printer printer(this->root, fs);
@@ -62,8 +67,9 @@ bool TreeFile::printTree(bool blocking, bool debug){
     return false;
   }
   //Ensure directory exists
-  Filer::mkDirDashP(filename.c_str(), true);
-  Filer::cp(temp_path.c_str(), filename.c_str());
+  auto fname=filename.pack();
+  Filer::mkDirDashP(fname, true);
+  Filer::cp(temp_name, fname);
 //  if(!debug){
 //    Filer::rm(temp_path.c_str());
 //  }
@@ -80,7 +86,7 @@ double TreeFile::svn(){
 
 bool TreeFile::dumpStorage(Storable&root, const char *location){
   FileName rootname("var");
-  rootname.folder(location).ext("art");
+  rootname.append(location).append(".art");
   TreeFile writer(rootname, root);
   return writer.printTree(false);
 }

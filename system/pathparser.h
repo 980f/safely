@@ -1,5 +1,4 @@
-#ifndef PATHPARSER_H
-#define PATHPARSER_H
+#pragma once
 
 #include "textpointer.h"
 #include "segmentedname.h"
@@ -61,5 +60,3 @@ struct Chunker {
 };
 
 }  // class PathParser
-
-#endif // PATHPARSER_H

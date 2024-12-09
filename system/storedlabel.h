@@ -7,11 +7,15 @@
 class StoredLabel : public Stored {
 public:
   StoredLabel(Storable &node, const TextValue  &fallback = TextValue());
+  StoredLabel(Storable&node, const char *fallback) ;
+
   void setDefault(const TextValue  &deftext);
-  /**pointer to storage, not safe to use to manipulate it,*/
+  void setDefault(const char *deftext);
+
+  /** pointer to storage, not safe to use to manipulate it. */
   TextKey c_str() const;
   /** your own self-deleting copy of the storage.
-   * IE manipuating this does not affect the stored value.  */
+   * IE manipulating this does not affect the stored value.  */
   Text toString() const;
   /** syntactic sugar for toString() */
   operator TextValue() const {

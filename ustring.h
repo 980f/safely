@@ -7,7 +7,8 @@
 
 #ifdef SAFELY_debug_Ustring
 #include "logger.h" //for wtf
-#else
+#elifndef Safely_Have_Wtf
+//perhaps: #define Safely_Have_Wtf
 void wtf(const char *fmt, ...){
   // a place to breakpoint.
 }
@@ -80,7 +81,7 @@ private: //template varargs majick
         }
       }
       if(sizeof ... (args) > 0) {//recurse
-        compose_item(which + 1, format, args ...);
+        compose_item(which + 1, workspace, args ...);
       }
     } catch(...) {
      wtf("Stifled exception in Ustring::compose");

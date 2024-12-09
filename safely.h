@@ -9,13 +9,13 @@
 
 // controls whether json escaping rules are applied to data before being passed to Storable.
 #define STORJSON_DOESCAPES 0
-
+#define SAFELY_NULL 1
 //////////////////////////////////////
 /// from here down are things that haven't yet found a home:
 
 /////compiler specific way to make 'missing break' warnings go away.
 #if __has_cpp_attribute(fallthrough)
-#define JOIN  [[clang::fallthrough]]
+#define JOIN  [[fallthrough]];
 #else
 #define JOIN
 #endif
