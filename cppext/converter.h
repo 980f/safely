@@ -1,5 +1,4 @@
-#ifndef CONVERTER_H
-#define CONVERTER_H "(C) Andrew L. Heilveil, 2017"
+#pragma once // "(C) Andrew L. Heilveil, 2017"
 
 #include "buffer.h"
 
@@ -8,17 +7,18 @@
  */
 class Converter {
 public:
-  virtual ~Converter()=default;
+  virtual ~Converter() = default;
+
   /** @returns length required for converted @param source */
-  virtual unsigned length(const char * source) const;
+  virtual unsigned length(const char *source) const;
+
   /** convert @param source into @param packer. Will truncate if you do not make packer big enough to contain what @see length() returns for the @param source.
  @returns whether it did NOT truncate */
-  virtual bool operator()(const char * source,Indexer<char> &packer);
-  /** quite a few instances of passing a converter around by reference needed an rvalue reference.
+  virtual bool operator()(const char *source, Indexer<char> &packer);
+
+  /** quite a few instances of passing a converter around by reference needed an r-value reference.
    * This guy does the equivalent of std::forward<Converter>(converterarg) with less painful typing */
-  Converter &&forward(){
-    return static_cast<Converter&&>(*this);
+  Converter &&forward() {
+    return static_cast<Converter &&>(*this);
   }
 };
-
-#endif // CONVERTER_H

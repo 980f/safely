@@ -1,5 +1,4 @@
-#ifndef COUNTDOWN_H
-#define COUNTDOWN_H "(C) Andrew L. Heilveil, 2017"
+#pragma once // "(C) Andrew L. Heilveil, 2017"
 
 /** if non-zero then decrement else leave alone */
 class CountDown {
@@ -42,4 +41,3 @@ public:
     return array[counter];
   }
 };
-#endif // COUNTDOWN_H

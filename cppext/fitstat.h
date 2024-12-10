@@ -1,5 +1,5 @@
-#ifndef FITSTAT_H
-#define FITSTAT_H   "(C) 2017 Andy Heilveil"
+#pragma once //   "(C) 2017 Andy Heilveil"
+
 /**
   * report on a fit (regression) operation
   */
@@ -14,4 +14,3 @@ struct FitStat {
   void apply(double deviation);
   FitStat &operator=(const FitStat &&other);
 };
-#endif // FITSTAT_H

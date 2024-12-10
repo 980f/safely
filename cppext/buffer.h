@@ -11,7 +11,7 @@
  *  Instances are passed a pointer to a buffer and its length and provide pointer-like syntax for modifying and accessing said
  *  buffer, but won't increment the pointer outside the allocated range.
  *  This class does not CONTAIN the data, it is a pointer into data allocated elsewhere.
- *  todo: add ownership flag, to delete the buffer when the object goes away. We don't already have that as most of the time we have multiple indexers into a shared buffer.
+ *  wont do: add ownership flag, to delete the buffer when the object goes away. Do that in an extended class.
  *  If this is the only place a malloc'd address is retained you can free that block (at the appropriate time!) by calling free(indx.internalBuffer());
  *
  *  There are two major modalities of use, writing and reading.

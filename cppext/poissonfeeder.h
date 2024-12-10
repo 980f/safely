@@ -1,13 +1,11 @@
-#ifndef POISSONFEEDER_H
-#define POISSONFEEDER_H
-
+#pragma once
 
 #include <random>
 
 /** wrapper for common use of a generator of poisson distribution test data.
- TODO: expose seeding so that reproducible sequences are possible, and so that we don't have an OS dependency (time service is used for default seed)*/
+ TODO: expose seeding so that reproducible sequences are possible, and so that we don't have an OS dependency (time service is used for default seed) */
 class PoissonFeeder {
-  //random number generation sogn and dance:
+  //random number generation song and dance:
   std::random_device randomSource;
   std::mt19937 uniform;
   std::exponential_distribution<double> generator;
@@ -15,9 +13,7 @@ class PoissonFeeder {
 public:
   PoissonFeeder(double cps);
 
-  double operator()(){
+  double operator()() {
     return generator(uniform);
   }
-
 };
-#endif // POISSONFEEDER_H
