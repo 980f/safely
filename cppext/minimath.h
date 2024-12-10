@@ -1,5 +1,4 @@
-#ifndef minimath_h
-#define minimath_h
+#pragma once
 
 /**
  *  math related functions that either had platform/compiler variations or have platform specific optimizations (such as implementing in assembly code using processor specific instructions).
@@ -214,14 +213,14 @@ u64 keepDecimals(u64 p19,unsigned digits);
  *  @returns a truncated int that has those digits of interest, but you may need to pad with leading zeroes. */
 u64 truncateDecimals(u64 p19,unsigned digits);
 /** filtering in case we choose to optimize this */
-double dpow10(int exponent);
-double dpow10(unsigned uexp);
+constexpr double dpow10(int exponent);
+constexpr double dpow10(unsigned uexp);
 
-template<typename mathy> double squared(mathy x){
+template<typename mathy> constexpr double squared(mathy x){
   return x * x;
 }
 
-double degree2radian(double theta);
+constexpr double degree2radian(double theta);
 
 /** n!/r!(n-r)! combinatorial function.
  * Was formerly named and documented as Pnr, but implementation was correct for Cnr and so was its usages.
@@ -342,17 +341,13 @@ void memory_copy(const void *source, void *target, void *sourceEnd);
 
 void memory_set(void *target, void *targetEnd, u8 value);
 
-/** variants of splitter, allowing for greater range. @see splitter is optimized for numbers less than 32k
+/** split a number into its integer and fractional parts, a wrapper around ::modf.
+ * it is named after the number of bins, such as array elements, needed to span the range from 0..@param d .
+ * variants of splitter, allowing for greater range. @see splitter is optimized for numbers less than 32k
  *  @param d is replaced with its fractional part, the function @returns the integer part, @see standard math lib's modf for edge cases.
  */
-//template <typename Integrish, typename Floater> Integrish intbin(Floater &d);
-//template <> int intbin<int,double>(double &d);
-//template <> long intbin<long,double>(double &d);
-//template <> u64 intbin<u64,double>(double &d);
-
 template<typename Integrish,typename Floater> Integrish intbin(Floater &d){
   double eye;
   d = modf(d,&eye);
   return Integrish(eye);
 }
-#endif /* ifndef minimath_h */

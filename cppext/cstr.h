@@ -1,11 +1,9 @@
-#ifndef CSTR_H
-#define CSTR_H
+#pragma once
 
 #include "textkey.h" //for its utility functions, could migrate those here
 #include "index.h"  //for string search results
 
 /** yet another attempt at safe use of standard C lib str functions.
- * Assiduous use will make it hard for you to make use-after-free bugs.
  *
  * This class wraps a pointer and null checks all uses, vs letting str*() lib functions seg fault.
  * NB: only str* functions which do NOT alter the string should be wrapped here.
@@ -40,6 +38,7 @@ public:
   /** as byte vs human readable character */
   const unsigned char*raw() const;
 
+  /** @returns a nevern null pointer. If the wrapped pointer is null this returns a pointer to a shared empty string. */
   const char *notNull() const;
 
   /** @returns the pointer if the string length is >0 else returns nullptr.*/
@@ -96,16 +95,23 @@ public:
   /** @returns pointer to last character in this string which matches ch. @see chr() */
   const char *rchr(int chr) const noexcept;
 
+
+  /** search from end forward matching chars*/
+  bool endsWith(TextKey ext) const noexcept;
+
   /** @returns an index that if nulled will remove useless '0' digits, and maybe a radix point. This is dumb and presumes the string is a reasonable representation of a number. */
   Index trailingZeroes() const;
 
-  /** strtod */
+  /** strtod, if @param tail is not null it is set to point to char that terminated the numerical image */
   double asNumber(Cstr *tail = nullptr) const noexcept;
 
-  /** for bool: 1,0,true, false have definite values.
+  /** parse string for a value of type Numeric, if the string is null then @returns @param onNull. @param units if not null is set to the character that ended the parse.
+   *
+   * for bool: 1,0,true, false have definite values.
    * to distinguish onNull from the same value being parsed inspect units.
    */
   template<typename Numeric> Numeric cvt(Numeric onNull, Cstr *units = nullptr) const noexcept;
+
   /** forget the target */
   virtual void clear() noexcept;
 
@@ -127,8 +133,6 @@ public:
     return const_cast<unsigned char *>(reinterpret_cast<const unsigned char *>(ptr));
   }
 
-  /** search from end forward matching chars*/
-  bool endsWith(TextKey ext) const noexcept;
 }; // class Cstr
 
 //versions implemented in cstr.cpp. You should probably add others here if the type is intrinsic or already known to this module.

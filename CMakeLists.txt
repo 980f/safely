@@ -249,7 +249,6 @@ add_library(safely STATIC
   ./cppext/pathiterator.h
   ./cppext/textkey.h
   ./cppext/iterate.h
-  ./cppext/localonexit.h
   ./cppext/extremer.h
   ./cppext/cheaptricks.h
   ./cppext/minimath.h

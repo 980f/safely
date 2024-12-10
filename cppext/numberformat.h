@@ -32,7 +32,8 @@ struct NumberFormat {
   /** set to standard values */
   void clear();
 
-  /** every time this is used to actually process a number someone should call this method */
+  /** every time this is used to actually process a number someone should call this method.
+   * when the designated number of usages has been reached this object is altered to the default (clear()) state. */
   void onUse();
 };
 

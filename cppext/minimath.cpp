@@ -192,7 +192,7 @@ int fexp(double d){ //todo:1 remove dependence on cmath.
   return ret;
 }
 
-double dpow10(unsigned uexp){
+constexpr double dpow10(unsigned uexp){
   if(uexp<countof(Decimal1)) {
     return double(Decimal1[uexp]);
   }
@@ -202,7 +202,7 @@ double dpow10(unsigned uexp){
   return 0;
 }
 
-double dpow10(int exponent){
+constexpr double dpow10(int exponent){
   if(exponent>=0) {
      dpow10(unsigned(exponent));
   }
@@ -216,7 +216,7 @@ double dpow10(int exponent){
 #define M_PI 3.14159265358979323846
 #endif
 
-double degree2radian(double theta){
+constexpr double degree2radian(double theta){
   return theta * (M_PI / 180);
 }
 
