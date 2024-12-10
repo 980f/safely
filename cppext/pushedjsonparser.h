@@ -8,9 +8,8 @@
  * It does not interpret data values, it leaves them as strings as it doesn't actually retain the string in any sense.
  */
 #include "halfopen.h"
-#include "cheaptricks.h" //CountDown
 #include "pushedparser.h"
-#include "localonexit.h"
+#include "onexit.h"
 
 #include "extremer.h"
 struct JsonStats {

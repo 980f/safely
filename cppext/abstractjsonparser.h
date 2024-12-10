@@ -1,5 +1,4 @@
-#ifndef ABSTRACTJSONPARSER_H
-#define ABSTRACTJSONPARSER_H "(C) 2017 Andrew L. Heilveil"
+#pragma once //"(C) 2017 Andrew L. Heilveil"
 
 /** an abstract json parser.
  *  @see StoredJSONparser.
@@ -7,8 +6,7 @@ todo:1 replace template with abstract base classes.
 */
 
 #include "pushedjsonparser.h"
-#include "sequence.h"
-#include "localonexit.h"
+#include "onexit.h"
 
 template <typename Storable, typename TextClass> class AbstractJSONparser;//forward ref for friendliness
 
@@ -21,8 +19,8 @@ public: //needs accessor
   bool treatRootSpecial=true;//for loading a file onto an existing node we want the file content to be wrappped with braces that do not cause a new child to be made.
 protected:
   /** must supply and track source data, and be able to recover it from values of ordinal */
-  virtual bool hasNext(void) = 0;
-  virtual char next(void) = 0;
+  virtual bool hasNext() = 0;
+  virtual char next() = 0;
 
   /** @returns an object suitable for passing to insertNewChild */
   virtual TextClass extract(Span &span)=0;

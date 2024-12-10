@@ -1,8 +1,7 @@
 //"(C) Andrew L. Heilveil, 2017"
 #include "safely.h"
 #include "pushedjsonparser.h"
-#include "utf8.h"
-#include "localonexit.h"
+#include "onexit.h"
 
 using namespace PushedJSON;
 
@@ -12,7 +11,7 @@ void Parser::recordName(){
   haveName = true;
 }
 
-PushedJSON::Action Parser::next(char pushed){
+Action Parser::next(char pushed){
 
   switch (PushedParser::next(pushed)) {
   case BeginValue:
@@ -25,8 +24,8 @@ PushedJSON::Action Parser::next(char pushed){
   case Done:
     return PushedJSON::Done;
 
-  case PushedParser::EndValueAndItem:
-  case PushedParser::EndItem:
+  case EndValueAndItem:
+  case EndItem:
     switch(d.last) {
     case '=':
       if(!rule.equalscolon){
@@ -54,10 +53,8 @@ PushedJSON::Action Parser::next(char pushed){
       if(rule.semicomma){
         d.last=',';//canonical token
         return PushedJSON::EndItem;//missing value, possible missing whole child.
-      } else {
-        return PushedJSON::Illegal;
       }
-
+      return PushedJSON::Illegal;
     case ',': //sometimes is an extraneous comma, we choose to ignore those.
       return PushedJSON::EndItem;//missing value, possible missing whole child.
     case 0: /*abnormal*/

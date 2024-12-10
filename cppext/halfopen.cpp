@@ -23,7 +23,7 @@ void Span::clear(){
 }
 
 void Span::shift(unsigned offset){
-  //NB: Index -= only modifies the Index if is is valid.
+  //NB: Index -= only modifies the Index if it is valid.
   lowest-=offset;
   highest-=offset;
 }
