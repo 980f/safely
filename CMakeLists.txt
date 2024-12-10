@@ -28,7 +28,6 @@ add_library(safely STATIC
   ./cppext/realstatistic.cpp
   ./cppext/safestr.cpp
   ./cppext/core-atomic.cpp
-  ./cppext/block.cpp
   ./cppext/bitwise.cpp
   ./cppext/bitbanger.cpp
   ./cppext/maxtracked.cpp
