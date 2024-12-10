@@ -26,8 +26,8 @@ struct FullRules :public Rules {
   FullRules();
 };
 
-/** append the pieces together separated by seperator and conditionally wrapped with seperators.
- * the lead and trailing seperators are only added when requested and when they would not result in a lonely slash
+/** append the pieces together separated by separator and conditionally wrapped with separators.
+ * the lead and trailing separators are only added when requested and when they would not result in a lonely slash
  * IE an empty pathname does NOT become '/'. That is an attempt to preclude 'rm -rf /' */
 Text pack(const SegmentedName &pieces, const Rules &rule=Rules(), Converter &&converter=Converter());
 

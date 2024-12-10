@@ -3,7 +3,6 @@
 #include "storednumeric.h"  //version number
 
 #include <fstream>
-//#include <giomm.h>
 
 #include <unistd.h>
 #include <ustring.h>
@@ -17,17 +16,13 @@
 /** expects a supplier of a linear number such as svn produces. */
 extern double svn();
 
-//using namespace Gio;
-//using namespace Glib;
-//using namespace std;
-
 TreeFile::TreeFile(FileName &fname, Storable &node) :
   filename(fname),
   root(node),
   ConnectChild(svnnumber){
 }
 
-bool TreeFile::parseTreeFile(void){
+bool TreeFile::parseTreeFile(){
 //  PerfTimer perf(ustring::compose("parse tree %1", filename).c_str());
   auto fname=filename.pack();
   Filer file("TreeFile");

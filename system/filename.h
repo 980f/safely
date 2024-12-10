@@ -1,12 +1,10 @@
-#ifndef FILENAME_H
-#define FILENAME_H "(C) 2017 Andrew Heilveil"
+#pragma once //"(C) 2017 Andrew Heilveil"
 
-#include "dottedname.h"  //dotted with '/'
+#include "dottedname.h"
 #include "filenameconverter.h"
 #include "pathparser.h"
 
-/**
- *
+/** a filename as an array of DottedNames, each of which is an array of text.
  * this approach maintains the path as an array of pieces, not assembled into a proper string until pack is called, which generates an independent chunk of text.
  * this has an advantage that intentional path separators aren't url encoded, only ones embedded in data appended to the path.
  */
