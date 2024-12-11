@@ -36,8 +36,14 @@ public:
   /** assemble pieces into an actual fp representation */
   double packed() const;
 
-  /** @returns whether number could be an integer */
-  bool seemsInteger() const;
+  /** @returns whether number could be an integer.
+   * @deprecated still returns true even if the result overflows the number of bits, not yet properly handling exponent.
+   */
+  bool seemsInteger(unsigned numBits= std::numeric_limits<unsigned>::digits) const;
+
+  template <typename Numeric> bool seemsInteger() const {
+    return seemsInteger(std::numeric_limits<Numeric>::digits);
+  }
 
   /** saturated signed version of number predecimal */
   s64 asInteger() const;
@@ -60,5 +66,5 @@ public:
   /** maximum value that can be multiplied by 10 and not exceed 2^64: */
   static constexpr u64 DecimalCutoff = (1ULL << 63) / 5; //2^64 /10 == 2^63/5, needed to take care that the compiler didn't get a wrap.
   static constexpr unsigned maxDigits = 19; /* (floor(log10(2^64) */
-  static constexpr double p19 = dpow10(maxDigits);
+  static constexpr double p19 = 10e19;
 };

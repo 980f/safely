@@ -5,7 +5,7 @@
 const double Infinity = std::numeric_limits<double>::infinity();
 const double Nan = std::numeric_limits<double>::quiet_NaN();
 
-u32 log2Exponent(u32 number){
+unsigned log2Exponent(u32 number){
   //can be really fast in asm
   for(u32 exp = 0; exp<32; ++exp) {
     if(number) {
@@ -58,7 +58,8 @@ bool isDecent(double d){
   return d==0.0 || isNormal(d);
 }
 
-const u32 Decimal1[] = {
+//powers of 10 that fit into a 32 bit integer
+constexpr u32 Decimal1[] = {
   1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000
 };
 
@@ -72,6 +73,7 @@ int ilog10(u32 value){
   return -1;
 }
 
+// powers of 10 that fit into a 64 bit integer, but not a 32bit integer.
 const u64 Decimal2[] = {
   10000000000UL, 100000000000UL, 1000000000000UL, 10000000000000UL, 100000000000000UL, 1000000000000000UL, 10000000000000000UL, 100000000000000000UL, 1000000000000000000UL, 10000000000000000000UL
   //compiler reported overflow when I added one more.

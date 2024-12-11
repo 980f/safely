@@ -2,65 +2,67 @@
 #include "continuedfractionratiogenerator.h"
 #include "minimath.h"
 
-ContinuedFractionRatioGenerator::ContinuedFractionRatioGenerator(){
+ContinuedFractionRatioGenerator::ContinuedFractionRatioGenerator() {
   restart(0);
 }
 
-bool ContinuedFractionRatioGenerator::restart(double ratio, unsigned limit){
-  this->limit = limit==0 ? ~0U : limit;//too many defective call points, fix it here.
+bool ContinuedFractionRatioGenerator::restart(double ratio, unsigned limit) {
+  this->limit = limit == 0 ? ~0U : limit; //there were too many defective call points, fixing it here.
   fraction = fabs(ratio);
-  h[0] = k[1] = 0;
+  h[0] = k[1] = 0; //note that indices here are swap of following ones. h/k 0/1 is a 2x2 matrix that we are initializing to the identity matrix.
   h[1] = k[0] = 1;
-  h[2] = k[2] = 0;//4 debug
-  step();//gives 1/0
-  return step();//gives int(ratio)/1
-} // ContinuedFractionRatioGenerator::restart
+  an = h[2] = k[2] = 0; //4 debug, these values aren't actually used.
+  step(); //gives 1/0
+  return step(); //gives int(ratio)/1
+}
 
-bool ContinuedFractionRatioGenerator::bump(unsigned hk[3]){
-  u64 provisional = u64(an) * hk[1] + hk[0];
-  if(provisional<=limit) {
+bool ContinuedFractionRatioGenerator::bump(unsigned hk[3]) {
+  u64 provisional = u64(an) * hk[1] + hk[0]; //using extra bits to make the math easier here.
+  if (provisional <= limit) {
     hk[2] = unsigned(provisional);
     return true;
   }
   return false;
 }
 
-static void shift(unsigned hk[3]){
+static void shift(unsigned hk[3]) {
   hk[0] = hk[1];
   hk[1] = hk[2];
 }
 
-bool ContinuedFractionRatioGenerator::step(){
-  if(split()) {
-    if(bump(h)&& bump(k)) {
+bool ContinuedFractionRatioGenerator::step() {
+  if (split()) {
+    if (bump(h) && bump(k)) { //only  if both are in range do we keep the new values
       shift(h);
       shift(k);
       return true;
-    } else {
-      return false;
     }
+    return false; //breakpoint here to stop at final step
   }
   return false;
-} // ContinuedFractionRatioGenerator::step
-
-double ContinuedFractionRatioGenerator::approximation(){
-  return ratio(double(numerator()),double(denominator()));
 }
 
-double ContinuedFractionRatioGenerator::best(){
-  //we use a counter to guard against bad input parameters. Termination is normally done due to the 'limit' value which is default set to note overflow in the computation.
-  for (unsigned steps = 32; steps-->0&&step();) {
-  }
-  return approximation();
-} // ContinuedFractionRatioGenerator::step
+double ContinuedFractionRatioGenerator::approximation() {
+  return ratio(double(numerator()), double(denominator()));
+}
 
-bool ContinuedFractionRatioGenerator::split(){
-  static const double u32epsilon = pow(2,-32);//confirmed perfect representation. 0x3df0000000000000
-  if(fraction==0.0) {
+void ContinuedFractionRatioGenerator::run() {
+  //we use a counter to guard against bad input parameters. Termination is normally done via step() due to the 'limit' value which is default set to note overflow in the computation.
+  for (unsigned steps = maxWorkingBits; steps-- > 0 && step();) {}
+}
+
+double ContinuedFractionRatioGenerator::best() {
+  run();
+  return approximation();
+}
+
+bool ContinuedFractionRatioGenerator::split() {
+  static const double u32epsilon = pow(2, -maxWorkingBits); //confirmed perfect representation. 0x3df0000000000000
+  if (fraction == 0.0) {
     return false;
   }
 
-  if(fraction< u32epsilon) {//subsequent math would overflow without notices.
+  if (fraction < u32epsilon) { //subsequent math would overflow without notices.
     return false;
   }
 
@@ -69,4 +71,4 @@ bool ContinuedFractionRatioGenerator::split(){
   an = splitteru(inverse);
   fraction = inverse;
   return true;
-} // ContinuedFractionRatioGenerator::split
+}

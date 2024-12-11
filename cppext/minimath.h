@@ -314,7 +314,7 @@ u16 fractionallyScale(u16 number, u16 fraction, u16 numbits);
  * Note well that this will give 0 as the log of 0 rather than negative infinity, precheck the argument if you can't live with that.
  * mathematical definition: "number of right shifts necessary for an unsigned number to become 0"
  */
-u32 log2Exponent(u32 number);
+unsigned log2Exponent(u32 number);
 
 /** @returns eff * 2^pow2  where pow2 is signed. This can be done rapidly via bitfiddling*/
 float shiftScale(float eff, int pow2);

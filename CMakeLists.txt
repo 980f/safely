@@ -32,7 +32,6 @@ add_library(safely STATIC
   ./cppext/bitbanger.cpp
   ./cppext/maxtracked.cpp
   ./cppext/pathname.cpp
-  ./cppext/stacked.cpp
   ./cppext/bigendianer.cpp
   ./cppext/converter.cpp
   ./cppext/countdown.cpp
@@ -199,7 +198,6 @@ add_library(safely STATIC
   ./cppext/numericalvalue.h
   ./cppext/pushedparser.h
   ./cppext/quantizer.h
-  ./cppext/stacked.h
   ./cppext/textchunk.h
   ./cppext/textwalker.h
   ./cppext/transactionalbuffer.h
@@ -219,7 +217,7 @@ add_library(safely STATIC
   ./cppext/tableofpointers.h
   ./cppext/abstractjsonparser.h
   ./cppext/bitbanger.h
-  ./cppext/block.h
+  ./system/block.h
   ./cppext/bufferformatter.h
   ./cppext/centeredslice.h
   ./cppext/chained.h
@@ -257,7 +255,7 @@ add_library(safely STATIC
   ./cppext/numberpieces.h
   ./cppext/polyfilter.h
   ./cppext/linearsmoother.h
-  ./system/kanjidic.h
+  #./system/kanjidic.h
   #./system/cachedindextostored.h
   ./system/delimitedinputstream.h
   ./system/measure.h

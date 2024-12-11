@@ -39,6 +39,11 @@ double NumberPieces::packed() const {
   return negative ? -number : number;
 }
 
+/** todo:00 perfect this as it is ignoring magnitude of exponent. Needs a fractional multiple, ~3.3 bits per base 10 exponent. */
+bool NumberPieces::seemsInteger(unsigned numBits) const {
+  return !isNan && postdecimal==0 && (!hasEterm||!negativeExponent) && ((log2Exponent(predecimal)+negative)<=numBits);
+}
+
 NumberPieces::NumberPieces(double d) {
   //  reset();
   decompose(d);
