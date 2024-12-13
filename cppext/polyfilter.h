@@ -1,5 +1,4 @@
-#ifndef POLYFILTER_H  //(C) 2017,2024 Andrew L.Heilveil.  AKA github/980f.
-#define POLYFILTER_H
+#pragma once //(C) 2017,2024 Andrew L.Heilveil.  AKA github/980f.
 
 #include "centeredslice.h"
 
@@ -13,7 +12,7 @@ public:
   const unsigned hw;
   struct Datum {
     int amplitude = 0; //discriminant for "biggest" whatever determination.
-    int location = 0; //not unsigned as this is an abstract user coordinate
+    int location = 0; //not unsigned as this is an abstract user coordinate, not necessarily an array index.
     Datum() = default;
   };
   /** places where derivatives are zero or maximum is often the main goal in filtering. */
@@ -25,7 +24,7 @@ public:
     Inflection();
     /** the stored location is relative to some external point @param offset*/
     double absolute(int offset) const;
-  public:
+
     /** use return to reduce cost of computing the tweak
     @returns whether the inflection was updated */
     bool morePositive(const Datum &testpoint);
@@ -54,5 +53,3 @@ public:
   virtual void scan(const CenteredSlice &slice, ScanReport &report) = 0;
 
 }; // class PolyFilter
-
-#endif // POLYFILTER_H

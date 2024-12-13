@@ -25,7 +25,7 @@ public:
   unsigned limit;
   constexpr unsigned maxWorkingBits = std::numeric_limits<decltype(h[0])>::digits;
 
-  /** create one for learning the algorithm*/
+  /** create one for learning the algorithm, then call restart followed by looping on step inspecting numerator and denominator as you go. */
   ContinuedFractionRatioGenerator();
 
   /** create and iterate. By the time this returns it holds the best ratio. */
