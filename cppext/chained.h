@@ -15,7 +15,6 @@
 template<typename T> class Chained {
   //  friend class Chainer<T>;
   //protected:
-public://for SettingsGrouper::init
   T* peer;
 protected:
   Chained(){

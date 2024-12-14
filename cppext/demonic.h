@@ -7,7 +7,7 @@
  *
  * a numeric value that may have unlimited side effects when set.
 *  The Numeric should have an operator != Numeric, operator !=[0,1]
-the side effect is provided to objects of this class via @see onAnyChange().
+*  the side effect is provided to objects of this class via @see onAnyChange().
 */
 
 template<typename Numeric> class Demonic {

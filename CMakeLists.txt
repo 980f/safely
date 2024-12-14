@@ -373,4 +373,6 @@ add_library(safely STATIC
   ./network/tcpsocket.h
   ./network/tcpserver.h
   ./safely.h
+  network/darkhttpd.cpp
+  network/darkhttpd.h
 )

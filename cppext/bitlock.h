@@ -5,8 +5,7 @@
 
 #pragma once
 
-/** instantiate one of these as a local variable at the start of a compound statement to ensure the given 'lock' bit is set to !polarity for all exit paths of that
- * block
+/** instantiate one of these as a local variable at the start of a compound statement to ensure the given 'lock' bit is set to !polarity for all exit paths of that block
  */
 class BitLock {
   /** the (naturally atomic) item being used as a mutex */
