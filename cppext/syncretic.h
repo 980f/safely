@@ -1,5 +1,4 @@
-#ifndef SYNCRETIC_H
-#define SYNCRETIC_H
+#pragma once
 
 /**
   * When all the instances of a class need to be accessed as a group then derive from this class.
@@ -13,37 +12,26 @@ template <class K> class Syncretic {
 protected:
   static K *lister;
   K *next;
-protected:
+
   Syncretic(){
-    next = 0;
-    if(lister == 0) {//only existing object
-      lister = this;
-      return;
-    }
-    for(K *scan = lister; scan != 0; scan = scan->next) {
-      if(scan->next == 0) {
-        scan->next = this;
-        return;
-      }
-    }
+    //putting new one at the head of list is cheaper than at the end.
+    next = lister;
+    lister = this;
   }
   
   virtual ~Syncretic(){
-    if(lister == 0) {//pathological case, deleting one that didn't get listed in the first place
+    if(lister == nullptr) {//pathological case, deleting one that somehow didn't get listed in the first place
       return;
     }
-    if(lister == this) {//last one, often nice to know and makes the for loop that follows simpler.
-      lister = 0;
+    if(lister == this) {//most recently constructed one, a frequent case.
+      lister = this->next;
       return;
     }
     for(K *scan = lister; scan != 0; scan = scan->next) {
       if(scan->next == this) {
         scan->next = this->next;
-        break;
+        return;
       }
     }
   }
 };
-
-
-#endif // SYNCRETIC_H
