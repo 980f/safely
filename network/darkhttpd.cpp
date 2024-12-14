@@ -5,14 +5,13 @@
 
 #include "darkhttpd.h"
 
+#include <forward_list>
+#include <sigc++/connection.h>
+
 static const char pkgname[]   = "darkhttpd/1.16.from.git";
 static const char copyright[] = "copyright (c) 2003-2024 Emil Mikulic" ", totally refactored in 2024 by github/980f";
 
 /* Possible build options: -DDEBUG -DNO_IPV6 */
-
-#ifndef NO_IPV6
-# define HAVE_INET6
-#endif
 
 #ifndef DEBUG
 # define NDEBUG
@@ -41,21 +40,21 @@ static const int debug = 1;
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <arpa/inet.h>
-#include <assert.h>
-#include <ctype.h>
+#include <cassert>
+#include <cctype>
 #include <dirent.h>
-#include <errno.h>
+#include <cerrno>
 #include <fcntl.h>
 #include <grp.h>
-#include <limits.h>
+#include <climits>
 #include <pwd.h>
-#include <signal.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <csignal>
+#include <cstdarg>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <syslog.h>
-#include <time.h>
+#include <ctime>
 #include <unistd.h>
 
 /** The time formatting that we use in directory listings.
@@ -106,16 +105,6 @@ static const unsigned DIR_LIST_MTIME_SIZE =16 + 1; /* How large the buffer will 
 # define O_EXLOCK O_EXCL
 #endif
 
-#ifndef __printflike
-# ifdef __GNUC__
-/* [->] borrowed from FreeBSD's src/sys/sys/cdefs.h,v 1.102.2.2.2.1 */
-#  define __printflike(fmtarg, firstvararg) \
-             __attribute__((__format__(__printf__, fmtarg, firstvararg)))
-/* [<-] */
-# else
-#  define __printflike(fmtarg, firstvararg)
-# endif
-#endif
 
 #if defined(__GNUC__) || defined(__INTEL_COMPILER)
 # define unused __attribute__((__unused__))
@@ -173,97 +162,6 @@ static void warn(const char *format, ...) {
 #endif
 
 
-struct connection {
-//    LIST_ENTRY(connection) entries;
-
-    int socket;
-#ifdef HAVE_INET6
-    struct in6_addr client;
-#else
-    in_addr_t client;
-#endif
-    time_t last_active;
-    enum {
-        RECV_REQUEST,   /* receiving request */
-        SEND_HEADER,    /* sending generated header */
-        SEND_REPLY,     /* sending reply */
-        DONE            /* connection closed, need to remove from queue */
-    } state;
-
-    /* char request[request_length+1] is null-terminated */
-    char *request;
-    size_t request_length;
-
-    /* request fields */
-    char *method, *url, *referer, *user_agent, *authorization;
-    off_t range_begin, range_end;
-    off_t range_begin_given, range_end_given;
-
-    char *header;
-    size_t header_length, header_sent;
-    int header_dont_free, header_only, http_code, conn_close;
-
-    enum { REPLY_GENERATED, REPLY_FROMFILE } reply_type;
-    char *reply;
-    int reply_dont_free;
-    int reply_fd;
-    off_t reply_start, reply_length, reply_sent,
-          total_sent; /* header + body = total, for logging */
-};
-
-
-
-static const char *forward_all_url = nullptr;
-
-static int forward_to_https = 0;
-
-
-/* If a connection is idle for timeout_secs or more, it gets closed and
- * removed from the connlist.
- */
-static int timeout_secs = 30;
-static char *keep_alive_field = nullptr;
-
-/* Time is cached in the event loop to avoid making an excessive number of
- * gettimeofday() calls.
- */
-static time_t now;
-
-/* To prevent a malformed request from eating up too much memory, die once the
- * request exceeds this many bytes:
- */
-#define MAX_REQUEST_LENGTH 4000
-
-/* Defaults can be overridden on the command-line */
-static const char *bindaddr;
-static uint16_t bindport = 8080;    /* or 80 if running as root */
-static int max_connections = -1;    /* kern.ipc.somaxconn */
-static const char *index_name = "index.html";
-static int no_listing = 0;
-
-static int sockin = -1;             /* socket to accept connections from */
-#ifdef HAVE_INET6
-static int inet6 = 0;               /* whether the socket uses inet6 */
-#endif
-static char *wwwroot = nullptr;        /* a path name */
-static char *logfile_name = nullptr;   /* NULL = no logging */
-static FILE *logfile = nullptr;
-static char *pidfile_name = nullptr;   /* NULL = no pidfile */
-static int want_chroot = 0, want_daemon = 0, want_accf = 0,
-           want_keepalive = 1, want_server_id = 1, want_single_file = 0;
-static char *server_hdr = nullptr;
-static char *auth_key = nullptr;       /* NULL or "Basic base64_of_password" */
-static char *custom_hdrs = nullptr;
-static uint64_t num_requests = 0, total_in = 0, total_out = 0;
-static int accepting = 1;           /* set to 0 to stop accept()ing */
-static int syslog_enabled = 0;
-volatile int running = 0; /* signal handler sets this to false */
-
-#define INVALID_UID ((uid_t) -1)
-#define INVALID_GID ((gid_t) -1)
-
-static uid_t drop_uid = INVALID_UID;
-static gid_t drop_gid = INVALID_GID;
 
 /* Default mimetype mappings - make sure this array is NULL terminated. */
 static const char *default_extension_map[] = {
@@ -304,13 +202,11 @@ static const char octet_stream[] = "application/octet-stream";
 static const char *default_mimetype = octet_stream;
 
 /* Prototypes. */
-static void poll_recv_request(struct connection *conn);
-static void poll_send_header(struct connection *conn);
-static void poll_send_reply(struct connection *conn);
+
 
 /* close() that dies on error.  */
-static void xclose(const int fd) {
-    if (close(fd) == -1)
+void DarkHttpd::xclose(Fd fd) {
+    if (!fd.close())
         err(1, "close()");
 }
 
@@ -335,33 +231,66 @@ static void *xrealloc(void *original, const size_t size) {
  */
 static char *xstrdup(const char *src) {
     size_t len = strlen(src) + 1;
-    char *dest = xmalloc(len);
+    char *dest = static_cast<char *>(xmalloc(len));
+  if (dest!=nullptr)
     memcpy(dest, src, len);
     return dest;
 }
 
-/* vasprintf() that dies if it fails. */
-static unsigned int xvasprintf(char **ret, const char *format, va_list ap)
-    __printflike(2,0);
-static unsigned int xvasprintf(char **ret, const char *format, va_list ap) {
-    int len = vasprintf(ret, format, ap);
-    if (ret == nullptr || len == -1)
-        errx(1, "out of memory in vasprintf()");
-    return (unsigned int)len;
-}
 
-/* asprintf() that dies if it fails. */
-static unsigned int xasprintf(char **ret, const char *format, ...)
-    __printflike(2,3);
-static unsigned int xasprintf(char **ret, const char *format, ...) {
+/** delete vasprintf allocation when exit scope.
+ * vasprintf() internally allocates from heap, returning via a pointer pointer with a length by normal return
+ *
+ */
+struct Vsprinter {
+  char *malloced=nullptr;
+  int length=0;
+
+  /** @returns whether we have a nontrivial block*/
+  explicit operator bool () const {
+    return malloced != nullptr && length>=0;
+  }
+
+  Vsprinter(const char *format, va_list ap) {
+    length = vasprintf(&malloced, format, ap);
+  }
+
+  Vsprinter(const char *format, ...) {
     va_list va;
-    unsigned int len;
-
     va_start(va, format);
-    len = xvasprintf(ret, format, va);
+    length = vasprintf(&malloced,format, va);
     va_end(va);
-    return len;
-}
+  }
+
+  ~Vsprinter() {
+    free(malloced);
+    malloced=nullptr;
+    length=0;
+  }
+};
+
+// /* vasprintf() that dies if it fails. */
+// static unsigned int xvasprintf(char **ret, const char *format, va_list ap)
+//     __printflike(2,0);
+// static unsigned int xvasprintf(char **ret, const char *format, va_list ap) {
+//     unsigned len = vasprintf(ret, format, ap);
+//     if (ret == nullptr || len == ~0)
+//         errx(1, "out of memory in vasprintf()");
+//     return len;
+// }
+//
+// /* asprintf() that dies if it fails. */
+// static unsigned int xasprintf(char **ret, const char *format, ...)
+//     __printflike(2,3);
+// static unsigned int xasprintf(char **ret, const char *format, ...) {
+//     va_list va;
+//     unsigned int len;
+//
+//     va_start(va, format);
+//     len = xvasprintf(ret, format, va);
+//     va_end(va);
+//     return len;
+// }
 
 /* Append buffer code.  A somewhat efficient string buffer with pool-based
  * reallocation.
@@ -369,55 +298,52 @@ static unsigned int xasprintf(char **ret, const char *format, ...) {
 #ifndef APBUF_INIT
 # define APBUF_INIT 4096
 #endif
+
+//the below should probably be configurable rather than hard coded at same size as default init.
 #define APBUF_GROW APBUF_INIT
-struct apbuf {
+struct apbuf { //this looks like an std::vector<char>
     size_t length, pool;
     char *str;
+  apbuf() {
+    // struct apbuf *buf = static_cast<struct apbuf *>(xmalloc(sizeof(struct apbuf)));
+    length = 0;
+    pool = APBUF_INIT;
+    str = static_cast<char *>(xmalloc(pool));
+  }
+
+  /* Append s (of length len) to buf. */
+  void appendl( const char *s, const size_t len) {
+    size_t need = length + len;
+    if (pool < need) {
+      /* pool has dried up */
+      while (pool < need)
+        pool += APBUF_GROW;
+      str = static_cast<char *>(xrealloc(str,pool));
+    }
+    memcpy(str +length, s, len);
+    length += len;
+  }
+
+  void appendl(const Vsprinter &vs) {
+    appendl(vs.malloced,vs.length);
+  }
+
+  void appendf(const char *format, ...) __printflike(2, 3) {
+    va_list va;
+    va_start(va, format);
+    appendl(Vsprinter (format, va));
+    va_end(va);
+  }
 };
 
-static struct apbuf *make_apbuf(void) {
-    struct apbuf *buf = xmalloc(sizeof(struct apbuf));
-    buf->length = 0;
-    buf->pool = APBUF_INIT;
-    buf->str = xmalloc(buf->pool);
-    return buf;
-}
-
-/* Append s (of length len) to buf. */
-static void appendl(struct apbuf *buf, const char *s, const size_t len) {
-    size_t need = buf->length + len;
-    if (buf->pool < need) {
-        /* pool has dried up */
-        while (buf->pool < need)
-            buf->pool += APBUF_GROW;
-        buf->str = xrealloc(buf->str, buf->pool);
-    }
-    memcpy(buf->str + buf->length, s, len);
-    buf->length += len;
-}
 
 #ifdef __GNUC__
-#define append(buf, s) appendl(buf, s, \
-    (__builtin_constant_p(s) ? sizeof(s)-1 : strlen(s)) )
+#define append(buf, s) buf->appendl( s, (__builtin_constant_p(s) ? sizeof(s)-1 : strlen(s)) )
 #else
 static void append(struct apbuf *buf, const char *s) {
-    appendl(buf, s, strlen(s));
+    buf->appendl( s, strlen(s));
 }
 #endif
-
-static void appendf(struct apbuf *buf, const char *format, ...)
-    __printflike(2, 3);
-static void appendf(struct apbuf *buf, const char *format, ...) {
-    char *tmp;
-    va_list va;
-    size_t len;
-
-    va_start(va, format);
-    len = xvasprintf(&tmp, format, va);
-    va_end(va);
-    appendl(buf, tmp, len);
-    free(tmp);
-}
 
 /* Make the specified socket non-blocking. */
 static void nonblock_socket(const int sock) {
@@ -431,8 +357,7 @@ static void nonblock_socket(const int sock) {
 }
 
 /* Split string out of src with range [left:right-1] */
-static char *split_string(const char *src,
-        const size_t left, const size_t right) {
+static char *split_string(const char *src, const size_t left, const size_t right) {
     char *dest;
     assert(left <= right);
     assert(left < strlen(src));   /* [left means must be smaller */
@@ -449,8 +374,9 @@ static char *split_string(const char *src,
  * successful.
  */
 static char *make_safe_url(char *const url) {
-    char *src = url, *dst;
-    #define ends(c) ((c) == '/' || (c) == '\0')
+  char *src = url;
+  char *dst;
+#define ends(c) ((c) == '/' || (c) == '\0')
 
     /* URLs not starting with a slash are illegal. */
     if (*src != '/')
@@ -503,8 +429,6 @@ static char *make_safe_url(char *const url) {
 }
 
 
-
-
 DarkHttpd::Exception::~Exception() {
   delete [] msg;
 }
@@ -527,9 +451,12 @@ DarkHttpd::mime_mapping::mime_ref DarkHttpd::mime_mapping::add(const char *exten
 
 /* Parses a mime.types line and adds the parsed data to the mime_map. */
  void DarkHttpd::parse_mimetype_line(const char *line) {
-    unsigned int pad, bound1, lbound, rbound;
+   unsigned int pad;
+   unsigned int bound1;
+   unsigned int lbound;
+   unsigned int rbound;
 
-    /* parse mimetype */
+   /* parse mimetype */
     for (pad=0; (line[pad] == ' ') || (line[pad] == '\t'); pad++)
         ;
     if (line[pad] == '\0' || /* empty line */
@@ -589,17 +516,15 @@ void DarkHttpd::parse_default_extension_map() {
  * unexpected file error or running out of memory.
  */
 static char *read_line(FILE *fp) {
-    char *buf;
-    long startpos, endpos;
-    size_t linelen, numread;
-    int c;
 
-    startpos = ftell(fp);
+    long startpos = ftell(fp);
     if (startpos == -1)
         err(1, "ftell()");
 
     /* find end of line (or file) */
-    linelen = 0;
+    size_t linelen = 0;
+  int c;
+
     for (;;) {
         c = fgetc(fp);
         if ((c == EOF) || (c == (int)'\n') || (c == (int)'\r'))
@@ -611,7 +536,7 @@ static char *read_line(FILE *fp) {
     if (linelen == 0 && c == EOF)
         return nullptr;
 
-    endpos = ftell(fp);
+    long endpos = ftell(fp);
     if (endpos == -1)
         err(1, "ftell()");
 
@@ -619,12 +544,12 @@ static char *read_line(FILE *fp) {
     if ((c == (int)'\r') && (fgetc(fp) == (int)'\n'))
         endpos++;
 
-    buf = xmalloc(linelen + 1);
+    char *buf = static_cast<char *>(xmalloc(linelen + 1));
 
     /* rewind file to where the line stared and load the line */
     if (fseek(fp, startpos, SEEK_SET) == -1)
         err(1, "fseek()");
-    numread = fread(buf, 1, linelen, fp);
+    size_t numread = fread(buf, 1, linelen, fp);
     if (numread != linelen)
         errx(1, "fread() %zu bytes, expecting %zu bytes", numread, linelen);
 
@@ -641,7 +566,7 @@ static char *read_line(FILE *fp) {
 /* ---------------------------------------------------------------------------
  * Adds contents of specified file to mime_map list.
  */
-static void parse_extension_map_file(const char *filename) {
+ void DarkHttpd::parse_extension_map_file(const char *filename) {
     char *buf;
     FILE *fp = fopen(filename, "rb");
 
@@ -649,7 +574,7 @@ static void parse_extension_map_file(const char *filename) {
         err(1, "fopen(\"%s\")", filename);
     while ((buf = read_line(fp)) != nullptr) {
         parse_mimetype_line(buf);
-        free(buf);
+        free(&buf);
     }
     fclose(fp);
 }
@@ -675,7 +600,7 @@ static void parse_extension_map_file(const char *filename) {
 }
 
 static const char *get_address_text(const void *addr) {
-#ifdef HAVE_INET6
+#if HAVE_INET6
     if (inet6) {
         static char text_addr[INET6_ADDRSTRLEN];
         inet_ntop(AF_INET6, (const struct in6_addr *)addr, text_addr,
@@ -691,7 +616,7 @@ static const char *get_address_text(const void *addr) {
 /* Initialize the sockin global. This is the socket that we accept
  * connections from.
  */
-static void init_sockin(void) {
+ void DarkHttpd::init_sockin() {
     struct sockaddr_in addrin;
 #ifdef HAVE_INET6
     struct sockaddr_in6 addrin6;
@@ -803,7 +728,7 @@ static void init_sockin(void) {
     }
 }
 
-static void usage(const char *argv0) {
+ void DarkHttpd::usage(const char *argv0) {
     printf("usage:\t%s /path/to/wwwroot [flags]\n\n", argv0);
     printf("flags:\t--port number (default: %u, or 80 if running as root)\n"
     "\t\tSpecifies which port to listen on for connections.\n"
@@ -896,12 +821,12 @@ static char *base64_encode(char *str) {
     int input_length = strlen(str);
     int output_length = 4 * ((input_length + 2) / 3);
 
-    char *encoded_data = malloc(output_length+1);
+    char *encoded_data = static_cast<char *>(malloc(output_length+1));
     if (encoded_data == nullptr) return nullptr;
 
-    int i;
-    int j;
-    for (i = 0, j = 0; i < input_length;) {
+    // int i;
+    // int j;
+    for (int i = 0, j = 0; i < input_length;) {
         uint32_t octet_a = i < input_length ? (unsigned char)str[i++] : 0;
         uint32_t octet_b = i < input_length ? (unsigned char)str[i++] : 0;
         uint32_t octet_c = i < input_length ? (unsigned char)str[i++] : 0;
@@ -915,7 +840,7 @@ static char *base64_encode(char *str) {
     }
 
     const int mod_table[] = {0, 2, 1};
-    for (i = 0; i < mod_table[input_length % 3]; i++)
+    for (int i = 0; i < mod_table[input_length % 3]; i++)
         encoded_data[output_length - 1 - i] = '=';
     encoded_data[output_length] = '\0';
 
@@ -952,7 +877,7 @@ static long long xstr_to_num(const char *str) {
     return ret;
 }
 
-static void parse_commandline(const int argc, char *argv[]) {
+void DarkHttpd::parse_commandline(const int argc, char *argv[]) {
     int i;
     size_t len;
 
@@ -1071,7 +996,7 @@ static void parse_commandline(const int argc, char *argv[]) {
             if (++i >= argc)
                 errx(1, "missing url after --forward");
             url = argv[i];
-            add_forward_mapping(host, url);
+            forward_map.add(host, url);
         }
         else if (strcmp(argv[i], "--forward-all") == 0) {
             if (++i >= argc)
@@ -1091,7 +1016,8 @@ static void parse_commandline(const int argc, char *argv[]) {
                 errx(1, "missing 'user:pass' after --auth");
 
             char *key = base64_encode(argv[i]);
-            xasprintf(&auth_key, "Basic %s", key);
+
+             xasprintf(&auth_key, "Basic %s", key);
             free(key);
         }
         else if (strcmp(argv[i], "--forward-https") == 0) {
@@ -1116,49 +1042,9 @@ static void parse_commandline(const int argc, char *argv[]) {
     }
 }
 
-/* Allocate and initialize an empty connection. */
-static struct connection *new_connection(void) {
-    struct connection *conn = xmalloc(sizeof(struct connection));
-
-    conn->socket = -1;
-    memset(&conn->client, 0, sizeof(conn->client));
-    conn->last_active = now;
-    conn->request = nullptr;
-    conn->request_length = 0;
-    conn->method = nullptr;
-    conn->url = nullptr;
-    conn->referer = nullptr;
-    conn->user_agent = nullptr;
-    conn->authorization = nullptr;
-    conn->range_begin = 0;
-    conn->range_end = 0;
-    conn->range_begin_given = 0;
-    conn->range_end_given = 0;
-    conn->header = nullptr;
-    conn->header_length = 0;
-    conn->header_sent = 0;
-    conn->header_dont_free = 0;
-    conn->header_only = 0;
-    conn->http_code = 0;
-    conn->conn_close = 1;
-    conn->reply = nullptr;
-    conn->reply_dont_free = 0;
-    conn->reply_fd = -1;
-    conn->reply_start = 0;
-    conn->reply_length = 0;
-    conn->reply_sent = 0;
-    conn->total_sent = 0;
-
-    /* Make it harmless so it gets garbage-collected if it should, for some
-     * reason, fail to be correctly filled out.
-     */
-    conn->state = DONE;
-
-    return conn;
-}
 
 /* Accept a connection from sockin and add it to the connection queue. */
-static void accept_connection(void) {
+void DarkHttpd::accept_connection() {
     struct sockaddr_in addrin;
 #ifdef HAVE_INET6
     struct sockaddr_in6 addrin6;
@@ -1167,7 +1053,7 @@ static void accept_connection(void) {
     struct connection *conn;
     int fd;
 
-#ifdef HAVE_INET6
+#if HAVE_INET6
     if (inet6) {
         sin_size = sizeof(addrin6);
         memset(&addrin6, 0, sin_size);
@@ -1188,20 +1074,22 @@ static void accept_connection(void) {
     }
 
     /* Allocate and initialize struct connection. */
-    conn = new_connection();
+    conn = new connection(*this);//connections have defaults from the DarkHttpd that creates them.
     conn->socket = fd;
     nonblock_socket(conn->socket);
-    conn->state = RECV_REQUEST;
 
-#ifdef HAVE_INET6
+  conn->state = connection::RECV_REQUEST;
+  conn->last_active=now;
+
+#if HAVE_INET6
     if (inet6) {
         conn->client = addrin6.sin6_addr;
     } else
 #endif
     {
-        *(in_addr_t *)&conn->client = addrin.sin_addr.s_addr;
+        *reinterpret_cast<in_addr_t *>(&conn->client) = addrin.sin_addr.s_addr;
     }
-    LIST_INSERT_HEAD(&connlist, conn, entries);
+    entries.push_front(conn);
 
     if (debug)
         printf("accepted connection from %s:%u (fd %d)\n",
@@ -1212,7 +1100,7 @@ static void accept_connection(void) {
     /* Try to read straight away rather than going through another iteration
      * of the select() loop.
      */
-    poll_recv_request(conn);
+    conn->poll_recv_request();
 }
 
 /* Should this character be logencoded?
@@ -1254,7 +1142,7 @@ static char *clf_date(char *dest, const time_t when) {
 }
 
 /* Add a connection's details to the logfile. */
-static void log_connection(const struct connection *conn) {
+void DarkHttpd::log_connection(const struct connection *conn) {
     char *safe_method, *safe_url, *safe_referer, *safe_user_agent,
     dest[CLF_DATE_LEN];
 
@@ -1267,7 +1155,7 @@ static void log_connection(const struct connection *conn) {
 
 #define make_safe(x) do { \
     if (conn->x) { \
-        safe_##x = xmalloc(strlen(conn->x)*3 + 1); \
+        safe_##x = static_cast<char *>(xmalloc(strlen(conn->x)*3 + 1)); \
         logencode(conn->x, safe_##x); \
     } else { \
         safe_##x = NULL; \
@@ -1317,60 +1205,59 @@ static void log_connection(const struct connection *conn) {
 }
 
 /* Log a connection, then cleanly deallocate its internals. */
-static void free_connection(struct connection *conn) {
-    if (debug) printf("free_connection(%d)\n", conn->socket);
-    log_connection(conn);
-    if (conn->socket != -1) xclose(conn->socket);
-    if (conn->request != nullptr) free(conn->request);
-    if (conn->method != nullptr) free(conn->method);
-    if (conn->url != nullptr) free(conn->url);
-    if (conn->referer != nullptr) free(conn->referer);
-    if (conn->user_agent != nullptr) free(conn->user_agent);
-    if (conn->authorization != nullptr) free(conn->authorization);
-    if (conn->header != nullptr && !conn->header_dont_free) free(conn->header);
-    if (conn->reply != nullptr && !conn->reply_dont_free) free(conn->reply);
-    if (conn->reply_fd != -1) xclose(conn->reply_fd);
-    /* If we ran out of sockets, try to resume accepting. */
-    accepting = 1;
+void DarkHttpd::connection::free() {
+    if (debug) printf("free_connection(%d)\n", socket);
+
+  xclose(socket);
+    Free(&request);
+    Free(&method);
+     Free(&url);
+     Free(&referer);
+     Free(&user_agent);
+     Free(&authorization);
+    if (header != nullptr && !header_dont_free) Free(&header);
+    if (reply != nullptr && !reply_dont_free) Free(&reply);
+
 }
 
 /* Recycle a finished connection for HTTP/1.1 Keep-Alive. */
-static void recycle_connection(struct connection *conn) {
-    int socket_tmp = conn->socket;
+void DarkHttpd::connection::recycle_connection() {
+    int socket_tmp = socket;
     if (debug)
         printf("recycle_connection(%d)\n", socket_tmp);
-    conn->socket = -1; /* so free_connection() doesn't close it */
-    free_connection(conn);
-    conn->socket = socket_tmp;
+    socket = -1; /* so free_connection() doesn't close it, !!but then it dangles?!  */
+    free();
 
-    /* don't reset conn->client */
-    conn->request = nullptr;
-    conn->request_length = 0;
-    conn->method = nullptr;
-    conn->url = nullptr;
-    conn->referer = nullptr;
-    conn->user_agent = nullptr;
-    conn->authorization = nullptr;
-    conn->range_begin = 0;
-    conn->range_end = 0;
-    conn->range_begin_given = 0;
-    conn->range_end_given = 0;
-    conn->header = nullptr;
-    conn->header_length = 0;
-    conn->header_sent = 0;
-    conn->header_dont_free = 0;
-    conn->header_only = 0;
-    conn->http_code = 0;
-    conn->conn_close = 1;
-    conn->reply = nullptr;
-    conn->reply_dont_free = 0;
-    conn->reply_fd = -1;
-    conn->reply_start = 0;
-    conn->reply_length = 0;
-    conn->reply_sent = 0;
-    conn->total_sent = 0;
+    socket = socket_tmp;
 
-    conn->state = RECV_REQUEST; /* ready for another */
+    /* don't reset client */
+    request = nullptr;
+    request_length = 0;
+    method = nullptr;
+    url = nullptr;
+    referer = nullptr;
+    user_agent = nullptr;
+    authorization = nullptr;
+    range_begin = 0;
+    range_end = 0;
+    range_begin_given = 0;
+    range_end_given = 0;
+    header = nullptr;
+    header_length = 0;
+    header_sent = 0;
+    header_dont_free = false;
+    header_only = 0;
+    http_code = 0;
+    conn_closed = true;
+    reply = nullptr;
+    reply_dont_free = false;
+    reply_fd = -1;
+    reply_start = 0;
+    reply_length = 0;
+    reply_sent = 0;
+    total_sent = 0;
+
+    state = RECV_REQUEST; /* ready for another */
 }
 
 /* Uppercasify all characters in a string of given length. */
@@ -1384,14 +1271,13 @@ static void strntoupper(char *str, const size_t length) {
 /* If a connection has been idle for more than timeout_secs, it will be
  * marked as DONE and killed off in httpd_poll().
  */
-static void poll_check_timeout(struct connection *conn) {
-    if (timeout_secs > 0) {
-        if (now - conn->last_active >= timeout_secs) {
+void DarkHttpd::connection::poll_check_timeout() {
+    if (service.timeout_secs > 0) {
+        if (now - last_active >= service.timeout_secs) {
             if (debug)
-                printf("poll_check_timeout(%d) closing connection\n",
-                       conn->socket);
-            conn->conn_close = 1;
-            conn->state = DONE;
+                printf("poll_check_timeout(%d) marking connection closed\n", socket);
+            conn_closed = true;
+            state = DONE;
         }
     }
 }
@@ -1414,7 +1300,7 @@ static char *rfc1123_date(char *dest, const time_t when) {
  */
 static char *urldecode(const char *url) {
     size_t i, pos, len = strlen(url);
-    char *out = xmalloc(len+1);
+    char *out = static_cast<char *>(xmalloc(len+1));
 
     for (i = 0, pos = 0; i < len; i++) {
         if ((url[i] == '%') && (i+2 < len) &&
@@ -1438,17 +1324,16 @@ static char *urldecode(const char *url) {
     return out;
 }
 
-/* Returns Connection or Keep-Alive header, depending on conn_close. */
-static const char *keep_alive(const struct connection *conn)
-{
-    return (conn->conn_close ? "Connection: close\r\n" : keep_alive_field);
+/* Returns Connection or Keep-Alive header, depending on conn_closed. */
+const char *DarkHttpd::connection::keep_alive() const {
+    return conn_closed ? "Connection: close\r\n" : service.keep_alive_field;
 }
 
 /* "Generated by " + pkgname + " on " + date + "\n"
  *  1234567890123               1234            2 ('\n' and '\0')
  */
 static char _generated_on_buf[13 + sizeof(pkgname) - 1 + 4 + DATE_LEN + 2];
-static const char *generated_on(const char date[DATE_LEN]) {
+ const char *DarkHttpd::generated_on(const char date[DATE_LEN]) const {
     if (!want_server_id)
         return "";
     snprintf(_generated_on_buf, sizeof(_generated_on_buf),
@@ -1458,35 +1343,35 @@ static const char *generated_on(const char date[DATE_LEN]) {
 }
 
 /* A default reply for any (erroneous) occasion. */
-static void default_reply(struct connection *conn,
-        const int errcode, const char *errname, const char *format, ...)
-        __printflike(4, 5);
-static void default_reply(struct connection *conn,
-        const int errcode, const char *errname, const char *format, ...) {
-    char *reason, date[DATE_LEN];
-    va_list va;
+// static void default_reply(struct connection *conn,
+//         const int errcode, const char *errname, const char *format, ...)
+//         __printflike(4, 5);
+void DarkHttpd::connection::default_reply(const int errcode, const char *errname, const char *format, ...) {
+  char date[DATE_LEN];
+  va_list va;
 
     va_start(va, format);
+  char *reason=nullptr;
     xvasprintf(&reason, format, va);
     va_end(va);
 
     /* Only really need to calculate the date once. */
     rfc1123_date(date, now);
 
-    conn->reply_length = xasprintf(&(conn->reply),
+    reply_length = xasprintf(&(reply),
      "<!DOCTYPE html><html><head><title>%d %s</title></head><body>\n"
      "<h1>%s</h1>\n" /* errname */
      "%s\n" /* reason */
      "<hr>\n"
      "%s" /* generated on */
      "</body></html>\n",
-     errcode, errname, errname, reason, generated_on(date));
-    free(reason);
+     errcode, errname, errname, reason, service.generated_on(date));
+    Free(&reason);
 
     const char auth_header[] =
         "WWW-Authenticate: Basic realm=\"User Visible Realm\"\r\n";
 
-    conn->header_length = xasprintf(&(conn->header),
+    header_length = xasprintf(&(header),
      "HTTP/1.1 %d %s\r\n"
      "Date: %s\r\n"
      "%s" /* server */
@@ -1497,20 +1382,20 @@ static void default_reply(struct connection *conn,
      "Content-Type: text/html; charset=UTF-8\r\n"
      "%s"
      "\r\n",
-     errcode, errname, date, server_hdr, keep_alive(conn),
-     custom_hdrs, llu(conn->reply_length),
-     (auth_key != nullptr ? auth_header : ""));
+     errcode, errname, date, service.server_hdr, keep_alive(),
+     service.custom_hdrs, llu(reply_length),
+     (service.auth_key != nullptr ? auth_header : ""));
 
-    conn->reply_type = REPLY_GENERATED;
-    conn->http_code = errcode;
+    reply_type = connection::REPLY_GENERATED;
+    http_code = errcode;
 
     /* Reset reply_start in case the request set a range. */
-    conn->reply_start = 0;
+    reply_start = 0;
 }
 
-static void redirect(struct connection *conn, const char *format, ...)
-    __printflike(2, 3);
-static void redirect(struct connection *conn, const char *format, ...) {
+// static void redirect(struct connection *conn, const char *format, ...)
+//     __printflike(2, 3);
+void DarkHttpd::connection::redirect(const char *format, ...) {
     char *where, date[DATE_LEN];
     va_list va;
 
@@ -1521,16 +1406,16 @@ static void redirect(struct connection *conn, const char *format, ...) {
     /* Only really need to calculate the date once. */
     rfc1123_date(date, now);
 
-    conn->reply_length = xasprintf(&(conn->reply),
+    reply_length = xasprintf(&(reply),
      "<!DOCTYPE html><html><head><title>301 Moved Permanently</title></head><body>\n"
      "<h1>Moved Permanently</h1>\n"
      "Moved to: <a href=\"%s\">%s</a>\n" /* where x 2 */
      "<hr>\n"
      "%s" /* generated on */
      "</body></html>\n",
-     where, where, generated_on(date));
+     where, where, service.generated_on(date));
 
-    conn->header_length = xasprintf(&(conn->header),
+    header_length = xasprintf(&(header),
      "HTTP/1.1 301 Moved Permanently\r\n"
      "Date: %s\r\n"
      "%s" /* server */
@@ -1541,12 +1426,12 @@ static void redirect(struct connection *conn, const char *format, ...) {
      "Content-Length: %llu\r\n"
      "Content-Type: text/html; charset=UTF-8\r\n"
      "\r\n",
-     date, server_hdr, where, keep_alive(conn),
-     custom_hdrs, llu(conn->reply_length));
+     date, service.server_hdr, where, keep_alive(),
+     service.custom_hdrs, llu(reply_length));
 
-    free(where);
-    conn->reply_type = REPLY_GENERATED;
-    conn->http_code = 301;
+    Free(&where);
+    reply_type = REPLY_GENERATED;
+    http_code = 301;
 }
 
 /* Parses a single HTTP request field.  Returns string from end of [field] to
@@ -1556,54 +1441,54 @@ static void redirect(struct connection *conn, const char *format, ...) {
  * You need to remember to deallocate the result.
  * example: parse_field(conn, "Referer: ");
  */
-static char *parse_field(const struct connection *conn, const char *field) {
+char *DarkHttpd::connection::parse_field( const char *field) {
     size_t bound1, bound2;
     char *pos;
 
     /* find start */
-    pos = strcasestr(conn->request, field);
+    pos = strcasestr(request, field);
     if (pos == nullptr)
         return nullptr;
-    assert(pos >= conn->request);
-    bound1 = (size_t)(pos - conn->request) + strlen(field);
+    assert(pos >= request);
+    bound1 = (size_t)(pos - request) + strlen(field);
 
     /* find end */
     for (bound2 = bound1;
-         ((bound2 < conn->request_length) &&
-          (conn->request[bound2] != '\r') &&
-          (conn->request[bound2] != '\n'));
+         ((bound2 < request_length) &&
+          (request[bound2] != '\r') &&
+          (request[bound2] != '\n'));
          bound2++)
             ;
 
     /* copy to buffer */
-    return split_string(conn->request, bound1, bound2);
+    return split_string(request, bound1, bound2);
 }
 
-static void redirect_https(struct connection *conn) {
-    char *host, *url;
+void DarkHttpd::connection::redirect_https() {
+    char *url;
 
     /* work out path of file being requested */
-    url = urldecode(conn->url);
+    url = urldecode(url);
 
     /* make sure it's safe */
     if (make_safe_url(url) == nullptr) {
-        default_reply(conn, 400, "Bad Request",
+        default_reply( 400, "Bad Request",
                       "You requested an invalid URL.");
-        free(url);
+        Free(&url);
         return;
     }
 
-    host = parse_field(conn, "Host: ");
+    char *host = parse_field("Host: ");
     if (host == nullptr) {
-        default_reply(conn, 400, "Bad Request",
+        default_reply( 400, "Bad Request",
                 "Missing 'Host' header.");
-        free(url);
+        Free(&url);
         return;
     }
 
-    redirect(conn, "https://%s%s", host, url);
-    free(host);
-    free(url);
+    redirect( "https://%s%s", host, url);
+    Free(&host);
+    Free(&url);
 }
 
 static int is_https_redirect(struct connection *conn) {
@@ -1612,7 +1497,7 @@ static int is_https_redirect(struct connection *conn) {
     if (forward_to_https == 0)
         return 0; /* --forward-https was never used */
 
-    proto = parse_field(conn, "X-Forwarded-Proto: ");
+    proto = conn->parse_field( "X-Forwarded-Proto: ");
     if (proto == nullptr || strcasecmp(proto, "https") == 0) {
         free(proto);
         return 0;
@@ -1626,10 +1511,10 @@ static int is_https_redirect(struct connection *conn) {
  * first range if a list is given.  Sets range_{begin,end}_given to 1 if
  * either part of the range is given.
  */
-static void parse_range_field(struct connection *conn) {
+void connection::parse_range_field() {
     char *range;
 
-    range = parse_field(conn, "Range: bytes=");
+    range = parse_field( "Range: bytes=");
     if (range == nullptr)
         return;
 
@@ -1648,8 +1533,8 @@ static void parse_range_field(struct connection *conn) {
             break; /* there must be a hyphen here */
 
         if (bound1 != bound2) {
-            conn->range_begin_given = 1;
-            conn->range_begin = (off_t)strtoll(range+bound1, nullptr, 10);
+            range_begin_given = 1;
+            range_begin = (off_t)strtoll(range+bound1, nullptr, 10);
         }
 
         /* parse number after hyphen */
@@ -1663,8 +1548,8 @@ static void parse_range_field(struct connection *conn) {
             break; /* must be end of string or a list to be valid */
 
         if (bound1 != bound2) {
-            conn->range_end_given = 1;
-            conn->range_end = (off_t)strtoll(range+bound1, nullptr, 10);
+            range_end_given = 1;
+            range_end = (off_t)strtoll(range+bound1, nullptr, 10);
         }
     } while(0);
     free(range);
@@ -1674,82 +1559,82 @@ static void parse_range_field(struct connection *conn) {
  * url (/), the referer (if given) and the user-agent (if given).  Remember to
  * deallocate all these buffers.  The method will be returned in uppercase.
  */
-static int parse_request(struct connection *conn) {
+int connection::parse_request() {
     size_t bound1, bound2;
     char *tmp;
-    assert(conn->request_length == strlen(conn->request));
+    assert(request_length == strlen(request));
 
     /* parse method */
     for (bound1 = 0;
-        (bound1 < conn->request_length) &&
-        (conn->request[bound1] != ' ');
+        (bound1 < request_length) &&
+        (request[bound1] != ' ');
         bound1++)
             ;
 
-    conn->method = split_string(conn->request, 0, bound1);
-    strntoupper(conn->method, bound1);
+    method = split_string(request, 0, bound1);
+    strntoupper(method, bound1);
 
     /* parse url */
     for (;
-        (bound1 < conn->request_length) &&
-        (conn->request[bound1] == ' ');
+        (bound1 < request_length) &&
+        (request[bound1] == ' ');
         bound1++)
             ;
 
-    if (bound1 == conn->request_length)
+    if (bound1 == request_length)
         return 0; /* fail */
 
     for (bound2 = bound1 + 1;
-        (bound2 < conn->request_length) &&
-        (conn->request[bound2] != ' ') &&
-        (conn->request[bound2] != '\r') &&
-        (conn->request[bound2] != '\n');
+        (bound2 < request_length) &&
+        (request[bound2] != ' ') &&
+        (request[bound2] != '\r') &&
+        (request[bound2] != '\n');
         bound2++)
             ;
 
-    conn->url = split_string(conn->request, bound1, bound2);
+    url = split_string(request, bound1, bound2);
 
-    /* parse protocol to determine conn_close */
-    if (conn->request[bound2] == ' ') {
+    /* parse protocol to determine conn_closed */
+    if (request[bound2] == ' ') {
         char *proto;
         for (bound1 = bound2;
-            (bound1 < conn->request_length) &&
-            (conn->request[bound1] == ' ');
+            (bound1 < request_length) &&
+            (request[bound1] == ' ');
             bound1++)
                 ;
 
         for (bound2 = bound1 + 1;
-            (bound2 < conn->request_length) &&
-            (conn->request[bound2] != ' ') &&
-            (conn->request[bound2] != '\r');
+            (bound2 < request_length) &&
+            (request[bound2] != ' ') &&
+            (request[bound2] != '\r');
             bound2++)
                 ;
 
-        proto = split_string(conn->request, bound1, bound2);
+        proto = split_string(request, bound1, bound2);
         if (strcasecmp(proto, "HTTP/1.1") == 0)
-            conn->conn_close = 0;
+            conn_close = 0;
         free(proto);
     }
 
     /* parse connection field */
-    tmp = parse_field(conn, "Connection: ");
+    tmp = parse_field( "Connection: ");
     if (tmp != nullptr) {
         if (strcasecmp(tmp, "close") == 0)
-            conn->conn_close = 1;
+            conn_close = 1;
         else if (strcasecmp(tmp, "keep-alive") == 0)
-            conn->conn_close = 0;
+            conn_close = 0;
         free(tmp);
     }
 
     /* cmdline flag can be used to deny keep-alive */
     if (!want_keepalive)
-        conn->conn_close = 1;
+        conn_close = 1;
 
     /* parse important fields */
-    conn->referer = parse_field(conn, "Referer: ");
-    conn->user_agent = parse_field(conn, "User-Agent: ");
-    conn->authorization = parse_field(conn, "Authorization: ");
-    parse_range_field(conn);
+    referer = parse_field( "Referer: ");
+    user_agent = parse_field( "User-Agent: ");
+    authorization = parse_field( "Authorization: ");
+    parse_range_field();
     return 1;
 }
 
@@ -1892,7 +1777,7 @@ static void append_escaped(struct apbuf *dst, const char *src) {
     }
 }
 
-static void generate_dir_listing(struct connection *conn, const char *path,
+static void generate_dir_listing(struct connection &conn, const char *path,
         const char *decoded_url) {
     char date[DATE_LEN], *spaces;
     struct dlent **list;
@@ -1905,13 +1790,13 @@ static void generate_dir_listing(struct connection *conn, const char *path,
     if (listsize == -1) {
         /* opendir() failed */
         if (errno == EACCES)
-            default_reply(conn, 403, "Forbidden",
+            conn. default_reply( 403, "Forbidden",
                 "You don't have permission to access this URL.");
         else if (errno == ENOENT)
-            default_reply(conn, 404, "Not Found",
+            conn.default_reply( 404, "Not Found",
                 "The URL you requested was not found.");
         else
-            default_reply(conn, 500, "Internal Server Error",
+            conn.default_reply( 500, "Internal Server Error",
                 "Couldn't list directory: %s", strerror(errno));
         return;
     }
@@ -1934,7 +1819,7 @@ static void generate_dir_listing(struct connection *conn, const char *path,
     append_escaped(listing, decoded_url);
     append(listing, "</h1>\n<pre>\n");
 
-    spaces = xmalloc(maxlen);
+    spaces = static_cast<char *>(xmalloc(maxlen));
     memset(spaces, ' ', maxlen);
 
     /* append ".." entry if not in wwwroot */
@@ -2000,15 +1885,15 @@ static void generate_dir_listing(struct connection *conn, const char *path,
      "Content-Length: %llu\r\n"
      "Content-Type: text/html; charset=UTF-8\r\n"
      "\r\n",
-     date, server_hdr, keep_alive(conn), custom_hdrs,
-     llu(conn->reply_length));
+     date, server_hdr, keep_alive(), custom_hdrs,
+     llu(conn.reply_length));
 
-    conn->reply_type = REPLY_GENERATED;
+    conn->reply_type = DarkHttpd::connection::REPLY_GENERATED;
     conn->http_code = 200;
 }
 
 /* Process a GET/HEAD request. */
-static void process_get(struct connection *conn) {
+ void DarkHttpd::process_get(struct connection &conn) {
     char *decoded_url, *end, *target, *if_mod_since;
     char date[DATE_LEN], lastmod[DATE_LEN];
     const char *mimetype = nullptr;
@@ -2016,30 +1901,30 @@ static void process_get(struct connection *conn) {
     struct stat filestat;
 
     /* strip out query params */
-    if ((end = strchr(conn->url, '?')) != nullptr)
+    if ((end = strchr(conn.url, '?')) != nullptr)
         *end = '\0';
 
     /* work out path of file being requested */
-    decoded_url = urldecode(conn->url);
+    decoded_url = urldecode(conn.url);
 
     /* make sure it's safe */
     if (make_safe_url(decoded_url) == nullptr) {
-        default_reply(conn, 400, "Bad Request",
+        conn.default_reply( 400, "Bad Request",
                       "You requested an invalid URL.");
         free(decoded_url);
         return;
     }
 
     /* test the host against web forward options */
-    if (forward_map) {
-        char *host = parse_field(conn, "Host: ");
+    if (forward_map.size()>0) {
+        char *host = conn.parse_field( "Host: ");
         if (host) {
             size_t i;
             if (debug)
                 printf("host=\"%s\"\n", host);
-            for (i = 0; i < forward_map_size; i++) {
-                if (strcasecmp(forward_map[i].host, host) == 0) {
-                    forward_to = forward_map[i].target_url;
+            for (auto record:forward_map) {
+                if (strcasecmp(record.first, host) == 0) {
+                    forward_to = record.second;
                     break;
                 }
             }
@@ -2050,7 +1935,7 @@ static void process_get(struct connection *conn) {
         forward_to = forward_all_url;
     }
     if (forward_to) {
-        redirect(conn, "%s%s", forward_to, decoded_url);
+        conn.redirect( "%s%s", forward_to, decoded_url);
         free(decoded_url);
         return;
     }
@@ -2070,12 +1955,12 @@ static void process_get(struct connection *conn) {
                  * indistinguishable from the directory not existing.
                  * i.e.: Don't leak information.
                  */
-                default_reply(conn, 404, "Not Found",
+                conn.default_reply( 404, "Not Found",
                     "The URL you requested was not found.");
                 return;
             }
             xasprintf(&target, "%s%s", wwwroot, decoded_url);
-            generate_dir_listing(conn, target, decoded_url);
+            generate_dir_listing( target, decoded_url);
             free(target);
             free(decoded_url);
             return;
@@ -2313,15 +2198,15 @@ static void process_request(struct connection *conn) {
 }
 
 /* Receiving request. */
-static void poll_recv_request(struct connection *conn) {
+ void  connection::poll_recv_request() {
     char buf[1<<15];
     ssize_t recvd;
 
     assert(conn->state == RECV_REQUEST);
-    recvd = recv(conn->socket, buf, sizeof(buf), 0);
+    recvd = recv(socket, buf, sizeof(buf), 0);
     if (debug)
         printf("poll_recv_request(%d) got %d bytes\n",
-               conn->socket, (int)recvd);
+               socket, (int)recvd);
     if (recvd < 1) {
         if (recvd == -1) {
             if (errno == EAGAIN) {
@@ -2329,60 +2214,60 @@ static void poll_recv_request(struct connection *conn) {
                 return;
             }
             if (debug) printf("recv(%d) error: %s\n",
-                conn->socket, strerror(errno));
+                socket, strerror(errno));
         }
-        conn->conn_close = 1;
-        conn->state = DONE;
+        conn_close = 1;
+        state = DONE;
         return;
     }
-    conn->last_active = now;
+    last_active = now;
 
     /* append to conn->request */
     assert(recvd > 0);
-    conn->request = xrealloc(
-        conn->request, conn->request_length + (size_t)recvd + 1);
-    memcpy(conn->request+conn->request_length, buf, (size_t)recvd);
-    conn->request_length += (size_t)recvd;
-    conn->request[conn->request_length] = 0;
+    request = xrealloc(
+        request, request_length + (size_t)recvd + 1);
+    memcpy(request+request_length, buf, (size_t)recvd);
+    request_length += (size_t)recvd;
+    request[request_length] = 0;
     total_in += (size_t)recvd;
 
     /* process request if we have all of it */
-    if ((conn->request_length > 2) &&
-        (memcmp(conn->request+conn->request_length-2, "\n\n", 2) == 0))
-            process_request(conn);
-    else if ((conn->request_length > 4) &&
-        (memcmp(conn->request+conn->request_length-4, "\r\n\r\n", 4) == 0))
-            process_request(conn);
+    if ((request_length > 2) &&
+        (memcmp(request+request_length-2, "\n\n", 2) == 0))
+            process_request();
+    else if ((request_length > 4) &&
+        (memcmp(request+request_length-4, "\r\n\r\n", 4) == 0))
+            process_request();
 
     /* die if it's too large */
-    if (conn->request_length > MAX_REQUEST_LENGTH) {
-        default_reply(conn, 413, "Request Entity Too Large",
+    if (request_length > MAX_REQUEST_LENGTH) {
+        default_reply(this, 413, "Request Entity Too Large",
                       "Your request was dropped because it was too long.");
-        conn->state = SEND_HEADER;
+        state = SEND_HEADER;
     }
 
     /* if we've moved on to the next state, try to send right away, instead of
      * going through another iteration of the select() loop.
      */
-    if (conn->state == SEND_HEADER)
-        poll_send_header(conn);
+    if (state == SEND_HEADER)
+        poll_send_header();
 }
 
 /* Sending header.  Assumes conn->header is not NULL. */
-static void poll_send_header(struct connection *conn) {
+void connection:: poll_send_header() {
     ssize_t sent;
 
     assert(conn->state == SEND_HEADER);
     assert(conn->header_length == strlen(conn->header));
 
-    sent = send(conn->socket,
-                conn->header + conn->header_sent,
-                conn->header_length - conn->header_sent,
+    sent = send(socket,
+                header + header_sent,
+                header_length - header_sent,
                 0);
-    conn->last_active = now;
+    last_active = now;
     if (debug)
         printf("poll_send_header(%d) sent %d bytes\n",
-               conn->socket, (int)sent);
+               socket, (int)sent);
 
     /* handle any errors (-1) or closure (0) in send() */
     if (sent < 1) {
@@ -2391,26 +2276,26 @@ static void poll_send_header(struct connection *conn) {
             return;
         }
         if (debug && (sent == -1))
-            printf("send(%d) error: %s\n", conn->socket, strerror(errno));
-        conn->conn_close = 1;
-        conn->state = DONE;
+            printf("send(%d) error: %s\n", socket, strerror(errno));
+        conn_close = 1;
+        state = DONE;
         return;
     }
     assert(sent > 0);
-    conn->header_sent += (size_t)sent;
-    conn->total_sent += (size_t)sent;
+    header_sent += (size_t)sent;
+    total_sent += (size_t)sent;
     total_out += (size_t)sent;
 
     /* check if we're done sending header */
-    if (conn->header_sent == conn->header_length) {
-        if (conn->header_only)
-            conn->state = DONE;
+    if (header_sent == header_length) {
+        if (header_only)
+            state = DONE;
         else {
-            conn->state = SEND_REPLY;
+            state = SEND_REPLY;
             /* go straight on to body, don't go through another iteration of
              * the select() loop.
              */
-            poll_send_reply(conn);
+            poll_send_reply();
         }
     }
 }
@@ -2479,37 +2364,37 @@ static ssize_t send_from_file(const int s, const int fd,
 }
 
 /* Sending reply. */
-static void poll_send_reply(struct connection *conn)
+void connection::poll_send_reply()
 {
     ssize_t sent;
     /* off_t can be wider than size_t, avoid overflow in send_len */
     const size_t max_size_t = ~((size_t)0);
-    off_t send_len = conn->reply_length - conn->reply_sent;
+    off_t send_len = reply_length - reply_sent;
     if (send_len > max_size_t) send_len = max_size_t;
 
-    assert(conn->state == SEND_REPLY);
-    assert(!conn->header_only);
-    if (conn->reply_type == REPLY_GENERATED) {
-        assert(conn->reply_length >= conn->reply_sent);
-        sent = send(conn->socket,
-            conn->reply + conn->reply_start + conn->reply_sent,
+    assert(state == SEND_REPLY);
+    assert(!header_only);
+    if (reply_type == REPLY_GENERATED) {
+        assert(reply_length >= reply_sent);
+        sent = send(socket,
+            reply + reply_start + reply_sent,
             (size_t)send_len, 0);
     }
     else {
         errno = 0;
-        assert(conn->reply_length >= conn->reply_sent);
-        sent = send_from_file(conn->socket, conn->reply_fd,
-            conn->reply_start + conn->reply_sent, (size_t)send_len);
+        assert(reply_length >= reply_sent);
+        sent = send_from_file(socket, reply_fd,
+            reply_start + reply_sent, (size_t)send_len);
         if (debug && (sent < 1))
             printf("send_from_file returned %lld (errno=%d %s)\n",
                 (long long)sent, errno, strerror(errno));
     }
-    conn->last_active = now;
+    last_active = now;
     if (debug)
         printf("poll_send_reply(%d) sent %d: %llu+[%llu-%llu] of %llu\n",
-               conn->socket, (int)sent, llu(conn->reply_start),
-               llu(conn->reply_sent), llu(conn->reply_sent + sent - 1),
-               llu(conn->reply_length));
+               socket, (int)sent, llu(reply_start),
+               llu(reply_sent), llu(reply_sent + sent - 1),
+               llu(reply_length));
 
     /* handle any errors (-1) or closure (0) in send() */
     if (sent < 1) {
@@ -2520,23 +2405,23 @@ static void poll_send_reply(struct connection *conn)
                 return;
             }
             if (debug)
-                printf("send(%d) error: %s\n", conn->socket, strerror(errno));
+                printf("send(%d) error: %s\n", socket, strerror(errno));
         }
         else if (sent == 0) {
             if (debug)
-                printf("send(%d) closure\n", conn->socket);
+                printf("send(%d) closure\n", socket);
         }
-        conn->conn_close = 1;
-        conn->state = DONE;
+        conn_close = 1;
+        state = DONE;
         return;
     }
-    conn->reply_sent += sent;
-    conn->total_sent += (size_t)sent;
+    reply_sent += sent;
+    total_sent += (size_t)sent;
     total_out += (size_t)sent;
 
     /* check if we're done sending */
-    if (conn->reply_sent == conn->reply_length)
-        conn->state = DONE;
+    if (reply_sent == reply_length)
+        state = DONE;
 }
 
 /* Main loop of the httpd - a select() and then delegation to accept
@@ -2564,17 +2449,17 @@ static void httpd_poll(void) {
 
     LIST_FOREACH_SAFE(conn, &connlist, entries, next) {
         switch (conn->state) {
-        case DONE:
+        case connection::DONE:
             /* do nothing, no connection should be left in this state */
             break;
 
-        case RECV_REQUEST:
+        case connection::RECV_REQUEST:
             MAX_FD_SET(conn->socket, &recv_set);
             bother_with_timeout = 1;
             break;
 
-        case SEND_HEADER:
-        case SEND_REPLY:
+        case connection::SEND_HEADER:
+        case connection::SEND_REPLY:
             MAX_FD_SET(conn->socket, &send_set);
             bother_with_timeout = 1;
             break;
@@ -2637,21 +2522,21 @@ static void httpd_poll(void) {
             if (FD_ISSET(conn->socket, &recv_set)) poll_recv_request(conn);
             break;
 
-        case SEND_HEADER:
+        case connection::SEND_HEADER:
             if (FD_ISSET(conn->socket, &send_set)) poll_send_header(conn);
             break;
 
-        case SEND_REPLY:
+        case connection::SEND_REPLY:
             if (FD_ISSET(conn->socket, &send_set)) poll_send_reply(conn);
             break;
 
-        case DONE:
+        case connection::DONE:
             /* (handled later; ignore for now as it's a valid state) */
             break;
         }
 
         /* Handling SEND_REPLY could have set the state to done. */
-        if (conn->state == DONE) {
+        if (conn->state == connection::DONE) {
             /* clean out finished connection */
             if (conn->conn_close) {
                 LIST_REMOVE(conn, entries);
@@ -2666,10 +2551,8 @@ static void httpd_poll(void) {
 
 /* Daemonize helpers. */
 #define PATH_DEVNULL "/dev/null"
-static int lifeline[2] = { -1, -1 };
-static int fd_null = -1;
 
-static void daemonize_start(void) {
+ void DarkHttpd::daemonize_start() {
     pid_t f;
 
     if (pipe(lifeline) == -1)
@@ -2705,15 +2588,15 @@ static void daemonize_start(void) {
     /* else we are the child: continue initializing */
 }
 
-static void daemonize_finish(void) {
-    if (fd_null == -1)
+void DarkHttpd::daemonize_finish() {
+    if (!fd_null )
         return; /* didn't daemonize_start() so we're not daemonizing */
 
     if (setsid() == -1)
         err(1, "setsid");
-    if (close(lifeline[0]) == -1)
+    if (close(!lifeline[0]) )//todo: diff check
         warn("close read end of lifeline in child");
-    if (close(lifeline[1]) == -1)
+    if (close(!lifeline[1]) )
         warn("couldn't cut the lifeline");
 
     /* close all our std fds */
@@ -2723,17 +2606,14 @@ static void daemonize_finish(void) {
         warn("dup2(stdout)");
     if (dup2(fd_null, STDERR_FILENO) == -1)
         warn("dup2(stderr)");
-    if (fd_null > 2)
+    if (fd_null.isNotStd())
         close(fd_null);
 }
 
-/* [->] pidfile helpers, based on FreeBSD src/lib/libutil/pidfile.c,v 1.3
- * Original was copyright (c) 2005 Pawel Jakub Dawidek <pjd@FreeBSD.org>
- */
-static int pidfile_fd = -1;
+
 #define PIDFILE_MODE 0600
 
-static void pidfile_remove(void) {
+ void DarkHttpd::pidfile_remove() {
     if (unlink(pidfile_name) == -1)
         err(1, "unlink(pidfile) failed");
  /* if (flock(pidfile_fd, LOCK_UN) == -1)
@@ -2742,16 +2622,15 @@ static void pidfile_remove(void) {
     pidfile_fd = -1;
 }
 
-static int pidfile_read(void) {
+ int DarkHttpd::pidfile_read() {
     char buf[16];
-    int fd, i;
     long long pid;
 
-    fd = open(pidfile_name, O_RDONLY);
+    Fd fd( open(pidfile_name, O_RDONLY));
     if (fd == -1)
         err(1, " after create failed");
 
-    i = (int)read(fd, buf, sizeof(buf) - 1);
+    int i = read(fd, buf, sizeof(buf) - 1);
     if (i == -1)
         err(1, "read from pidfile failed");
     xclose(fd);
@@ -2763,7 +2642,7 @@ static int pidfile_read(void) {
     return (int)pid;
 }
 
-static void pidfile_create(void) {
+void DarkHttpd::pidfile_create() {
     int error, fd;
     char pidstr[16];
 
@@ -2795,7 +2674,7 @@ static void pidfile_create(void) {
 }
 /* [<-] end of pidfile helpers. */
 
-static void change_root(void) {
+ void DarkHttpd::change_root(void) {
     #ifdef HAVE_NON_ROOT_CHROOT
     /* We run this even as root, which should never be a bad thing. */
     int arg = PROC_NO_NEW_PRIVS_ENABLE;
@@ -2838,12 +2717,12 @@ static void change_root(void) {
 }
 
 /* Close all sockets and FILEs and exit. */
-static void stop_running(int sig unused) {
-    running = 0;
+void DarkHttpd::stop_running(int sig unused) {
+    running = false;
 }
 
 /* usage stats */
-void DarkHttpd::showUsageStats(){
+void DarkHttpd::reportStats(){
   struct rusage r;
 
   getrusage(RUSAGE_SELF, &r);
@@ -2943,10 +2822,9 @@ int DarkHttpd::main(int argc, char **argv) {
     printf("%s, %s.\n", pkgname, copyright);
     parse_default_extension_map();
     parse_commandline(argc, argv);
-    /* parse_commandline() might override parts of the extension map by
-     * parsing a user-specified file.
+    /* NB: parse_commandline() might override parts of the extension map by
+     * parsing a user-specified file. THat is why we use isnert_or_assign when adding to the map.
      */
-    sort_mime_map();
 
     prepareToRun();
     /* main loop */
@@ -2963,3 +2841,10 @@ int DarkHttpd::main(int argc, char **argv) {
     return 0;
 }
 
+#if 0
+these three actions were once associated with closing a connection, but apply only to the server. That seems like a bug, limiting the server to single connections despite all the work to have multiple ones.
+log_connection(this);
+xclose(reply_fd);
+/* If we ran out of sockets, try to resume accepting. */
+accepting = true;
+#endif
