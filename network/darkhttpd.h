@@ -135,26 +135,41 @@ class DarkHttpd {
     int returncode = 0; // what would have been returned to a shell on exit.
     ~Exception() override; // todo: free message
   public:
-    Exception(int returncode, const char *msgf, ...);
+    Exception(int returncode, const char *msgf, ...) checkFargs(3,4);
   };
 
   /** replacing inline reproduction of map logic with an std map, after verifying who did the allocations.
    * this uses the default key compare function 'less<const char *>', which we might want to replace with strncmp(...longest_ext) */
   struct mime_mapping : std::map<const char *, const char *> {
-    size_t longest_ext = 0;
+    // size_t longest_ext = 0;
     /** arg returned by 'add to map' */
     using mime_ref = std::pair<std::_Rb_tree_iterator<std::pair<const char *const, const char *>>, bool>; // todo: indirect to a decltype on the function returning this.
     bool add(const char *extension, const char *mimetype);
 
     /** free contents, then forget them.*/
     void purge() {
+      for (auto each: *this) {
+        free((void *)each.first);
+        free((void *)each.second);
+      }
+      clear();
     }
   } mime_map;
 
+  /** todo: this seems to have become the same as mime_mapping except for idiot checks */
   struct forward_mapping : std::map<const char *, const char *> {
     // const char *host, *target_url; /* These point at argv. */
     void add(const char *const host, const char *const target_url) {
       insert_or_assign(host, target_url); // # allows breakpoint on these. We need to decide whether multiples are allowed for the same host, at present that has been excluded but the orignal might have allowed for that in which case we need a map of list of string.
+    }
+
+    /** free contents, then forget them.*/
+    void purge() {
+      for (auto each: *this) {
+        free((void *)each.first);
+        free((void *)each.second);
+      }
+      clear();
     }
   } forward_map;
 
@@ -285,17 +300,16 @@ public:
       memset(&client, 0, sizeof(client));
     }
 
-    void free();
+    void clear();
 
-    void recycle_connection();
+    void recycle();
 
     void poll_check_timeout();
 
     const char *keep_alive() const;
+    void default_reply(int errcode, const char *errname, const char *format, ...) checkFargs(4, 5);
 
-    void default_reply(int errcode, const char *errname, const char *format, ...);
-
-    void redirect(const char *format, ...);
+    void redirect(const char *format, ...) checkFargs(2, 3);
 
     char *parse_field(const char *field);
 
@@ -372,16 +386,6 @@ public:
 
   int main(int argc, char **argv);
 
-  /** free with nulling of pointer to make use after free uniformly a sigsegv instead of random crash or corruption
-   * @see safely/system library.
-   */
-  template<typename Something> static void Free(Something **malloced) {
-    if (malloced) {
-      ::free(*malloced);
-      *malloced = nullptr;
-    }
-  }
-
 private:
   Fd fd_null;
   struct PipePair {
@@ -397,10 +401,6 @@ private:
 
   } lifeline;
 
-  /* [->] pidfile helpers, based on FreeBSD src/lib/libutil/pidfile.c,v 1.3
-   * Original was copyright (c) 2005 Pawel Jakub Dawidek <pjd@FreeBSD.org>
-   */
-  Fd pidfile_fd;
 
   Fd sockin; /* socket to accept connections from */
 
@@ -409,19 +409,18 @@ private:
 
   const char *forward_all_url = nullptr;
 
-  int forward_to_https = 0;
-
+  bool forward_to_https = 0;
 
   /* If a connection is idle for timeout_secs or more, it gets closed and
    * removed from the connlist.
    */
-  int timeout_secs = 30;
-  AutoFree keep_alive_field = nullptr;
+  unsigned timeout_secs = 30;
+  AutoFree keep_alive_field;
 
   /* Time is cached in the event loop to avoid making an excessive number of
    * gettimeofday() calls.
    */
-  static time_t now;
+  time_t now;
 
   /* To prevent a malformed request from eating up too much memory, die once the
    * request exceeds this many bytes:
@@ -429,20 +428,27 @@ private:
 #define MAX_REQUEST_LENGTH 4000
 
   /* Defaults can be overridden on the command-line */
-  const char *bindaddr = nullptr;
+  const char *bindaddr = nullptr;//only assigned from cmdline
   uint16_t bindport = 8080; /* or 80 if running as root */
   int max_connections = -1; /* kern.ipc.somaxconn */
   const char *index_name = "index.html";
-  int no_listing = 0;
+  bool no_listing = false;
 
 #ifdef HAVE_INET6
   bool inet6 = false; /* whether the socket uses inet6 */
 #endif
-  const char *default_mimetype = nullptr;
+  const char *default_mimetype = nullptr;//always a pointer into a map which manages free'ing
   AutoFree wwwroot; /* a path name */
+
   char *logfile_name = nullptr; /* NULL = no logging */
   FILE *logfile = nullptr;
+
+  /* [->] pidfile helpers, based on FreeBSD src/lib/libutil/pidfile.c,v 1.3
+   * Original was copyright (c) 2005 Pawel Jakub Dawidek <pjd@FreeBSD.org>
+   */
+  Fd pidfile_fd;
   char *pidfile_name = nullptr; /* NULL = no pidfile */
+
   bool want_chroot = false;
   bool want_daemon = false;
   bool want_accf = false;
@@ -459,8 +465,8 @@ private:
   bool syslog_enabled = false;
   volatile bool running = false; /* signal handler sets this to false */
 
-#define INVALID_UID ((uid_t) - 1)
-#define INVALID_GID ((gid_t) - 1)
+#define INVALID_UID ((uid_t) ~0)
+#define INVALID_GID ((gid_t) ~0)
 
   uid_t drop_uid = INVALID_UID;
   gid_t drop_gid = INVALID_GID;
