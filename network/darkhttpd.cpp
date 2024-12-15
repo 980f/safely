@@ -6,6 +6,7 @@
 #include "darkhttpd.h"
 
 #include <forward_list>
+#include <cstdarg>
 #include <sigc++/connection.h>
 
 static const char pkgname[]   = "darkhttpd/1.16.from.git";
@@ -13,11 +14,46 @@ static const char copyright[] = "copyright (c) 2003-2024 Emil Mikulic" ", totall
 
 /* Possible build options: -DDEBUG -DNO_IPV6 */
 
+/** to help ensure timely frees.*/
+struct AutoFree {
+  char *pointer;
+  operator char *() {
+    return pointer;
+  }
+  operator bool() {
+    return pointer != nullptr;
+  }
+  AutoFree(char *pointer):pointer(pointer){}
+  ~AutoFree() {
+    free(pointer);
+  }
+
+  void operator =(AutoFree&other)=delete;
+  AutoFree(AutoFree&&other)=delete;
+};
+
+class DebugLog {
+public:
+  bool spew=false;
+  int operator ()(const char *format, ...) {
+    if (spew) {
+      va_list args;
+      va_start(args,format);
+      vfprintf(stdout, format, args);
+      va_end(args);
+    }
+  }
+  void operator =(bool enable) {
+    spew=enable;
+  }
+  DebugLog(bool startup):spew(startup) {}
+};
+//It is best to always have the debug statements present even when it is disabled, to reduce the difference between debug build execution and 'release' builds.
 #ifndef DEBUG
 # define NDEBUG
-static const int debug = 0;
+static DebugLog debug(false);
 #else
-static const int debug = 1;
+static DebugLog debug(true);
 #endif
 
 #ifdef __linux
@@ -213,16 +249,18 @@ void DarkHttpd::xclose(Fd fd) {
 /* malloc that dies if it can't allocate. */
 static void *xmalloc(const size_t size) {
     void *ptr = malloc(size);
-    if (ptr == nullptr)
-        errx(1, "can't allocate %zu bytes", size);
+    if (ptr == nullptr) {
+      errx(1, "can't allocate %zu bytes", size);
+    }
     return ptr;
 }
 
 /* realloc() that dies if it can't reallocate. */
 static void *xrealloc(void *original, const size_t size) {
     void *ptr = realloc(original, size);
-    if (ptr == nullptr)
-        errx(1, "can't reallocate %zu bytes", size);
+    if (ptr == nullptr) {
+      errx(1, "can't reallocate %zu bytes", size);
+    }
     return ptr;
 }
 
@@ -1091,11 +1129,7 @@ void DarkHttpd::accept_connection() {
     }
     entries.push_front(conn);
 
-    if (debug)
-        printf("accepted connection from %s:%u (fd %d)\n",
-               inet_ntoa(addrin.sin_addr),
-               ntohs(addrin.sin_port),
-               conn->socket);
+    debug("accepted connection from %s:%u (fd %d)\n",inet_ntoa(addrin.sin_addr),ntohs(addrin.sin_port),conn->socket);
 
     /* Try to read straight away rather than going through another iteration
      * of the select() loop.
@@ -1105,7 +1139,7 @@ void DarkHttpd::accept_connection() {
 
 /* Should this character be logencoded?
  */
-static int needs_logencoding(const unsigned char c) {
+static bool needs_logencoding(const unsigned char c) {
     return ((c <= 0x1F) || (c >= 0x7F) || (c == '"'));
 }
 
@@ -1206,7 +1240,7 @@ void DarkHttpd::log_connection(const struct connection *conn) {
 
 /* Log a connection, then cleanly deallocate its internals. */
 void DarkHttpd::connection::free() {
-    if (debug) printf("free_connection(%d)\n", socket);
+    debug("free_connection(%d)\n", socket);
 
   xclose(socket);
     Free(&request);
@@ -1223,35 +1257,33 @@ void DarkHttpd::connection::free() {
 /* Recycle a finished connection for HTTP/1.1 Keep-Alive. */
 void DarkHttpd::connection::recycle_connection() {
     int socket_tmp = socket;
-    if (debug)
-        printf("recycle_connection(%d)\n", socket_tmp);
+    debug("recycle_connection(%d)\n", socket_tmp);
     socket = -1; /* so free_connection() doesn't close it, !!but then it dangles?!  */
     free();
 
     socket = socket_tmp;
 
     /* don't reset client */
-    request = nullptr;
+
     request_length = 0;
-    method = nullptr;
-    url = nullptr;
-    referer = nullptr;
-    user_agent = nullptr;
-    authorization = nullptr;
-    range_begin = 0;
+
+  range_begin = 0;
     range_end = 0;
     range_begin_given = 0;
     range_end_given = 0;
-    header = nullptr;
+
+  // header = nullptr;//seems buggy when this ignored header_dont_free. TO not be a bug 'header_dont_free must only be set when we know the value stored here was not dynamically allocated
+    header_dont_free = false;
+
+  //seemslike bug  reply = nullptr; see 'header'
+  reply_dont_free = false;
+
     header_length = 0;
     header_sent = 0;
-    header_dont_free = false;
-    header_only = 0;
+    header_only = false;
     http_code = 0;
     conn_closed = true;
-    reply = nullptr;
-    reply_dont_free = false;
-    reply_fd = -1;
+    reply_fd.forget();//but it might be still open ?!
     reply_start = 0;
     reply_length = 0;
     reply_sent = 0;
@@ -1262,9 +1294,7 @@ void DarkHttpd::connection::recycle_connection() {
 
 /* Uppercasify all characters in a string of given length. */
 static void strntoupper(char *str, const size_t length) {
-    size_t i;
-
-    for (i = 0; i < length; i++)
+  for (size_t i = 0; i < length; i++)
         str[i] = (char)toupper(str[i]);
 }
 
@@ -1274,8 +1304,7 @@ static void strntoupper(char *str, const size_t length) {
 void DarkHttpd::connection::poll_check_timeout() {
     if (service.timeout_secs > 0) {
         if (now - last_active >= service.timeout_secs) {
-            if (debug)
-                printf("poll_check_timeout(%d) marking connection closed\n", socket);
+            debug("poll_check_timeout(%d) marking connection closed\n", socket);
             conn_closed = true;
             state = DONE;
         }
@@ -1288,8 +1317,7 @@ void DarkHttpd::connection::poll_check_timeout() {
 #define DATE_LEN 30 /* strlen("Fri, 28 Feb 2003 00:02:08 GMT")+1 */
 static char *rfc1123_date(char *dest, const time_t when) {
     time_t when_copy = when;
-    if (strftime(dest, DATE_LEN,
-                 "%a, %d %b %Y %H:%M:%S GMT", gmtime(&when_copy)) == 0) {
+    if (strftime(dest, DATE_LEN,"%a, %d %b %Y %H:%M:%S GMT", gmtime(&when_copy)) == 0) {
         dest[0] = 0;
     }
     return dest;
@@ -1299,8 +1327,10 @@ static char *rfc1123_date(char *dest, const time_t when) {
  * character it represents.  Don't forget to free the return value.
  */
 static char *urldecode(const char *url) {
-    size_t i, pos, len = strlen(url);
-    char *out = static_cast<char *>(xmalloc(len+1));
+  size_t i;
+  size_t pos;
+  size_t len = strlen(url);
+  char *out = static_cast<char *>(xmalloc(len+1));
 
     for (i = 0, pos = 0; i < len; i++) {
         if ((url[i] == '%') && (i+2 < len) &&
@@ -1442,144 +1472,114 @@ void DarkHttpd::connection::redirect(const char *format, ...) {
  * example: parse_field(conn, "Referer: ");
  */
 char *DarkHttpd::connection::parse_field( const char *field) {
-    size_t bound1, bound2;
-    char *pos;
+
+  char *pos;
 
     /* find start */
     pos = strcasestr(request, field);
     if (pos == nullptr)
         return nullptr;
     assert(pos >= request);
-    bound1 = (size_t)(pos - request) + strlen(field);
+    size_t bound1 = (size_t) (pos - request) + strlen(field);
 
     /* find end */
-    for (bound2 = bound1;
-         ((bound2 < request_length) &&
-          (request[bound2] != '\r') &&
-          (request[bound2] != '\n'));
-         bound2++)
-            ;
+    size_t bound2;
+   for (bound2 = bound1;((bound2 < request_length) &&(request[bound2] != '\r') &&(request[bound2] != '\n'));bound2++){}
 
     /* copy to buffer */
     return split_string(request, bound1, bound2);
 }
 
 void DarkHttpd::connection::redirect_https() {
-    char *url;
-
     /* work out path of file being requested */
-    url = urldecode(url);
+    AutoFree url ( urldecode(url));
 
     /* make sure it's safe */
     if (make_safe_url(url) == nullptr) {
-        default_reply( 400, "Bad Request",
-                      "You requested an invalid URL.");
-        Free(&url);
+        default_reply( 400, "Bad Request","You requested an invalid URL.");
         return;
     }
 
-    char *host = parse_field("Host: ");
+    AutoFree host( parse_field("Host: "));
     if (host == nullptr) {
         default_reply( 400, "Bad Request",
                 "Missing 'Host' header.");
-        Free(&url);
         return;
     }
-
     redirect( "https://%s%s", host, url);
-    Free(&host);
-    Free(&url);
 }
 
-static int is_https_redirect(struct connection *conn) {
-    char *proto = nullptr;
+bool DarkHttpd::is_https_redirect(connection &conn) const {
 
-    if (forward_to_https == 0)
-        return 0; /* --forward-https was never used */
+    if (forward_to_https == false)
+        return false; /* --forward-https was never used */
 
-    proto = conn->parse_field( "X-Forwarded-Proto: ");
+   AutoFree proto( conn.parse_field( "X-Forwarded-Proto: "));
     if (proto == nullptr || strcasecmp(proto, "https") == 0) {
-        free(proto);
-        return 0;
+        return false;
     }
-
-    free(proto);
-    return 1;
+    return true;
 }
 
 /* Parse a Range: field into range_begin and range_end.  Only handles the
  * first range if a list is given.  Sets range_{begin,end}_given to 1 if
  * either part of the range is given.
  */
-void connection::parse_range_field() {
-    char *range;
-
-    range = parse_field( "Range: bytes=");
-    if (range == nullptr)
+void DarkHttpd::connection::parse_range_field() {
+    AutoFree range( parse_field( "Range: bytes="));
+    if (!range)
         return;
 
-    do {
-        size_t bound1, bound2, len;
-        len = strlen(range);
+      size_t len = strlen(range);
 
         /* parse number up to hyphen */
-        bound1 = 0;
-        for (bound2=0;
-            (bound2 < len) && isdigit((int)range[bound2]);
+        size_t bound1 = 0;
+
+      size_t bound2;
+      for (bound2=0;
+            (bound2 < len) && isdigit(range[bound2]);
             bound2++)
                 ;
 
         if ((bound2 == len) || (range[bound2] != '-'))
-            break; /* there must be a hyphen here */
+            return; /* there must be a hyphen here */
 
         if (bound1 != bound2) {
             range_begin_given = 1;
-            range_begin = (off_t)strtoll(range+bound1, nullptr, 10);
+            range_begin = (off_t)strtoll(range.pointer+bound1, nullptr, 10);
         }
 
         /* parse number after hyphen */
-        bound2++;
-        for (bound1=bound2;
-            (bound2 < len) && isdigit((int)range[bound2]);
-            bound2++)
-                ;
+        for (bound1=++bound2;(bound2 < len) && isdigit(range[bound2]);bound2++){}
 
         if ((bound2 != len) && (range[bound2] != ','))
-            break; /* must be end of string or a list to be valid */
+            return; /* must be end of string or a list to be valid */
 
         if (bound1 != bound2) {
             range_end_given = 1;
-            range_end = (off_t)strtoll(range+bound1, nullptr, 10);
+            range_end = (off_t)strtoll(range.pointer+bound1, nullptr, 10);
         }
-    } while(0);
-    free(range);
+
 }
 
 /* Parse an HTTP request like "GET / HTTP/1.1" to get the method (GET), the
  * url (/), the referer (if given) and the user-agent (if given).  Remember to
  * deallocate all these buffers.  The method will be returned in uppercase.
  */
-int connection::parse_request() {
-    size_t bound1, bound2;
-    char *tmp;
+int DarkHttpd::connection::parse_request() {
+  size_t bound1;
+  size_t bound2;
+
     assert(request_length == strlen(request));
 
     /* parse method */
-    for (bound1 = 0;
-        (bound1 < request_length) &&
-        (request[bound1] != ' ');
-        bound1++)
-            ;
+    for (bound1 = 0;(bound1 < request_length) &&(request[bound1] != ' ');bound1++){} //?! tabs  find exactly a space. strnchr
 
     method = split_string(request, 0, bound1);
     strntoupper(method, bound1);
 
     /* parse url */
-    for (;
-        (bound1 < request_length) &&
-        (request[bound1] == ' ');
-        bound1++)
-            ;
+    for (;(bound1 < request_length) && (request[bound1] == ' ');bound1++){}
 
     if (bound1 == request_length)
         return 0; /* fail */
@@ -1596,39 +1596,32 @@ int connection::parse_request() {
 
     /* parse protocol to determine conn_closed */
     if (request[bound2] == ' ') {
-        char *proto;
+
         for (bound1 = bound2;
             (bound1 < request_length) &&
             (request[bound1] == ' ');
             bound1++)
                 ;
 
-        for (bound2 = bound1 + 1;
-            (bound2 < request_length) &&
-            (request[bound2] != ' ') &&
-            (request[bound2] != '\r');
-            bound2++)
-                ;
+        for (bound2 = bound1 + 1;(bound2 < request_length) &&(request[bound2] != ' ') &&(request[bound2] != '\r');bound2++){}
 
-        proto = split_string(request, bound1, bound2);
+        AutoFree proto( split_string(request, bound1, bound2));
         if (strcasecmp(proto, "HTTP/1.1") == 0)
-            conn_close = 0;
-        free(proto);
+            conn_closed = false;
     }
 
     /* parse connection field */
-    tmp = parse_field( "Connection: ");
-    if (tmp != nullptr) {
+   AutoFree tmp  (parse_field( "Connection: "));
+    if (tmp) {
         if (strcasecmp(tmp, "close") == 0)
-            conn_close = 1;
+            conn_closed = true;
         else if (strcasecmp(tmp, "keep-alive") == 0)
-            conn_close = 0;
-        free(tmp);
+            conn_closed = false;
     }
 
     /* cmdline flag can be used to deny keep-alive */
-    if (!want_keepalive)
-        conn_close = 1;
+    if (!service.want_keepalive)
+        conn_closed = true;
 
     /* parse important fields */
     referer = parse_field( "Referer: ");
@@ -1638,12 +1631,9 @@ int connection::parse_request() {
     return 1;
 }
 
-static int file_exists(const char *path) {
+static bool file_exists(const char *path) {
     struct stat filestat;
-    if ((stat(path, &filestat) == -1) && (errno == ENOENT))
-        return 0;
-    else
-        return 1;
+    return stat(path, &filestat) == -1 && errno == ENOENT ? false : true;
 }
 
 struct dlent {
@@ -1666,15 +1656,13 @@ static ssize_t make_sorted_dirlist(const char *path, struct dlent ***output) {
     struct dirent *ent;
     size_t entries = 0;
     size_t pool = 128;
-    char *currname;
-    struct dlent **list = nullptr;
 
     dir = opendir(path);
     if (dir == nullptr)
         return -1;
 
-    currname = xmalloc(strlen(path) + MAXNAMLEN + 1);
-    list = xmalloc(sizeof(struct dlent*) * pool);
+    AutoFree currname( static_cast<char *>(xmalloc(strlen(path) + MAXNAMLEN + 1)));
+    struct dlent **list = static_cast<struct dlent **>(xmalloc(sizeof(struct dlent *) * pool));
 
     /* construct list */
     while ((ent = readdir(dir)) != nullptr) {
@@ -1688,9 +1676,9 @@ static ssize_t make_sorted_dirlist(const char *path, struct dlent ***output) {
             continue; /* skip un-stat-able files */
         if (entries == pool) {
             pool *= 2;
-            list = xrealloc(list, sizeof(struct dlent*) * pool);
+            list = static_cast<struct dlent **>(xrealloc(list, sizeof(struct dlent*) * pool));
         }
-        list[entries] = xmalloc(sizeof(struct dlent));
+        list[entries] = static_cast<struct dlent *>(xmalloc(sizeof(struct dlent)));
         list[entries]->name = xstrdup(ent->d_name);
         list[entries]->is_dir = S_ISDIR(s.st_mode);
         list[entries]->size = s.st_size;
@@ -1698,7 +1686,6 @@ static ssize_t make_sorted_dirlist(const char *path, struct dlent ***output) {
         entries++;
     }
     closedir(dir);
-    free(currname);
     qsort(list, entries, sizeof(struct dlent*), dlent_cmp);
     *output = list;
     return (ssize_t)entries;
@@ -1771,14 +1758,13 @@ static void append_escaped(struct apbuf *dst, const char *src) {
                 append(dst, "&quot;");
                 break;
             default:
-                appendl(dst, src+pos, 1);
+                dst->appendl(src+pos, 1);
         }
         pos++;
     }
 }
 
-static void generate_dir_listing(struct connection &conn, const char *path,
-        const char *decoded_url) {
+void DarkHttpd::generate_dir_listing(struct connection &conn, const char *path, const char *decoded_url) {
     char date[DATE_LEN], *spaces;
     struct dlent **list;
     ssize_t listsize;
@@ -1790,14 +1776,11 @@ static void generate_dir_listing(struct connection &conn, const char *path,
     if (listsize == -1) {
         /* opendir() failed */
         if (errno == EACCES)
-            conn. default_reply( 403, "Forbidden",
-                "You don't have permission to access this URL.");
+            conn.default_reply( 403, "Forbidden","You don't have permission to access this URL.");
         else if (errno == ENOENT)
-            conn.default_reply( 404, "Not Found",
-                "The URL you requested was not found.");
+            conn.default_reply( 404, "Not Found","The URL you requested was not found.");
         else
-            conn.default_reply( 500, "Internal Server Error",
-                "Couldn't list directory: %s", strerror(errno));
+            conn.default_reply( 500, "Internal Server Error","Couldn't list directory: %s", strerror(errno));
         return;
     }
 
@@ -1849,15 +1832,15 @@ static void generate_dir_listing(struct connection &conn, const char *path,
 
         if (list[i]->is_dir) {
             append(listing, "/");
-            appendl(listing, spaces, maxlen-strlen(list[i]->name));
+            listing->appendl(spaces, maxlen-strlen(list[i]->name));
             append(listing, buf);
             append(listing, "\n");
         }
         else {
-            appendl(listing, spaces, maxlen-strlen(list[i]->name));
+            listing->appendl( spaces, maxlen-strlen(list[i]->name));
             append(listing, " ");
             append(listing, buf);
-            appendf(listing, " %10llu\n", llu(list[i]->size));
+            listing->appendf( " %10llu\n", llu(list[i]->size));
         }
     }
 
@@ -1871,11 +1854,11 @@ static void generate_dir_listing(struct connection &conn, const char *path,
     append(listing, generated_on(date));
     append(listing, "</body>\n</html>\n");
 
-    conn->reply = listing->str;
-    conn->reply_length = (off_t)listing->length;
+    conn.reply = listing->str;
+    conn.reply_length = (off_t)listing->length;
     free(listing); /* don't free inside of listing */
 
-    conn->header_length = xasprintf(&(conn->header),
+    conn.header_length = xasprintf(&(conn.header),
      "HTTP/1.1 200 OK\r\n"
      "Date: %s\r\n"
      "%s" /* server */
@@ -1885,64 +1868,61 @@ static void generate_dir_listing(struct connection &conn, const char *path,
      "Content-Length: %llu\r\n"
      "Content-Type: text/html; charset=UTF-8\r\n"
      "\r\n",
-     date, server_hdr, keep_alive(), custom_hdrs,
+     date, server_hdr, conn.keep_alive(), custom_hdrs,
      llu(conn.reply_length));
 
-    conn->reply_type = DarkHttpd::connection::REPLY_GENERATED;
-    conn->http_code = 200;
+    conn.reply_type = DarkHttpd::connection::REPLY_GENERATED;
+    conn.http_code = 200;
 }
 
 /* Process a GET/HEAD request. */
- void DarkHttpd::process_get(struct connection &conn) {
-    char *decoded_url, *end, *target, *if_mod_since;
-    char date[DATE_LEN], lastmod[DATE_LEN];
-    const char *mimetype = nullptr;
+ void DarkHttpd::connection ::process_get() {
+   char *end;
+   char date[DATE_LEN], lastmod[DATE_LEN];
+
     const char *forward_to = nullptr;
     struct stat filestat;
 
     /* strip out query params */
-    if ((end = strchr(conn.url, '?')) != nullptr)
+    if ((end = strchr(url, '?')) != nullptr)
         *end = '\0';
 
     /* work out path of file being requested */
-    decoded_url = urldecode(conn.url);
+    AutoFree decoded_url( urldecode(url));
 
     /* make sure it's safe */
     if (make_safe_url(decoded_url) == nullptr) {
-        conn.default_reply( 400, "Bad Request",
-                      "You requested an invalid URL.");
-        free(decoded_url);
+        default_reply( 400, "Bad Request","You requested an invalid URL.");
         return;
     }
 
     /* test the host against web forward options */
-    if (forward_map.size()>0) {
-        char *host = conn.parse_field( "Host: ");
+    if (service.forward_map.size()>0) {
+        AutoFree host( parse_field( "Host: "));
         if (host) {
-            size_t i;
-            if (debug)
-                printf("host=\"%s\"\n", host);
-            for (auto record:forward_map) {
+            debug("host=\"%s\"\n", host);
+            for (auto record:service.forward_map) {
                 if (strcasecmp(record.first, host) == 0) {
                     forward_to = record.second;
                     break;
                 }
             }
-            free(host);
         }
     }
     if (!forward_to) {
-        forward_to = forward_all_url;
+        forward_to = service.forward_all_url;
     }
     if (forward_to) {
-        conn.redirect( "%s%s", forward_to, decoded_url);
-        free(decoded_url);
+        redirect( "%s%s", forward_to, decoded_url);
         return;
     }
 
-    if (want_single_file) {
-        target = xstrdup(wwwroot);
-        mimetype = url_content_type(wwwroot);
+  const char *mimetype = nullptr;
+
+  char *target;
+    if (service.want_single_file) {
+        target = xstrdup(service.wwwroot);
+        mimetype = url_content_type(service.wwwroot);
     }
     else if (decoded_url[strlen(decoded_url)-1] == '/') {
         /* does it end in a slash? serve up url/index_name */
@@ -1950,19 +1930,16 @@ static void generate_dir_listing(struct connection &conn, const char *path,
         if (!file_exists(target)) {
             free(target);
             if (no_listing) {
-                free(decoded_url);
                 /* Return 404 instead of 403 to make --no-listing
                  * indistinguishable from the directory not existing.
                  * i.e.: Don't leak information.
                  */
-                conn.default_reply( 404, "Not Found",
-                    "The URL you requested was not found.");
+                default_reply( 404, "Not Found","The URL you requested was not found.");
                 return;
             }
             xasprintf(&target, "%s%s", wwwroot, decoded_url);
             generate_dir_listing( target, decoded_url);
-            free(target);
-            free(decoded_url);
+            free(target);//looks like this was a double free!
             return;
         }
         mimetype = url_content_type(index_name);
@@ -1973,58 +1950,50 @@ static void generate_dir_listing(struct connection &conn, const char *path,
         mimetype = url_content_type(decoded_url);
     }
     free(decoded_url);
-    if (debug)
-        printf("url=\"%s\", target=\"%s\", content-type=\"%s\"\n",
-               conn->url, target, mimetype);
+    debug("url=\"%s\", target=\"%s\", content-type=\"%s\"\n",url, target, mimetype);
 
     /* open file */
-    conn->reply_fd = open(target, O_RDONLY | O_NONBLOCK);
+    reply_fd = open(target, O_RDONLY | O_NONBLOCK);
     free(target);
 
-    if (conn->reply_fd == -1) {
+    if (reply_fd == -1) {
         /* open() failed */
         if (errno == EACCES)
-            default_reply(conn, 403, "Forbidden",
-                "You don't have permission to access this URL.");
+            default_reply(403, "Forbidden","You don't have permission to access this URL.");
         else if (errno == ENOENT)
-            default_reply(conn, 404, "Not Found",
-                "The URL you requested was not found.");
+            default_reply( 404, "Not Found","The URL you requested was not found.");
         else
-            default_reply(conn, 500, "Internal Server Error",
-                "The URL you requested cannot be returned: %s.",
-                strerror(errno));
+            default_reply( 500, "Internal Server Error","The URL you requested cannot be returned: %s.",strerror(errno));
 
         return;
     }
 
     /* stat the file */
-    if (fstat(conn->reply_fd, &filestat) == -1) {
-        default_reply(conn, 500, "Internal Server Error",
-            "fstat() failed: %s.", strerror(errno));
+    if (fstat(reply_fd, &filestat) == -1) {
+        default_reply( 500, "Internal Server Error","fstat() failed: %s.", strerror(errno));
         return;
     }
 
     /* make sure it's a regular file */
-    if ((S_ISDIR(filestat.st_mode)) && (!want_single_file)) {
-        redirect(conn, "%s/", conn->url);
+    if ((S_ISDIR(filestat.st_mode)) && (!service.want_single_file)) {
+        redirect( "%s/", url);
         return;
     }
     else if (!S_ISREG(filestat.st_mode)) {
-        default_reply(conn, 403, "Forbidden", "Not a regular file.");
+        default_reply( 403, "Forbidden", "Not a regular file.");
         return;
     }
 
-    conn->reply_type = REPLY_FROMFILE;
+    reply_type = REPLY_FROMFILE;
     rfc1123_date(lastmod, filestat.st_mtime);
 
     /* check for If-Modified-Since, may not have to send */
-    if_mod_since = parse_field(conn, "If-Modified-Since: ");
+    AutoFree if_mod_since ( parse_field( "If-Modified-Since: "));
     if ((if_mod_since != nullptr) &&
             (strcmp(if_mod_since, lastmod) == 0)) {
-        if (debug)
-            printf("not modified since %s\n", if_mod_since);
-        conn->http_code = 304;
-        conn->header_length = xasprintf(&(conn->header),
+        debug("not modified since %s\n", if_mod_since);
+        http_code = 304;
+        header_length = xasprintf(&(header),
          "HTTP/1.1 304 Not Modified\r\n"
          "Date: %s\r\n"
          "%s" /* server */
@@ -2032,38 +2001,35 @@ static void generate_dir_listing(struct connection &conn, const char *path,
          "%s" /* keep-alive */
          "%s" /* custom headers */
          "\r\n",
-         rfc1123_date(date, now), server_hdr, keep_alive(conn),
-         custom_hdrs);
-        conn->reply_length = 0;
-        conn->reply_type = REPLY_GENERATED;
-        conn->header_only = 1;
-
-        free(if_mod_since);
+         rfc1123_date(date, now), service.server_hdr, keep_alive(),
+         service.custom_hdrs);
+        reply_length = 0;
+        reply_type = REPLY_GENERATED;
+        header_only = true;
         return;
     }
-    free(if_mod_since);
 
-    if (conn->range_begin_given || conn->range_end_given) {
+    if (range_begin_given || range_end_given) {
         off_t from, to;
 
-        if (conn->range_begin_given && conn->range_end_given) {
+        if (range_begin_given && range_end_given) {
             /* 100-200 */
-            from = conn->range_begin;
-            to = conn->range_end;
+            from = range_begin;
+            to = range_end;
 
             /* clamp end to filestat.st_size-1 */
             if (to > (filestat.st_size - 1))
                 to = filestat.st_size - 1;
         }
-        else if (conn->range_begin_given && !conn->range_end_given) {
+        else if (range_begin_given && !range_end_given) {
             /* 100- :: yields 100 to end */
-            from = conn->range_begin;
+            from = range_begin;
             to = filestat.st_size - 1;
         }
-        else if (!conn->range_begin_given && conn->range_end_given) {
+        else if (!range_begin_given &&range_end_given) {
             /* -200 :: yields last 200 */
             to = filestat.st_size - 1;
-            from = to - conn->range_end + 1;
+            from = to - range_end + 1;
 
             /* clamp start */
             if (from < 0)
@@ -2073,21 +2039,18 @@ static void generate_dir_listing(struct connection &conn, const char *path,
             errx(1, "internal error - from/to mismatch");
 
         if (from >= filestat.st_size) {
-            default_reply(conn, 416, "Requested Range Not Satisfiable",
-                "You requested a range outside of the file.");
+            default_reply( 416, "Requested Range Not Satisfiable","You requested a range outside of the file.");
             return;
         }
 
         if (to < from) {
-            default_reply(conn, 416, "Requested Range Not Satisfiable",
-                "You requested a backward range.");
+            default_reply( 416, "Requested Range Not Satisfiable","You requested a backward range.");
             return;
         }
+        reply_start = from;
+        reply_length = to - from + 1;
 
-        conn->reply_start = from;
-        conn->reply_length = to - from + 1;
-
-        conn->header_length = xasprintf(&(conn->header),
+        header_length = xasprintf(&header,
             "HTTP/1.1 206 Partial Content\r\n"
             "Date: %s\r\n"
             "%s" /* server */
@@ -2100,20 +2063,18 @@ static void generate_dir_listing(struct connection &conn, const char *path,
             "Last-Modified: %s\r\n"
             "\r\n"
             ,
-            rfc1123_date(date, now), server_hdr, keep_alive(conn),
-            custom_hdrs,
-            llu(conn->reply_length), llu(from), llu(to),
+            rfc1123_date(date, now), service.server_hdr, keep_alive(),
+            service.custom_hdrs,
+            llu(reply_length), llu(from), llu(to),
             llu(filestat.st_size), mimetype, lastmod
         );
-        conn->http_code = 206;
-        if (debug)
-            printf("sending %llu-%llu/%llu\n",
-                   llu(from), llu(to), llu(filestat.st_size));
+        http_code = 206;
+        debug("sending %llu-%llu/%llu\n", llu(from), llu(to), llu(filestat.st_size));
     }
     else {
         /* no range stuff */
-        conn->reply_length = filestat.st_size;
-        conn->header_length = xasprintf(&(conn->header),
+        reply_length = filestat.st_size;
+        header_length = xasprintf(&header,
             "HTTP/1.1 200 OK\r\n"
             "Date: %s\r\n"
             "%s" /* server */
@@ -2123,12 +2084,10 @@ static void generate_dir_listing(struct connection &conn, const char *path,
             "Content-Length: %llu\r\n"
             "Content-Type: %s\r\n"
             "Last-Modified: %s\r\n"
-            "\r\n"
-            ,
-            rfc1123_date(date, now), server_hdr, keep_alive(conn),
-            custom_hdrs, llu(conn->reply_length), mimetype, lastmod
-        );
-        conn->http_code = 200;
+            "\r\n",
+            rfc1123_date(date, now), service.server_hdr, keep_alive(),
+            service.custom_hdrs, llu(reply_length), mimetype, lastmod);
+        http_code = 200;
     }
 }
 
@@ -2160,63 +2119,56 @@ int password_equal(const char *user_input, const char *secret) {
 }
 
 /* Process a request: build the header and reply, advance state. */
-static void process_request(struct connection *conn) {
-    num_requests++;
+void DarkHttpd::connection::process_request() {
+    service.num_requests++;
 
-    if (!parse_request(conn)) {
-        default_reply(conn, 400, "Bad Request",
-            "You sent a request that the server couldn't understand.");
+    if (!parse_request()) {
+        default_reply( 400, "Bad Request","You sent a request that the server couldn't understand.");
     }
-    else if (is_https_redirect(conn)) {
-        redirect_https(conn);
+    else if (service.is_https_redirect(*this)) {
+        redirect_https();
     }
     /* fail if: (auth_enabled) AND (client supplied invalid credentials) */
-    else if (auth_key != nullptr &&
-            (conn->authorization == nullptr ||
-             !password_equal(conn->authorization, auth_key))) {
-        default_reply(conn, 401, "Unauthorized",
-            "Access denied due to invalid credentials.");
+    else if (service.auth_key != nullptr &&
+            (authorization == nullptr ||
+             !password_equal(authorization, service.auth_key))) {
+        default_reply( 401, "Unauthorized","Access denied due to invalid credentials.");
     }
-    else if (strcmp(conn->method, "GET") == 0) {
-        process_get(conn);
+    else if (strcmp(method, "GET") == 0) {
+        process_get();
     }
-    else if (strcmp(conn->method, "HEAD") == 0) {
-        process_get(conn);
-        conn->header_only = 1;
+    else if (strcmp(method, "HEAD") == 0) {
+        process_get();
+        header_only = true;
     }
     else {
-        default_reply(conn, 501, "Not Implemented",
-                      "The method you specified is not implemented.");
+        default_reply( 501, "Not Implemented","The method you specified is not implemented.");
     }
 
     /* advance state */
-    conn->state = SEND_HEADER;
+    state = SEND_HEADER;
 
     /* request not needed anymore */
-    free(conn->request);
-    conn->request = nullptr; /* important: don't free it again later */
+    Free(&request); /* important: don't free it again later */
 }
 
 /* Receiving request. */
- void  connection::poll_recv_request() {
+ void DarkHttpd::connection::poll_recv_request() {
     char buf[1<<15];
     ssize_t recvd;
 
     assert(conn->state == RECV_REQUEST);
     recvd = recv(socket, buf, sizeof(buf), 0);
-    if (debug)
-        printf("poll_recv_request(%d) got %d bytes\n",
-               socket, (int)recvd);
+    debug("poll_recv_request(%d) got %d bytes\n",socket, (int)recvd);
     if (recvd < 1) {
         if (recvd == -1) {
             if (errno == EAGAIN) {
-                if (debug) printf("poll_recv_request would have blocked\n");
+                debug("poll_recv_request would have blocked\n");
                 return;
             }
-            if (debug) printf("recv(%d) error: %s\n",
-                socket, strerror(errno));
+            debug("recv(%d) error: %s\n",socket, strerror(errno));
         }
-        conn_close = 1;
+        conn_closed = true;
         state = DONE;
         return;
     }
@@ -2224,12 +2176,11 @@ static void process_request(struct connection *conn) {
 
     /* append to conn->request */
     assert(recvd > 0);
-    request = xrealloc(
-        request, request_length + (size_t)recvd + 1);
+    request = static_cast<char *>(xrealloc(request, request_length + (size_t)recvd + 1));
     memcpy(request+request_length, buf, (size_t)recvd);
     request_length += (size_t)recvd;
     request[request_length] = 0;
-    total_in += (size_t)recvd;
+    service.total_in += (size_t)recvd;
 
     /* process request if we have all of it */
     if ((request_length > 2) &&
@@ -2241,8 +2192,7 @@ static void process_request(struct connection *conn) {
 
     /* die if it's too large */
     if (request_length > MAX_REQUEST_LENGTH) {
-        default_reply(this, 413, "Request Entity Too Large",
-                      "Your request was dropped because it was too long.");
+        default_reply( 413, "Request Entity Too Large","Your request was dropped because it was too long.");
         state = SEND_HEADER;
     }
 
@@ -2254,37 +2204,31 @@ static void process_request(struct connection *conn) {
 }
 
 /* Sending header.  Assumes conn->header is not NULL. */
-void connection:: poll_send_header() {
+void DarkHttpd::connection:: poll_send_header() {
     ssize_t sent;
 
     assert(conn->state == SEND_HEADER);
     assert(conn->header_length == strlen(conn->header));
 
-    sent = send(socket,
-                header + header_sent,
-                header_length - header_sent,
-                0);
+    sent = send(socket,header + header_sent,header_length - header_sent,0);
     last_active = now;
-    if (debug)
-        printf("poll_send_header(%d) sent %d bytes\n",
-               socket, (int)sent);
+    debug("poll_send_header(%d) sent %d bytes\n", socket, (int)sent);
 
     /* handle any errors (-1) or closure (0) in send() */
     if (sent < 1) {
         if ((sent == -1) && (errno == EAGAIN)) {
-            if (debug) printf("poll_send_header would have blocked\n");
+            debug("poll_send_header would have blocked\n");
             return;
         }
-        if (debug && (sent == -1))
-            printf("send(%d) error: %s\n", socket, strerror(errno));
-        conn_close = 1;
+        if (sent == -1) debug("send(%d) error: %s\n", socket, strerror(errno));
+        conn_closed = true;
         state = DONE;
         return;
     }
     assert(sent > 0);
     header_sent += (size_t)sent;
     total_sent += (size_t)sent;
-    total_out += (size_t)sent;
+    service.total_out += (size_t)sent;
 
     /* check if we're done sending header */
     if (header_sent == header_length) {
@@ -2364,7 +2308,7 @@ static ssize_t send_from_file(const int s, const int fd,
 }
 
 /* Sending reply. */
-void connection::poll_send_reply()
+void DarkHttpd::connection::poll_send_reply()
 {
     ssize_t sent;
     /* off_t can be wider than size_t, avoid overflow in send_len */
@@ -2376,48 +2320,36 @@ void connection::poll_send_reply()
     assert(!header_only);
     if (reply_type == REPLY_GENERATED) {
         assert(reply_length >= reply_sent);
-        sent = send(socket,
-            reply + reply_start + reply_sent,
-            (size_t)send_len, 0);
+        sent = send(socket,reply + reply_start + reply_sent,(size_t)send_len, 0);
     }
     else {
         errno = 0;
         assert(reply_length >= reply_sent);
-        sent = send_from_file(socket, reply_fd,
-            reply_start + reply_sent, (size_t)send_len);
-        if (debug && (sent < 1))
-            printf("send_from_file returned %lld (errno=%d %s)\n",
-                (long long)sent, errno, strerror(errno));
+        sent = send_from_file(socket, reply_fd,reply_start + reply_sent, (size_t)send_len);
+        if ((sent < 1)) debug("send_from_file returned %lld (errno=%d %s)\n",(long long)sent, errno, strerror(errno));
     }
     last_active = now;
-    if (debug)
-        printf("poll_send_reply(%d) sent %d: %llu+[%llu-%llu] of %llu\n",
-               socket, (int)sent, llu(reply_start),
-               llu(reply_sent), llu(reply_sent + sent - 1),
-               llu(reply_length));
+    debug("poll_send_reply(%d) sent %d: %llu+[%llu-%llu] of %llu\n",socket, (int)sent, llu(reply_start),llu(reply_sent), llu(reply_sent + sent - 1),llu(reply_length));
 
     /* handle any errors (-1) or closure (0) in send() */
     if (sent < 1) {
         if (sent == -1) {
             if (errno == EAGAIN) {
-                if (debug)
-                    printf("poll_send_reply would have blocked\n");
+                debug("poll_send_reply would have blocked\n");
                 return;
             }
-            if (debug)
-                printf("send(%d) error: %s\n", socket, strerror(errno));
+            debug("send(%d) error: %s\n", socket, strerror(errno));
         }
         else if (sent == 0) {
-            if (debug)
-                printf("send(%d) closure\n", socket);
+            debug("send(%d) closure\n", socket);
         }
-        conn_close = 1;
+        conn_closed = true;
         state = DONE;
         return;
     }
     reply_sent += sent;
     total_sent += (size_t)sent;
-    total_out += (size_t)sent;
+    service.total_out += (size_t)sent;
 
     /* check if we're done sending */
     if (reply_sent == reply_length)
@@ -2427,7 +2359,7 @@ void connection::poll_send_reply()
 /* Main loop of the httpd - a select() and then delegation to accept
  * connections, handle receiving of requests, and sending of replies.
  */
-static void httpd_poll(void) {
+void DarkHttpd:: httpd_poll() {
     fd_set recv_set, send_set;
     int max_fd, select_ret;
     struct connection *conn, *next;
@@ -2445,22 +2377,22 @@ static void httpd_poll(void) {
 #define MAX_FD_SET(sock, fdset) do { FD_SET(sock,fdset); \
                                 max_fd = (max_fd<sock) ? sock : max_fd; } \
                                 while (0)
-    if (accepting) MAX_FD_SET(sockin, &recv_set);
+    if (accepting) MAX_FD_SET(int(sockin), &recv_set);
 
-    LIST_FOREACH_SAFE(conn, &connlist, entries, next) {
+    for (auto conn: entries) {
         switch (conn->state) {
         case connection::DONE:
             /* do nothing, no connection should be left in this state */
             break;
 
         case connection::RECV_REQUEST:
-            MAX_FD_SET(conn->socket, &recv_set);
+            MAX_FD_SET(int(conn->socket), &recv_set);
             bother_with_timeout = 1;
             break;
 
         case connection::SEND_HEADER:
         case connection::SEND_REPLY:
-            MAX_FD_SET(conn->socket, &send_set);
+            MAX_FD_SET(int(conn->socket), &send_set);
             bother_with_timeout = 1;
             break;
         }
@@ -2478,13 +2410,10 @@ static void httpd_poll(void) {
     if (timeout_secs == 0) {
         bother_with_timeout = 0;
     }
-    if (debug) {
-        printf("select() with max_fd %d timeout %d\n",
-                max_fd, bother_with_timeout ? (int)timeout.tv_sec : 0);
-        gettimeofday(&t0, nullptr);
-    }
-    select_ret = select(max_fd + 1, &recv_set, &send_set, nullptr,
-        (bother_with_timeout) ? &timeout : nullptr);
+    debug("select() with max_fd %d timeout %d\n",max_fd, bother_with_timeout ? (int)timeout.tv_sec : 0);
+    if (debug.spew) gettimeofday(&t0, nullptr);
+
+    select_ret = select(max_fd + 1, &recv_set, &send_set, nullptr,bother_with_timeout ? &timeout : nullptr);
     if (select_ret == 0) {
         if (!bother_with_timeout)
             errx(1, "select() timed out");
@@ -2495,7 +2424,7 @@ static void httpd_poll(void) {
         else
             err(1, "select() failed");
     }
-    if (debug) {
+    if (debug.spew) {
         long long sec, usec;
         gettimeofday(&t1, nullptr);
         sec = t1.tv_sec - t0.tv_sec;
@@ -2504,30 +2433,30 @@ static void httpd_poll(void) {
             usec += 1000000;
             sec--;
         }
-        printf("select() returned %d after %lld.%06lld secs\n",
-                select_ret, sec, usec);
+        printf("select() returned %d after %lld.%06lld secs\n",select_ret, sec, usec);
     }
 
     /* update time */
     now = time(nullptr);
 
     /* poll connections that select() says need attention */
-    if (FD_ISSET(sockin, &recv_set))
+    if (FD_ISSET(int(sockin), &recv_set))
         accept_connection();
 
-    LIST_FOREACH_SAFE(conn, &connlist, entries, next) {
-        poll_check_timeout(conn);
+    for (auto conn: entries) {
+        conn->poll_check_timeout();
+      int socket=conn->socket;
         switch (conn->state) {
-        case RECV_REQUEST:
-            if (FD_ISSET(conn->socket, &recv_set)) poll_recv_request(conn);
+        case connection::RECV_REQUEST:
+            if (FD_ISSET(socket, &recv_set)) conn->poll_recv_request();
             break;
 
         case connection::SEND_HEADER:
-            if (FD_ISSET(conn->socket, &send_set)) poll_send_header(conn);
+            if (FD_ISSET(socket, &send_set)) conn->poll_send_header();
             break;
 
         case connection::SEND_REPLY:
-            if (FD_ISSET(conn->socket, &send_set)) poll_send_reply(conn);
+            if (FD_ISSET(socket, &send_set)) conn->poll_send_reply();
             break;
 
         case connection::DONE:
@@ -2538,12 +2467,11 @@ static void httpd_poll(void) {
         /* Handling SEND_REPLY could have set the state to done. */
         if (conn->state == connection::DONE) {
             /* clean out finished connection */
-            if (conn->conn_close) {
-                LIST_REMOVE(conn, entries);
-                free_connection(conn);
-                free(conn);
+            if (conn->conn_closed) {
+               entries.remove(conn);
+              conn->free();
             } else {
-                recycle_connection(conn);
+                conn->recycle_connection();
             }
         }
     }
@@ -2552,70 +2480,85 @@ static void httpd_poll(void) {
 /* Daemonize helpers. */
 #define PATH_DEVNULL "/dev/null"
 
- void DarkHttpd::daemonize_start() {
-    pid_t f;
+bool DarkHttpd::daemonize_start() {
+  if (!lifeline.connect()) {
+    err(1, "pipe(lifeline)");
+    return false;
+  }
 
-    if (pipe(lifeline) == -1)
-        err(1, "pipe(lifeline)");
+  fd_null = open(PATH_DEVNULL, O_RDWR, 0);
+  if (!fd_null) {
+    err(1, "open(" PATH_DEVNULL ")");
+  }
 
-    fd_null = open(PATH_DEVNULL, O_RDWR, 0);
-    if (fd_null == -1)
-        err(1, "open(" PATH_DEVNULL ")");
+  pid_t f = fork();
+  if (f == -1) {
+    err(1, "fork");
+    return false;
+  }  else if (f != 0) {
+    /* parent: wait for child */
+    char tmp[1];
+    int status;
 
-    f = fork();
-    if (f == -1)
-        err(1, "fork");
-    else if (f != 0) {
-        /* parent: wait for child */
-        char tmp[1];
-        int status;
-        pid_t w;
-
-        if (close(lifeline[1]) == -1)
-            warn("close lifeline in parent");
-        if (read(lifeline[0], tmp, sizeof(tmp)) == -1)
-            warn("read lifeline in parent");
-        w = waitpid(f, &status, WNOHANG);
-        if (w == -1)
-            err(1, "waitpid");
-        else if (w == 0)
-            /* child is running happily */
-            exit(EXIT_SUCCESS);
-        else
-            /* child init failed, pass on its exit status */
-            exit(WEXITSTATUS(status));
+    if (close(lifeline[1]) == -1) {
+      warn("close lifeline in parent");
     }
-    /* else we are the child: continue initializing */
+    if (read(lifeline[0], tmp, sizeof(tmp)) == -1) {
+      warn("read lifeline in parent");
+    }
+    pid_t w = waitpid(f, &status, WNOHANG);
+    if (w == -1) {
+      err(1, "waitpid");
+      return false;
+    } else if (w == 0) {
+      /* child is running happily */
+      exit(EXIT_SUCCESS);
+      return true;
+    } else {
+      /* child init failed, pass on its exit status */
+      exit(WEXITSTATUS(status));
+      return false;
+    }
+  }
+  /* else we are the child: continue initializing */
 }
 
 void DarkHttpd::daemonize_finish() {
-    if (!fd_null )
-        return; /* didn't daemonize_start() so we're not daemonizing */
+  if (!fd_null) {
+    return; /* didn't daemonize_start() so we're not daemonizing */
+  }
 
-    if (setsid() == -1)
-        err(1, "setsid");
-    if (close(!lifeline[0]) )//todo: diff check
-        warn("close read end of lifeline in child");
-    if (close(!lifeline[1]) )
-        warn("couldn't cut the lifeline");
+  if (setsid() == -1) {
+    err(1, "setsid");
+  }
+  if (close(!lifeline[0])) {
+    warn("close read end of lifeline in child");
+  }
+  if (close(!lifeline[1])) {
+    warn("couldn't cut the lifeline");
+  }
 
-    /* close all our std fds */
-    if (dup2(fd_null, STDIN_FILENO) == -1)
-        warn("dup2(stdin)");
-    if (dup2(fd_null, STDOUT_FILENO) == -1)
-        warn("dup2(stdout)");
-    if (dup2(fd_null, STDERR_FILENO) == -1)
-        warn("dup2(stderr)");
-    if (fd_null.isNotStd())
-        close(fd_null);
+  /* close all our std fds */
+  if (!fd_null.copyinto(STDIN_FILENO)) {
+    warn("dup2(stdin)");
+  }
+  if (!fd_null.copyinto(STDOUT_FILENO)) {
+    warn("dup2(stdout)");
+  }
+  if (!fd_null.copyinto(STDERR_FILENO)) {
+    warn("dup2(stderr)");
+  }
+  if (fd_null.isNotStd()) {
+    close(fd_null);
+  }
 }
-
 
 #define PIDFILE_MODE 0600
 
  void DarkHttpd::pidfile_remove() {
-    if (unlink(pidfile_name) == -1)
-        err(1, "unlink(pidfile) failed");
+    if (unlink(pidfile_name) == -1) {
+      err(1, "unlink(pidfile) failed");
+    }
  /* if (flock(pidfile_fd, LOCK_UN) == -1)
         err(1, "unlock(pidfile) failed"); */
     xclose(pidfile_fd);
@@ -2794,21 +2737,16 @@ void DarkHttpd::prepareToRun() {
 void DarkHttpd::freeall() {
 
   /* close and free connections */
-  {
-    struct connection *conn, *next;
 
-    LIST_FOREACH_SAFE(conn, &connlist, entries, next) {
-      LIST_REMOVE(conn, entries);
-      free_connection(conn);
-      free(conn);
-    }
+for (auto conn: entries) {
+  entries.remove(conn);
+  conn->free();
   }
 
   /* free the mallocs */
 
     mime_map.clear();
-    if (forward_map)
-      free(forward_map);
+    forward_map.clear();//todo; free contents first! Must establish that all were malloc'd
     free(keep_alive_field);
     free(wwwroot);
     free(server_hdr);

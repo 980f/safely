@@ -168,9 +168,26 @@ public:
       return true;//already closed is same as just now successfully closed.
     }
 
+    /** lose track of the fd regardless of the associated file's state. Most uses seem like bugs, leaks of OS file handles.*/
+    void forget() {
+      fd=-1;
+    }
+
     /** @returns whether the fd is real and not stdin, stdout, or stderr */
     bool isNotStd() const {
       return fd > 2;
+    }
+
+    /** close this oneif open, then make it attach to same file as fdother
+     * @returns whether the OS was happy with doing this.
+     */
+    bool duplicate(int fdother) const {
+      return dup2(fdother,fd)!=-1;//makes fd point to same file as fdother
+    }
+
+    /** put this guy's file state into @param fdother. */
+    bool copyinto(int fdother) const {
+      return dup2(fd,fdother)!=-1;
     }
 
     Fd() = default;
@@ -227,7 +244,7 @@ public:
 
     char *reply = nullptr;
     bool reply_dont_free = false;
-    int reply_fd = -1;
+    Fd reply_fd;
     off_t reply_start = 0;
     off_t reply_length = 0;
     off_t reply_sent = 0;
@@ -258,6 +275,10 @@ public:
 
     int parse_request();
 
+    void process_get();
+
+    void process_request();
+
     void poll_recv_request();
 
     void poll_send_header();
@@ -280,9 +301,13 @@ public:
 
   void usage(const char *argv0);
 
+  void generate_dir_listing(struct connection &conn, const char *path, const char *decoded_url);
+
   void process_get(struct connection &conn);
 
-  void daemonize_start();
+  void httpd_poll();
+
+  bool daemonize_start();
 
   void daemonize_finish();
 
@@ -307,6 +332,12 @@ public:
 
   void change_root();
 
+  #define DATE_LEN 30 /* strlen("Fri, 28 Feb 2003 00:02:08 GMT")+1 */
+
+  const char *generated_on(const char date[DATE_LEN]) const;
+
+  bool is_https_redirect(struct connection &conn) const;
+
   void stop_running(int sig);
 
   void reportStats();
@@ -326,7 +357,19 @@ public:
 
 private:
   Fd fd_null;
-  Fd lifeline[2];
+  struct PipePair {
+    Fd fds[2];
+    int operator[](bool which) {
+      return fds[which];
+    }
+
+    bool connect() {
+      int punned[2]={fds[0],fds[1]};
+      return pipe(punned)!=-1;
+    }
+
+  } lifeline ;
+
   /* [->] pidfile helpers, based on FreeBSD src/lib/libutil/pidfile.c,v 1.3
  * Original was copyright (c) 2005 Pawel Jakub Dawidek <pjd@FreeBSD.org>
  */
