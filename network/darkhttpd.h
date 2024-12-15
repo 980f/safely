@@ -241,12 +241,10 @@ public:
 
 
   struct connection {
-    //    LIST_ENTRY(connection) entries;
-
     Fd socket;
     DarkHttpd &service;
 #ifdef HAVE_INET6
-    struct in6_addr client;
+    in6_addr client;
 #else
     in_addr_t client;
 #endif
@@ -337,7 +335,7 @@ public:
   void parse_extension_map_file(const char *filename);
 
   const char *url_content_type(const char *url);
-  const char *get_address_text(const void *addr);
+  const char *get_address_text(const void *addr) const;
 
   void init_sockin();
 
@@ -359,14 +357,11 @@ public:
 
   void freeall();
 
-public:
   bool parse_commandline(int argc, char *argv[]);
 
   void accept_connection();
 
-  void log_connection(const struct connection *conn);
-
-  // void showUsageStats();
+  void log_connection(const connection *conn);
 
   void prepareToRun();
 
@@ -378,7 +373,7 @@ public:
 
   const char *generated_on(const char date[DATE_LEN]) const;
 
-  bool is_https_redirect(struct connection &conn) const;
+  bool is_https_redirect(connection &conn) const;
 
   static void stop_running(int sig);
 

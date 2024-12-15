@@ -659,7 +659,7 @@ const char *DarkHttpd::url_content_type(const char *url) {
   return default_mimetype ? default_mimetype : "application/octet-stream";
 }
 
-const char *DarkHttpd::get_address_text(const void *addr) {
+const char *DarkHttpd::get_address_text(const void *addr) const {
 #ifdef HAVE_INET6
   if (inet6) {
     static char text_addr[INET6_ADDRSTRLEN];
@@ -884,15 +884,15 @@ static unsigned char base64_mapped(unsigned char low6bits) {
 #endif
 }
 
-static char *base64_encode(char *str) {
+static unsigned char *base64_encode(char *str) {
   unsigned input_length = strlen(str);
   unsigned output_length = 4 * ((input_length + 2) / 3);
 
-  char *encoded_data = static_cast<char *>(malloc(output_length + 1));
+  auto encoded_data = static_cast<unsigned char *>(malloc(output_length + 1));
   if (encoded_data == nullptr) {
     return nullptr;
   }
-  char *writer = encoded_data;
+  auto writer = encoded_data;
 
   for (int i = 0; i < input_length;) {
     unsigned char first = *str++; // i already tested by 'for'
@@ -954,7 +954,7 @@ static long long xstr_to_num(const char *str) {
   return ret;
 }
 
-bool DarkHttpd::parse_commandline(const int argc, char *argv[]) {
+bool DarkHttpd::parse_commandline(int argc, char *argv[]) {
   int i;
   if (argc < 2 || (argc == 2 && strcmp(argv[1], "--help") == 0)) {
     usage(argv[0]); /* no wwwroot given */
