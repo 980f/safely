@@ -58,5 +58,3 @@ public:
   /** access to embedded @see FileName::pack */
   Text pack();
 };
-
-#endif // FILENAME_H

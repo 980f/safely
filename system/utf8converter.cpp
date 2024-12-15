@@ -1,7 +1,12 @@
 #include "utf8converter.h"
 
+#include <cstr.h>
 #include <safely.h>
 
+bool Utf8ConverterOut::needsSlash(Unichar uch) const {
+  //todo: recover this functionality.
+  return true;//fuck things up until we implement this function!
+}
 unsigned Utf8ConverterOut::length(const char *source) const{
   if(Cstr(source).empty()) {
     return 0;

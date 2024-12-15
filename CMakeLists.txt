@@ -37,7 +37,6 @@ add_library(safely STATIC
   ./cppext/countdown.cpp
   ./cppext/enumerizer.cpp
   ./cppext/halfopen.cpp
-  ./cppext/localonexit.cpp
   ./cppext/multilock.cpp
   ./cppext/pushedparser.cpp
   ./cppext/textchunk.cpp

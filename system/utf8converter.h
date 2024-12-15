@@ -9,7 +9,8 @@
 /** utf8 to \u etc. */
 class Utf8ConverterOut: public Converter {
 public:
-  virtual ~Utf8ConverterOut()=default;
+  virtual ~Utf8ConverterOut() = default;
+  bool needsSlash(Unichar uch) const;
   /** length required by conversion of source */
   unsigned length(const char * source) const override ;
   /** convert source into @param packer */

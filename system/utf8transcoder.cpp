@@ -1,7 +1,7 @@
 #include "utf8transcoder.h"
 
 #include "cstr.h"
-#include "localonexit.h"
+#include "onexit.h"
 
 /** In the string below there are pairs of (escape code: escaped char) e.g. n\n
  * it looks confusing as some of the chars being escaped are unchanged by the process.

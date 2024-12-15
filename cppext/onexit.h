@@ -8,7 +8,7 @@
 template<typename Scalar> class ModifyOnExit {
 protected:
   Scalar &target;
-
+public:
   ModifyOnExit(Scalar &toBeCleared) : target(toBeCleared) {
     //#nada
   }

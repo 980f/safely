@@ -7,7 +7,7 @@
 */
 
 #include <sigc++/sigc++.h>
-#include "localonexit.h" //for deleteonreturn
+#include "onexit.h" //for deleteonreturn
 
 //sigc trackable should be inherited from virtually in so many cases that we always shall
 #define SIGCTRACKABLE virtual public sigc::trackable

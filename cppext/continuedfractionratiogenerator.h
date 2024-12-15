@@ -23,7 +23,7 @@ public:
    * This is usually a power of 2.
    */
   unsigned limit;
-  constexpr unsigned maxWorkingBits = std::numeric_limits<decltype(h[0])>::digits;
+  static constexpr unsigned maxWorkingBits = std::numeric_limits<decltype(h[0])>::digits;
 
   /** create one for learning the algorithm, then call restart followed by looping on step inspecting numerator and denominator as you go. */
   ContinuedFractionRatioGenerator();

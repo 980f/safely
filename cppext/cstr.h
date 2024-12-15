@@ -141,5 +141,3 @@ template<> long Cstr::cvt(long onNull, Cstr *units) const noexcept;
 template<> unsigned Cstr::cvt(unsigned onNull, Cstr *units) const noexcept;
 template<> int Cstr::cvt(int onNull, Cstr *units) const noexcept;
 template<> double Cstr::cvt(double onNull, Cstr *units) const noexcept;
-
-#endif // CSTR_H

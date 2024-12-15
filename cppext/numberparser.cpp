@@ -138,7 +138,7 @@ bool PushedNumberParser::next(char u) {
         return true;
       }
       if ('-' == u) {
-        if (changed(negativeExponent, true) {
+        if (changed(negativeExponent, true)) {
           return true;
         }
         return fail();//E-- not allowed
