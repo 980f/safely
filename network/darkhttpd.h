@@ -27,6 +27,13 @@
  */
 
 #pragma once
+
+#ifdef __linux
+#ifndef _GNU_SOURCE // suppress warning, not sure who already set this.
+#define _GNU_SOURCE /* for strsignal() and vasprintf() */
+#endif
+#endif
+
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
@@ -42,14 +49,14 @@
 #endif
 
 // gizmo to get the compiler to check our printf args:
-#ifndef __printflike
+#ifndef checkFargs
 #ifdef __GNUC__
 /* [->] borrowed from FreeBSD's src/sys/sys/cdefs.h,v 1.102.2.2.2.1 */
-#define __printflike(fmtarg, firstvararg) \
+#define checkFargs(fmtarg, firstvararg) \
   __attribute__((__format__(__printf__, fmtarg, firstvararg)))
 /* [<-] */
 #else
-#define __printflike(fmtarg, firstvararg)
+#define checkFargs(fmtarg, firstvararg)
 #endif
 #endif
 
@@ -60,29 +67,56 @@
  * This frees what it has been given at constructor or by assignment when there is an assignment or a destruction. As such never assign to it from anything not malloc'd.
  */
 struct AutoFree {
+  //these are exposed because we are mutating C code into C++ and hiding them is tedious. We should hide at least the pointer member, but there are a few contexts (*printf) where the implicit conversion doesn't get invoked.
   char *pointer;
+  size_t length = ~0; //~0 indicates unknown
 
-  operator char *() {
+  operator char *() const {
     return pointer;
   }
 
-  operator bool() {
+  operator bool() const {
     return pointer != nullptr;
   }
 
-  AutoFree(char *pointer = nullptr) :
-      pointer(pointer) {
+  bool operator!() const {
+    return pointer == nullptr;
+  }
+
+  /**
+   * @param str is this what the string ends with?
+   * @param len length if known, else leave off or pass ~0
+   * @returns whether the internal string ends with str .
+   */
+  bool endsWith(const char *str, unsigned len = ~0) const;
+
+  /**
+   *
+   * @param str to append to end after allocating room for it
+   * @param len length of string if known, ~0 for unknown (default)
+   * @returns whether the append happened, won't if out of heap
+   */
+  bool cat(const char *str, size_t len = ~0);
+
+  AutoFree(char *pointer = nullptr, unsigned length = ~0) :
+      pointer(pointer), length(length) {
+    // todo:M strlen if length = ~0
   }
 
   ~AutoFree() {
     free(pointer);
+    // null fields in case someone tries to use this after it is deleted
+    pointer = nullptr;
+    length = 0;
   }
 
   void operator=(AutoFree &other) = delete;
 
-  AutoFree& operator=(char *replacement) {
+  AutoFree &operator=(char *replacement) {
     free(pointer);
     pointer = replacement;
+    length = replacement ? ~0 : 0;
+    return *this;
   }
 
   AutoFree(AutoFree &&other) = delete;
@@ -90,7 +124,11 @@ struct AutoFree {
 
 
 class DarkHttpd {
+  static DarkHttpd *forSignals; // trusting BSS zero to clear this.
 
+  DarkHttpd() {
+    forSignals = this;
+  }
   class Exception : public std::exception {
     // todo: internal malloc string with delete
     const char *msg = nullptr;
@@ -126,11 +164,12 @@ public:
     int fd = -1;
 
   public:
+    // ReSharper disable once CppNonExplicitConversionOperator
     operator int() const {
       return fd;
     }
 
-    int operator=(int newfd) {
+    int operator=(int newfd) { // NOLINT(*-unconventional-assign-operator)
       fd = newfd;
       return newfd;
     }
@@ -139,6 +178,7 @@ public:
       return fd == newfd;
     }
 
+    // ReSharper disable once CppNonExplicitConversionOperator
     operator bool() const {
       return fd != -1;
     }
@@ -171,13 +211,14 @@ public:
       return dup2(fdother, fd) != -1; // makes fd point to same file as fdother
     }
 
-    /** put this guy's file state into @param fdother. */
+    /** put this guy's file state into @param fdother . */
     bool copyinto(int fdother) const {
       return dup2(fd, fdother) != -1;
     }
 
     Fd() = default;
 
+    // ReSharper disable once CppNonExplicitConvertingConstructor
     Fd(int open) :
         fd(open) {
     }
@@ -204,23 +245,22 @@ public:
     } state = DONE; // DONE makes it harmless so it gets garbage-collected if it should, for some reason, fail to be correctly filled out.
 
     /* char request[request_length+1] is null-terminated */
-    char *request = nullptr;
-    size_t request_length = 0;
+    AutoFree request;
 
     /* request fields */
     AutoFree method; // as in GET, POST, ...
-    char *url = nullptr;
-    char *referer = nullptr;
-    char *user_agent = nullptr;
-    char *authorization = nullptr;
+    AutoFree url;
+    AutoFree referer;
+    AutoFree user_agent;
+    AutoFree authorization;
 
     off_t range_begin = 0;
     off_t range_end = 0;
     off_t range_begin_given = 0;
     off_t range_end_given = 0;
 
-    char *header = nullptr;
-    size_t header_length = 0;
+    AutoFree header;
+
     size_t header_sent = 0;
     bool header_dont_free = false;
     int header_only = 0;
@@ -231,7 +271,7 @@ public:
       REPLY_FROMFILE,
       REPLY_NONE } reply_type = REPLY_NONE;
 
-    char *reply = nullptr;
+    AutoFree reply = nullptr;
     bool reply_dont_free = false;
     Fd reply_fd;
     off_t reply_start = 0;
@@ -276,9 +316,6 @@ public:
     void poll_send_reply();
   };
 
-
-  static void xclose(Fd fd);
-
   int parse_mimetype_line(const char *line);
 
   void parse_default_extension_map();
@@ -294,7 +331,7 @@ public:
 
   void generate_dir_listing(connection &conn, const char *path, const char *decoded_url);
 
-  void process_get(struct connection &conn);
+  // void process_get(connection &conn);
 
   void httpd_poll();
 
@@ -309,7 +346,7 @@ public:
   void freeall();
 
 public:
-  void parse_commandline(int argc, char *argv[]);
+  bool parse_commandline(int argc, char *argv[]);
 
   void accept_connection();
 
@@ -329,9 +366,9 @@ public:
 
   bool is_https_redirect(struct connection &conn) const;
 
-  void stop_running(int sig);
+  static void stop_running(int sig);
 
-  void reportStats();
+  void reportStats() const;
 
   int main(int argc, char **argv);
 
@@ -344,7 +381,6 @@ public:
       *malloced = nullptr;
     }
   }
-
 
 private:
   Fd fd_null;
@@ -380,7 +416,7 @@ private:
    * removed from the connlist.
    */
   int timeout_secs = 30;
-  char *keep_alive_field = nullptr;
+  AutoFree keep_alive_field = nullptr;
 
   /* Time is cached in the event loop to avoid making an excessive number of
    * gettimeofday() calls.
@@ -403,7 +439,7 @@ private:
   bool inet6 = false; /* whether the socket uses inet6 */
 #endif
   const char *default_mimetype = nullptr;
-  char *wwwroot = nullptr; /* a path name */
+  AutoFree wwwroot; /* a path name */
   char *logfile_name = nullptr; /* NULL = no logging */
   FILE *logfile = nullptr;
   char *pidfile_name = nullptr; /* NULL = no pidfile */
@@ -413,9 +449,9 @@ private:
   bool want_keepalive = true;
   bool want_server_id = true;
   bool want_single_file = false;
-  char *server_hdr = nullptr;
-  char *auth_key = nullptr; /* NULL or "Basic base64_of_password" */
-  char *custom_hdrs = nullptr;
+  AutoFree server_hdr;
+  AutoFree auth_key; /* NULL or "Basic base64_of_password" */
+  AutoFree custom_hdrs;
   uint64_t num_requests = 0;
   uint64_t total_in = 0;
   uint64_t total_out = 0;
