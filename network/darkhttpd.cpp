@@ -1,13 +1,14 @@
-/**
+  /**
 // Created by andyh on 12/14/24.
 // Copyright (c) 2024 Andy Heilveil, (github/980f). All rights reserved.
 */
 
 #include "darkhttpd.h"
 
+#include <bits/fs_dir.h>
+#include <bits/ios_base.h>
 #include <cstdarg>
 #include <forward_list>
-#include <sigc++/connection.h>
 
 static const char pkgname[] = "darkhttpd/1.16.from.git";
 static const char copyright[] = "copyright (c) 2003-2024 Emil Mikulic"
@@ -15,70 +16,12 @@ static const char copyright[] = "copyright (c) 2003-2024 Emil Mikulic"
 
 /* Possible build options: -DDEBUG -DNO_IPV6 */
 
-/** to help ensure timely frees.
- * Many people seem to not know that 'free' doesn't mind null pointers, it checks for them and does nothing so that we don't have to do that in a gazillion places.
- */
-struct AutoFree {
-  char *pointer;
-
-  operator char *() {
-    return pointer;
-  }
-
-  operator bool() {
-    return pointer != nullptr;
-  }
-
-  AutoFree(char *pointer) :
-      pointer(pointer) {
-  }
-
-  ~AutoFree() {
-    free(pointer);
-  }
-
-  void operator=(AutoFree &other) = delete;
-
-  void operator=(char *replacement) {
-    free(pointer);
-    pointer = replacement;
-  }
-
-  AutoFree(AutoFree &&other) = delete;
-};
-
-class DebugLog {
-public:
-  bool spew = false;
-
-  int operator()(const char *format, ...) {
-    if (spew) {
-      va_list args;
-      va_start(args, format);
-      vfprintf(stdout, format, args);
-      va_end(args);
-    }
-  }
-
-  void operator=(bool enable) {
-    spew = enable;
-  }
-
-  DebugLog(bool startup) :
-      spew(startup) {
-  }
-};
-
-// It is best to always have the debug statements present even when it is disabled, to reduce the difference between debug build execution and 'release' builds.
-#ifndef DEBUG
-#define NDEBUG
-static DebugLog debug(false);
-#else
-static DebugLog debug(true);
-#endif
 
 #ifdef __linux
+#ifndef _GNU_SOURCE // suppress warning, not sure who already set this.
 #define _GNU_SOURCE /* for strsignal() and vasprintf() */
+#endif
+
 #define _FILE_OFFSET_BITS 64 /* stat() files bigger than 2GB */
 #include <sys/sendfile.h>
 #endif
@@ -93,7 +36,6 @@ static DebugLog debug(true);
 #include <cerrno>
 #include <climits>
 #include <csignal>
-#include <cstdarg>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -113,6 +55,41 @@ static DebugLog debug(true);
 #include <sys/wait.h>
 #include <syslog.h>
 #include <unistd.h>
+
+class DebugLog {
+  bool spew = false;
+
+public:
+  /** @returns spew so that you can do if(debug ()) {  more behavior conditional on debug }*/
+  bool operator()(const char *format, ...) {
+    if (spew && format) {
+      va_list args;
+      va_start(args, format);
+      vfprintf(stdout, format, args);
+      va_end(args);
+    }
+    return spew;
+  }
+
+  void operator=(bool enable) {
+    spew = enable;
+  }
+
+  DebugLog(bool startup) :
+      spew(startup) {
+  }
+};
+
+#define countOf(a) (sizeof(a) / sizeof(a[0]))
+
+// It is best to always have the debug statements present even when it is disabled, to reduce the difference between debug build execution and 'release' builds.
+#ifndef DEBUG
+#define NDEBUG
+static DebugLog debug(false);
+#else
+static DebugLog debug(true);
+#endif
+
 
 /** The time formatting that we use in directory listings.
  * An example of the default is 2013-09-09 13:01, which should be compatible with xbmc/kodi. */
@@ -221,74 +198,40 @@ static void warn(const char *format, ...) {
 #endif
 
 
-/* Default mimetype mappings - make sure this array is NULL terminated. */
+/* Default mimetype mappings - make sure this array is NULL terminated.
+ * //todo: either pairs or pack as json ... and use xdg-mime on systems which have it */
 static const char *default_extension_map[] = {
-  "application/json"
-  " json",
-  "application/pdf"
-  " pdf",
-  "application/wasm"
-  " wasm",
-  "application/xml"
-  " xsl xml",
-  "application/xml-dtd"
-  " dtd",
-  "application/xslt+xml"
-  " xslt",
-  "application/zip"
-  " zip",
-  "audio/flac"
-  " flac",
-  "audio/mpeg"
-  " mp2 mp3 mpga",
-  "audio/ogg"
-  " ogg opus oga spx",
-  "audio/wav"
-  " wav",
-  "audio/x-m4a"
-  " m4a",
-  "font/woff"
-  " woff",
-  "font/woff2"
-  " woff2",
-  "image/apng"
-  " apng",
-  "image/avif"
-  " avif",
-  "image/gif"
-  " gif",
-  "image/jpeg"
-  " jpeg jpe jpg",
-  "image/png"
-  " png",
-  "image/svg+xml"
-  " svg",
-  "image/webp"
-  " webp",
-  "text/css"
-  " css",
-  "text/html"
-  " html htm",
-  "text/javascript"
-  " js",
-  "text/plain"
-  " txt asc",
-  "video/mpeg"
-  " mpeg mpe mpg",
-  "video/quicktime"
-  " qt mov",
-  "video/webm"
-  " webm",
-  "video/x-msvideo"
-  " avi",
-  "video/mp4"
-  " mp4 m4v",
-  nullptr};
-
-static const char octet_stream[] = "application/octet-stream";
-static const char *default_mimetype = octet_stream;
-
-/* Prototypes. */
+  "application/json: json",
+  "application/pdf: pdf",
+  "application/wasm: wasm",
+  "application/xml: xsl xml",
+  "application/xml-dtd: dtd",
+  "application/xslt+xml: xslt",
+  "application/zip: zip",
+  "audio/flac: flac",
+  "audio/mpeg: mp2 mp3 mpga",
+  "audio/ogg: ogg opus oga spx",
+  "audio/wav: wav",
+  "audio/x-m4a: m4a",
+  "font/woff: woff",
+  "font/woff2: woff2",
+  "image/apng: apng",
+  "image/avif: avif",
+  "image/gif: gif",
+  "image/jpeg: jpeg jpe jpg",
+  "image/png: png",
+  "image/svg+xml: svg",
+  "image/webp: webp",
+  "text/css: css",
+  "text/html: html htm",
+  "text/javascript: js",
+  "text/plain: txt asc",
+  "video/mpeg: mpeg mpe mpg",
+  "video/quicktime: qt mov",
+  "video/webm: webm",
+  "video/x-msvideo: avi",
+  "video/mp4: mp4 m4v",
+  nullptr};//extra protection.
 
 
 /* close() that dies on error.  */
@@ -360,28 +303,28 @@ struct Vsprinter {
   }
 };
 
-// /* vasprintf() that dies if it fails. */
-// static unsigned int xvasprintf(char **ret, const char *format, va_list ap)
-//     __printflike(2,0);
-// static unsigned int xvasprintf(char **ret, const char *format, va_list ap) {
-//     unsigned len = vasprintf(ret, format, ap);
-//     if (ret == nullptr || len == ~0)
-//         errx(1, "out of memory in vasprintf()");
-//     return len;
-// }
-//
-// /* asprintf() that dies if it fails. */
-// static unsigned int xasprintf(char **ret, const char *format, ...)
-//     __printflike(2,3);
-// static unsigned int xasprintf(char **ret, const char *format, ...) {
-//     va_list va;
-//     unsigned int len;
-//
-//     va_start(va, format);
-//     len = xvasprintf(ret, format, va);
-//     va_end(va);
-//     return len;
-// }
+/* vasprintf() that dies if it fails. */
+static unsigned int xvasprintf(char **ret, const char *format, va_list ap)
+    __printflike(2,0);
+static unsigned int xvasprintf(char **ret, const char *format, va_list ap) {
+    unsigned len = vasprintf(ret, format, ap);
+    if (ret == nullptr || len == ~0)
+        errx(1, "out of memory in vasprintf()");
+    return len;
+}
+
+/* asprintf() that dies if it fails. */
+static unsigned int xasprintf(char **ret, const char *format, ...)
+    __printflike(2,3);
+static unsigned int xasprintf(char **ret, const char *format, ...) {
+    va_list va;
+    unsigned int len;
+
+    va_start(va, format);
+    len = xvasprintf(ret, format, va);
+    va_end(va);
+    return len;
+}
 
 /* Append buffer code.  A somewhat efficient string buffer with pool-based
  * reallocation.
@@ -430,7 +373,7 @@ struct apbuf { // this looks like an std::vector<char>
   }
 };
 
-
+//the following is a minor performance enhancement:
 #ifdef __GNUC__
 #define append(buf, s) buf->appendl(s, (__builtin_constant_p(s) ? sizeof(s) - 1 : strlen(s)))
 #else
@@ -452,7 +395,7 @@ static void nonblock_socket(const int sock) {
   }
 }
 
-/* Split string out of src with range [left:right-1] */
+/* malloc a string out of src with range [left:right), adding a null. */
 static char *split_string(const char *src, const size_t left, const size_t right) {
   char *dest;
   assert(left <= right);
@@ -534,82 +477,77 @@ DarkHttpd::Exception::~Exception() {
   delete[] msg;
 }
 
-DarkHttpd::mime_mapping::mime_ref DarkHttpd::mime_mapping::add(const char *extension, const char *mimetype) {
-  /* Associates an extension with a mimetype in the mime_map.
-   * todo:00 check if map copies the strings, if not we must do so.
-   */
-  assert(strlen(extension) > 0);
-  assert(strlen(mimetype) > 0);
-
-  /* update longest_ext */
-  auto i = strlen(extension);
-  if (i > longest_ext) {
-    longest_ext = i;
+bool DarkHttpd::mime_mapping::add(const char *extension, const char *mimetype) {
+  if (!mimetype || strlen(mimetype) == 0 || !extension) {
+    return false;
   }
+  auto size = strlen(extension);
+  auto chunk=  insert_or_assign(extension, mimetype);
+  if (chunk.second) {//new entry, else updated old
+    /* update longest_ext */
+    if (size > longest_ext) {
+      longest_ext = size;
+    }
+    return true;
+  }
+  return false;
+}
 
-  return insert_or_assign(extension, mimetype);
+/** @returns nullptr if the line is blank or EOL or EOL comment char, else points to first char not a space nor a tab */
+static const char *removeLeadingWhitespace(const char *text) {
+  while (auto c = *text++) {
+    switch (c) {
+      case ' ':
+      case '\t':
+        continue;
+      case '#':
+      case '\r':
+      case '\n':
+        return nullptr;
+      default:
+        return text;
+    }
+  }
+  return nullptr;
 }
 
 /* Parses a mime.types line and adds the parsed data to the mime_map. */
-void DarkHttpd::parse_mimetype_line(const char *line) {
-  unsigned int pad;
-  unsigned int bound1;
-  unsigned int lbound;
-  unsigned int rbound;
-
-  /* parse mimetype */
-  for (pad = 0; (line[pad] == ' ') || (line[pad] == '\t'); pad++)
-    ;
-  if (line[pad] == '\0' || /* empty line */
-      line[pad] == '#') { /* comment */
-    return;
+int DarkHttpd::parse_mimetype_line(const char *line) {
+  if (!line) {
+    return -1;
   }
-
-  for (bound1 = pad + 1;
-    (line[bound1] != ' ') &&
-    (line[bound1] != '\t');
-    bound1++) {
-    if (line[bound1] == '\0') {
-      return; /* malformed line */
-    }
+  const char * start=removeLeadingWhitespace(line);
+  if (!start) {
+    return -1;
   }
-
-  lbound = bound1;
-  for (;;) {
-    char *mimetype, *extension;
-
-    /* find beginning of extension */
-    for (; (line[lbound] == ' ') || (line[lbound] == '\t'); lbound++)
-      ;
-    if (line[lbound] == '\0') {
-      return; /* end of line */
-    }
-
-    /* find end of extension */
-    for (rbound = lbound;
-      line[rbound] != ' ' &&
-      line[rbound] != '\t' &&
-      line[rbound] != '\0';
-      rbound++)
-      ;
-
-    mimetype = split_string(line, pad, bound1);
-    extension = split_string(line, lbound, rbound);
-    mime_map.add(extension, mimetype); // NB: the split_string new's the content, we must have mime_map delete it.
-
-    if (line[rbound] == '\0') {
-      return; /* end of line */
-    } else {
-      lbound = rbound + 1;
-    }
+  const char *finish=strchr(start,':');
+  if (!finish) {
+    return -1;
   }
+  char *mimetype = split_string(line, start-line, finish-line);
+  int fyi=0;
+  while (true) {
+    start=removeLeadingWhitespace(++finish);
+    if (!start) {
+      break;//trailing whitespace
+    }
+    ++fyi;
+    finish=strchr(start,' ');
+    if (!finish) {
+      mime_map.add(strdup(start), mimetype);
+      break;//normal exit
+    }
+    mime_map.add(split_string(line, start-line, finish-line), mimetype); // NB: the split_string new's the content, we must have mime_map delete it.
+    //continue;
+  }
+  return fyi;
 }
 
 /* Adds contents of default_extension_map[] to mime_map list.  The array must
  * be NULL terminated.
  */
 void DarkHttpd::parse_default_extension_map() {
-  for (size_t i = 0; default_extension_map[i] != nullptr; i++) {
+  for (size_t i = countOf(default_extension_map); i-->0;) {
     parse_mimetype_line(default_extension_map[i]);
   }
 }
@@ -620,6 +558,7 @@ void DarkHttpd::parse_default_extension_map() {
  * Handles CR, CRLF and LF line endings, as well as NOEOL correctly.  If
  * already at EOF, returns NULL.  Will err() or errx() in case of
  * unexpected file error or running out of memory.
+ * //todo: replace this with whole file reader, we only use it for mime type files.
  */
 static char *read_line(FILE *fp) {
   long startpos = ftell(fp);
@@ -680,7 +619,7 @@ static char *read_line(FILE *fp) {
  * Adds contents of specified file to mime_map list.
  */
 void DarkHttpd::parse_extension_map_file(const char *filename) {
-  char *buf;
+  AutoFree buf;
   FILE *fp = fopen(filename, "rb");
 
   if (fp == nullptr) {
@@ -688,38 +627,29 @@ void DarkHttpd::parse_extension_map_file(const char *filename) {
   }
   while ((buf = read_line(fp)) != nullptr) {
     parse_mimetype_line(buf);
-    free(&buf);
   }
   fclose(fp);
 }
 
-//
-// /* Uses the mime_map to determine a Content-Type: for a requested URL.  This
-//  * bsearch()es mime_map, so make sure it's sorted first.
-//  */
-// static int mime_mapping_cmp_str(const void *a, const void *b) {
-//     return strcmp((const char *)a,
-//                  ((const struct mime_mapping *)b)->extension);
-// }
-
 const char *DarkHttpd::url_content_type(const char *url) {
-  if (auto period = strrchr(url, '.')) {
-    auto result = mime_map.find(period + 1);
-    if (result != mime_map.end()) {
-      // assert(strcmp(period + 1, result->extension) == 0);
-      return result->second;
+  if (url != nullptr) { // useful guard, and lets us get to the default of the default.
+    if (auto period = strrchr(url, '.')) {
+      auto result = mime_map.find(period + 1);
+      if (result != mime_map.end()) {
+        // assert(strcmp(period + 1, result->extension) == 0);
+        return result->second;
+      }
     }
   }
   /* else no period found in the string */
-  return default_mimetype;
+  return default_mimetype ? default_mimetype : "application/octet-stream";
 }
 
-static const char *get_address_text(const void *addr) {
-#if HAVE_INET6
+const char *DarkHttpd::get_address_text(const void *addr) {
+#ifdef HAVE_INET6
   if (inet6) {
     static char text_addr[INET6_ADDRSTRLEN];
-    inet_ntop(AF_INET6, (const struct in6_addr *) addr, text_addr,
-      INET6_ADDRSTRLEN);
+    inet_ntop(AF_INET6, (const struct in6_addr *) addr, text_addr, INET6_ADDRSTRLEN);
     return text_addr;
   } else
 #endif
@@ -742,8 +672,7 @@ void DarkHttpd::init_sockin() {
 #ifdef HAVE_INET6
   if (inet6) {
     memset(&addrin6, 0, sizeof(addrin6));
-    if (inet_pton(AF_INET6, bindaddr ? bindaddr : "::",
-          &addrin6.sin6_addr) != 1) {
+    if (inet_pton(AF_INET6, bindaddr ? bindaddr : "::", &addrin6.sin6_addr) != 1) {
       errx(1, "malformed --addr argument");
     }
     sockin = socket(PF_INET6, SOCK_STREAM, 0);
@@ -764,15 +693,13 @@ void DarkHttpd::init_sockin() {
 
   /* reuse address */
   sockopt = 1;
-  if (setsockopt(sockin, SOL_SOCKET, SO_REUSEADDR,
-        &sockopt, sizeof(sockopt)) == -1) {
+  if (setsockopt(sockin, SOL_SOCKET, SO_REUSEADDR, &sockopt, sizeof(sockopt)) == -1) {
     err(1, "setsockopt(SO_REUSEADDR)");
   }
 
   /* disable Nagle since we buffer everything ourselves */
   sockopt = 1;
-  if (setsockopt(sockin, IPPROTO_TCP, TCP_NODELAY,
-        &sockopt, sizeof(sockopt)) == -1) {
+  if (setsockopt(sockin, IPPROTO_TCP, TCP_NODELAY, &sockopt, sizeof(sockopt)) == -1) {
     err(1, "setsockopt(TCP_NODELAY)");
   }
 
@@ -793,8 +720,7 @@ void DarkHttpd::init_sockin() {
    * one byte at a time (this is for debugging)
    */
   sockopt = 1;
-  if (setsockopt(sockin, SOL_SOCKET, SO_SNDBUF,
-        &sockopt, sizeof(sockopt)) == -1) {
+  if (setsockopt(sockin, SOL_SOCKET, SO_SNDBUF, &sockopt, sizeof(sockopt)) == -1) {
     err(1, "setsockopt(SO_SNDBUF)");
   }
 #endif
@@ -804,16 +730,15 @@ void DarkHttpd::init_sockin() {
   if (inet6) {
     addrin6.sin6_family = AF_INET6;
     addrin6.sin6_port = htons(bindport);
-    if (bind(sockin, (struct sockaddr *) &addrin6, sizeof(struct sockaddr_in6)) == -1) {
+    if (bind(sockin, reinterpret_cast<sockaddr *>(&addrin6), sizeof(sockaddr_in6)) == -1) {
       err(1, "bind(port %u)", bindport);
     }
 
     addrin_len = sizeof(addrin6);
-    if (getsockname(sockin, (struct sockaddr *) &addrin6, &addrin_len) == -1) {
+    if (getsockname(sockin, reinterpret_cast<sockaddr *>(&addrin6), &addrin_len) == -1) {
       err(1, "getsockname()");
     }
-    printf("listening on: http://[%s]:%u/\n",
-      get_address_text(&addrin6.sin6_addr), ntohs(addrin6.sin6_port));
+    printf("listening on: http://[%s]:%u/\n", get_address_text(&addrin6.sin6_addr), ntohs(addrin6.sin6_port));
   } else
 #endif
   {
@@ -826,8 +751,7 @@ void DarkHttpd::init_sockin() {
     if (getsockname(sockin, (struct sockaddr *) &addrin, &addrin_len) == -1) {
       err(1, "getsockname()");
     }
-    printf("listening on: http://%s:%u/\n",
-      get_address_text(&addrin.sin_addr), ntohs(addrin.sin_port));
+    printf("listening on: http://%s:%u/\n", get_address_text(&addrin.sin_addr), ntohs(addrin.sin_port));
   }
 
   /* listen on socket */
@@ -882,9 +806,8 @@ void DarkHttpd::usage(const char *argv0) {
          "\t\tDo not serve listing if directory is requested.\n\n");
   printf("\t--mimetypes filename (optional)\n"
          "\t\tParses specified file for extension-MIME associations.\n\n");
-  printf("\t--default-mimetype string (optional, default: %s)\n"
-         "\t\tFiles with unknown extensions are served as this mimetype.\n\n",
-    octet_stream);
+  printf("\t--default-mimetype string (optional, default: application)\n"
+         "\t\tFiles with unknown extensions are served as this mimetype.\n\n", url_content_type(nullptr));
   printf("\t--uid uid/uname, --gid gid/gname (default: don't privdrop)\n"
          "\t\tDrops privileges to given uid:gid after initialization.\n\n");
   printf("\t--chroot (default: don't chroot)\n"
@@ -930,17 +853,25 @@ void DarkHttpd::usage(const char *argv0) {
 #endif
 }
 
-static char *base64_encode(char *str) {
+// bug-fixed: DarkHttpd's base 64 encoder output excess chars at end of string when padding is needed.
+static char base64_mapped(unsigned low6bits) {
+#if 1 // less code bytes
+  low6bits &= 63; // do this here instead of at all points of use.
+  return low6bits + (low6bits < 26 ? 'A' : low6bits < 52 ? 'a' - 26 :
+                                         low6bits < 62   ? '0' - 52 :
+                                         low6bits == 62  ? '+' :
+                                                           '/');
+#else // easier to read
   const char *base64_table = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
                              "abcdefghijklmnopqrstuvwxyz"
                              "0123456789"
                              "+/"; // reformatter kept on trashing the array so I made it into strings.
+  return base64_table[0x3F & low6bits];
+#endif
+}
 
+static char *base64_encode(char *str) {
   unsigned input_length = strlen(str);
-  unsigned numberofPads = input_length % 3;
-  if (numberofPads) {
-    numberofPads = 3 - numberofPads;
-  }
   unsigned output_length = 4 * ((input_length + 2) / 3);
 
   char *encoded_data = static_cast<char *>(malloc(output_length + 1));
@@ -950,21 +881,26 @@ static char *base64_encode(char *str) {
   char *writer = encoded_data;
 
   for (int i = 0; i < input_length;) {
-    unsigned char flip = *str++; // i already tested by 'for'
-    *writer++ = base64_table[0x3F & flip >> 2]; // top 6 leaves 2 behind
-
-    unsigned char flop = i < input_length ? *str++ : 0;
-    *writer++ = base64_table[0x3F & flip << 4 | flop >> 4]; // 2 to high nibble and 4 from new to low
-
-    unsigned flap = i < input_length ? *str++ : 0;
-    *writer++ = base64_table[0x3F & flop << 2 | flap >> 6]; // 4 low become high of 6, need 2 from next one
-
-    *writer++ = base64_table[0x3F & flap]; // final 6
+    unsigned char first = *str++; // i already tested by 'for'
+    *writer++ = base64_mapped(first >> 2); // top 6 leaves 2 behind
+    if (i < input_length) {
+      unsigned char second = *str++;
+      *writer++ = base64_mapped(first << 4 | second >> 4); // 2 to high nibble and 4 from new to low
+      if (i < input_length) {
+        unsigned third = *str++;
+        *writer++ = base64_mapped(second << 2 | third >> 6); // 4 low become high of 6, need 2 from next one
+        *writer++ = base64_mapped(third); // final 6
+      } else {
+        *writer++ = '='; // pad after 2nd
+      }
+    } else {
+      *writer++ = base64_mapped(first << 4); // 2 to high nibble then two padding
+      // prior implementation output one extra char here., 4 for every 3 and then the pads.
+      *writer++ = '=';
+      *writer++ = '=';
+    }
   }
 
-  while (numberofPads-- > 0) {
-    *writer++ = '=';
-  }
   *writer++ = 0;
   return encoded_data;
 }
@@ -992,8 +928,10 @@ static bool str_to_num(const char *str, long long *num) {
   return true;
 }
 
-/* Returns a valid number or dies. */
-static long long wtf_xstr_to_num(const char *str) {
+/* @returns a valid number or dies.
+ * @deprecated
+ */
+static long long xstr_to_num(const char *str) {
   long long ret;
 
   if (!str_to_num(str, &ret)) {
@@ -1012,13 +950,14 @@ void DarkHttpd::parse_commandline(const int argc, char *argv[]) {
   }
 
   if (getuid() == 0) {
-    bindport = 80;
+    bindport = 80; //default if run as root.
   }
 
   custom_hdrs = strdup("");
 
   wwwroot = xstrdup(argv[1]);
-  /* Strip ending slash. */
+  /* Strip ending slash.
+   * todo: should use the url cleaner to deal with . and .. in the string */
   len = strlen(wwwroot);
   if (len == 0) {
     errx(1, "/path/to/wwwroot cannot be empty");
@@ -1177,7 +1116,7 @@ void DarkHttpd::accept_connection() {
   struct connection *conn;
   int fd;
 
-#if HAVE_INET6
+#ifdef HAVE_INET6
   if (inet6) {
     sin_size = sizeof(addrin6);
     memset(&addrin6, 0, sin_size);
@@ -1207,7 +1146,7 @@ void DarkHttpd::accept_connection() {
   conn->state = connection::RECV_REQUEST;
   conn->last_active = now;
 
-#if HAVE_INET6
+#ifdef HAVE_INET6
   if (inet6) {
     conn->client = addrin6.sin6_addr;
   } else
@@ -1279,13 +1218,14 @@ void DarkHttpd::log_connection(const struct connection *conn) {
     return; /* invalid - didn't parse - maybe too long */
   }
 
+  //all the _safe macros can go away if we stream with a encoding translator in the stream instead of this malloc and free and explode methodology.
 #define make_safe(x)                                                    \
   do {                                                                  \
     if (conn->x) {                                                      \
-      safe_##x = static_cast<char *>(xmalloc(strlen(conn->x) * 3 + 1)); \
-      logencode(conn->x, safe_##x);                                     \
+      safe_## x = static_cast<char *>(xmalloc(strlen(conn->x) * 3 + 1)); \
+      logencode(conn->x, safe_## x);                                     \
     } else {                                                            \
-      safe_##x = NULL;                                                  \
+      safe_## x = NULL;                                                  \
     }                                                                   \
   } while (0)
 
@@ -1294,7 +1234,9 @@ void DarkHttpd::log_connection(const struct connection *conn) {
   make_safe(referer);
   make_safe(user_agent);
 
-#define use_safe(x) safe_##x ? safe_##x : ""
+#undef make_safe
+
+#define use_safe(x) safe_## x ? safe_## x : ""
   if (syslog_enabled) {
     syslog(LOG_INFO, "%s - - %s \"%s %s HTTP/1.1\" %d %llu \"%s\" \"%s\"\n",
       get_address_text(&conn->client),
@@ -1317,17 +1259,16 @@ void DarkHttpd::log_connection(const struct connection *conn) {
       use_safe(user_agent));
     fflush(logfile);
   }
-#define free_safe(x) \
-  if (safe_##x)      \
-  free(safe_##x)
+
+#undef use_safe
+
+#define free_safe(x) free(safe_## x)
 
   free_safe(method);
   free_safe(url);
   free_safe(referer);
   free_safe(user_agent);
 
-#undef make_safe
-#undef use_safe
 #undef free_safe
 }
 
@@ -1389,9 +1330,9 @@ void DarkHttpd::connection::recycle_connection() {
 }
 
 /* Uppercasify all characters in a string of given length. */
-static void strntoupper(char *str, const size_t length) {
-  for (size_t i = 0; i < length; i++) {
-    str[i] = (char) toupper(str[i]);
+static void strntoupper(char *str, size_t length) {
+  while (length-->0 && *str) {
+    *str++ = toupper(*str);
   }
 }
 
@@ -1415,40 +1356,40 @@ void DarkHttpd::connection::poll_check_timeout() {
 
 static char *rfc1123_date(char *dest, const time_t when) {
   time_t when_copy = when;
-  if (strftime(dest, DATE_LEN, "%a, %d %b %Y %H:%M:%S GMT", gmtime(&when_copy)) == 0) {
-    dest[0] = 0;
-  }
+  dest[strftime(dest, DATE_LEN, "%a, %d %b %Y %H:%M:%S GMT", gmtime(&when_copy))] = 0;//strftime returns number of chars it put into dest.
   return dest;
 }
+
+char HEX_TO_DIGIT(char hex) {
+  if (hex >= 'A' && hex <= 'F') {
+    return hex - 'A' + 10;
+  }
+  if (hex >= 'a' && hex <= 'f') {
+    return hex - 'a' + 10;
+  }
+  return hex - '0';
+}
+
 
 /* Decode URL by converting %XX (where XX are hexadecimal digits) to the
  * character it represents.  Don't forget to free the return value.
  */
 static char *urldecode(const char *url) {
-  size_t i;
-  size_t pos;
   size_t len = strlen(url);
   char *out = static_cast<char *>(xmalloc(len + 1));
+  char *writer=out;
 
-  for (i = 0, pos = 0; i < len; i++) {
-    if ((url[i] == '%') && (i + 2 < len) &&
-        isxdigit(url[i + 1]) && isxdigit(url[i + 2])) {
-      /* decode %XX */
-#define HEX_TO_DIGIT(hex) (                             \
-  ((hex) >= 'A' && (hex) <= 'F') ? ((hex) - 'A' + 10) : \
-  ((hex) >= 'a' && (hex) <= 'f') ? ((hex) - 'a' + 10) : \
-                                   ((hex) - '0'))
-
-      out[pos++] = HEX_TO_DIGIT(url[i + 1]) * 16 +
-                   HEX_TO_DIGIT(url[i + 2]);
-      i += 2;
-#undef HEX_TO_DIGIT
-    } else {
-      /* straight copy */
-      out[pos++] = url[i];
+  while (char c=*url++){
+    if (c == '%'
+      && url[1] && isxdigit(url[1])  //because we have already used strlen we know there is a null char we can rely upon here
+      && url[2] && isxdigit(url[2])) {
+      *writer++ = HEX_TO_DIGIT(*url++) * 16 + HEX_TO_DIGIT(*url++);
+      continue;
     }
+    *writer++=c;/* straight copy */
   }
-  out[pos] = '\0';
+
+  *writer=0;
   return out;
 }
 
@@ -1466,9 +1407,7 @@ const char *DarkHttpd::generated_on(const char date[DATE_LEN]) const {
   if (!want_server_id) {
     return "";
   }
-  snprintf(_generated_on_buf, sizeof(_generated_on_buf),
-    "Generated by %s on %s\n",
-    pkgname, date);
+  snprintf(_generated_on_buf, sizeof(_generated_on_buf),"Generated by %s on %s\n", pkgname, date);
   return _generated_on_buf;
 }
 
@@ -1477,15 +1416,15 @@ const char *DarkHttpd::generated_on(const char date[DATE_LEN]) const {
 //         const int errcode, const char *errname, const char *format, ...)
 //         __printflike(4, 5);
 void DarkHttpd::connection::default_reply(const int errcode, const char *errname, const char *format, ...) {
-  char date[DATE_LEN];
   va_list va;
 
   va_start(va, format);
-  char *reason = nullptr;
+  AutoFree reason;
   xvasprintf(&reason, format, va);
   va_end(va);
 
   /* Only really need to calculate the date once. */
+  char date[DATE_LEN];
   rfc1123_date(date, now);
 
   reply_length = xasprintf(&(reply),
@@ -1496,12 +1435,10 @@ void DarkHttpd::connection::default_reply(const int errcode, const char *errname
     "%s" /* generated on */
     "</body></html>\n",
     errcode, errname, errname, reason, service.generated_on(date));
-  Free(&reason);
 
-  const char auth_header[] =
-    "WWW-Authenticate: Basic realm=\"User Visible Realm\"\r\n";
+  const char auth_header[] = "WWW-Authenticate: Basic realm=\"User Visible Realm\"\r\n";
 
-  header_length = xasprintf(&(header),
+  header_length = xasprintf(&header,
     "HTTP/1.1 %d %s\r\n"
     "Date: %s\r\n"
     "%s" /* server */
@@ -1512,11 +1449,9 @@ void DarkHttpd::connection::default_reply(const int errcode, const char *errname
     "Content-Type: text/html; charset=UTF-8\r\n"
     "%s"
     "\r\n",
-    errcode, errname, date, service.server_hdr, keep_alive(),
-    service.custom_hdrs, llu(reply_length),
-    (service.auth_key != nullptr ? auth_header : ""));
+    errcode, errname, date, service.server_hdr, keep_alive(),service.custom_hdrs, llu(reply_length),(service.auth_key != nullptr ? auth_header : ""));
 
-  reply_type = connection::REPLY_GENERATED;
+  reply_type = REPLY_GENERATED;
   http_code = errcode;
 
   /* Reset reply_start in case the request set a range. */
@@ -1526,7 +1461,8 @@ void DarkHttpd::connection::default_reply(const int errcode, const char *errname
 // static void redirect(struct connection *conn, const char *format, ...)
 //     __printflike(2, 3);
 void DarkHttpd::connection::redirect(const char *format, ...) {
-  char *where, date[DATE_LEN];
+  char *where;
+  char date[DATE_LEN];
   va_list va;
 
   va_start(va, format);
@@ -1536,7 +1472,7 @@ void DarkHttpd::connection::redirect(const char *format, ...) {
   /* Only really need to calculate the date once. */
   rfc1123_date(date, now);
 
-  reply_length = xasprintf(&(reply),
+  reply_length = xasprintf(&reply,
     "<!DOCTYPE html><html><head><title>301 Moved Permanently</title></head><body>\n"
     "<h1>Moved Permanently</h1>\n"
     "Moved to: <a href=\"%s\">%s</a>\n" /* where x 2 */
@@ -1545,7 +1481,7 @@ void DarkHttpd::connection::redirect(const char *format, ...) {
     "</body></html>\n",
     where, where, service.generated_on(date));
 
-  header_length = xasprintf(&(header),
+  header_length = xasprintf(&header,
     "HTTP/1.1 301 Moved Permanently\r\n"
     "Date: %s\r\n"
     "%s" /* server */
@@ -1556,8 +1492,7 @@ void DarkHttpd::connection::redirect(const char *format, ...) {
     "Content-Length: %llu\r\n"
     "Content-Type: text/html; charset=UTF-8\r\n"
     "\r\n",
-    date, service.server_hdr, where, keep_alive(),
-    service.custom_hdrs, llu(reply_length));
+    date, service.server_hdr, where, keep_alive(), service.custom_hdrs, llu(reply_length));
 
   Free(&where);
   reply_type = REPLY_GENERATED;
@@ -1750,20 +1685,19 @@ struct dlent {
   char *name; /* The name/path of the entry.                 */
   int is_dir; /* If the entry is a directory and not a file. */
   off_t size; /* The size of the entry, in bytes.            */
-  struct timespec mtime; /* When the file was last modified.            */
+  timespec mtime; /* When the file was last modified.            */
 };
 
 static int dlent_cmp(const void *a, const void *b) {
-  return strcmp((*((const struct dlent *const *) a))->name,
-    (*((const struct dlent *const *) b))->name);
+  return strcmp((*static_cast<const dlent *const *>(a))->name,(*static_cast<const dlent *const *>(b))->name);
 }
 
 /* Make sorted list of files in a directory.  Returns number of entries, or -1
  * if error occurs.
  */
-static ssize_t make_sorted_dirlist(const char *path, struct dlent ***output) {
+static ssize_t make_sorted_dirlist(const char *path, dlent ***output) {
   DIR *dir;
-  struct dirent *ent;
+  dirent *ent;
   size_t entries = 0;
   size_t pool = 128;
 
@@ -1773,7 +1707,7 @@ static ssize_t make_sorted_dirlist(const char *path, struct dlent ***output) {
   }
 
   AutoFree currname(static_cast<char *>(xmalloc(strlen(path) + MAXNAMLEN + 1)));
-  struct dlent **list = static_cast<struct dlent **>(xmalloc(sizeof(struct dlent *) * pool));
+  dlent **list = static_cast<struct dlent **>(xmalloc(sizeof(struct dlent *) * pool));
 
   /* construct list */
   while ((ent = readdir(dir)) != nullptr) {
@@ -1805,10 +1739,9 @@ static ssize_t make_sorted_dirlist(const char *path, struct dlent ***output) {
 }
 
 /* Cleanly deallocate a sorted list of directory files. */
-static void cleanup_sorted_dirlist(struct dlent **list, const ssize_t size) {
-  ssize_t i;
+static void cleanup_sorted_dirlist(dlent **list, const ssize_t size) {
 
-  for (i = 0; i < size; i++) {
+  for (ssize_t i = 0; i < size; i++) {
     free(list[i]->name);
     free(list[i]);
   }
@@ -1817,24 +1750,24 @@ static void cleanup_sorted_dirlist(struct dlent **list, const ssize_t size) {
 /* Is this an unreserved character according to
  * https://tools.ietf.org/html/rfc3986#section-2.3
  */
-static int is_unreserved(const unsigned char c) {
+static bool is_unreserved(const unsigned char c) {
   if (c >= 'a' && c <= 'z') {
-    return 1;
+    return true;
   }
   if (c >= 'A' && c <= 'Z') {
-    return 1;
+    return true;
   }
   if (c >= '0' && c <= '9') {
-    return 1;
+    return true;
   }
   switch (c) {
     case '-':
     case '.':
     case '_':
     case '~':
-      return 1;
+      return true;
   }
-  return 0;
+  return false;
 }
 
 /* Encode string to be an RFC3986-compliant URL part.
@@ -1842,18 +1775,17 @@ static int is_unreserved(const unsigned char c) {
  */
 static void urlencode(const char *src, char *dest) {
   static const char hex[] = "0123456789ABCDEF";
-  int i, j;
 
-  for (i = j = 0; src[i] != '\0'; i++) {
-    if (!is_unreserved((unsigned char) src[i])) {
-      dest[j++] = '%';
-      dest[j++] = hex[(src[i] >> 4) & 0xF];
-      dest[j++] = hex[src[i] & 0xF];
+  while (char c= *src ++) {
+    if (!is_unreserved(c)) {
+      *dest++ = '%';
+      *dest++ = hex[ 0xF & c >> 4 ];
+      *dest++ = hex[0xF & c ];
     } else {
-      dest[j++] = src[i];
+      *dest++ = c;
     }
   }
-  dest[j] = '\0';
+  *dest++ = '\0';
 }
 
 /* Escape < > & ' " into HTML entities. */
@@ -1883,7 +1815,7 @@ static void append_escaped(struct apbuf *dst, const char *src) {
   }
 }
 
-void DarkHttpd::generate_dir_listing(struct connection &conn, const char *path, const char *decoded_url) {
+void DarkHttpd::generate_dir_listing(connection &conn, const char *path, const char *decoded_url) {
   char date[DATE_LEN], *spaces;
   struct dlent **list;
   ssize_t listsize;
@@ -2060,7 +1992,7 @@ void DarkHttpd::connection::process_get() {
         return;
       }
       xasprintf(&target, "%s%s", service.wwwroot, decoded_url);
-      service.generate_dir_listing(*this,target, decoded_url);
+      service.generate_dir_listing(*this, target, decoded_url);
       return;
     }
     mimetype = service.url_content_type(service.index_name);
@@ -2210,7 +2142,10 @@ void DarkHttpd::connection::process_get() {
  * user_input to avoid leaking the secret's length and contents through timing
  * information.
  */
-int password_equal(const char *user_input, const char *secret) {
+bool password_equal(const char *user_input, const char *secret) {
+  if (user_input==nullptr) {
+    return false;//
+  }
   size_t i = 0;
   size_t j = 0;
   char out = 0;
@@ -2247,9 +2182,7 @@ void DarkHttpd::connection::process_request() {
     redirect_https();
   }
   /* fail if: (auth_enabled) AND (client supplied invalid credentials) */
-  else if (service.auth_key != nullptr &&
-           (authorization == nullptr ||
-             !password_equal(authorization, service.auth_key))) {
+  else if (service.auth_key != nullptr && !password_equal(authorization, service.auth_key)) {//todo:extract method
     default_reply(401, "Unauthorized", "Access denied due to invalid credentials.");
   } else if (strcmp(method, "GET") == 0) {
     process_get();
@@ -2272,7 +2205,7 @@ void DarkHttpd::connection::poll_recv_request() {
   char buf[1 << 15];
   ssize_t recvd;
 
-  assert(conn->state == RECV_REQUEST);
+  assert(state == RECV_REQUEST);
   recvd = recv(socket, buf, sizeof(buf), 0);
   debug("poll_recv_request(%d) got %d bytes\n", socket, (int) recvd);
   if (recvd < 1) {
@@ -2298,11 +2231,9 @@ void DarkHttpd::connection::poll_recv_request() {
   service.total_in += (size_t) recvd;
 
   /* process request if we have all of it */
-  if ((request_length > 2) &&
-      (memcmp(request + request_length - 2, "\n\n", 2) == 0)) {
+  if ((request_length > 2) && (memcmp(request + request_length - 2, "\n\n", 2) == 0)) {
     process_request();
-  } else if ((request_length > 4) &&
-             (memcmp(request + request_length - 4, "\r\n\r\n", 4) == 0)) {
+  } else if ((request_length > 4) && (memcmp(request + request_length - 4, "\r\n\r\n", 4) == 0)) {
     process_request();
   }
 
@@ -2324,8 +2255,8 @@ void DarkHttpd::connection::poll_recv_request() {
 void DarkHttpd::connection::poll_send_header() {
   ssize_t sent;
 
-  assert(conn->state == SEND_HEADER);
-  assert(conn->header_length == strlen(conn->header));
+  assert(state == SEND_HEADER);
+  assert(header_length == strlen(header));
 
   sent = send(socket, header + header_sent, header_length - header_sent, 0);
   last_active = now;
@@ -2333,7 +2264,7 @@ void DarkHttpd::connection::poll_send_header() {
 
   /* handle any errors (-1) or closure (0) in send() */
   if (sent < 1) {
-    if ((sent == -1) && (errno == EAGAIN)) {
+    if (sent == -1 && errno == EAGAIN) {
       debug("poll_send_header would have blocked\n");
       return;
     }
@@ -2345,9 +2276,9 @@ void DarkHttpd::connection::poll_send_header() {
     return;
   }
   assert(sent > 0);
-  header_sent += (size_t) sent;
-  total_sent += (size_t) sent;
-  service.total_out += (size_t) sent;
+  header_sent +=  sent;
+  total_sent +=  sent;
+  service.total_out += sent;
 
   /* check if we're done sending header */
   if (header_sent == header_length) {
@@ -2486,9 +2417,10 @@ void DarkHttpd::connection::poll_send_reply() {
 void DarkHttpd::httpd_poll() {
   fd_set recv_set, send_set;
   int max_fd, select_ret;
-  struct connection *conn, *next;
   int bother_with_timeout = 0;
-  struct timeval timeout, t0, t1;
+  timeval timeout;
+  timeval t0;
+  timeval t1;
 
   timeout.tv_sec = timeout_secs;
   timeout.tv_usec = 0;
@@ -2503,6 +2435,7 @@ void DarkHttpd::httpd_poll() {
     FD_SET(sock, fdset);                      \
     max_fd = (max_fd < sock) ? sock : max_fd; \
   } while (0)
+
   if (accepting) {
     MAX_FD_SET(int(sockin), &recv_set);
   }
@@ -2536,10 +2469,9 @@ void DarkHttpd::httpd_poll() {
 
   /* -select- */
   if (timeout_secs == 0) {
-    bother_with_timeout = 0;
+    bother_with_timeout = false;
   }
-  debug("select() with max_fd %d timeout %d\n", max_fd, bother_with_timeout ? (int) timeout.tv_sec : 0);
-  if (debug.spew) {
+  if (debug("select() with max_fd %d timeout %d\n", max_fd, bother_with_timeout ? (int) timeout.tv_sec : 0)) {
     gettimeofday(&t0, nullptr);
   }
 
@@ -2556,7 +2488,7 @@ void DarkHttpd::httpd_poll() {
       err(1, "select() failed");
     }
   }
-  if (debug.spew) {
+  if (debug(nullptr)) {
     long long sec, usec;
     gettimeofday(&t1, nullptr);
     sec = t1.tv_sec - t0.tv_sec;
@@ -2760,7 +2692,7 @@ void DarkHttpd::pidfile_create() {
 
 /* [<-] end of pidfile helpers. */
 
-void DarkHttpd::change_root(void) {
+void DarkHttpd::change_root() {
 #ifdef HAVE_NON_ROOT_CHROOT
   /* We run this even as root, which should never be a bad thing. */
   int arg = PROC_NO_NEW_PRIVS_ENABLE;

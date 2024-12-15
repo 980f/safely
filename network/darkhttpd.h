@@ -33,34 +33,69 @@
 #include <cstring>
 #include <forward_list>
 #include <map>
-#include <unistd.h>
 #include <netinet/in.h>
+#include <unistd.h>
 
 /** build options */
 #ifndef NO_IPV6
-# define HAVE_INET6
+#define HAVE_INET6
 #endif
 
-//gizmo to get the compiler to check our printf args:
+// gizmo to get the compiler to check our printf args:
 #ifndef __printflike
-# ifdef __GNUC__
+#ifdef __GNUC__
 /* [->] borrowed from FreeBSD's src/sys/sys/cdefs.h,v 1.102.2.2.2.1 */
-#  define __printflike(fmtarg, firstvararg) \
-__attribute__((__format__(__printf__, fmtarg, firstvararg)))
+#define __printflike(fmtarg, firstvararg) \
+  __attribute__((__format__(__printf__, fmtarg, firstvararg)))
 /* [<-] */
-# else
-#  define __printflike(fmtarg, firstvararg)
-# endif
+#else
+#define __printflike(fmtarg, firstvararg)
 #endif
+#endif
+
+
+/** to help ensure timely frees.
+ * Many people seem to not know that 'free' doesn't mind null pointers, it checks for them and does nothing so that we don't have to do that in a gazillion places.
+ *
+ * This frees what it has been given at constructor or by assignment when there is an assignment or a destruction. As such never assign to it from anything not malloc'd.
+ */
+struct AutoFree {
+  char *pointer;
+
+  operator char *() {
+    return pointer;
+  }
+
+  operator bool() {
+    return pointer != nullptr;
+  }
+
+  AutoFree(char *pointer = nullptr) :
+      pointer(pointer) {
+  }
+
+  ~AutoFree() {
+    free(pointer);
+  }
+
+  void operator=(AutoFree &other) = delete;
+
+  AutoFree& operator=(char *replacement) {
+    free(pointer);
+    pointer = replacement;
+  }
+
+  AutoFree(AutoFree &&other) = delete;
+};
 
 
 class DarkHttpd {
 
   class Exception : public std::exception {
-    //todo: internal malloc string with delete
+    // todo: internal malloc string with delete
     const char *msg = nullptr;
-    int returncode = 0; //what would have been returned to a shell on exit.
-    ~Exception() override; //todo: free message
+    int returncode = 0; // what would have been returned to a shell on exit.
+    ~Exception() override; // todo: free message
   public:
     Exception(int returncode, const char *msgf, ...);
   };
@@ -70,21 +105,21 @@ class DarkHttpd {
   struct mime_mapping : std::map<const char *, const char *> {
     size_t longest_ext = 0;
     /** arg returned by 'add to map' */
-    using mime_ref = std::pair<std::_Rb_tree_iterator<std::pair<const char * const, const char *> >, bool>; //todo: indirect to a decltype on the function returning this.
-    mime_ref add(const char *extension, const char *mimetype);
+    using mime_ref = std::pair<std::_Rb_tree_iterator<std::pair<const char *const, const char *>>, bool>; // todo: indirect to a decltype on the function returning this.
+    bool add(const char *extension, const char *mimetype);
 
     /** free contents, then forget them.*/
     void purge() {
-
     }
   } mime_map;
 
   struct forward_mapping : std::map<const char *, const char *> {
     // const char *host, *target_url; /* These point at argv. */
     void add(const char *const host, const char *const target_url) {
-      insert_or_assign(host, target_url); //# allows breakpoint on these. We need to decide whether multiples are allowed for the same host, at present that has been excluded but the orignal might have allowed for that in which case we need a map of list of string.
+      insert_or_assign(host, target_url); // # allows breakpoint on these. We need to decide whether multiples are allowed for the same host, at present that has been excluded but the orignal might have allowed for that in which case we need a map of list of string.
     }
   } forward_map;
+
 
 public:
   class Fd { // a minimal one compared to safely/posix
@@ -95,12 +130,12 @@ public:
       return fd;
     }
 
-    int operator =(int newfd) {
+    int operator=(int newfd) {
       fd = newfd;
       return newfd;
     }
 
-    bool operator ==(int newfd) const {
+    bool operator==(int newfd) const {
       return fd == newfd;
     }
 
@@ -110,18 +145,18 @@ public:
 
     /** @returns whether close() thinks it worked , but we discard our fd value regardless of that */
     bool close() {
-      if (fd!=-1) {
+      if (fd != -1) {
         int fi = ::close(fd);
         fd = -1;
 
         return fi != -1;
       }
-      return true;//already closed is same as just now successfully closed.
+      return true; // already closed is same as just now successfully closed.
     }
 
     /** lose track of the fd regardless of the associated file's state. Most uses seem like bugs, leaks of OS file handles.*/
     void forget() {
-      fd=-1;
+      fd = -1;
     }
 
     /** @returns whether the fd is real and not stdin, stdout, or stderr */
@@ -133,19 +168,20 @@ public:
      * @returns whether the OS was happy with doing this.
      */
     bool duplicate(int fdother) const {
-      return dup2(fdother,fd)!=-1;//makes fd point to same file as fdother
+      return dup2(fdother, fd) != -1; // makes fd point to same file as fdother
     }
 
     /** put this guy's file state into @param fdother. */
     bool copyinto(int fdother) const {
-      return dup2(fd,fdother)!=-1;
+      return dup2(fd, fdother) != -1;
     }
 
     Fd() = default;
 
-    Fd(int open):fd(open){}
+    Fd(int open) :
+        fd(open) {
+    }
   };
-
 
 
   struct connection {
@@ -172,7 +208,7 @@ public:
     size_t request_length = 0;
 
     /* request fields */
-    char *method = nullptr; //as in GET, POST, ...
+    AutoFree method; // as in GET, POST, ...
     char *url = nullptr;
     char *referer = nullptr;
     char *user_agent = nullptr;
@@ -191,7 +227,9 @@ public:
     int http_code = 0;
     bool conn_closed = true;
 
-    enum { REPLY_GENERATED, REPLY_FROMFILE, REPLY_NONE } reply_type=REPLY_NONE;
+    enum { REPLY_GENERATED,
+      REPLY_FROMFILE,
+      REPLY_NONE } reply_type = REPLY_NONE;
 
     char *reply = nullptr;
     bool reply_dont_free = false;
@@ -202,7 +240,8 @@ public:
     off_t total_sent = 0;
     /* header + body = total, for logging */
   public:
-    connection(DarkHttpd &parent):service(parent) {
+    connection(DarkHttpd &parent) :
+        service(parent) {
       memset(&client, 0, sizeof(client));
     }
 
@@ -240,19 +279,20 @@ public:
 
   static void xclose(Fd fd);
 
-  void parse_mimetype_line(const char *line);
+  int parse_mimetype_line(const char *line);
 
   void parse_default_extension_map();
 
   void parse_extension_map_file(const char *filename);
 
   const char *url_content_type(const char *url);
+  const char *get_address_text(const void *addr);
 
   void init_sockin();
 
   void usage(const char *argv0);
 
-  void generate_dir_listing(struct connection &conn, const char *path, const char *decoded_url);
+  void generate_dir_listing(connection &conn, const char *path, const char *decoded_url);
 
   void process_get(struct connection &conn);
 
@@ -275,7 +315,7 @@ public:
 
   void log_connection(const struct connection *conn);
 
-  void showUsageStats();
+  // void showUsageStats();
 
   void prepareToRun();
 
@@ -283,7 +323,7 @@ public:
 
   void change_root();
 
-  #define DATE_LEN 30 /* strlen("Fri, 28 Feb 2003 00:02:08 GMT")+1 */
+#define DATE_LEN 30 /* strlen("Fri, 28 Feb 2003 00:02:08 GMT")+1 */
 
   const char *generated_on(const char date[DATE_LEN]) const;
 
@@ -298,7 +338,7 @@ public:
   /** free with nulling of pointer to make use after free uniformly a sigsegv instead of random crash or corruption
    * @see safely/system library.
    */
-   template<typename Something> static  void Free(Something **malloced) {
+  template<typename Something> static void Free(Something **malloced) {
     if (malloced) {
       ::free(*malloced);
       *malloced = nullptr;
@@ -315,15 +355,15 @@ private:
     }
 
     bool connect() {
-      int punned[2]={fds[0],fds[1]};
-      return pipe(punned)!=-1;
+      int punned[2] = {fds[0], fds[1]};
+      return pipe(punned) != -1;
     }
 
-  } lifeline ;
+  } lifeline;
 
   /* [->] pidfile helpers, based on FreeBSD src/lib/libutil/pidfile.c,v 1.3
- * Original was copyright (c) 2005 Pawel Jakub Dawidek <pjd@FreeBSD.org>
- */
+   * Original was copyright (c) 2005 Pawel Jakub Dawidek <pjd@FreeBSD.org>
+   */
   Fd pidfile_fd;
 
   Fd sockin; /* socket to accept connections from */
@@ -360,8 +400,9 @@ private:
   int no_listing = 0;
 
 #ifdef HAVE_INET6
-  bool inet6 = false;               /* whether the socket uses inet6 */
+  bool inet6 = false; /* whether the socket uses inet6 */
 #endif
+  const char *default_mimetype = nullptr;
   char *wwwroot = nullptr; /* a path name */
   char *logfile_name = nullptr; /* NULL = no logging */
   FILE *logfile = nullptr;
@@ -382,8 +423,8 @@ private:
   bool syslog_enabled = false;
   volatile bool running = false; /* signal handler sets this to false */
 
-#define INVALID_UID ((uid_t) -1)
-#define INVALID_GID ((gid_t) -1)
+#define INVALID_UID ((uid_t) - 1)
+#define INVALID_GID ((gid_t) - 1)
 
   uid_t drop_uid = INVALID_UID;
   gid_t drop_gid = INVALID_GID;
