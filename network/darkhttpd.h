@@ -55,18 +55,6 @@ __attribute__((__format__(__printf__, fmtarg, firstvararg)))
 
 
 class DarkHttpd {
-  // /* [->] LIST_* macros taken from FreeBSD's src/sys/sys/queue.h,v 1.56
-  //  * Copyright (c) 1991, 1993
-  //  *      The Regents of the University of California.  All rights reserved.
-  //  *
-  //  * Under a BSD license.
-  //  */
-  // /** doubly linked list, with all content outside the class */
-  // template <typename Type> class ListElement {
-  //   //#define LIST_ENTRY(type)
-  //   Type *le_next=0;   /* next element content */
-  //   Type **le_prev=0;  /* address of previous next element */
-  // };
 
   class Exception : public std::exception {
     //todo: internal malloc string with delete
@@ -77,55 +65,18 @@ class DarkHttpd {
     Exception(int returncode, const char *msgf, ...);
   };
 
-  // #define LIST_ENTRY(Type) struct Type: public ListElement<Type> {};
-  // #if 0
-  // #define LIST_HEAD(name, type)
-  // struct name {
-  //         struct type *lh_first;  /* first element */
-  // }
-  //
-  // #define LIST_HEAD_INITIALIZER(head)                                     \
-  //         { NULL }
-  //
-  // #define LIST_FIRST(head)        ((head)->lh_first)
-  //
-  // #define LIST_FOREACH_SAFE(var, head, field, tvar)                       \
-  //     for ((var) = LIST_FIRST((head));                                    \
-  //         (var) && ((tvar) = LIST_NEXT((var), field), 1);                 \
-  //         (var) = (tvar))
-  //
-  // #define LIST_INSERT_HEAD(head, elm, field) do {                         \
-  //         if ((LIST_NEXT((elm), field) = LIST_FIRST((head))) != NULL)     \
-  //                 LIST_FIRST((head))->field.le_prev = &LIST_NEXT((elm), field);\
-  //         LIST_FIRST((head)) = (elm);                                     \
-  //         (elm)->field.le_prev = &LIST_FIRST((head));                     \
-  // } while (0)
-  //
-  // #define LIST_NEXT(elm, field)   ((elm)->field.le_next)
-  //
-  // #define LIST_REMOVE(elm, field) do {                                    \
-  //         if (LIST_NEXT((elm), field) != NULL)                            \
-  //                 LIST_NEXT((elm), field)->field.le_prev =                \
-  //                     (elm)->field.le_prev;                               \
-  //         *(elm)->field.le_prev = LIST_NEXT((elm), field);                \
-  // } while (0)
-  // /* [<-] */
-  //
-  // static LIST_HEAD(conn_list_head, connection) connlist =
-  //     LIST_HEAD_INITIALIZER(conn_list_head);
-  //
-  //   };
-  // #endif
-
-
   /** replacing inline reproduction of map logic with an std map, after verifying who did the allocations.
    * this uses the default key compare function 'less<const char *>', which we might want to replace with strncmp(...longest_ext) */
   struct mime_mapping : std::map<const char *, const char *> {
     size_t longest_ext = 0;
-    // static size_t mime_map_size = 0;
-    /** arg checking 'add to map' */
+    /** arg returned by 'add to map' */
     using mime_ref = std::pair<std::_Rb_tree_iterator<std::pair<const char * const, const char *> >, bool>; //todo: indirect to a decltype on the function returning this.
     mime_ref add(const char *extension, const char *mimetype);
+
+    /** free contents, then forget them.*/
+    void purge() {
+
+    }
   } mime_map;
 
   struct forward_mapping : std::map<const char *, const char *> {
