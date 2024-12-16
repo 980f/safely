@@ -13,7 +13,7 @@ void TcpTester::TestService::connectionChanged(bool connected){
 }
 
 void TcpTester::TestService::reader(ByteScanner &raw){
-  socketStats.reads++;
+  stats.reads++;
 //  idleDetector.retrigger();
   buffer.next()='<';
   while(raw.hasNext()){
@@ -37,7 +37,7 @@ bool TcpTester::TestService::writer(ByteScanner &raw){
 }
 
 void TcpTester::TestService::goneQuiet(){
-  dbg("service gone quiet for port: %d, fd: %d",this->connectArgs.port,fd.asInt());
+  dbg("service gone quiet for port: %d, fd: %d",this->connectArgs.port,sock.asInt());
   //todo:2 can we get remote ip?
 }
 
@@ -77,21 +77,18 @@ TcpSocket * TcpTester::spawnClient(int client_fd,u32 ipv4){//called on accept, n
 #include <sys/socket.h>
 #include <netinet/in.h>
 bool TcpTester::runMiniServer(int port){
-  int sockfd, newsockfd, portno;
-  socklen_t clilen;
   char buffer[256];
-  struct sockaddr_in serv_addr, cli_addr;
-  int n;
-
-  sockfd = socket(AF_INET, SOCK_STREAM, 0);
+  int sockfd = socket(AF_INET, SOCK_STREAM, 0);
   if (sockfd < 0){
     dbg("ERROR opening socket");
   }else{
     int optval(1);
     setsockopt(sockfd,SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
   }
+  int portno = port;
+
+  sockaddr_in serv_addr;
   EraseThing(serv_addr);
-  portno = port;
   serv_addr.sin_family = AF_INET;
   serv_addr.sin_addr.s_addr = INADDR_ANY;
   serv_addr.sin_port = htons(portno);
@@ -99,14 +96,16 @@ bool TcpTester::runMiniServer(int port){
     dbg("ERROR on binding");
   }
   listen(sockfd,5);
-  clilen = sizeof(cli_addr);
-  newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
+
+  sockaddr_in cli_addr;
+  socklen_t clilen = sizeof(cli_addr);
+  int newsockfd = accept(sockfd, reinterpret_cast<struct sockaddr *>(&cli_addr), &clilen);
   if (newsockfd < 0){
     dbg("ERROR on accept");
   }
   while(true){
     EraseThing(buffer);
-    n = read(newsockfd,buffer,255);
+    auto n = read(newsockfd,buffer,255);
     if (n < 0){
       dbg("ERROR reading from socket");
       break;
@@ -128,5 +127,5 @@ bool TcpTester::runMiniServer(int port){
   else{
     dbg("failed to shutdown the connection");
   }
-  return 0;
+  return false;
 }

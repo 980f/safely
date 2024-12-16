@@ -67,7 +67,7 @@ void Pwm::setRatio(unsigned leading, unsigned total){
 }
 
 void Pwm::setDutyCycle(double fraction){
-  ContinuedFractionRatioGenerator generator=ContinuedFractionRatioGenerator::Run(fraction,bitMask(0,10));
+  ContinuedFractionRatioGenerator generator=ContinuedFractionRatioGenerator(fraction,bitMask(0,10));
   setRatio(generator.numerator(),generator.denominator());
 }
 

@@ -128,7 +128,7 @@ public:
   }
 
   /** useful for sending value changes */
-  SimpleSlot applyTo(sigc::slot<void,Numeric> functor){
+  SimpleSlot applyTo(sigc::slot<void(Numeric)> functor){
     return sigc::compose(functor,getLater());
   }
 

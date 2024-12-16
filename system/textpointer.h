@@ -1,5 +1,4 @@
-#ifndef TEXTPOINTER_H
-#define TEXTPOINTER_H
+#pragma once
 
 #include "cstr.h"
 #include "halfopen.h" //Span
@@ -20,7 +19,7 @@ public:
    * IE: if takeit is true then this class just records the pointer, if false it makes a copy of the data and forgets the given pointer.
    * This class *always* frees the data it points at.
  */
-  Text(TextKey ptr,bool takeit);
+  Text(TextKey ptr, bool takeit);
 
   /** makes a copy of the @param given content */
   Text(TextKey other);
@@ -29,7 +28,7 @@ public:
   Text(unsigned size);
 
   /** enforce that a const can't have its resource taken away from it. */
-  Text(const Text &other)=delete ;
+  Text(const Text &other) = delete ;
 
   /** take content from @param other, other will be empty */
   Text(Text &&other);
@@ -38,15 +37,14 @@ public:
   Text(Text &other);
 
   /** make a copy of non-null-terminated subset of some string. includes @param begin but not @param end */
-  Text(TextKey other,const Span &span);
+  Text(TextKey other, const Span &span);
 
   /** make a copy of non-null-terminated subset of some string. includes @param begin but not @param end */
-  Text(Text other,const Span &span);
+  Text(Text other, const Span &span);
 
 public:
-
   /** deletes its copy of the content copied or recorded by the constructor */
-  virtual ~Text() override;
+  ~Text() override;
 
   /** useful for forcing a copy when constructing, the copy constructor is used for moving. */
   operator TextKey() const;
@@ -64,34 +62,38 @@ public:
   void setto(const TextKey &other);
 
   /** take ownership of a buffer, i.e. deleting this Text object will free @param other */
-  void take(Text&& other);
+  void take(Text &&other);
 
   /** make a copy of @param other. If other points to the same memory as this ... we might screw up */
   void copy(TextKey other);
+
 private:
   /** relinquish ownership, which entails also forgetting the content. If used wrongly this will leak memory. */
-  void release(){
-    ptr=nullptr;
+  void release() {
+    ptr = nullptr;
   }
+
 public:
   /** discard==free internal content (if any) and null the internal pointer (to prevent use-after-free) */
   void clear() noexcept override;
 
   /** a core part of a parser is to take substrings, this does just that part of parsing. It never retains the content it manipulates, it creates copies that it hands to you. */
-  class Chunker:public Span {
+  class Chunker : public Span {
     Cstr base;
+
   public:
-    Chunker (const char*start);
+    Chunker(const char *start);
+
     /** pass back a copy of the substring defined by the cutter, and move the cutter @param leap past that */
-    Text operator() (unsigned leap);
+    Text operator()(unsigned leap);
+
     /** pass back a copy of the substring defined by the cutter */
     Text chunk() const;
   };
 
-  Text substring(unsigned first,unsigned last);
-
+  Text substring(unsigned first, unsigned last);
 }; // class TextPointer
 
 //pre-safely name:
-typedef Text TextPointer;
+using TextPointer = Text;
 #endif // TEXTPOINTER_H

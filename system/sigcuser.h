@@ -6,7 +6,7 @@
  *
 */
 
-#include <sigc++/sigc++.h>
+#include <sigc++/sigc++.h> //todo:1 how do we ensure this is 3.x version?
 #include "onexit.h" //for deleteonreturn
 
 //sigc trackable should be inherited from virtually in so many cases that we always shall

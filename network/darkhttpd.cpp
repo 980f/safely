@@ -1096,7 +1096,7 @@ bool DarkHttpd::parse_commandline(int argc, char *argv[]) {
         errx(1, "missing 'user:pass' after --auth");
       }
 
-      AutoFree key = base64_encode(argv[i]);
+      AutoFree key = reinterpret_cast<char *>(base64_encode(argv[i]));
       xasprintf(auth_key, "Basic %s", key.pointer);
     } else if (strcmp(argv[i], "--forward-https") == 0) {
       forward_to_https = true;
@@ -1119,8 +1119,10 @@ bool DarkHttpd::parse_commandline(int argc, char *argv[]) {
 #endif
     else {
       errx(1, "unknown argument `%s'", argv[i]);
+      return false;
     }
   }
+  return true;
 }
 
 

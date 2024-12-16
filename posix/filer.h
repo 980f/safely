@@ -1,4 +1,5 @@
-#ifndef FILER_H
+#pragma once
+
 #define FILER_H "(C) Copyright Andy Heilveil 2017-2018"
 
 #include "posixwrapper.h"
@@ -20,7 +21,7 @@ public:
   /** get stream, @parm fargs is what you typically pass to fopen() */
   FILE * getfp(const char *fargs=0);
   /** for when you need to close the file before this object goes out of scope:*/
-  int close(void);
+  int close();
   /** allocate a buffer that can hold the whole file and read it in.
    * File must already be successfully opened (so that we don't have to deal with those errors here).
    * if you read some from the file before calling this the buffer will be big enough for the whole file even though only the remainder will be read in. */
@@ -40,5 +41,3 @@ public:
   /** this rename is blocking */
   static int mv(const char *src,const char *target);
 };
-
-#endif // FILER_H

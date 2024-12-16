@@ -1,5 +1,4 @@
-#ifndef STOREDGROUP_H
-#define STOREDGROUP_H
+#pragma once
 
 #include "stored.h"
 #include "chain.h"
@@ -45,7 +44,7 @@ template<class Groupie> class StoredGroup : public Stored {
   sigc::signal<void(Groupie &)> oncreation;
 
   /** before removal we ask for permission */
-  sigc::signal<bool(Groupie &, AndUntilFalse)> preremoval;
+  sigc::signal_with_accumulator<bool,AndUntilFalse,Groupie &> preremoval;
 
   /** for removal we want to have already destroyed object before calling some of the change watchers.
    * so this tells you the number of the one that has already been removed. The object is already deleted and ordinals adjusted.
@@ -107,9 +106,8 @@ public:
   using ConstScanner = ConstChainScanner<Groupie>;
 
   /** "in class" macros for StoredGroup.
-   * outside of StoredGroup use the iterator factory
-   * beware that when using this macro you must invoke list.next() in every body else you will spin forever (ie no conditional
-   * invocation of list.next())*/
+   * outside of the StoredGroup use the iterator factory
+   * beware that when using this macro you must invoke list.next() in every body else you will spin forever (ie no conditional invocation of list.next())*/
 #define ForValues(list)   for(Scanner list(pod); list.hasNext(); )
 #define ForValuesConstly(list)   for(ConstScanner list(pod); list.hasNext(); )
 
@@ -124,6 +122,7 @@ public:
   /**added to suppress warnings on things that are too difficult to properly "index" */
   bool autocreate;
 
+  // ReSharper disable once CppNonExplicitConvertingConstructor
   StoredGroup(Storable &node) : Stored(node), autocreate(false){
     node.isOrdered=true;//matches initial implementations, application can decide to override this.
     if(node.setType(Storable::Wad)) { //needed in case group is presently empty, so that proper change watching is set up.
@@ -149,7 +148,7 @@ public:
   }
 
   /** every new must have a delete ;) */
-  virtual ~StoredGroup(){
+  ~StoredGroup() override {
     pod.clear();
     //don't do this, we don't signal when the whole group is being ditched: removeAll();
     //we don't touch the Storable nodes, they will go away when their root is destructed.
@@ -484,5 +483,3 @@ private:
 }; // class StoredGroup
 
 #define INDEXER(group) *group.basecast()
-
-#endif // STOREDGROUP_H

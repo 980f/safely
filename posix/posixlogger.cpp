@@ -91,6 +91,6 @@ void PosixLoggerInit(bool trapSignals){
     sigaction(SIGSEGV, &sa, nullptr);
 //SIGPIPE's interfere with graceful restart on socat disconnect.
 //    Note that gdb turns the signal back on but you can defeat that with the gdb command: handle SIGPIPE nostop
-    sigignore(SIGPIPE);
+    sigignore(SIGPIPE);   //todo:1 convert to sigaction style.
   }
 } // Logger::ClassInit

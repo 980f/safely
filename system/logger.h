@@ -1,4 +1,4 @@
-#ifndef LOGGER_H
+#pragma once
 #define LOGGER_H  "(C) 2017 Andrew Heilveil"
 
 #include <cstdarg> //for relaying arg packs through layers
@@ -16,10 +16,11 @@ public:
   /** makes usage look like a function */
   void operator() (const char *msg, ...);
 
-  /** output newine and flush the file */
+  /** output newline and flush the file */
   void flushline();
   //used for legacy in PosixWrapper
   void varg(const char *fmt, va_list &args);
+  //try to produce a stack trace, not as reliable as Java.
   void dumpStack(const char *prefix);
   //RIAA for merging messages:
   struct Combiner {
@@ -40,6 +41,8 @@ public:
   };
 
 public:
+  /** 1st implementation coupled to a json file for enabling/disbling by logger name.
+   * Logger construction and destruction call these members if a global one exists. */
   struct Manager {
     virtual void onCreation(Logger &logger) = 0;
     virtual void onDestruction(Logger &logger) = 0;
@@ -61,5 +64,3 @@ extern Logger wtf;
 #define SafeLogger(loggerName,deflevel) \
   __attribute__((init_priority(202)))  \
   static Logger loggerName( #loggerName, deflevel )
-
-#endif // LOGGER_H

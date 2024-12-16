@@ -1,17 +1,14 @@
 #include "posixwrapper.h"
+#include <cerrno>
+#include <cstring> //for strerror
 #include "cheaptricks.h" //changed()
-#include <errno.h>
-#include "string.h" //for strerror
 
-
-PosixWrapper::PosixWrapper(const char *prefix):dbg(prefix){
-  //#nada
-}
+PosixWrapper::PosixWrapper(const char *prefix) : dbg(prefix) {}
 
 const char *PosixWrapper::errorText() const {
-  if(errornumber<0){
-    if(alttext&&numalts){
-      if(unsigned(-errornumber)<numalts){
+  if (errornumber < 0) {
+    if (alttext && numalts) {
+      if (unsigned(-errornumber) < numalts) {
         return alttext[-errornumber];
       } else {
         return alttext[numalts - 1];
@@ -21,8 +18,8 @@ const char *PosixWrapper::errorText() const {
   return strerror(errornumber);
 } // PosixWrapper::errorText
 
-bool PosixWrapper::setFailed(bool passthrough){
-  if(passthrough){
+bool PosixWrapper::setFailed(bool passthrough) {
+  if (passthrough) {
     failure(errno);
   }
   return passthrough;
@@ -32,7 +29,7 @@ bool PosixWrapper::failure(int errcode) {
   if (changed(errornumber, errcode)) { // only log message if different than previous, prevents spam at the loss of occasional meaningful duplicates.
     // If you think you might repeat an error then clear errornumber before such a call.
     if (errcode != 0 && !(stifleEAGAIN && errcode == EAGAIN)) {
-      dbg("Failed: %s",errorText());//former code only worked when errno was the actual source of the error.
+      dbg("Failed: %s", errorText()); // former code only worked when errno was the actual source of the error.
     }
   }
   return errcode != 0;
@@ -47,6 +44,6 @@ bool PosixWrapper::failed(int zeroorminus1) {
   }
 }
 
-bool PosixWrapper::isWaiting(){
-  return errornumber==EAGAIN || errornumber== EWOULDBLOCK;
+bool PosixWrapper::isWaiting() const {
+  return errornumber == EAGAIN ;//forget this, we will never run on the ancient systems that have this be different: || errornumber == EWOULDBLOCK;
 }

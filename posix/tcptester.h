@@ -4,7 +4,7 @@
 #include "chain.h"
 
 class TcpTester: public TcpServer {
-  class TestService : public TcpSocket, public sigc::trackable {
+  class TestService : public TcpSocket, SIGCTRACKABLE {
     friend class TcpTester;
     //notify on disconnects, including on destructor
     using TestSlot=sigc::slot<void(TestService *)>;

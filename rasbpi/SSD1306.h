@@ -1,3 +1,4 @@
+#pragma once
 
 #include <cstring>
 
@@ -19,10 +20,12 @@ The chip has 64 lines worth of ram regardless of what is attached. When the disp
 /** doing our own drawing classes to ensure library smallness, and to expedite axis swapping */
 struct PixelCoord {
   unsigned x[2];
+
   PixelCoord(unsigned x0 = 0, unsigned x1 = 0) {
     x[0] = x0;
     x[1] = x1;
   }
+
   // default copy and assignment work just fine
 
   /** move one step along the given access in the given direction, ignoring the magnitude of the direction. For direction==0 don't move at all.*/
@@ -55,12 +58,17 @@ public:
     bool altaddress = false; // modules have a usually hardwired address bit. Theoretically two controllers could be used for a 128 X 128 display.
 
     /** the number of 'pages' of display ram used. We are using terms from the manual even if they are stilted */
-    unsigned pages() const { return (commons + 7) / 8; }
+    unsigned pages() const {
+      return (commons + 7) / 8;
+    }
+  };
+
+  enum Code {
+    DataMarker = 0x40, //first byte of I2C payload, indicates that the remainder goes to ram.
   };
 
   /** processor memory with image of what will be put onto display.
    *
-
    * coordinates on the chip are COMmmons, the narrower range, and SEGments the wider range.
    */
   struct FrameBuffer {
@@ -74,16 +82,22 @@ public:
 
     FrameBuffer(unsigned pixwidth, unsigned pixheight = 128);
 
-    ~FrameBuffer() { delete[] fb; }
-
-    void clear(bool ink=false){
-      memset(fb+1,ink?255:0,databytes);//leave control bytes unchanged.
+    ~FrameBuffer() {
+      delete[] fb;
     }
 
-    u8 &operator()(unsigned page,unsigned segment){
-      return fb[1+page+stride*segment];
+    void clear(bool ink = false) {
+      memset(fb + 1, ink ? 255 : 0, databytes); //leave control bytes unchanged.
     }
 
+    u8 &operator()(unsigned page, unsigned segment) {
+      return fb[1 + page + stride * segment];
+    }
+
+  public:
+    void markAsData() const {
+      fb[0] = DataMarker;
+    };
   };
 
   /** maintains offset and bit picker in tandem with logical pixel coordinates. This is for slower processors, especially ones with no native divide instruction.
@@ -98,11 +112,11 @@ public:
     u8 mask;
     unsigned offset;
     FrameBuffer &fb;
-    enum Code {
-      DataMarker=0x40 , //first byte of I2C payload, indicates that the remainder goes to ram.
-    };
+
   public:
-    Pen(FrameBuffer &fb) : fb(fb) { jumpto({0, 0}); }
+    Pen(FrameBuffer &fb) : fb(fb) {
+      jumpto({0, 0});
+    }
 
     /** set a pixel */
     void splot();
@@ -134,18 +148,21 @@ private:
   struct Register {
     unsigned pattern;
     const unsigned bytes;
+
     /** masks value into legal range and shifts to where it belongs */
     virtual Register &operator=(unsigned value) = 0;
+
     Register(unsigned bytes);
-    virtual ~Register()=default;//to stifle warnings
+
+    virtual ~Register() = default; //to stifle warnings
     /** caller ensures that this won't overflow by prechecking that there is room for the bytes of this+1*/
     u8 *operator()(u8 *buffer) const;
   };
 
   /** code is the value for the first byte. bits is the field width, bytes is the number of command bytes, 1,2,3 are allowed but not checked, arf is an additional bit shift, for when the lsb of a field is not the lsb of the operand byte. */
-  template <unsigned code, unsigned bits = 1, unsigned numbytes = 1, unsigned arf = 0> struct Reg : public Register {
+  template<unsigned code, unsigned bits = 1, unsigned numbytes = 1, unsigned arf = 0> struct Reg : public Register {
     enum {
-      mask = ((1 << bits) - 1),           // ones where operand bits are allowed
+      mask = ((1 << bits) - 1), // ones where operand bits are allowed
       aligner = 8 * (numbytes - 1) + arf, // little endian machine, must nominally reverse byte order
     };
 
@@ -161,29 +178,30 @@ private:
 private:
   enum BackgroundActions {
     Idle,
-    StartReset,  // set to a 1, this ensures it spends some time there.
+    StartReset, // set to a 1, this ensures it spends some time there.
     ActiveReset, // set to 0, this ensures it is long enough.
-    SendInit,    // set to 1,
+    SendInit, // set to 1,
   } bgact = Idle;
+
   unsigned bgdelay = 0;
 
-private://todo: inline each of these in accessor functions which convert from application data types to that of the display
+private: //todo: inline each of these in accessor functions which convert from application data types to that of the display
 
   Reg<0x21, 6, 3, 8> windowSeg; // address pointer for refresh.
-                                //  Reg windowSeg = {0x21, 6, 3, 8}; // actually 2 6 bit operands each in own byte but the first is always 0 for our use so we can cheat.
+  //  Reg windowSeg = {0x21, 6, 3, 8}; // actually 2 6 bit operands each in own byte but the first is always 0 for our use so we can cheat.
   Reg<0x22, 3, 3, 8> windowCom; // see above, smaller arguments on page axis.
-  Reg<0xA4> allOn;              // 1= all pixels lit
-  Reg<0xA6> inverseVideo;       // inverts data on way ito the video buffer, doesn't alter existing image
-  Reg<0xAE> display;            // 1= show data
-  Reg<0x81, 8, 2> contrast;     // the adafruit code has strange ideas of suggested values for init.
-  Reg<0x2E> scrolling;          // to enable else off
-  Reg<0xD5, 8, 2> osc;          // actually two nibbles, high is osc freq, starts as 8, low is divide-1
-  Reg<0xD9, 8, 2> precharge;    // actually two nibbles, high is phase 2 of timing low nibble phase 1.
-  Reg<0xDB, 3, 2, 4> vcomh;     // some kind of reset trigger maybe?
-  Reg<0xA8, 6, 2> muxratio;     // minimum of 15 not enforced, resets to all ones==63
+  Reg<0xA4> allOn; // 1= all pixels lit
+  Reg<0xA6> inverseVideo; // inverts data on way ito the video buffer, doesn't alter existing image
+  Reg<0xAE> display; // 1= show data
+  Reg<0x81, 8, 2> contrast; // the adafruit code has strange ideas of suggested values for init.
+  Reg<0x2E> scrolling; // to enable else off
+  Reg<0xD5, 8, 2> osc; // actually two nibbles, high is osc freq, starts as 8, low is divide-1
+  Reg<0xD9, 8, 2> precharge; // actually two nibbles, high is phase 2 of timing low nibble phase 1.
+  Reg<0xDB, 3, 2, 4> vcomh; // some kind of reset trigger maybe?
+  Reg<0xA8, 6, 2> muxratio; // minimum of 15 not enforced, resets to all ones==63
   Reg<0x2c0, 2, 2, 4> compins;
-  Reg<0x8C> something;        //!!WAG, hard coded 8D and no matching document.
-                              // viewport controls
+  Reg<0x8C> something; //!!WAG, hard coded 8D and no matching document.
+  // viewport controls
   Reg<0x20, 2, 2> memoryMode; // 0=horizontal like Epson printer, 1=Vertical the most natural, 2= not reasonable for serial interface.
   Reg<0xA0> hflip;
   Reg<0xC0, 4, 1, 3> vflip; // C0 or C8
@@ -202,12 +220,13 @@ public:
 
   /** configure the display based on values stored via the constructor */
   void begin();
+
   /** @returns whether it can be talked to profitably. False when going through initialization sequence or not configured*/
-  int busy(){
-    if(!dev.isOpen()){
+  int busy() {
+    if (!dev.isOpen()) {
       return -1;
     }
-    if(bgact!=Idle){
+    if (bgact != Idle) {
       return 1;
     }
     return 0;

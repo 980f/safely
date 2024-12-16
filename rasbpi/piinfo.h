@@ -26,12 +26,13 @@ enum Version {
   VERSION_1,VERSION_1_1,VERSION_1_2,VERSION_2
 } rev;
 
+  /** megabytes of ram */
+  unsigned mem;
+
 enum Maker {
   MAKER_SONY,MAKER_EGOMAN,MAKER_EMBEST,MAKER_UNKNOWN
 } maker;
 
-/** megabytes of ram */
-  unsigned mem;
 /** whether overvoltage and maybe overclocking are enabled */
   unsigned warranty;
   /** 0 don't know, 1=original, 2= more recent. Once the 'where used' is created we may change the encoding. */

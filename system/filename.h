@@ -25,7 +25,7 @@ public:
   }
   /** removes the last path element, similar to the dirname unix command
    * @returns this as reference */
-  FileName &dirname(void);
+  FileName &dirname();
 
   /** modifies last path member, add a dot if one isn't present then add given text. creates one if empty
  @returns this as reference */

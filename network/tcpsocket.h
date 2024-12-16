@@ -1,9 +1,8 @@
-#ifndef TCPSOCKET_H
-#define TCPSOCKET_H
+#pragma once
 
-#include "sigcuser.h"
 #include "charscanner.h"
 #include "iosource.h"
+#include "sigcuser.h"
 #include "stopwatch.h" //for blocking connection timeout use
 
 /** common part of client and server sockets. server socket itself is declared elsewhere. */
@@ -11,20 +10,20 @@ class TcpSocketBase {
 public:
   /** diagnostic counters */
   struct Stats {
-      /** successful connection */
-      u32 connects;
-      /** failed attempt or lost connection after succeeded */
-      u32 disconnects;
-      /** read events */
-      u32 reads;
-      /** write events */
-      u32 writes;
-      /** returned values from last io read command */
-      int lastRead;
-       /** returned values from last io write command */
-      int lastWrote;
-      Stats();
-      void clear();
+    /** successful connection */
+    u32 connects;
+    /** failed attempt or lost connection after succeeded */
+    u32 disconnects;
+    /** read events */
+    u32 reads;
+    /** write events */
+    u32 writes;
+    /** returned values from last io read command */
+    int lastRead;
+    /** returned values from last io write command */
+    int lastWrote;
+    Stats();
+    void clear();
   } stats;
   /** a slot to track connects and disconnects */
   void connectionEvent(bool connected);
@@ -36,7 +35,7 @@ public:
     bool noDelay;
     /** request that we block on connection, i.e. even on explicit failure to connect do not retry until timeout has expired */
     bool block;
-    ConnectArgs(int ipv4=0, int port=0, bool noDelay=false,bool block=false);//defaults are the same values as set by @see erase
+    ConnectArgs(int ipv4 = 0, int port = 0, bool noDelay = false, bool block = false); // defaults are the same values as set by @see erase
 
     /** sets to blatantly ridiculous values, @see isPossible()*/
     void erase();
@@ -45,10 +44,10 @@ public:
   } connectArgs;
 
 protected:
-  IoSource sock; //socket fd with socket queries added over basic fd operation
-  IoConnections source; //stream connections to sock.
+  IoSource sock; // socket fd with socket queries added over basic fd operation
+  IoConnections source; // stream connections to sock.
   /** create from an fd of an open (connected) socket or use the default arg and call connect() */
-  TcpSocketBase(int fd=~0,u32 remoteAddress=0,int port=0);
+  TcpSocketBase(int fd = ~0, u32 remoteAddress = 0, int port = 0);
 
 public:
   virtual ~TcpSocketBase();
@@ -64,10 +63,10 @@ public:
 //////////////////////////////////////////////
 
 /** client socket */
-class TcpSocket: public TcpSocketBase, SIGCTRACKABLE {
+class TcpSocket : public TcpSocketBase, SIGCTRACKABLE {
 protected:
   /** create from an fd of an open (connected) socket or use the default arg and call connect() */
-  TcpSocket(int fd=~0,u32 remoteAddress=0,int port=0);
+  TcpSocket(int fd = ~0, u32 remoteAddress = 0, int port = 0);
 
   /** enables attempts to reconnect */
   bool autoConnect;
@@ -81,26 +80,29 @@ protected:
   void writeInterest();
   /** called by aio when data can be written (after writeInterest has recently been called) */
   bool writeable();
+
 public:
-  virtual ~TcpSocket();
+  ~TcpSocket() override;
   /** @returns isConnected() */
   bool connect(unsigned ipv4, unsigned port, bool noDelay, bool block);
   /** disconnect and release socket, if @param andNotify then call 'onConnectionChange' actions*/
-  bool disconnect(bool andNotify)override;
+  bool disconnect(bool andNotify) override;
   /** throw away all pending input, best effort-some bytes might sneak in right after it returns.
    * this is BLOCKING, but due to the way Glib works it will leave in a finite amount of time.
    * added to dump the qchardware incoming queue when the logic is way behind */
   void flush();
-  BooleanSignal notifyConnected;//todo:1 our usual hiding behind a funciton call that returns a connection object.
+
 protected:
+  BooleanSignal notifyConnected;
   /** called when some data has arrived. You MUST copy the data, the underlying pointer of @param raw is to a piece of the stack. */
-  virtual void reader(ByteScanner&raw)=0;
-  /** called when can write, should set ByteScanner to point to data, and return true if should be sent.
-  The data YOU point to by modifying @param raw must stay allocated until the next call to writer(). You could poll the TcpSocket to see if it is done with the write, we should probably add a callback for 'transmit buffer empty'.*/
-  virtual bool writer(ByteScanner&raw)=0;
+  virtual void reader(ByteScanner &raw) = 0;
+  /** This will be called when the system can write for you, you should set ByteScanner to point to data, and return true if it should be sent.
+  The data YOU point to by modifying @param raw must stay allocated until the next call to writer().
+  You could poll the TcpSocket to see if it is done with the write, we should probably add a callback for 'transmit buffer empty'.*/
+  virtual bool writer(ByteScanner &raw) = 0;
 
 public:
-  sigc::connection whenConnectionChanges(const BooleanSlot &nowConnected, bool kickme=false);
+  sigc::connection whenConnectionChanges(const BooleanSlot &nowConnected, bool kickme = false);
   bool reconnect();
   void startReception();
   /** temporary (hah!) debug flags, tracking writeInterest calling */
@@ -110,6 +112,7 @@ public:
   bool connectionInProgress;
   /** how long we have been waiting for a connection to complete */
   StopWatch connectionTimer;
+
 protected:
   /** called when connection failes, @param error is an errno value */
   void connectionFailed(int error);
@@ -117,20 +120,20 @@ protected:
 
 #include <netinet/in.h>
 /** address etc will be maintained in network order, with accessors for host order.*/
-struct SocketAddress{
+struct SocketAddress {
   sockaddr_in sin;
   /** for one that is to be filled by a posix call*/
   SocketAddress();
   /** for one that is to be sent to a posix call */
   SocketAddress(TcpSocket::ConnectArgs &cargs);
-  u16 hostPort()const;
-  u32 hostAddress()const;
+  u16 hostPort() const;
+  u32 hostAddress() const;
   /** address for posix functions */
-  const sockaddr *addr()const;
+  const sockaddr *addr() const;
   sockaddr *addr();
 
   /** struct size for posix functions*/
-  int len()const;
+  int len() const;
   /** @returns errno if an ERROR occured (else 0), @param fd is value returned from your call to socket() */
   int connect(int fd);
 };
@@ -140,7 +143,7 @@ class BlockingConnectSocket : public TcpSocketBase {
 public:
 protected:
   // create from an fd of an open (connected) socket or use the default arg and call connect()
-  BlockingConnectSocket(int fd=~0,u32 remoteAddress=0,int port=0);
+  BlockingConnectSocket(int fd = ~0, u32 remoteAddress = 0, int port = 0);
 
   // enables attempts to reconnect
   bool autoConnect;
@@ -178,17 +181,15 @@ protected:
   BooleanSignal notifyConnected;
 
   // called when some data has arrived. You MUST copy the data, the underlying pointer of @param raw is to a piece of the stack.
-  virtual void reader(ByteScanner&raw)=0;
+  virtual void reader(ByteScanner &raw) = 0;
 
   // called when can write, should set ByteScanner to point to data, and return true if should be sent.
-  //The data YOU point to by modifying @param raw must stay allocated until the next call to writer(). You could poll the TcpSocket to see if it is done with the write,
+  // The data YOU point to by modifying @param raw must stay allocated until the next call to writer(). You could poll the TcpSocket to see if it is done with the write,
   //  we should probably add a callback for 'transmit buffer empty'.
-  virtual bool writer(ByteScanner&raw)=0;
+  virtual bool writer(ByteScanner &raw) = 0;
 
 public:
-  sigc::connection whenConnectionChanges(const BooleanSlot &nowConnected, bool kickme=false);
+  sigc::connection whenConnectionChanges(const BooleanSlot &nowConnected, bool kickme = false);
   bool reconnect();
   void startReception();
 };
-
-#endif // TCPSOCKET_H

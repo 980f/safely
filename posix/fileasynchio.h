@@ -1,32 +1,37 @@
-#ifndef FileAsyncAccess_H
-#define FileAsyncAccess_H  "(C) Andrew L. Heilveil, 2017"
+#  pragma once
+//  "(C) Andrew L. Heilveil, 2017"
 
 #include "incrementalfiletransfer.h"
 #include "aio.h"
-#include "signal.h"
+#include <csignal>
 #include "fildes.h" //our file <-> safe buffer routines
 #include "hook.h"  //used for callbacks to process file.
 /** mate aio calls to FilDes class
  * Note that the file is left open at the end of transfer, you can chain more data on writes.
  * The file will be closed when the FileAsyncAccess is deleted. */
-class FileAsyncAccess: public IncrementalFileTransfer {
-
+class FileAsyncAccess : public IncrementalFileTransfer {
   /** the thing we are wrapping use of: */
-  aiocb cb;
+
+  struct Aiocb: aiocb {
+    Aiocb() {
+      EraseThing(*this);
+    }
+  } cb;
 
 public:
   /* connect to user allocated file and buffer objects. This makes it easier to change synch code to async. */
-  FileAsyncAccess(bool reader,Fildes &fd,ByteScanner &buf);
+  FileAsyncAccess(bool reader); // NOLINT(*-explicit-constructor)
   /** start read process */
   bool go();
 
   /** For polling @returns whether background operation is not still in progress */
   bool isDone() const {
-    int ercode=aio_error (&cb); //bypassing PosixWrapper for no documented reason :(
-    return ercode!=EINPROGRESS;
+    int ercode = aio_error(&cb); //bypassing PosixWrapper for no documented reason :(
+    return ercode != EINPROGRESS;
   }
+
   /** @returns not reported as done and more bytes expected */
-  bool notDone()const;
+  bool notDone() const;
 
   /** block, used only for diagnostics on this class. @returns whether aio_suspend 'failed'.
    * I quote 'failed' since it includes things like whether it quit because a signal occured.
@@ -40,18 +45,20 @@ public:
 
   /** issue a cancel request, man aio_cancel for full behavior */
   void cancel();
+
 private:
   /** this will call back to our member fn */
   static void sighandler(int signo, siginfo_t *info, void *);
+
   /* @param code is siginfo_t.si_code */
   void notified(int code, int ernumber);
-  /* rerunnable part of operation */
+
+  /* re-runnable part of operation */
   bool launch(bool more);
 
   // IncrementalFileTransfer interface
 public:
-  virtual bool onEachBlock(__ssize_t amount) override;
-  virtual void onDone() override;
-};
+  bool onEachBlock(__ssize_t amount) override;
 
-#endif // FILEREADER_H
+  void onDone() override;
+};

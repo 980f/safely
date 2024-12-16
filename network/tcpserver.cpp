@@ -72,8 +72,8 @@ TcpServer::ServerSocket::ServerSocket(u32 remoteAddress, int port):
 
 bool TcpServer::ServerSocket::accept(int backlog, Spawner spawner){
 
-  sock.fd = ::socket(AF_INET, SOCK_STREAM, 0);
-  if(sock.fd != ~0){
+  sock.preopened( ::socket(AF_INET, SOCK_STREAM, 0),true);
+  if(sock.isOpen()){
     SocketAddress sad(connectArgs);
     //Setting the socket to reuse the address if we fail and restart.
     //This keeps us from getting a failed to bind error.
@@ -81,17 +81,16 @@ bool TcpServer::ServerSocket::accept(int backlog, Spawner spawner){
 
     //The sad.addr should be set to the wildcard 0.0.0.0, we don't care about the address yet.
     //when we do care which interface we listen on then figure out its address, don't trust eth naming unless we creat our own synonyms or pass that in as a configuration string.
-    if(0 == ::bind(sock.fd, sad.addr(),sizeof(sad.sin))){
+    if(0 == ::bind(sock.asInt(), sad.addr(),sizeof(sad.sin))){
       //todo:1 the following references to errno make no sense, for instance they look for changes in errno instead of checking and storing it at the moment that it is valid.
       int listenRetval(0);
       int errorNum(errno);
-      listenRetval = ::listen(sock.fd,backlog);
+      listenRetval = ::listen(sock,backlog);
       if (errorNum != errno){
         dbg("::listen failed with code %d errno: %d", listenRetval, errorNum);
       }
       this->spawner=spawner;
-      source.incoming=sock.input(MyHandler(TcpServer::ServerSocket::incoming));
-      source.hangup=sock.hangup(MyHandler(TcpServer::ServerSocket::disconnect));
+      source.listen(sigc::hide_return( MyHandler(TcpServer::ServerSocket::incoming)),sigc::hide_return(MyHandler(TcpServer::ServerSocket::disconnect)));
       return true;
     } else {
       dbg("failed to bind %08X", connectArgs.ipv4);
@@ -107,9 +106,9 @@ bool TcpServer::ServerSocket::incoming(){
   SocketAddress sad;  // :(
   //bi-directional arg, max length in, actual length out
   socklen_t length(sad.len());
-  int fd = ::accept(sock.fd, sad.addr(), &length);
-  if (fd != ~0) {
-    spawner(fd,sad.hostAddress());//todo:0 redo to pass SocketAddress once we are sure we are dumping Gio::stuff.
+  unsigned spawnedfd = ::accept(sock, sad.addr(), &length);
+  if (spawnedfd != BadIndex) {
+    spawner(spawnedfd,sad.hostAddress());//todo:0 redo to pass SocketAddress once we are sure we are dumping Gio::stuff.
   } else {
     dbg("ERROR on accept");
   }

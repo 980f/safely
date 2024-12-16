@@ -14,7 +14,8 @@
 #include "perftimer.h"
 
 /** expects a supplier of a linear number such as svn produces. */
-extern double svn();
+#include "versioning.h"
+
 
 TreeFile::TreeFile(FileName &fname, Storable &node) :
   filename(fname),
@@ -34,7 +35,7 @@ bool TreeFile::parseTreeFile(){
       root.wasModified();//to clear flags set by parsing;
       return parsedok;
     } else {
-      dbg("Filename %s too big to be parsed.", fname.c_str());
+      dbg("File %s is too big to be parsed.", fname.c_str());
       return false;
     }
   } else {
@@ -45,7 +46,7 @@ bool TreeFile::parseTreeFile(){
 } /* parseTreeFile */
 
 bool TreeFile::printTree(bool blocking, bool debug){
-  PerfTimer perf(Ustring::compose("printTree %1", filename).c_str());
+  PerfTimer perf(Ustring::compose("printTree %1", filename).c_str()); //todo:0 this guy may not function properly, according to the compiler which nonetheless compiled it.
   StoredReal(root("svnnumber")) = ::svn();//update to current svn.
   FileName temp_path("var/printTree.tmp");
   auto temp_name=temp_path.pack();

@@ -1,6 +1,5 @@
 #include "SSD1306.h"
 
-
 SSD1306::FrameBuffer::FrameBuffer(unsigned pixwidth, unsigned pixheight) : comspan(pixwidth), segspan(pixheight), // bounds
   stride((pixwidth + 7) / 8), // chunkiness
   databytes(stride * pixheight),
@@ -46,7 +45,7 @@ void SSD1306::refresh(const FrameBuffer &fb) {
 
 #ifdef __linux__
   // 1st attempt: send the whole nine yards, hence adding an extra byte to fb allocator.
-  fb.fb[0] = DataMarker; // we require the user allocate this byte to us. If they fail to then the display is shifted and they will figure that out eventually.
+  fb.markAsData(); // we require the user allocate this byte to us. If they fail to then the display is shifted and they will figure that out eventually.
   dev.write(fb.fb, 1 + fb.stride * fb.segspan);
 #else
   const unsigned WireLimit = 32; // to stay compatibile with arduinos we must limit a transmission to 32 bytes including the 0x40 leader.

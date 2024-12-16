@@ -12,14 +12,18 @@ IoSource::~IoSource(){
 }
 
 
-int IoSource::recode(ssize_t rwreturn){
-  if(rwreturn==~0){
+int IoSource::recode(ssize_t rwreturn) {
+  if (rwreturn == ~0) {
     int errnum(errno);
-    if(EINTR == errnum || EAGAIN == errnum || EWOULDBLOCK == errnum) {
-      return 0;//still more perhaps.
+    if (EINTR == errnum || EAGAIN == errnum || EWOULDBLOCK == errnum) {
+      return 0; // still more perhaps.
     }
     return -errnum;
   }
   return rwreturn;
+}
+bool IoConnections::writeInterest(IoSource::Slot action) {
+  //todo: replace this concept with asynchio?
+  return false;
 }
 
