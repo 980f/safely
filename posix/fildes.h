@@ -30,17 +30,22 @@ protected:
   /** whether this object opened the fd it wraps. That is the normal case but if you want to do multiple operations and retain error info on each step then you might use multiple Fildes objects around the same fd. */
   bool amOwner; // determines whether we auto close on destruction.
   int fd;
+
   bool assignFd(int anFD);
 
 public:
   explicit Fildes(const char *whatfor);
+
   /** copies ONLY the fd, none of the other state, and most especially is NOT the owner of the underlying file descriptor */
   Fildes(const Fildes &other);
+
   /** since we close on going out of scope if you share an fd you must take care to use pointer or reference*/
   virtual ~Fildes();
+
   bool open(const char *devname, int O_stuff); // open a named file
   /** takes ownership of  @param fd  if @param urit is true ("You are it"), else just copy it and probably should not call close() as that will piss off the actual owner, making it lose track of the fd's state. */
   bool preopened(int fd, bool urit = true);
+
   /** set/clear a fcntl accessible flag, @returns success of operation */
   bool setSingleFlag(int bitfield, bool one);
 
@@ -52,11 +57,13 @@ public:
    * @returns what system's close returns.
    */
   virtual int close();
+
   /**make this transparently usable as an fd number*/
   operator int() const { // #~intentionally implicit NOLINT(*-explicit-constructor)
     return fd;
   }
-  /** to get rid of warnings when compiler can't figure out an automatic cast to int.*/
+
+  /** to get rid of warnings when compiler can't figure out an automatic cast to int, such as var-arg list.*/
   int asInt() const {
     return fd;
   }
@@ -76,7 +83,9 @@ public:
 
   /** read into freespace/tail of buffer */
   bool read(Indexer<u8> &p);
+
   bool read(Indexer<char> &p);
+
   bool read(u8 *buf, unsigned len);
 
   /** write from freespace/tail of buffer.
@@ -84,8 +93,11 @@ public:
    * When you are finished building something to send you create a new Indexer object from the head of that one.
    */
   bool write(Indexer<u8> &p);
+
   bool write(Indexer<u8> &&p);
+
   bool write(Indexer<char> &p);
+
   bool write(Indexer<char> &&p);
 
   bool write(const u8 *buf, unsigned len); // placeholder
@@ -95,12 +107,15 @@ public:
   /** set the associated flag given this guy's fd.
    * @returns @see isOpen() */
   bool mark(FDset &fdset) const;
+
   /** @returns whether bit associated with this guy is a one in the fdset.*/
   bool isMarked(const FDset &fdset) const;
+
   /** moves all bytes pending on this' OS read buffer to the other file.
    *
    * @returns 0 on full success, a positive number if some bytes are dropped, -1 for read error (see the fd's lastRead for details) -2 for write error (see that fd's lastWrote for detail. */
   int moveto(Fildes &other);
+
   /**set file to either blocking or not blocking */
   bool setBlocking(bool block);
 
@@ -111,6 +126,25 @@ public:
   template<typename Scalar> bool ioctl(unsigned code, Scalar datum) {
     // pre-test isopen so as to not overwrite the error code from that.
     return isOpen() && ok(::ioctl(asInt(), code, datum));
+  }
+
+  template<typename Pod> Pod read(const Pod marker) {
+    Pod result; //don't try to make 'marker' a Pod, we might get a partial read and then we would have corruption.
+    if (read(reinterpret_cast<u8 *>(&result), sizeof(Pod))) {
+      if (sizeof(Pod) == lastRead) {
+        return result;
+      }
+    }
+    return marker;
+  }
+
+  template<typename Pod> bool write(Pod &&datum) {
+    if (write(reinterpret_cast<u8 *>(&datum), sizeof(Pod))) {
+      if (sizeof(Pod) == lastWrote) {
+        return true;;
+      }
+    }
+    return false;
   }
 
 protected:

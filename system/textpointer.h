@@ -96,4 +96,3 @@ public:
 
 //pre-safely name:
 using TextPointer = Text;
-#endif // TEXTPOINTER_H

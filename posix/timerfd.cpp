@@ -1,65 +1,68 @@
 //"(C) Andrew L. Heilveil, 2017"
 #include "timerfd.h"
 #include "sys/timerfd.h"
-#include <charscanner.h>
 #include "nanoseconds.h"
-#include "minimath.h"
+// #include "minimath.h"
 
 
-TimerFD::TimerFD(const char *traceName, bool phaseLock):PosixWrapper(traceName),
-  fd("TimerFD"),
-  phaseLock(phaseLock){
-  int tfd=timerfd_create(CLOCK_MONOTONIC,TFD_NONBLOCK);
-  fd.preopened(tfd,true);
-  period=getPeriod();
+TimerFD::TimerFD(const char *traceName, bool phaseLock): Fildes(traceName ? traceName : "TimerFD"),
+  phaseLock(phaseLock) {
+  preopened(timerfd_create(CLOCK_MONOTONIC,TFD_NONBLOCK), true);
+  period = getPeriod();
 }
 
-double TimerFD::setPeriod(double seconds){
-  if(fd.isOk()){
+NanoSeconds TimerFD::setPeriod(NanoSeconds seconds) {
+  period = seconds;
+  if (isOk()) {
     itimerspec u;
-    parseTime(u.it_interval,seconds);
-    parseTime(u.it_value,seconds);//set initial delay to same as period
+    u.it_interval= seconds;
+    u.it_value= seconds; //set initial delay to same as period
 
     itimerspec old;
-    timerfd_settime(fd.asInt(),phaseLock?TFD_TIMER_ABSTIME:0,&u,&old);//0: not TFD_TIMER_ABSTIME, todo: add option for absolute time.
-    return period=from(old.it_interval);
+    timerfd_settime(fd, phaseLock ? TFD_TIMER_ABSTIME : 0, &u, &old); //0: no flags
+    seconds=old.it_interval;
+    return seconds;
   }
-  return Nan;
+  return NanoSeconds(0);
 }
 
-bool TimerFD::ack(){
-  u64 expirations=~0UL;//#type here is chosen by timer fd stuff, not us.
-  ByteScanner discard(reinterpret_cast<u8*>(&expirations),sizeof(expirations));
-  fd.read(discard);
-  if(sizeof(expirations)==fd.lastRead){
+bool TimerFD::ack() {
+  auto expirations = read(u64(~0)); //#type here is chosen by timer fd stuff, not us.
+
+  if (expirations) { //# expanded for breakpoint.
     return true;
-  } else {
-    //then we shouldn't have been called.
+  } else { //then we shouldn't have been called.
     return false;
   }
 }
 
-double TimerFD::getPeriod() const noexcept {
+NanoSeconds TimerFD::getPeriod() const noexcept {
   itimerspec old;
-  timerfd_gettime(fd.asInt(),&old);
-  return from(old.it_interval);
+  timerfd_gettime(fd, &old);
+  return NanoSeconds(old.it_interval);
 }
 
-void TimerFD::operator=(bool enable) {
+NanoSeconds TimerFD::getExpiration() const noexcept {
+  itimerspec old;
+  timerfd_gettime(fd, &old);
+  return NanoSeconds(old.it_value);
+}
+
+itimerspec && TimerFD::pause() {
+  itimerspec old;
   itimerspec u;
-  itimerspec old;
+  /* from man page: "Setting both fields of new_value.it_value to zero disarms the timer."*/
+  u.it_value.tv_sec=0;
+  u.it_value.tv_nsec=0;
+  timerfd_settime(fd, 0, &u,&old);
+  return static_cast<itimerspec>(old);
+}
 
-  if (enable) {
-    NanoSeconds &wrap(NanoSeconds::wrap(u.it_value));
-    wrap=0;
-    timerfd_settime(fd.asInt(),phaseLock?TFD_TIMER_ABSTIME:0,&u,nullptr);//0: not TFD_TIMER_ABSTIME, todo: add option for absolute time.
-  } else {
-
-    timerfd_settime(fd.asInt(),phaseLock?TFD_TIMER_ABSTIME:0,&u,&old);//0: not TFD_TIMER_ABSTIME, todo: add option for absolute time.
-  }
+void TimerFD::resume(const itimerspec &was) {
 
 }
 
-unsigned TimerFD::chunks(double hz){
-  return ::chunks(ratio(1.0,hz), period);
+
+unsigned TimerFD::chunks(double hz) {
+  return ::chunks(ratio(1.0, hz), period);
 }
