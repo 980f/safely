@@ -1,8 +1,8 @@
-cmake_minimum_required(VERSION 3.16)
-project(cppext VERSION 1.0 LANGUAGES CXX)
+#cmake_minimum_required(VERSION 3.16)
+#project(cppext VERSION 1.0 LANGUAGES CXX)
 
+message("including cppext")
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
-
 
 add_library(cppext STATIC
   abstractjsonparser.h
@@ -135,6 +135,11 @@ add_library(cppext STATIC
   utf8.h
 )
 
-target_include_directories (cppext
-  "${CMAKE_CURRENT_SOURCE_DIR}"
+#
+#target_include_directories (cppext PUBLIC
+#  ${PROJECT_SOURCE_DIR}/cppext
+#)
+
+target_include_directories(cppext
+  INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}
 )

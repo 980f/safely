@@ -12,16 +12,7 @@ include_directories(${DEPS_INCLUDE_DIRS})
 #todo:00 target_link_libraries(yourprogram ${DEPS_LIBRARIES})
 
 add_subdirectory(cppext)
-
-include_directories(
-  cppext
-  system
-  posix
-  network
-  usb
-  usb/libusb
-  rasbpi
-)
+add_subdirectory(system)
 
 add_library(safely STATIC
   ./ignoresignwarnings.h
@@ -31,88 +22,6 @@ add_library(safely STATIC
   ./network/tcpserver.h
   #sigc3 issues ./network/tcpsocket.cpp
   ./network/tcpsocket.h
-  ./posix/activityperformance.cpp
-  ./posix/activityperformance.h
-  ./posix/application.cpp
-  ./posix/application.h
-  ./posix/directory.cpp
-  ./posix/directory.h
-  ./posix/directorywalker.cpp
-  ./posix/directorywalker.h
-  ./posix/epoller.cpp
-  ./posix/epoller.h
-  #gutted, had alternate timerfd wtf?! ./posix/eventloop.cpp
-  ./posix/eventloop.h
-  ./posix/fcntlflags.h
-  ./posix/fdset.cpp
-  ./posix/fdset.h
-  ./posix/fildes.cpp
-  ./posix/fildes.h
-  ./posix/fileasynchio.cpp
-  ./posix/fileasynchio.h
-  ./posix/fileinfo.cpp
-  ./posix/fileinfo.h
-  ./posix/filer.cpp
-  ./posix/filereader.cpp
-  ./posix/filereader.h
-  ./posix/filer.h
-  ./posix/filewatcher.cpp
-  ./posix/filewatcher.h
-  ./posix/filewriter.cpp
-  ./posix/filewriter.h
-  ./posix/incrementalfiletransfer.cpp
-  ./posix/incrementalfiletransfer.h
-  ./posix/iosource.cpp
-  ./posix/iosource.h
-  ./posix/jasoned.cpp
-  ./posix/jasoned.h
-  ./posix/jsonfile.cpp
-  ./posix/jsonfile.h
-  ./posix/jsonfiletracker.cpp
-  ./posix/jsonfiletracker.h
-  ./posix/memorymapper.cpp
-  ./posix/memorymapper.h
-  ./posix/microseconds.cpp
-  ./posix/microseconds.h
-  ./posix/nanoseconds.cpp
-  ./posix/nanoseconds.h
-  ./posix/performancelogger.cpp
-  ./posix/performancelogger.h
-  ./posix/performancetimer.cpp
-  ./posix/performancetimer.h
-  ./posix/perftimer.cpp
-  ./posix/perftimer.h
-  ./posix/posixlogger.cpp
-  ./posix/posixlogger.h
-  ./posix/posixwrapper.cpp
-  ./posix/posixwrapper.h
-  ./posix/serialdevice.cpp
-  ./posix/serialdevice.h
-  ./posix/serveroptions.cpp
-  ./posix/serveroptions.h
-  ./posix/socketeer.cpp
-  ./posix/socketeer.h
-  ./posix/stopwatch.cpp
-  ./posix/stopwatch.h
-  ./posix/streamformatter.cpp
-  ./posix/streamformatter.h
-  ./posix/streamprintf.cpp
-  ./posix/streamprintf.h
-  #./posix/tcpserver.cpp
-  #./posix/tcpserver.h
-  #./posix/tcpsocket.cpp
-  #./posix/tcpsocket.h
-  ./posix/tcptester.cpp
-  ./posix/tcptester.h
-  ./posix/telnetserver.cpp
-  ./posix/telnetserver.h
-  ./posix/threader.cpp
-  ./posix/threader.h
-  ./posix/timerfd.cpp
-  ./posix/timerfd.h
-  #when did this functionality disappear? what was it? ./posix/vargs.cpp
-  ./posix/worstcase.cpp
-  ./posix/worstcase.h
   ./rasbpi/clockgenerator.cpp
   ./rasbpi/clockgenerator.h
   ./rasbpi/din.cpp
@@ -136,92 +45,7 @@ add_library(safely STATIC
   ./safely.h
   ./storedloggermanager.cpp
   ./storedloggermanager.h
-  ./system/allocatedindexer.cpp
-  ./system/allocatedindexer.h
-  ./system/block.h
-  #./system/cachedindextostored.cpp
-  #./system/cachedindextostored.h
-  ./system/chain.h
-  ./system/chainsorter.h
-  ./system/delimitedinputstream.cpp
-  ./system/delimitedinputstream.h
-  ./system/delimitingoutputstream.cpp
-  ./system/delimitingoutputstream.h
-  ./system/dottedname.cpp
-  ./system/dottedname.h
-  ./system/dyndeterminator.cpp
-  ./system/dyndeterminator.h
-  ./system/filenameconverter.cpp
-  ./system/filenameconverter.h
-  ./system/filename.cpp
-  ./system/filename.h
-  ./system/gatedsignal.cpp
-  ./system/gatedsignal.h
-  ./system/jsonstore.cpp
-  ./system/jsonstore.h
-  #needs ArtFile ./system/kanjidic.cpp
-  #./system/kanjidic.h
-  ./system/linearfilter.cpp
-  ./system/linearfilter.h
-  ./system/logger.cpp
-  ./system/logger.h
-  ./system/managedblock.cpp
-  ./system/managedblock.h
-  ./system/mapiterator.h
-  ./system/matrixinverter.cpp
-  ./system/matrixinverter.h
-  #formatter hierarchy seems to have evaporated ./system/measure.cpp
-  #./system/measure.h
-  ./system/numberformatter.cpp
-  ./system/numberformatter.h
-  ./system/pathparser.cpp
-  ./system/pathparser.h
-  ./system/peakfindrecords.cpp
-  ./system/peakfindrecords.h
-  ./system/runoncenthtime.cpp
-  ./system/runoncenthtime.h
-  ./system/segmentedname.cpp
-  ./system/segmentedname.h
-  ./system/sigcuser.cpp
-  ./system/sigcuser.h
-  ./system/storable.cpp
-  ./system/storable.h
-  ./system/storageexporter.cpp
-  ./system/storageexporter.h
-  ./system/storedcorrelation.cpp
-  ./system/storedcorrelation.h
-  ./system/stored.cpp
-  ./system/storedenum.cpp
-  ./system/storedenum.h
-  ./system/storedgroup.cpp
-  ./system/storedgroup.h
-  ./system/stored.h
-  ./system/storedipv4address.cpp
-  ./system/storedipv4address.h
-  ./system/storedlabel.cpp
-  ./system/storedlabel.h
-  ./system/storednumeric.cpp
-  ./system/storednumeric.h
-  ./system/storedrange.cpp
-  ./system/storedrange.h
-  ./system/storedsettable.h
-  ./system/storejson.cpp
-  ./system/storejson.h
-  ./system/textformatter.cpp
-  ./system/textformatter.h
-  ./system/textpointer.cpp
-  ./system/textpointer.h
-  #needs working file path name./system/treefile.cpp
-  #./system/treefile.h
-  ./system/urltext.cpp
-  ./system/urltext.h
-  ./system/utf8converter.cpp
-  ./system/utf8converter.h
-  ./system/utf8text.cpp
-  ./system/utf8text.h
-  ./system/utf8transcoder.cpp
-  ./system/utf8transcoder.h
-  ./system/watchable.h
+
   ./usb/ftdi.h
   ./usb/ftdi_i.h
   ./usb/ftdi_version_i.h
@@ -254,7 +78,19 @@ add_executable(
 
 )
 
-target_link_libraries(
+target_link_libraries( testlink
   cppext
+  system
+  posix
   safely
+)
+
+include_directories(
+  #  cppext
+  system
+  posix
+  network
+  usb
+  usb/libusb
+  rasbpi
 )
