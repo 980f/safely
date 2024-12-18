@@ -7,7 +7,7 @@ SSD1306::FrameBuffer::FrameBuffer(unsigned pixwidth, unsigned pixheight) : comsp
   //#nada
 }
 
-SSD1306::SSD1306(const Display &&displaydefinition) : oled(displaydefinition), dev(oled.i2c_bus, 0x3C + oled.altaddress), pages(oled.pages()) {}
+SSD1306::SSD1306(const Display &&displaydefinition) : oled(displaydefinition), dev(oled.i2c_bus, 0x3C + oled.altaddress), pages(oled.pages()), lowlevel{dev} {}
 
 bool SSD1306::connect() {
   if (oled.resetPin != ~0U) {

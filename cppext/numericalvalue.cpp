@@ -1,8 +1,8 @@
 #include "numericalvalue.h"
 #include "logger.h"
-#include "eztypes.h"
+// #include "eztypes.h"
 #include "minimath.h" //nan
-#include "cheaptricks.h" //changed
+// #include "cheaptricks.h" //changed
 #include "index.h" //for 'unsigned' reasoning
 
 

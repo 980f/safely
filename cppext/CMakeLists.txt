@@ -131,6 +131,9 @@ add_library(cppext STATIC
   twiddler.h
   unionizer.cpp
   unionizer.h
+  ustring.cpp
+  ustring.h
+
   utf8.cpp
   utf8.h
 )
@@ -140,6 +143,9 @@ add_library(cppext STATIC
 #  ${PROJECT_SOURCE_DIR}/cppext
 #)
 
-target_include_directories(cppext
-  INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}
+message( "in cppext project is ${PROJECT_SOURCE_DIR}")
+
+target_include_directories(cppext PUBLIC
+  ${PROJECT_SOURCE_DIR}
+
 )

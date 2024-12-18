@@ -1,5 +1,5 @@
 #include "centeredslice.h"
-#include "ignoresignwarnings.h"
+//cannot manage to keep this guy in existence:  #include "ignoresignwarnings.h"
 
 CenteredSlice::CenteredSlice(int *data, unsigned hwidth):data(data),hwidth(hwidth){}
 
