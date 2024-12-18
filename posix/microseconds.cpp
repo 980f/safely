@@ -3,10 +3,9 @@
 
 #include "minimath.h"
 
-
 static const int OneMeg = 1000000;
 
-void parseTime(timeval &ts, double seconds){
+constexpr void parseTime(timeval &ts, double seconds){
   if(seconds==0.0) {//frequent case
     ts.tv_sec = 0;
     ts.tv_usec = 0;
@@ -82,7 +81,7 @@ MicroSeconds &MicroSeconds::Never(){
   return *this;
 }
 
-bool MicroSeconds::isNever() const {
+constexpr bool MicroSeconds::isNever() const {
   return tv_sec==~0 && tv_usec==~0;
 }
 

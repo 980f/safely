@@ -1,18 +1,12 @@
-#ifndef RANGE_H
-#define RANGE_H
+#pragma once
 
-//minimath takes care of this, limits.h implemenations weren't standard enough: #include <limits.h>
 #include "minimath.h"
 #include "cheaptricks.h"
 
 /**
  * integer types are half open: open on the high end
- */
-
-//#define HASNAN (std::numeric_limits<PrimitiveNumeric>::has_quiet_NaN)
-
-/**
- *  In various places you will have to add a :: in front of your Range declaration due to someone else (Gtk) having such a class inside some namespace .
+ *
+ *  In various places you may have to add a :: in front of your Range declaration due to someone else (Gtk) having such a class inside some namespace .
  */
 template<typename PrimitiveNumeric> class Range {
 protected:
@@ -21,7 +15,8 @@ protected:
   PrimitiveNumeric highest;
   bool reversed;
 public:
-  Range( ){
+  constexpr static PrimitiveNumeric Nan=std::is_floating_point<PrimitiveNumeric>::value?std::numeric_limits<PrimitiveNumeric>::quiet_NaN():~0;
+  Range(){
     trivialize();
   }
 
@@ -29,20 +24,16 @@ public:
     setto(highest,lowest);
   }
 
-  bool isValid(void) const {
+  bool isValid() const {
     return lowest <= highest;
   }
 
-  bool nonTrivial(void) const {
+  bool nonTrivial() const {
     return lowest < highest;
   }
 
   void trivialize(){
-//    if(HASNAN){
     setto(Nan,Nan);
-//    } else {
-//      setto(0,0);
-//    }
   }
 
   /** @return whether given number is in HALF OPEN range.
@@ -56,7 +47,8 @@ public:
     return lowest == other.lowest && highest == other.highest;
   }
 
-  Range<PrimitiveNumeric>& operator = (const Range<PrimitiveNumeric> &other){
+  /** we only allow assignment from identical type */
+  Range& operator = (const Range &other){
     lowest = other.lowest;
     highest = other.highest;
     reversed = other.reversed;
@@ -114,11 +106,11 @@ public:
     }
   } // adjustInto
 
-  PrimitiveNumeric width(void) const {
+  PrimitiveNumeric width() const {
     return highest - lowest;
   }
 
-  PrimitiveNumeric center(void) const {
+  PrimitiveNumeric center() const {
     return (highest + lowest) / 2;
   }
 
@@ -135,11 +127,11 @@ public:
     return true;
   } /* setto */
 
-  PrimitiveNumeric start(void) const {
+  PrimitiveNumeric start() const {
     return lowest;
   }
 
-  PrimitiveNumeric end(void) const {
+  PrimitiveNumeric end() const {
     return highest;
   }
 
@@ -251,11 +243,11 @@ public:
 class IndexRange : public ::Range<unsigned int> {
 public:
   /***/
-  int length(void) const {
+  int length() const {
     return highest - lowest;
   }
 
-  int span(void) const {
+  int span() const {
     return length() + 1;
   }
 
@@ -264,6 +256,3 @@ public:
   }
 
 }; // class IndexRange
-
-
-#endif // RANGE_H

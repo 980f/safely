@@ -42,7 +42,7 @@ template<typename Scalar> Scalar postAssign(Scalar&varb, Scalar value){
 
 /** atomisable test-and-clear take a value, @returns @param varb's value then clears it.*/
 template<typename Scalar> Scalar take(Scalar&varb){//replaces all but boolean use of flagged.
-  return postAssign(varb,Scalar(0));
+  return postAssign(varb,Scalar());
 }
 
 /** given pointer to a pointer to something that was dynamically allocated delete that thing and null the pointer. This gets more consistent segfaults on use-after-free

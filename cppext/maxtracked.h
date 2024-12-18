@@ -9,7 +9,7 @@ template <typename Scalar> class MaxTracked:public SimpleExtremer<Scalar,false,f
   using Base = SimpleExtremer<Scalar,false,false>;
 public:
   /** @param initValue is a starting value, @param andInspect is whether to including this in the determination of maximum */
-  MaxTracked(Scalar initValue=0,bool andInspect=true){
+  MaxTracked(Scalar initValue=Scalar(),bool andInspect=true){
     latestValue=initValue;
     if(andInspect){
       Base::inspect(initValue);

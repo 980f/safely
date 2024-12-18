@@ -5,16 +5,6 @@
 static const int OneGig = 1000000000;
 static const int OneMeg = 1000000;
 
-void parseTime(timespec &ts, double seconds){
-  if(seconds==0.0) {//frequent case
-    ts.tv_sec = 0;
-    ts.tv_nsec = 0;
-    return;
-  }
-
-  ts.tv_sec = splitter(seconds);
-  ts.tv_nsec = u32(1e9 * seconds);
-}
 
 void NanoSeconds::setMillis(unsigned ms){
   this->tv_sec = revolutions(ms,1000);//truncating divide

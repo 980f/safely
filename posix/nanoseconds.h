@@ -2,6 +2,7 @@
 
 #include "microseconds.h" //existed in Posix before nanoseconds so we convert just one way.
 #include <ctime>
+#include <minimath.h>
 #include <type_traits>
 
 /**
@@ -12,35 +13,50 @@ constexpr double from(const timespec &ts) {
   return ts.tv_sec + 1e-9 * ts.tv_nsec;
 }
 
-void parseTime(timespec &ts, double seconds);
+
+constexpr void parseTime(timespec &ts, double seconds){
+  if(seconds==0.0) {//frequent case
+    ts.tv_sec = 0;
+    ts.tv_nsec = 0;
+    return;
+  }
+
+  ts.tv_sec = splitter(seconds);
+  ts.tv_nsec = 1e9 * seconds;
+}
 
 struct NanoSeconds : timespec {
-  NanoSeconds(double seconds) {
+  constexpr NanoSeconds(double seconds) {
     this->operator=(seconds);
+  }
+
+  constexpr NanoSeconds(unsigned long long nanoseconds) {
+    tv_nsec = nanoseconds;
+    tv_sec = nanoseconds / 1'000'000'000;//truncating divide is desired
   }
 
   /** for timerfd we wish to create nonoseconds inline from a seconds value as double. */
 
-  explicit NanoSeconds(timespec ts){
+  constexpr NanoSeconds(timespec ts) {
     tv_sec = ts.tv_sec;
     tv_nsec = ts.tv_nsec;
   }
 
-  NanoSeconds() {
+  constexpr NanoSeconds() {
     tv_sec = 0;
     tv_nsec = 0;
   }
 
-  NanoSeconds(const NanoSeconds &other) = default;
+  constexpr NanoSeconds(const NanoSeconds &other) = default;
 
-  NanoSeconds(const MicroSeconds us) {
+  constexpr NanoSeconds(const MicroSeconds us) {
     tv_sec = us.tv_sec;
     tv_nsec = 1000 * us.tv_usec;
   }
 
 
-  template<typename Scalar> NanoSeconds &operator=(Scalar seconds) {
-    if constexpr  (std::is_same<timespec,Scalar>::value) {
+  template<typename Scalar> constexpr NanoSeconds &operator=(Scalar seconds) {
+    if constexpr (std::is_same<timespec, Scalar>::value) {
       tv_sec = seconds.tv_sec;
       tv_nsec = seconds.tv_nsec;
     } else if constexpr (std::is_floating_point<Scalar>::value) {
@@ -121,5 +137,4 @@ public: //system services
   NanoSeconds operator +(const NanoSeconds &lesser) const;
 
   NanoSeconds &operator +=(const NanoSeconds &lesser);
-
 };

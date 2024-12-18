@@ -236,6 +236,9 @@ public:
 
   void refresh(const FrameBuffer &fb);
 
+  /**for access to trouble codes */
+  const Fildes &lowlevel;
+
 private:
   // called back via procedure started with reset()
   void sendInit();

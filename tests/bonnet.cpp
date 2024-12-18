@@ -1,4 +1,3 @@
-
 #include "stdio.h"
 #include <initializer_list>  //for inline test data sets
 
@@ -16,33 +15,30 @@
 #include "application.h"
 
 
-static const u8 bybye[]="Bye Bye!";
+static const u8 bybye[] = "Bye Bye!";
 
-
-
-struct BonnetDemo: Application {
-
+struct BonnetDemo : Application {
   class ButtonTracker {
     Din pin;
+
   public:
-    bool isPressed=false;
-    unsigned toggles=0;
-    const char id;//A,B,C,D,L,R,U;
-    const unsigned pinnum=~0U;
-public:
+    bool isPressed = false;
+    /** counts both presses and releases */
+    unsigned toggles = 0;
+    const char id; //A,B,C,D,L,R,U;
+    const unsigned pinnum = ~0U;
 
-    ButtonTracker(char id,unsigned pinnum):id(id),pinnum(pinnum){
-      //#do nothing here
-    }
+  public:
+    ButtonTracker(char id, unsigned pinnum): id(id), pinnum(pinnum) {}
 
-    void connect(){
-      if(pinnum!=~0U){
-        pin.beGpio(pinnum,0,1);
+    void connect() {
+      if (pinnum != ~0U) {
+        pin.beGpio(pinnum, 0, 1);
       }
     }
 
-    bool changed(){
-      if(::changed(isPressed,pin.readpin())){
+    bool changed() {
+      if (::changed(isPressed, pin.readpin())) {
         ++toggles;
         return true;
       } else {
@@ -50,74 +46,86 @@ public:
       }
     }
 
-    operator bool()const{
+    operator bool() const {
       return pin.readpin();
     }
   };
 
-  ButtonTracker but[7]={{'A',5},{'B',6},{'C',4},{'D',22},{'L',27},{'R',23},{'U',17}};//
+  ButtonTracker but[7] = {
+    {'A', 5},
+    {'B', 6},
+    {'C', 4},
+    {'D', 22},
+    {'L', 27},
+    {'R', 23},
+    {'U', 17}
+  }; //
+
   SSD1306 hat;
   SSD1306::FrameBuffer fb;
 
-  //avoiding reliance on stdin and stdout since we intend in using WiFi or ethernet to talk to devices.
+  //avoiding builtin reliance on stdin and stdout since we intend to use WiFi or ethernet to talk to devices.
   Fildes cin;
   Fildes cout;
 
-  BonnetDemo(unsigned argc, char *argv[]):Application(argc,argv),
-  hat({128,64,true,~0U}),
-  fb(64),
-  cin("console"),
-  cout("console"){
-    cin.preopened(STDIN_FILENO,false);//let us not close the console, let the OS tend to that.
-    cin.setBlocking(false);//since available() is lying to us ...
-    cout.preopened(STDOUT_FILENO,false);
+  BonnetDemo(unsigned argc, char *argv[]): Application(argc, argv),
+    hat({128, 64, true, ~0U}),
+    fb(64),
+    cin("console"),
+    cout("console") {
+    cin.preopened(STDIN_FILENO, false); //let us not close the console, let the OS tend to that.
+    cin.setBlocking(false); //since available() is lying to us!
+    cout.preopened(STDOUT_FILENO, false);
     cout.setBlocking(false);
     fb.clear(1);
   }
 
   /** like Arduino setup() */
-  int main(){
+  int main() {
     grabPins();
-    if(hat.connect()){
+    if (hat.connect()) {
       hat.begin();
-      period=0.001;//want millisecond timing to match Arduino best practice.
-      return Application::run();//all activity from this point on is via callbacks arranged in the previous few lines.
+      period = 0.001; //want millisecond timing to match Arduino best practice.
+      return Application::run(); //all activity from this point on is via callbacks arranged in the previous few lines.
     } else {
-      return 2;//hat.dev.errornumber;
+      return hat.lowlevel.errornumber; //connection failures are from OS, this is an ERRNO
     }
   }
 
-  /** like Arduino loop() */
+  /** like Arduino loop(), called periodically by Application::run() */
   bool keepAlive() override {
-    bool dirty=false;
-    int incoming=cin.available();
-    if(incoming>0){
-      u8 cmd[incoming+1];
-      cin.read(cmd,incoming);
-      cmd[incoming]=0;//guarantee null terminator so we can use naive string routines.
-      switch(cmd[0]){
-      case 'x':
-        cout.write(bybye,sizeof(bybye));
-        return false;
-      case 'z':
-        dirty|=zebra();//single bar OR so that zebra is called even if we have already buffered something to show.
+    bool dirty = false;
+    auto incoming = cin.available(); //we went non-blocking on this because it wasn't always blocking anyway.
+    if (incoming > 0) {
+      u8 cmd[incoming + 1];
+      cin.read(cmd, incoming);
+      cmd[incoming] = 0; //guarantee null terminator so we can use naive string routines.
+      switch (cmd[0]) {
+        case 'x':
+          cout.write(bybye, sizeof(bybye));
+          return false;
+        case 'z':
+          dirty |= zebra(); //single bar OR so that zebra is called even if we have already buffered something to show.
 
-        break;
-      case '.':
-        dirty=true;
-        break;
+          break;
+        case '.':
+          dirty = true;
+          break;
+        default:
+          dbg("%s ignored", cmd);
+          break;
       }
     }
 
-    for(unsigned pi=countof(but);pi-->0;){
+    for (unsigned pi = countof(but); pi-- > 0;) {
       ButtonTracker &it(but[pi]);
-      if(it.changed()){
-        dbg("%c[%d] is now %d, toggled: %d",it.id,it.pinnum,it.isPressed,take(it.toggles));
+      if (it.changed()) {
+        dbg("%c[%d] is now %d, toggled: %d", it.id, it.pinnum, it.isPressed, take(it.toggles));
       }
     }
 
-    if(!hat.busy()){
-      if(flagged(dirty)){
+    if (!hat.busy()) {
+      if (flagged(dirty)) {
         dbg("now will refresh");
         hat.refresh(fb);
       }
@@ -125,31 +133,28 @@ public:
     return true;
   }
 
-  bool zebra(){
-    for(unsigned line=fb.segspan;line-->0;){
-      for(unsigned page=fb.stride;page-->0;){
-        fb(page,line)= 1<<(line&7);//something other than rectangles.
+  bool zebra() {
+    for (unsigned line = fb.segspan; line-- > 0;) {
+      for (unsigned page = fb.stride; page-- > 0;) {
+        fb(page, line) = 1 << (line & 7); //something other than rectangles.
       }
     }
     return true;
   }
 
-  void grabPins(){
-    for(unsigned pi=countof(but);pi-->0;){
+  void grabPins() {
+    for (unsigned pi = countof(but); pi-- > 0;) {
       ButtonTracker &it(but[pi]);
       it.connect();
     }
   }
-
 };
 
 
-
-
-int main(int argc, char *argv[]){
-BonnetDemo demo(argc,argv);
-  demo.main();
+int main(int argc, char *argv[]) {
+  BonnetDemo demo(argc, argv);
+  int exitcode = demo.main();
 
   dbg("tests completed \n");
-  return 0;
+  return exitcode;
 } // main

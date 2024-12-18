@@ -41,7 +41,7 @@ u16 Ranged::bin(unsigned numBins, double quantum) const {
 }
 
 double Ranged::map(int fraction, int fullscale)const{
-  return lowest+ ratio(width()*fraction,fullscale);
+  return lowest+ ratio(width()*fraction,double(fullscale));
 }
 
 double Ranged::map(double fraction)const{

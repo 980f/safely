@@ -5,7 +5,7 @@
 const double Infinity = std::numeric_limits<double>::infinity();
 const double Nan = std::numeric_limits<double>::quiet_NaN();
 
-unsigned log2Exponent(u32 number){
+constexpr unsigned log2Exponent(u32 number){
   //can be really fast in asm
   for(u32 exp = 0; exp<32; ++exp) {
     if(number) {
@@ -18,15 +18,15 @@ unsigned log2Exponent(u32 number){
 } // log2Exponent
 
 #include <cmath>
-bool isSignal(double d){
+constexpr bool isSignal(double d){
   return isNan(d);
 }
 
-bool isNan(double d){
+constexpr bool isNan(double d){
   return std::isnan(d);
 }
 
-bool isNormal(double d){
+constexpr bool isNormal(double d){
   return std::isnormal(d);
 }
 
@@ -54,7 +54,7 @@ bool isNormal(double d){//mimicing std::isnormal which means 'is fully normalize
 
 #endif // ifdef __linux__
 
-bool isDecent(double d){
+constexpr bool isDecent(double d){
   return d==0.0 || isNormal(d);
 }
 
@@ -64,7 +64,7 @@ constexpr u32 Decimal1[] = {
 };
 
 /** @returns the number of decimal digits needed to represent the given integer, -1 if the number is 0 */
-int ilog10(u32 value){
+constexpr int ilog10(u32 value){
   for(int log = countof(Decimal1); log-->0; ) {
     if(Decimal1[log]<=value) {
       return log;
@@ -74,13 +74,13 @@ int ilog10(u32 value){
 }
 
 // powers of 10 that fit into a 64 bit integer, but not a 32bit integer.
-const u64 Decimal2[] = {
+constexpr  u64 Decimal2[] = {
   10000000000UL, 100000000000UL, 1000000000000UL, 10000000000000UL, 100000000000000UL, 1000000000000000UL, 10000000000000000UL, 100000000000000000UL, 1000000000000000000UL, 10000000000000000000UL
   //compiler reported overflow when I added one more.
 };
 
 /** @returns the number of decimal digits needed to represent the given integer, -1 if the number is 0 */
-int ilog10(u64 value){
+constexpr int ilog10(u64 value){
   for(int log = countof(Decimal2); log-->0; ) {
     if(Decimal2[log]<=value) {
       return log + 10;
@@ -89,14 +89,14 @@ int ilog10(u64 value){
   return ilog10(u32(value));
 }
 
-u32 i32pow10(unsigned power){
+constexpr unsigned i32pow10(unsigned power){
   if(power<countof(Decimal1)) {
     return Decimal1[power];
   }
   return 0;//this should get the caller's attention.
 }
 
-u64 i64pow10(unsigned power){
+constexpr u64 i64pow10(unsigned power){
   if(power>=countof(Decimal1)) {
     power -= countof(Decimal1);
     if(power<countof(Decimal2)) {
@@ -108,11 +108,11 @@ u64 i64pow10(unsigned power){
   }
 } // i64pow10
 
-u64 keepDecimals(u64 p19,unsigned digits){
+constexpr u64 keepDecimals(u64 p19,unsigned digits){
   return rate(p19,i64pow10(19 - digits));
 }
 
-u64 truncateDecimals(u64 p19,unsigned digits){
+constexpr u64 truncateDecimals(u64 p19,unsigned digits){
   if(digits<=19) {
     return p19 / i64pow10(19 - digits);
   }
@@ -120,7 +120,7 @@ u64 truncateDecimals(u64 p19,unsigned digits){
 }
 
 //uround and sround are coded to be like they will in optimized assembly
-u16 uround(float scaled){
+constexpr u16 uround(float scaled){
   if(scaled < 0.5F) { //fp compares are the same cost as integer.
     return 0;
   }
@@ -132,7 +132,7 @@ u16 uround(float scaled){
   return u16(eye / 2);
 } /* uround */
 
-s16 sround(float scaled){ //#this would be so much cleaner and faster in asm!
+constexpr s16 sround(float scaled){ //#this would be so much cleaner and faster in asm!
   if(scaled > 32766.5F) {
     return 32767;
   }
@@ -143,7 +143,7 @@ s16 sround(float scaled){ //#this would be so much cleaner and faster in asm!
   return s16(scaled);
 }
 
-unsigned modulus(int value, unsigned cycle){
+constexpr unsigned modulus(int value, unsigned cycle){
   if(cycle<=1) {
     return value;//GIGO
   }
@@ -157,7 +157,7 @@ unsigned modulus(int value, unsigned cycle){
   return value;
 } // modulus
 
-unsigned saturated(unsigned quantity, double fractionThereof){
+constexpr unsigned saturated(unsigned quantity, double fractionThereof){
   double dee(quantity * fractionThereof);
   if(dee<0) {
     return 0;
@@ -172,9 +172,8 @@ unsigned saturated(unsigned quantity, double fractionThereof){
 } /* saturated */
 
 #undef __STRICT_ANSI__
-#include <cmath>
 
-u32 chunks(double num, double denom){
+constexpr unsigned chunks(double num, double denom){
   double _ratio = ratio(num, denom);
 
   if(_ratio >= 0) {
@@ -184,8 +183,8 @@ u32 chunks(double num, double denom){
   }
 }
 
-int fexp(double d){ //todo:1 remove dependence on cmath.
-  int ret;
+constexpr int fexp(double d){ //todo:1 remove dependence on cmath.
+  int ret=0;//assignment required for constexpr'ness
   if(d == 0.0) { //frexp returns 0, which makes it look bigger than numbers between 0 and 1.
     return std::numeric_limits<decltype(d)>::min_exponent -1;
     // return -1023;//one less than any non-zero number will give
@@ -209,7 +208,7 @@ constexpr double dpow10(int exponent){
      dpow10(unsigned(exponent));
   }
   //todo: see if std lib uses RPE to compute this.
-  return pow(double(10), exponent);
+  return pow(10, exponent);
 } // dpow10
 
 //linux has this, firmware doesn't have ANY coeffs in its math.h
@@ -231,7 +230,7 @@ constexpr double degree2radian(double theta){
 static const double M_LN2(0.69314718055994530942);
 #endif
 
-double flog(u32 number){
+constexpr double flog(u32 number){
   int exponent = log2Exponent(number);
   int malign = number << (30 - exponent); //unsigned 1.31
 
@@ -304,7 +303,7 @@ double flog(u32 number){
 } /* flog */
 
 #else /* if gotFlogWorking == 2 */
-double flog(u32 number){
+constexpr double flog(u32 number){
   if(number == 0) {
     number = 1;
   }
@@ -335,7 +334,7 @@ double logRatio(u32 over, u32 under){
 
 #else /* if logoptimized */
 //someday we will optimize the following:
-double logRatio(u32 over, u32 under){
+constexpr double logRatio(u32 over, u32 under){
   return flog(over) - flog(under);
 }
 
@@ -344,7 +343,7 @@ double logRatio(u32 over, u32 under){
 /** n!/r!(n-r)! = n*(n-1)..*(n-r+1)/r*(r-1)..
  *  This is done in a complicated fashion to increase the range over what could be done if the factorials were computed then divided.
  */
-unsigned Cnr(unsigned n, unsigned r){
+constexpr unsigned Cnr(unsigned n, unsigned r){
   if(r<=0) {//frequent case and avert naive divide by zero
     return 1;
   }
@@ -387,39 +386,15 @@ unsigned Cnr(unsigned n, unsigned r){
   return rate(num,denom);
 } // Cnr
 
-/* @return integer part of d, modify d to be its fractional part.
- */
-int splitter(double &d){
-  double eye;
-  d = modf(d,&eye);  //todo:2 this can be done very efficiently via bit twiddling. "modf()" has an inconvenient argument order and return type.
-  return int(eye);
-}
-
-unsigned splitteru(double &d){
-  double eye;
-  d = modf(d,&eye);  //todo:2 this can be done very efficiently via bit twiddling. "modf()" has an inconvenient argument order and return type.
-  return unsigned(eye);
-}
 
 
 ///** version of @see splitter that allows for long or long-long etc integer types.
-
-//template <typename Integrish,typename Floater> Integrish intbin(Floater &d){
-//  double eye;
-//  d=modf(d,&eye);
-//  return Integrish(eye);
-//}
-
-//template <> int intbin<int,double>(double &d);
-//template <> long intbin<long,double>(double &d);
-//template <> u64 intbin<u64,double>(double &d);
-
-unsigned digitsAbove(unsigned int value, unsigned numDigits){
+constexpr unsigned digitsAbove(unsigned int value, unsigned numDigits){
   unsigned digit = value / i32pow10(numDigits);
   value -= digit * i32pow10(numDigits);
   return digit;
 }
 
-int ilog10(double value){
+constexpr int ilog10(double value){
   return ilog10(u64(fabs(value)));
 }
