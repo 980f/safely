@@ -1,5 +1,4 @@
-#ifndef USTRING_H
-#define USTRING_H
+#pragma once
 
 #include "utf8.h" //
 #include "textkey.h" //maybe base on Textpointer, or Indexer<u8>
@@ -105,5 +104,3 @@ public:
   }
 
 }; // class Ustring
-
-#endif // USTRING_H
