@@ -11,6 +11,8 @@ pkg_check_modules(DEPS REQUIRED sigc++-3.0)
 include_directories(${DEPS_INCLUDE_DIRS})
 #todo:00 target_link_libraries(yourprogram ${DEPS_LIBRARIES})
 
+add_subdirectory(cppext)
+
 include_directories(
   cppext
   system
@@ -22,134 +24,6 @@ include_directories(
 )
 
 add_library(safely STATIC
-  ./cppext/abstractjsonparser.h
-  ./cppext/abstractpin.h
-  ./cppext/bigendianer.cpp
-  ./cppext/bigendianer.h
-  ./cppext/bitbanger.cpp
-  ./cppext/bitbanger.h
-  ./cppext/bitlock.cpp
-  ./cppext/bitlock.h
-  ./cppext/bitwise.cpp
-  ./cppext/bitwise.h
-  ./cppext/bufferformatter.cpp
-  ./cppext/bufferformatter.h
-  ./cppext/buffer.h
-  ./cppext/centeredslice.cpp
-  ./cppext/centeredslice.h
-  ./cppext/chained.h
-  ./cppext/changemonitored.h
-  ./cppext/char.cpp
-  ./cppext/charformatter.cpp
-  ./cppext/charformatter.h
-  ./cppext/char.h
-  ./cppext/charscanner.cpp
-  ./cppext/charscanner.h
-  ./cppext/cheaptricks.cpp
-  ./cppext/cheaptricks.h
-  ./cppext/circularbuffer.h
-  ./cppext/circularindexer.h
-  ./cppext/continuedfractionratiogenerator.cpp
-  ./cppext/continuedfractionratiogenerator.h
-  ./cppext/converter.cpp
-  ./cppext/converter.h
-  ./cppext/core-atomic.cpp
-  ./cppext/core-atomic.h
-  ./cppext/countdown.cpp
-  ./cppext/countdown.h
-  ./cppext/cppexttester.h
-  ./cppext/crc16m.cpp
-  ./cppext/crc16m.h
-  ./cppext/cstr.cpp
-  ./cppext/cstr.h
-  ./cppext/cycler.cpp
-  ./cppext/cycler.h
-  ./cppext/debuggable.h
-  ./cppext/demonic.h
-  ./cppext/determinator.cpp
-  ./cppext/determinator.h
-  ./cppext/enumerated.cpp
-  ./cppext/enumerated.h
-  ./cppext/enumerizer.cpp
-  ./cppext/enumerizer.h
-  ./cppext/eventflag.h
-  ./cppext/extremer.h
-  ./cppext/eztypes.h
-  ./cppext/fitstat.cpp
-  ./cppext/fitstat.h
-  ./cppext/halfopen.cpp
-  ./cppext/halfopen.h
-  ./cppext/hook.h
-  ./cppext/index.h
-  ./cppext/iterate.h
-  ./cppext/linearfit.cpp
-  ./cppext/linearfit.h
-  ./cppext/linearsmoother.h
-  ./cppext/linearstatistic.h
-  ./cppext/lock.h
-  ./cppext/maxtracked.cpp
-  ./cppext/maxtracked.h
-  ./cppext/minimath.cpp
-  ./cppext/minimath.h
-  ./cppext/multilock.cpp
-  ./cppext/multilock.h
-  ./cppext/numberformat.cpp
-  ./cppext/numberformat.h
-  ./cppext/numberparser.cpp
-  ./cppext/numberparser.h
-  ./cppext/numberpieces.cpp
-  ./cppext/numberpieces.h
-  ./cppext/numericalvalue.cpp
-  ./cppext/numericalvalue.h
-  ./cppext/onexit.h
-  ./cppext/ordinator.h
-  ./cppext/pathiterator.cpp
-  ./cppext/pathiterator.h
-  ./cppext/pathname.cpp
-  ./cppext/pathname.h
-  ./cppext/poissonfeeder.cpp
-  ./cppext/poissonfeeder.h
-  ./cppext/polledtimer.cpp
-  ./cppext/polledtimer.h
-  ./cppext/polyfilter.cpp
-  ./cppext/polyfilter.h
-  ./cppext/polynomial.cpp
-  ./cppext/polynomial.h
-  ./cppext/pushedjsonparser.cpp
-  ./cppext/pushedjsonparser.h
-  ./cppext/pushedparser.cpp
-  ./cppext/pushedparser.h
-  ./cppext/quadraticfilter.cpp
-  ./cppext/quadraticfilter.h
-  ./cppext/quantizer.cpp
-  ./cppext/quantizer.h
-  ./cppext/ranged.cpp
-  ./cppext/ranged.h
-  ./cppext/range.h
-  ./cppext/realstatistic.cpp
-  ./cppext/realstatistic.h
-  ./cppext/safestr.cpp
-  ./cppext/safestr.h
-  ./cppext/scaler.h
-  ./cppext/sequence.h
-  ./cppext/softpwm.cpp
-  ./cppext/softpwm.h
-  ./cppext/syncretic.h
-  ./cppext/tableofpointers.h
-  ./cppext/textchunk.cpp
-  ./cppext/textchunk.h
-  ./cppext/textkey.cpp
-  ./cppext/textkey.h
-  ./cppext/textwalker.cpp
-  ./cppext/textwalker.h
-  ./cppext/transactionalbuffer.cpp
-  ./cppext/transactionalbuffer.h
-  ./cppext/twiddler.cpp
-  ./cppext/twiddler.h
-  ./cppext/unionizer.cpp
-  ./cppext/unionizer.h
-  ./cppext/utf8.cpp
-  ./cppext/utf8.h
   ./ignoresignwarnings.h
   ./network/darkhttpd.cpp
   ./network/darkhttpd.h
@@ -372,4 +246,15 @@ add_library(safely STATIC
   ./ustring.h
   ./versioning.cpp
 
+)
+
+add_executable(
+  testlink
+  tests/bonnet.cpp
+
+)
+
+target_link_libraries(
+  cppext
+  safely
 )
