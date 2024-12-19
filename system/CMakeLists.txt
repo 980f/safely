@@ -32,8 +32,6 @@ add_library(system STATIC
   #kanjidic.h
   linearfilter.cpp
   linearfilter.h
-  logger.cpp
-  logger.h
   managedblock.cpp
   managedblock.h
   mapiterator.h
@@ -92,3 +90,12 @@ add_library(system STATIC
   utf8transcoder.h
   watchable.h
 )
+
+target_include_directories(system PUBLIC
+  ${PROJECT_SOURCE_DIR}
+  ${PROJECT_SOURCE_DIR}/cppext
+  ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+get_target_property(arf system "INCLUDE_DIRECTORIES")
+message("system target ${arf}")

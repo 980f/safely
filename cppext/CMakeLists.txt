@@ -70,6 +70,7 @@ add_library(cppext STATIC
   linearsmoother.h
   linearstatistic.h
   lock.h
+  logger.cpp logger.h
   maxtracked.cpp
   maxtracked.h
   minimath.cpp

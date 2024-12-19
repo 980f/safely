@@ -12,8 +12,20 @@
 const extern double Infinity;
 const extern double Nan;
 
-/** specifically nan, not infinity, @see isSignal() */
-constexpr bool isNan(double d);
+
+/** specifically nan, not infinity, @see isNormal() */
+constexpr bool isNan(double d){
+  return std::isnan(d);
+}
+
+constexpr bool isSignal(double d){
+  return isNan(d);
+}
+
+constexpr bool isNormal(double d){
+  return std::isnormal(d);
+}
+
 
 /** isNan(int) exists to allow templates to use isNan for floats without fancy type testing*/
 constexpr bool isNan(int) {
@@ -24,14 +36,11 @@ constexpr bool isNan(unsigned) {
   return false;
 }
 
-/** is a normalized fp number, excludes zero and signals */
-constexpr bool isNormal(double d);
-
-/** is not a value */
-constexpr bool isSignal(double d);
-
 /** is either 0 or not a nan. */
-constexpr bool isDecent(double d);
+constexpr bool isDecent(double d){
+  return d==0.0 || isNormal(d);
+}
+
 
 /** Note: 'signbit' is a macro in math.h that pertains only to floating point arguments
  * @returns sign of operand, and converts operand to its magnitude, MININT(0x800...) is still MININT and must be interpreted as unsigned to work correctly
@@ -117,8 +126,6 @@ template<typename Integer, typename Inttoo> Integer constexpr quanta(Integer num
   return (num + denom - 1) / denom;
 }
 
-/** quantity of bins needed to hold num items at denom items per bin */
-constexpr unsigned chunks(double num, double denom);
 
 
 /** protect against garbage in (divide by zero) note: 0/0 is 0, NOT what rate() returns for the similar case.
@@ -128,6 +135,17 @@ template<typename NumericTop,typename NumericBottom> constexpr double ratio(Nume
     return double(num); //attempt to make 0/0 be 1 was annoying in many use cases, where the denom was truncated instead of rounded coming from a sensor. should be signed inf or nan.
   }
   return double(num)/double(denom);//converts integers to float before divide, but after testing for zero.
+}
+
+/** quantity of bins needed to hold num items at denom items per bin */
+constexpr unsigned chunks(double num, double denom){
+  double _ratio = ratio(num, denom);
+
+  if(_ratio >= 0) {
+    return u32(ceil(_ratio));
+  } else {
+    return 0;
+  }
 }
 
 /** round to a quantum, to kill trivial trailing DECIMAL digits*/
@@ -140,7 +158,7 @@ constexpr double rounder(double value, double quantum) {
  *
  *  Note: the C '%' operator gives negative out for negative in.
  */
-constexpr unsigned modulus(int value, unsigned cycle);
+unsigned modulus(int value, unsigned cycle);
 
 /** @param accum is reduced to a number less than @param length,
  * @returns the number of subtractions that were necessary to do so.
@@ -157,7 +175,7 @@ template<typename Integrish, typename Integrash> Integrish constexpr revolutions
 }
 
 /** standard math lib's f_r_exp does a stupid thing for some args, we wrap it here and fix that.*/
-constexpr int fexp(double d) ISRISH;
+int fexp(double d) ISRISH;
 
 /** @returns whether the difference of the two numbers is less than a power of two times the lesser of the two. */
 template<typename floating> bool constexpr nearly(floating value, floating other, int bits = 32) {
@@ -184,44 +202,44 @@ template<typename floating> bool constexpr nearly(floating value, floating other
 
 /** @returns The base 10 exponent of @param value. Note that the number of digits for values >0 is 1+ilog10().
  * For zero this returns -1, most logic will have problems if you don't check that. */
-constexpr int ilog10(u32 value);
+int ilog10(u32 value);
 
-constexpr int ilog10(u64 value);
+int ilog10(u64 value);
 
-constexpr int ilog10(double value);
-
-/** an integer power of 10. out of bounds arg gets you nothing but trouble ... */
-constexpr u32 i32pow10(unsigned power);
-
-constexpr unsigned digitsAbove(unsigned int value, unsigned numDigits);
+int ilog10(double value);
 
 /** an integer power of 10. out of bounds arg gets you nothing but trouble ... */
-constexpr u64 i64pow10(unsigned power);
+u32 i32pow10(unsigned power);
+
+unsigned digitsAbove(unsigned int value, unsigned numDigits);
+
+/** an integer power of 10. out of bounds arg gets you nothing but trouble ... */
+u64 i64pow10(unsigned power);
 
 /** @param p19 is 10^19 times a fractional value. @param digits is the number of digits past the virtual radix point you are interested in.
  *  @returns a properly rounded int that has those digits of interest, but you may need to pad with leading zeroes. */
-constexpr u64 keepDecimals(u64 p19, unsigned digits);
+u64 keepDecimals(u64 p19, unsigned digits);
 
 /** @param p19 is 10^19 times a fractional value. @param digits is the number of digits past the virtual radix point you are interested in.
  *  @returns a truncated int that has those digits of interest, but you may need to pad with leading zeroes. */
-constexpr u64 truncateDecimals(u64 p19, unsigned digits);
+u64 truncateDecimals(u64 p19, unsigned digits);
 
 /** filtering in case we choose to optimize this */
-constexpr double dpow10(int exponent);
+double dpow10(int exponent);
 
-constexpr double dpow10(unsigned uexp);
+double dpow10(unsigned uexp);
 
 template<typename mathy> constexpr double squared(mathy x) {
   return x * x;
 }
 
-constexpr double degree2radian(double theta);
+double degree2radian(double theta);
 
 /** n!/r!(n-r)! combinatorial function.
  * Was formerly named and documented as Pnr, but implementation was correct for Cnr and so was its usages.
  * has greater range than naive implementation of ratio of factorials.
  */
-constexpr unsigned Cnr(unsigned n, unsigned r);
+unsigned Cnr(unsigned n, unsigned r);
 
 /** if @param a is greater than @param b set it to b and @return whether a change was made.
  *  if @param orequal is true then also return true if args are equal.
@@ -306,34 +324,34 @@ constexpr unsigned splitteru(double &d){
 void nanoSpin(unsigned ticks);
 
 /** rounded and overflow managed 'multiply by ratio' */
-constexpr u32 muldivide(u32 arg, u32 num, u32 denom);
+u32 muldivide(u32 arg, u32 num, u32 denom);
 
 /** @returns static_cast<unsigned>(ceil( quantity * @param fractionThereof ))
  */
-constexpr unsigned saturated(unsigned quantity, double fractionThereof);
+unsigned saturated(unsigned quantity, double fractionThereof);
 
 /** fraction is a fractional multiplier, with numbits stating how many fractional bits it has.*/
-constexpr u16 fractionallyScale(u16 number, u16 fraction, u16 numbits);
+u16 fractionallyScale(u16 number, u16 fraction, u16 numbits);
 
 /** 1 + the integer part of log base 2 of the given number, pretty much is just "count the leading zeroes".
  * Note well that this will give 0 as the log of 0 rather than negative infinity, precheck the argument if you can't live with that.
  * mathematical definition: "number of right shifts necessary for an unsigned number to become 0"
  */
-constexpr unsigned log2Exponent(u32 number);
+unsigned log2Exponent(u32 number);
 
 /** @returns eff * 2^pow2  where pow2 is signed. This can be done rapidly via bitfiddling*/
-constexpr float shiftScale(float eff, int pow2);
+float shiftScale(float eff, int pow2);
 
-constexpr double flog(unsigned number);
+double flog(unsigned number);
 
 /** @return the natural logarithm of the ratio of @param over @param under.
  * This is computable as the difference of their logs, but we wrap that here so that some fancy fiddling can reduce the number of logarithms executed. */
-constexpr double logRatio(unsigned over, unsigned under);
+double logRatio(unsigned over, unsigned under);
 
 //sane truncations:
-constexpr u16 uround(float scaled);
+u16 uround(float scaled);
 
-constexpr s16 sround(float scaled);
+s16 sround(float scaled);
 
 /** NB: copyObject() and fillObject() can NOT be used with objects that contain polymorphic objects */
 void copyObject(const void *source, void *target, u32 length);

@@ -5,10 +5,10 @@
 const double Infinity = std::numeric_limits<double>::infinity();
 const double Nan = std::numeric_limits<double>::quiet_NaN();
 
-constexpr unsigned log2Exponent(u32 number){
+unsigned log2Exponent(u32 number) {
   //can be really fast in asm
-  for(u32 exp = 0; exp<32; ++exp) {
-    if(number) {
+  for (u32 exp = 0; exp < 32; ++exp) {
+    if (number) {
       number >>= 1;
     } else {
       return exp;
@@ -16,19 +16,6 @@ constexpr unsigned log2Exponent(u32 number){
   }
   return 32;
 } // log2Exponent
-
-#include <cmath>
-constexpr bool isSignal(double d){
-  return isNan(d);
-}
-
-constexpr bool isNan(double d){
-  return std::isnan(d);
-}
-
-constexpr bool isNormal(double d){
-  return std::isnormal(d);
-}
 
 
 #else // ifdef __linux__
@@ -40,33 +27,39 @@ const double Infinity = pun(double,InfPattern);
 const double Nan(pun(double,NanPattern));
 
 
-bool isSignal(double d){
+constexpr bool isSignal(double d){
   return d == Nan || d == Infinity;
 }
 
-bool isNan(double arg){
+constexpr bool isNan(double arg){
   return arg == Nan;
 }
 
-bool isNormal(double d){//mimicing std::isnormal which means 'is fully normalized fp number'
+constexpr bool isNormal(double d){//mimicing std::isnormal which means 'is fully normalized fp number'
   return d!=0 && !isSignal(d);
 }
 
 #endif // ifdef __linux__
 
-constexpr bool isDecent(double d){
-  return d==0.0 || isNormal(d);
-}
 
 //powers of 10 that fit into a 32 bit integer
 constexpr u32 Decimal1[] = {
-  1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000, 1000000000
+  1,
+  10,
+  100,
+  1000,
+  10000,
+  100000,
+  1000000,
+  10000000,
+  100000000,
+  1000000000
 };
 
 /** @returns the number of decimal digits needed to represent the given integer, -1 if the number is 0 */
-constexpr int ilog10(u32 value){
-  for(int log = countof(Decimal1); log-->0; ) {
-    if(Decimal1[log]<=value) {
+int ilog10(u32 value) {
+  for (int log = countof(Decimal1); log-- > 0;) {
+    if (Decimal1[log] <= value) {
       return log;
     }
   }
@@ -74,97 +67,106 @@ constexpr int ilog10(u32 value){
 }
 
 // powers of 10 that fit into a 64 bit integer, but not a 32bit integer.
-constexpr  u64 Decimal2[] = {
-  10000000000UL, 100000000000UL, 1000000000000UL, 10000000000000UL, 100000000000000UL, 1000000000000000UL, 10000000000000000UL, 100000000000000000UL, 1000000000000000000UL, 10000000000000000000UL
+constexpr u64 Decimal2[] = {
+  10000000000UL,
+  100000000000UL,
+  1000000000000UL,
+  10000000000000UL,
+  100000000000000UL,
+  1000000000000000UL,
+  10000000000000000UL,
+  100000000000000000UL,
+  1000000000000000000UL,
+  10000000000000000000UL
   //compiler reported overflow when I added one more.
 };
 
 /** @returns the number of decimal digits needed to represent the given integer, -1 if the number is 0 */
-constexpr int ilog10(u64 value){
-  for(int log = countof(Decimal2); log-->0; ) {
-    if(Decimal2[log]<=value) {
+int ilog10(u64 value) {
+  for (int log = countof(Decimal2); log-- > 0;) {
+    if (Decimal2[log] <= value) {
       return log + 10;
     }
   }
   return ilog10(u32(value));
 }
 
-constexpr unsigned i32pow10(unsigned power){
-  if(power<countof(Decimal1)) {
+unsigned i32pow10(unsigned power) {
+  if (power < countof(Decimal1)) {
     return Decimal1[power];
   }
-  return 0;//this should get the caller's attention.
+  return 0; //this should get the caller's attention.
 }
 
-constexpr u64 i64pow10(unsigned power){
-  if(power>=countof(Decimal1)) {
+u64 i64pow10(unsigned power) {
+  if (power >= countof(Decimal1)) {
     power -= countof(Decimal1);
-    if(power<countof(Decimal2)) {
+    if (power < countof(Decimal2)) {
       return Decimal2[power];
     }
-    return 0;//overflow
+    return 0; //overflow
   } else {
     return Decimal1[power];
   }
 } // i64pow10
 
-constexpr u64 keepDecimals(u64 p19,unsigned digits){
-  return rate(p19,i64pow10(19 - digits));
+u64 keepDecimals(u64 p19, unsigned digits) {
+  return rate(p19, i64pow10(19 - digits));
 }
 
-constexpr u64 truncateDecimals(u64 p19,unsigned digits){
-  if(digits<=19) {
+u64 truncateDecimals(u64 p19, unsigned digits) {
+  if (digits <= 19) {
     return p19 / i64pow10(19 - digits);
   }
   return 0;
 }
 
 //uround and sround are coded to be like they will in optimized assembly
-constexpr u16 uround(float scaled){
-  if(scaled < 0.5F) { //fp compares are the same cost as integer.
+u16 uround(float scaled) {
+  if (scaled < 0.5F) { //fp compares are the same cost as integer.
     return 0;
   }
   scaled *= 2; //expose rounding bit
-  if(scaled >= 131071) {
+  if (scaled >= 131071) {
     return 65535;
   }
   int eye = int(scaled); //truncate
   return u16(eye / 2);
 } /* uround */
 
-constexpr s16 sround(float scaled){ //#this would be so much cleaner and faster in asm!
-  if(scaled > 32766.5F) {
+s16 sround(float scaled) { //#this would be so much cleaner and faster in asm!
+  if (scaled > 32766.5F) {
     return 32767;
   }
-  if(scaled < -32767.5F) {
+  if (scaled < -32767.5F) {
     return -32768;
   }
   scaled += scaled >= 0 ? 0.5 : -0.5; //round away from 0. aka round the magnitude.
   return s16(scaled);
 }
 
-constexpr unsigned modulus(int value, unsigned cycle){
-  if(cycle<=1) {
-    return value;//GIGO
+unsigned modulus(int value, unsigned cycle) {
+  if (cycle <= 1) {
+    return value; //GIGO
   }
   /* since most use cases are within one cycle we use add/sub rather than try to make divide work.*/
-  while(value < 0) {
+  while (value < 0) {
     value += cycle;
   }
-  while(unsigned(value) >= cycle) {
+  while (unsigned(value) >= cycle) {
     value -= cycle;
   }
   return value;
 } // modulus
 
-constexpr unsigned saturated(unsigned quantity, double fractionThereof){
+unsigned saturated(unsigned quantity, double fractionThereof) {
   double dee(quantity * fractionThereof);
-  if(dee<0) {
+  if (dee < 0) {
     return 0;
   }
   unsigned rawbins(dee + 0.5);
 
-  if(rawbins >= quantity) {
+  if (rawbins >= quantity) {
     return quantity - 1;
   } else {
     return rawbins;
@@ -173,39 +175,30 @@ constexpr unsigned saturated(unsigned quantity, double fractionThereof){
 
 #undef __STRICT_ANSI__
 
-constexpr unsigned chunks(double num, double denom){
-  double _ratio = ratio(num, denom);
 
-  if(_ratio >= 0) {
-    return u32(ceil(_ratio));
-  } else {
-    return 0;
-  }
-}
-
-constexpr int fexp(double d){ //todo:1 remove dependence on cmath.
-  int ret=0;//assignment required for constexpr'ness
-  if(d == 0.0) { //frexp returns 0, which makes it look bigger than numbers between 0 and 1.
-    return std::numeric_limits<decltype(d)>::min_exponent -1;
+int fexp(double d) { //todo:1 remove dependence on cmath.
+  int ret = 0; //assignment required for constexpr'ness
+  if (d == 0.0) { //frexp returns 0, which makes it look bigger than numbers between 0 and 1.
+    return std::numeric_limits<decltype(d)>::min_exponent - 1;
     // return -1023;//one less than any non-zero number will give
   }
   frexp(d, &ret);
   return ret;
 }
 
-constexpr double dpow10(unsigned uexp){
-  if(uexp<countof(Decimal1)) {
+double dpow10(unsigned uexp) {
+  if (uexp < countof(Decimal1)) {
     return double(Decimal1[uexp]);
   }
-  if(uexp<countof(Decimal2) + countof(Decimal1)) {
+  if (uexp < countof(Decimal2) + countof(Decimal1)) {
     return double(Decimal2[uexp - countof(Decimal1)]);
   }
   return 0;
 }
 
-constexpr double dpow10(int exponent){
-  if(exponent>=0) {
-     dpow10(unsigned(exponent));
+double dpow10(int exponent) {
+  if (exponent >= 0) {
+    dpow10(unsigned(exponent));
   }
   //todo: see if std lib uses RPE to compute this.
   return pow(10, exponent);
@@ -217,7 +210,7 @@ constexpr double dpow10(int exponent){
 #define M_PI 3.14159265358979323846
 #endif
 
-constexpr double degree2radian(double theta){
+double degree2radian(double theta) {
   return theta * (M_PI / 180);
 }
 
@@ -230,7 +223,7 @@ constexpr double degree2radian(double theta){
 static const double M_LN2(0.69314718055994530942);
 #endif
 
-constexpr double flog(u32 number){
+ double flog(u32 number){
   int exponent = log2Exponent(number);
   int malign = number << (30 - exponent); //unsigned 1.31
 
@@ -303,8 +296,8 @@ double flog(u32 number){
 } /* flog */
 
 #else /* if gotFlogWorking == 2 */
-constexpr double flog(u32 number){
-  if(number == 0) {
+double flog(u32 number) {
+  if (number == 0) {
     number = 1;
   }
   return log(double(number)); //without the cast the gcc-arm compiler just called __floatunsidf
@@ -334,7 +327,7 @@ double logRatio(u32 over, u32 under){
 
 #else /* if logoptimized */
 //someday we will optimize the following:
-constexpr double logRatio(u32 over, u32 under){
+double logRatio(u32 over, u32 under) {
   return flog(over) - flog(under);
 }
 
@@ -343,16 +336,16 @@ constexpr double logRatio(u32 over, u32 under){
 /** n!/r!(n-r)! = n*(n-1)..*(n-r+1)/r*(r-1)..
  *  This is done in a complicated fashion to increase the range over what could be done if the factorials were computed then divided.
  */
-constexpr unsigned Cnr(unsigned n, unsigned r){
-  if(r<=0) {//frequent case and avert naive divide by zero
+unsigned Cnr(unsigned n, unsigned r) {
+  if (r <= 0) { //frequent case and avert naive divide by zero
     return 1;
   }
-  if(r==1) {//fairly frequent case
+  if (r == 1) { //fairly frequent case
     return n;
   }
-  if(r==2) {
+  if (r == 2) {
     //divide the even number by 2, via shift.
-    if(n & 1) {
+    if (n & 1) {
       return n * ((n - 1) >> 1);
     } else {
       return (n >> 1) * (n - 1);
@@ -363,38 +356,37 @@ constexpr unsigned Cnr(unsigned n, unsigned r){
   unsigned denom = r;
   //optimize range by removing power of 2 from factorials while computing them
   int twos = 0;
-  while(r-->0) {
+  while (r-- > 0) {
     unsigned nterm = --n;
-    while(0==(nterm & 1)) {//50% of the time we loop just once, 25% of the time twice 12.5% of the time 3 times ...
+    while (0 == (nterm & 1)) { //50% of the time we loop just once, 25% of the time twice 12.5% of the time 3 times ...
       ++twos;
       nterm >>= 1;
     }
     num *= nterm;
     unsigned rterm = r;
-    while(0==(rterm & 1)) {
-      --twos;//these discarded twos are in the denominator
+    while (0 == (rterm & 1)) {
+      --twos; //these discarded twos are in the denominator
       rterm >>= 1;
     }
     denom *= rterm;
   }
   //twos should be a small value
-  if(twos>=0) {
+  if (twos >= 0) {
     num <<= twos;
   } else {
     denom <<= -twos;
   }
-  return rate(num,denom);
+  return rate(num, denom);
 } // Cnr
 
 
-
 ///** version of @see splitter that allows for long or long-long etc integer types.
-constexpr unsigned digitsAbove(unsigned int value, unsigned numDigits){
+unsigned digitsAbove(unsigned int value, unsigned numDigits) {
   unsigned digit = value / i32pow10(numDigits);
   value -= digit * i32pow10(numDigits);
   return digit;
 }
 
-constexpr int ilog10(double value){
+int ilog10(double value) {
   return ilog10(u64(fabs(value)));
 }

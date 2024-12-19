@@ -26,19 +26,12 @@ void MatrixInverter::dump(bool please){
   }
 } // MatrixInverter::dump
 
-MatrixInverter::MatrixInverter(unsigned size) :
-  size(size),
-  xs(size),
-  inv(size),
-  ignore(size){
-  //moved to constructor.
-}
+MatrixInverter::MatrixInverter(unsigned size) :size(size),xs(size),inv(size),  ignore(size){}
 
 MatrixInverter::Matrix::Matrix(unsigned size) :
   std::vector< Column >(size){
   forSize(i){
     (*this)[i].resize(size);
-
   }
 }
 
@@ -144,6 +137,7 @@ bool MatrixInverter::test(){
               product += xs[cl][pi] * inv[pi][rw];
             }
           }
+          //product here should equal rw==cl. The deviations from 1.0 or 0.0 shows the noisiness of the fp math.
           one[cl][rw] = product;
         }
       }
