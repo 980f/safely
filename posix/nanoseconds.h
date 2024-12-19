@@ -26,6 +26,7 @@ constexpr void parseTime(timespec &ts, double seconds){
 }
 
 struct NanoSeconds : timespec {
+
   constexpr NanoSeconds(double seconds) {
     this->operator=(seconds);
   }

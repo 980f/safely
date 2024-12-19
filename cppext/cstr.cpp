@@ -1,7 +1,7 @@
 #include "cstr.h"
-#include "safely.h"
-#include "string.h"
-#include "stdlib.h" //strtod
+// #include "safely.h"
+#include <cstring>
+#include <cstdlib> //strtod
 
 Cstr::Cstr() : ptr(nullptr){
   //#nada
@@ -11,7 +11,7 @@ Cstr::Cstr(TextKey target) : ptr(target){
 
 }
 
-Cstr::Cstr(unsigned char *target) : ptr(reinterpret_cast<char *>(target)){
+Cstr::Cstr(const unsigned char *target) : ptr(reinterpret_cast<TextKey>(target)){
   //#nada
 }
 

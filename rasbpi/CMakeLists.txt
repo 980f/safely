@@ -21,3 +21,14 @@ add_library(rasbpi STATIC
   SSD1306.cpp
   SSD1306.h
 )
+
+target_include_directories(rasbpi PUBLIC
+  ${PROJECT_SOURCE_DIR}
+  ${PROJECT_SOURCE_DIR}/cppext
+  ${PROJECT_SOURCE_DIR}/system
+  ${PROJECT_SOURCE_DIR}/posix
+  ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+get_target_property(arf rasbpi "INCLUDE_DIRECTORIES")
+message("rasbpi includes ${arf}")

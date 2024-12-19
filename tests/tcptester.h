@@ -1,22 +1,13 @@
-#ifndef TCPTESTER_H
-#define TCPTESTER_H
-//////////////////////////////////////////
+#pragma once
 
 #include "tcpserver.h"
 #include "chain.h"
-#if __has_include("deferedexecutor.h")
-#include "deferedexecutor.h"
-#else
- class DeferedExecutor{
- //todo: recover code and migrate to using some sort of POSIX timer for the deferal, class was dropped due to glib timer usage.
- };
-#endif
 
 class TcpTester: public TcpServer {
-  class TestService : public TcpSocket {
+  class TestService : public TcpSocket, SIGCTRACKABLE {
     friend class TcpTester;
     //notify on disconnects, including on destructor
-    using TestSlot= sigc::slot<void(TestService *)>;
+    using TestSlot=sigc::slot<void(TestService *)>;
     TestSlot onDisconnect;
 
     /** expect this to be called with connected==false only when remote disconnects. */
@@ -24,7 +15,6 @@ class TcpTester: public TcpServer {
 
     u8 bufferAllocation[100];
     ByteScanner buffer;
-    DeferedExecutor idleDetector;
 
     void reader(ByteScanner&raw);
 
@@ -49,8 +39,6 @@ public:
   TcpTester(int port,int backlog=3);
 
   TcpSocket *spawnClient(int client_fd, u32 ipv4);
+  /** BLOCKING server that responds with a fixed message to any message received. */
   bool runMiniServer(int port);
 };
-
-
-#endif // TCPTESTER_H

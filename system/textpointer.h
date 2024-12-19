@@ -93,6 +93,3 @@ public:
 
   Text substring(unsigned first, unsigned last);
 }; // class TextPointer
-
-//pre-safely name:
-using TextPointer = Text;

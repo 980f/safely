@@ -1,7 +1,7 @@
 #cmake_minimum_required(VERSION 3.16)
 #project(system VERSION 1.0 LANGUAGES CXX)
 
-message("including 'system' cmake file")
+message("including 'system' ")
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 add_library(system STATIC
@@ -98,4 +98,4 @@ target_include_directories(system PUBLIC
 )
 
 get_target_property(arf system "INCLUDE_DIRECTORIES")
-message("system target ${arf}")
+message("'system' includes ${arf}")

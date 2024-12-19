@@ -37,10 +37,11 @@ public:
 };
 
 #include "index.h"
-struct Span: public HalfOpen<Index> {
+struct Span: HalfOpen<Index> {
   Span(Index low,Index high);
   Span();
-//  virtual ~Span();
+   ~Span() override =default;
+
   bool ordered() const override;
   /** move span to next possible one. default of 1 is for cutting out single character separators */
   void leapfrog(unsigned skip=1);

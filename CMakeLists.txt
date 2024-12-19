@@ -30,6 +30,9 @@ add_library(safely STATIC
   ./storedloggermanager.h
   ./versioning.cpp
   ./versioning.h
+  system/textpointer.cpp
+  cppext/charformatter.cpp
+  cppext/cstr.cpp
 )
 
 add_executable(
@@ -41,6 +44,7 @@ target_link_libraries( testlink
   cppext
   system
   posix
+  rasbpi
   safely
 )
 

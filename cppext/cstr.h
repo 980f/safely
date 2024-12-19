@@ -21,7 +21,7 @@ protected://we are a base class
 public:
   Cstr();
   Cstr(TextKey target);//# we desire implicit conversions
-  Cstr(unsigned char *target);//# we desire implicit conversions
+  Cstr(const unsigned char *target);//# we desire implicit conversions
 
   //virtual destructor as this is a base for classes which may do smart things with the pointer on destruction.
   virtual ~Cstr() = default;//we never take ownership of ptr, see class Text for such a beast.

@@ -1,5 +1,4 @@
-#ifndef TEXTKEY_H
-#define TEXTKEY_H
+#pragma once
 
 /** marker for internal tag for const text, especially useful in getting 'const' onto the correct place
  *
@@ -54,5 +53,3 @@ bool same(TextKey a, TextKey b);
 double toDouble(TextKey rawText, bool *impure = nullptr);
 
 unsigned toIndex(TextKey rawText, bool *impure = nullptr);
-
-#endif // TEXTKEY_H

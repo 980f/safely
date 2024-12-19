@@ -30,3 +30,15 @@ add_library(usb STATIC
   libusb/os/linux_udev.c
 
 )
+
+
+  target_include_directories(usb PUBLIC
+    ${PROJECT_SOURCE_DIR}
+    ${PROJECT_SOURCE_DIR}/cppext
+    ${PROJECT_SOURCE_DIR}/system
+    ${PROJECT_SOURCE_DIR}/posix
+    ${CMAKE_CURRENT_SOURCE_DIR}
+  )
+
+  get_target_property(arf usb "INCLUDE_DIRECTORIES")
+  message("'usb' includes ${arf}")

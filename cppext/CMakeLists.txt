@@ -144,9 +144,11 @@ add_library(cppext STATIC
 #  ${PROJECT_SOURCE_DIR}/cppext
 #)
 
-message( "in cppext project is ${PROJECT_SOURCE_DIR}")
 
 target_include_directories(cppext PUBLIC
   ${PROJECT_SOURCE_DIR}
-
+  ${CMAKE_CURRENT_SOURCE_DIR}
 )
+
+get_target_property(arf cppext "INCLUDE_DIRECTORIES")
+message("cppext includes: ${arf}")

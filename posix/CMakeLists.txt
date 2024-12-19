@@ -72,8 +72,7 @@ add_library(posix STATIC
   #tcpserver.h
   #tcpsocket.cpp
   #tcpsocket.h
-  tcptester.cpp
-  tcptester.h
+#moved to tests project, not part of lib   tcptester.cpp  tcptester.h
   telnetserver.cpp
   telnetserver.h
   threader.cpp
@@ -84,3 +83,14 @@ add_library(posix STATIC
   worstcase.cpp
   worstcase.h
 )
+
+
+target_include_directories(posix PUBLIC
+  ${PROJECT_SOURCE_DIR}
+  ${PROJECT_SOURCE_DIR}/cppext
+  ${PROJECT_SOURCE_DIR}/system
+  ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+get_target_property(arf posix "INCLUDE_DIRECTORIES")
+message("'posix' includes ${arf}")
