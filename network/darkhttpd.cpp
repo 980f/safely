@@ -1,15 +1,37 @@
 /**
 // Created by andyh on 12/14/24.
 // Copyright (c) 2024 Andy Heilveil, (github/980f). All rights reserved.
+
+ * This module was started using C source whose license was:
+ *
+ * darkhttpd - a simple, single-threaded, static content webserver.
+ * https://unix4lyfe.org/darkhttpd/
+ * Copyright (c) 2003-2024 Emil Mikulic <emikulic@gmail.com>
+ *
+ * Permission to use, copy, modify, and distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the
+ * above copyright notice and this permission notice appear in all
+ * copies.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL
+ * WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE
+ * AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL
+ * DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR
+ * PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
+ * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+ * PERFORMANCE OF THIS SOFTWARE.
+ *
+ * It has been heavily modified to make it a module that can be included in other programs.
 */
 
 #include "darkhttpd.h"
 
 #include <cstdarg>
 
-static const char pkgname[] = "darkhttpd/1.16.from.git";
+static const char pkgname[] = "darkhttpd/1.16.from.git/980f";
 static const char copyright[] = "copyright (c) 2003-2024 Emil Mikulic"
-                                ", totally refactored in 2024 by github/980f";
+  ", totally refactored in 2024 by github/980f";
 
 /* Possible build options: -DDEBUG -DNO_IPV6 */
 
@@ -51,7 +73,14 @@ class DebugLog {
 
 public:
   /** @returns spew so that you can do if(debug ()) {  more behavior conditional on debug }*/
-  bool operator()(const char *format, ...) const checkFargs(2,3) {
+  bool operator()(const char *format, va_list &vargs) {
+    if (spew && format) {
+      vfprintf(stdout, format, vargs);
+    }
+    return spew;
+  }
+
+  bool operator()(const char *format, ...) const checkFargs(2, 3) {
     if (spew && format) {
       va_list args;
       va_start(args, format);
@@ -66,7 +95,7 @@ public:
     return enable;
   }
 
-  DebugLog(bool startup) :spew(startup) {}
+  DebugLog(bool startup) : spew(startup) {}
 };
 
 #define countOf(a) (sizeof(a) / sizeof(a[0]))
@@ -79,6 +108,24 @@ static DebugLog debug(false);
 static DebugLog debug(true);
 #endif
 
+
+class DarkException : public std::exception {
+public:
+  int returncode = 0; // what would have been returned to a shell on exit.
+  /** prints to log (if enable) when thrown, before any catching */
+  // DarkException(int returncode, const char *msgf, ...) checkFargs(3, 4) : returncode{returncode} {
+  //   va_list args;
+  //   va_start(args, msgf);
+  //   debug(msgf, args);
+  //   va_end(args);
+  // }
+  //
+  DarkException(int returncode): returncode{returncode} {}
+
+  const char *what() const noexcept override {
+    return strerror(returncode);
+  }
+};
 
 /** The time formatting that we use in directory listings.
  * An example of the default is 2013-09-09 13:01, which should be compatible with xbmc/kodi. */
@@ -104,10 +151,8 @@ static const unsigned DIR_LIST_MTIME_SIZE = 16 + 1; /* How large the buffer will
 #include <sys/procctl.h>
 #endif
 
-#if defined(__has_feature)
-#if __has_feature(memory_sanitizer)
+#if defined(__has_feature) &&  __has_feature(memory_sanitizer)
 #include <sanitizer/msan_interface.h>
-#endif
 #endif
 
 #ifdef __sun__
@@ -141,50 +186,34 @@ template<typename Integrish> auto llu(Integrish x) {
   return static_cast<unsigned long long>(x);
 }
 
-// todo: replace all of these with logging and throwing an exception.
-#if defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__linux)
-#include <err.h>
-#else
+// replaced err.h usage  with logging and throwing an exception.
+
 /* err - prints "error: format: strerror(errno)" to stderr and exit()s with
  * the given code.
  */
 static void err(const int code, const char *format, ...) checkFargs(2, 3);
+
 static void err(const int code, const char *format, ...) {
+  fprintf(stderr, "err[%d]: %s", code, code > 0 ? strerror(code) : "is not an errno.");
   va_list va;
-
   va_start(va, format);
-  fprintf(stderr, "error: ");
+
   vfprintf(stderr, format, va);
-  fprintf(stderr, ": %s\n", strerror(errno));
   va_end(va);
-  exit(code);
+  throw DarkException(code);;
 }
 
-/* errx - err() without the strerror */
-static void errx(const int code, const char *format, ...) checkFargs(2, 3);
-static void errx(const int code, const char *format, ...) {
-  va_list va;
+#define errx(first, second, ... ) err( - (first), second, ## __VA_ARGS__ )
 
-  va_start(va, format);
-  fprintf(stderr, "error: ");
-  vfprintf(stderr, format, va);
-  fprintf(stderr, "\n");
-  va_end(va);
-  exit(code);
-}
-
-/* warn - err() without the exit */
 static void warn(const char *format, ...) checkFargs(1, 2);
+
 static void warn(const char *format, ...) {
   va_list va;
-
   va_start(va, format);
-  fprintf(stderr, "warning: ");
   vfprintf(stderr, format, va);
   fprintf(stderr, ": %s\n", strerror(errno));
   va_end(va);
 }
-#endif
 
 /** @returns nullptr if the line is blank or EOL or EOL comment char, else points to first char not a space nor a tab */
 static const char *removeLeadingWhitespace(const char *text) {
@@ -330,7 +359,7 @@ struct Vsprinter {
     length = vasprintf(&malloced, format, ap);
   }
 
-  Vsprinter(const char *format, ...) checkFargs(2,3) {
+  Vsprinter(const char *format, ...) checkFargs(2, 3) {
     va_list va;
     va_start(va, format);
     length = vasprintf(&malloced, format, va);
@@ -346,7 +375,8 @@ struct Vsprinter {
 
 /* vasprintf() that dies if it fails. */
 static unsigned int xvasprintf(AutoFree &ret, const char *format, va_list ap)
-  checkFargs(2, 0);
+checkFargs(2, 0);
+
 static unsigned int xvasprintf(AutoFree &ret, const char *format, va_list ap) {
   ret = nullptr; // forget the old
   unsigned len = vasprintf(&ret.pointer, format, ap);
@@ -359,6 +389,7 @@ static unsigned int xvasprintf(AutoFree &ret, const char *format, va_list ap) {
 
 /* asprintf() that dies if it fails. */
 static unsigned int xasprintf(AutoFree &ret, const char *format, ...) checkFargs(2, 3);
+
 static unsigned int xasprintf(AutoFree &ret, const char *format, ...) {
   va_list va;
   unsigned int len;
@@ -485,8 +516,7 @@ static char *make_safe_url(char *const url) {
   while (*src) {
     if (*src != '/') {
       *dst++ = *src++;
-    } else if (*++src == '/')
-      ;
+    } else if (*++src == '/');
     else if (*src != '.') {
       *dst++ = '/';
     } else if (ends(src[1])) {
@@ -499,8 +529,7 @@ static char *make_safe_url(char *const url) {
         return nullptr; /* Illegal URL */
       } else {
         /* Backtrack to previous slash. */
-        while (*--dst != '/' && dst > url)
-          ;
+        while (*--dst != '/' && dst > url);
       }
     } else {
       *dst++ = '/';
@@ -540,9 +569,6 @@ bool AutoFree::cat(const char *str, size_t len) {
   return true;
 }
 
-DarkHttpd::Exception::~Exception() {
-  delete[] msg;
-}
 
 bool DarkHttpd::mime_mapping::add(const char *extension, const char *mimetype) {
   if (!mimetype || strlen(mimetype) == 0 || !extension) {
@@ -791,77 +817,77 @@ void DarkHttpd::init_sockin() {
 void DarkHttpd::usage(const char *argv0) {
   printf("usage:\t%s /path/to/wwwroot [flags]\n\n", argv0);
   printf("flags:\t--port number (default: %u, or 80 if running as root)\n"
-         "\t\tSpecifies which port to listen on for connections.\n"
-         "\t\tPass 0 to let the system choose any free port for you.\n\n",
+    "\t\tSpecifies which port to listen on for connections.\n"
+    "\t\tPass 0 to let the system choose any free port for you.\n\n",
     bindport);
   printf("\t--addr ip (default: all)\n"
-         "\t\tIf multiple interfaces are present, specifies\n"
-         "\t\twhich one to bind the listening port to.\n\n");
+    "\t\tIf multiple interfaces are present, specifies\n"
+    "\t\twhich one to bind the listening port to.\n\n");
 #ifdef HAVE_INET6
   printf("\t--ipv6\n"
-         "\t\tListen on IPv6 address.\n\n");
+    "\t\tListen on IPv6 address.\n\n");
 #endif
   printf("\t--daemon (default: don't daemonize)\n"
-         "\t\tDetach from the controlling terminal and run in the background.\n\n");
+    "\t\tDetach from the controlling terminal and run in the background.\n\n");
   printf("\t--pidfile filename (default: no pidfile)\n"
-         "\t\tWrite PID to the specified file. Note that if you are\n"
-         "\t\tusing --chroot, then the pidfile must be relative to,\n"
-         "\t\tand inside the wwwroot.\n\n");
+    "\t\tWrite PID to the specified file. Note that if you are\n"
+    "\t\tusing --chroot, then the pidfile must be relative to,\n"
+    "\t\tand inside the wwwroot.\n\n");
   printf("\t--maxconn number (default: system maximum)\n"
-         "\t\tSpecifies how many concurrent connections to accept.\n\n");
+    "\t\tSpecifies how many concurrent connections to accept.\n\n");
   printf("\t--log filename (default: stdout)\n"
-         "\t\tSpecifies which file to append the request log to.\n\n");
+    "\t\tSpecifies which file to append the request log to.\n\n");
   printf("\t--syslog\n"
-         "\t\tUse syslog for request log.\n\n");
+    "\t\tUse syslog for request log.\n\n");
   printf("\t--index filename (default: %s)\n"
-         "\t\tDefault file to serve when a directory is requested.\n\n",
+    "\t\tDefault file to serve when a directory is requested.\n\n",
     index_name);
   printf("\t--no-listing\n"
-         "\t\tDo not serve listing if directory is requested.\n\n");
+    "\t\tDo not serve listing if directory is requested.\n\n");
   printf("\t--mimetypes filename (optional)\n"
-         "\t\tParses specified file for extension-MIME associations.\n\n");
+    "\t\tParses specified file for extension-MIME associations.\n\n");
   printf("\t--default-mimetype string (optional, default: %s)\n"
-         "\t\tFiles with unknown extensions are served as this mimetype.\n\n",url_content_type(nullptr));
+    "\t\tFiles with unknown extensions are served as this mimetype.\n\n", url_content_type(nullptr));
   printf("\t--uid uid/uname, --gid gid/gname (default: don't privdrop)\n"
-         "\t\tDrops privileges to given uid:gid after initialization.\n\n");
+    "\t\tDrops privileges to given uid:gid after initialization.\n\n");
   printf("\t--chroot (default: don't chroot)\n"
-         "\t\tLocks server into wwwroot directory for added security.\n\n");
+    "\t\tLocks server into wwwroot directory for added security.\n\n");
 #ifdef __FreeBSD__
   printf("\t--accf (default: don't use acceptfilter)\n"
          "\t\tUse acceptfilter. Needs the accf_http kernel module loaded.\n\n");
 #endif
   printf("\t--no-keepalive\n"
-         "\t\tDisables HTTP Keep-Alive functionality.\n\n");
+    "\t\tDisables HTTP Keep-Alive functionality.\n\n");
   printf("\t--single-file\n"
-         "\t\tOnly serve a single file provided as /path/to/file instead\n"
-         "\t\tof a whole directory.\n\n");
+    "\t\tOnly serve a single file provided as /path/to/file instead\n"
+    "\t\tof a whole directory.\n\n");
   printf("\t--forward host url (default: don't forward)\n"
-         "\t\tWeb forward (301 redirect).\n"
-         "\t\tRequests to the host are redirected to the corresponding url.\n"
-         "\t\tThe option may be specified multiple times, in which case\n"
-         "\t\tthe host is matched in order of appearance.\n\n");
+    "\t\tWeb forward (301 redirect).\n"
+    "\t\tRequests to the host are redirected to the corresponding url.\n"
+    "\t\tThe option may be specified multiple times, in which case\n"
+    "\t\tthe host is matched in order of appearance.\n\n");
   printf("\t--forward-all url (default: don't forward)\n"
-         "\t\tWeb forward (301 redirect).\n"
-         "\t\tAll requests are redirected to the corresponding url.\n\n");
+    "\t\tWeb forward (301 redirect).\n"
+    "\t\tAll requests are redirected to the corresponding url.\n\n");
   printf("\t--forward-https\n"
-         "\t\tIf the client requested HTTP, forward to HTTPS.\n"
-         "\t\tThis is useful if darkhttpd is behind a reverse proxy\n"
-         "\t\tthat supports SSL.\n\n");
+    "\t\tIf the client requested HTTP, forward to HTTPS.\n"
+    "\t\tThis is useful if darkhttpd is behind a reverse proxy\n"
+    "\t\tthat supports SSL.\n\n");
   printf("\t--no-server-id\n"
-         "\t\tDon't identify the server type in headers\n"
-         "\t\tor directory listings.\n\n");
+    "\t\tDon't identify the server type in headers\n"
+    "\t\tor directory listings.\n\n");
   printf("\t--timeout secs (default: %d)\n"
-         "\t\tIf a connection is idle for more than this many seconds,\n"
-         "\t\tit will be closed. Set to zero to disable timeouts.\n\n",
+    "\t\tIf a connection is idle for more than this many seconds,\n"
+    "\t\tit will be closed. Set to zero to disable timeouts.\n\n",
     timeout_secs);
   printf("\t--auth username:password\n"
-         "\t\tEnable basic authentication. This is *INSECURE*: passwords\n"
-         "\t\tare sent unencrypted over HTTP, plus the password is visible\n"
-         "\t\tin ps(1) to other users on the system.\n\n");
+    "\t\tEnable basic authentication. This is *INSECURE*: passwords\n"
+    "\t\tare sent unencrypted over HTTP, plus the password is visible\n"
+    "\t\tin ps(1) to other users on the system.\n\n");
   printf("\t--header 'Header: Value'\n"
-         "\t\tAdd a custom header to all responses.\n"
-         "\t\tThis option can be specified multiple times, in which case\n"
-         "\t\tthe headers are added in order of appearance.\n\n");
+    "\t\tAdd a custom header to all responses.\n"
+    "\t\tThis option can be specified multiple times, in which case\n"
+    "\t\tthe headers are added in order of appearance.\n\n");
 #ifndef HAVE_INET6
   printf("\t(This binary was built without IPv6 support: -DNO_IPV6)\n\n");
 #endif
@@ -871,10 +897,15 @@ void DarkHttpd::usage(const char *argv0) {
 static unsigned char base64_mapped(unsigned char low6bits) {
 #if 1 // less code bytes
   low6bits &= 63; // do this here instead of at all points of use.
-  return low6bits + (low6bits < 26 ? 'A' : low6bits < 52 ? 'a' - 26 :
-                                         low6bits < 62   ? '0' - 52 :
-                                         low6bits == 62  ? '+' :
-                                                           '/');
+  return low6bits + (low6bits < 26 ?
+                       'A' :
+                       low6bits < 52 ?
+                         'a' - 26 :
+                         low6bits < 62 ?
+                           '0' - 52 :
+                           low6bits == 62 ?
+                             '+' :
+                             '/');
 #else // easier to read
   const char *base64_table = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
                              "abcdefghijklmnopqrstuvwxyz"
@@ -901,7 +932,7 @@ static unsigned char *base64_encode(char *str) {
       unsigned char second = *str++;
       *writer++ = base64_mapped(first << 4 | second >> 4); // 2 to high nibble and 4 from new to low
       if (i < input_length) {
-        unsigned third = *str++;
+        unsigned char third = *str++;
         *writer++ = base64_mapped(second << 2 | third >> 6); // 4 low become high of 6, need 2 from next one
         *writer++ = base64_mapped(third); // final 6
       } else {
@@ -975,7 +1006,7 @@ bool DarkHttpd::parse_commandline(int argc, char *argv[]) {
     return false;
   }
 
-  if (wwwroot.endsWith( "/",1)){
+  if (wwwroot.endsWith("/", 1)) {
     wwwroot[--wwwroot.length] = '\0';
   }
 
@@ -1110,7 +1141,6 @@ bool DarkHttpd::parse_commandline(int argc, char *argv[]) {
       //the following is not efficient, what we really need is a list of strings that we cat together in the stream output.
       custom_hdrs.cat(argv[i]);
       custom_hdrs.cat("\r\n");
-
     }
 #ifdef HAVE_INET6
     else if (strcmp(argv[i], "--ipv6") == 0) {
@@ -1237,7 +1267,7 @@ void DarkHttpd::log_connection(const connection *conn) {
   if (conn->http_code == 0) {
     return; /* invalid - died in request */
   }
-  if (!conn->method ) {
+  if (!conn->method) {
     return; /* invalid - didn't parse - maybe too long */
   }
 
@@ -1284,34 +1314,33 @@ void DarkHttpd::log_connection(const connection *conn) {
   }
 
 #undef use_safe
-
 }
 
 /* Log a connection, then cleanly deallocate its internals. */
 void DarkHttpd::connection::clear() {
-  request=nullptr;
-  method=nullptr;
-  url=nullptr;
-  referer=nullptr;
-  user_agent=nullptr;
-  authorization=nullptr;
+  request = nullptr;
+  method = nullptr;
+  url = nullptr;
+  referer = nullptr;
+  user_agent = nullptr;
+  authorization = nullptr;
   if (!header_dont_free) {
-    header=nullptr;
+    header = nullptr;
   }
   if (!reply_dont_free) {
-    reply=nullptr;
+    reply = nullptr;
   }
 }
 
 /* Recycle a finished connection for HTTP/1.1 Keep-Alive. */
 void DarkHttpd::connection::recycle() {
-  clear();//legacy, separate heap usage clear from the rest.
+  clear(); //legacy, separate heap usage clear from the rest.
   debug("free_connection(%d)\n", int(socket));
   xclose(socket);
   range_begin = 0;
   range_end = 0;
-  range_begin_given = 0;
-  range_end_given = 0;
+  range_begin_given = false;
+  range_end_given = false;
 
   header_dont_free = false;
   reply_dont_free = false;
@@ -1505,8 +1534,7 @@ char *DarkHttpd::connection::parse_field(const char *field) {
 
   /* find end */
   size_t bound2;
-  for (bound2 = bound1; ((bound2 < request.length) && (request[bound2] != '\r') && (request[bound2] != '\n')); bound2++) {
-  }
+  for (bound2 = bound1; ((bound2 < request.length) && (request[bound2] != '\r') && (request[bound2] != '\n')); bound2++) {}
 
   /* copy to buffer */
   return split_string(request, bound1, bound2);
@@ -1552,39 +1580,24 @@ void DarkHttpd::connection::parse_range_field() {
   if (!range) {
     return;
   }
-
-  size_t len = strlen(range);
-
+  char *end = nullptr;
+  range_begin = strtol(range.pointer, &end, 10);
   /* parse number up to hyphen */
-  size_t bound1 = 0;
-
-  size_t bound2;
-  for (bound2 = 0;
-    (bound2 < len) && isdigit(range[bound2]);
-    bound2++)
-    ;
-
-  if ((bound2 == len) || (range[bound2] != '-')) {
+  if (*end != '-') {
+    range_begin = 0; //forget old as well as reject new
     return; /* there must be a hyphen here */
   }
 
-  if (bound1 != bound2) {
-    range_begin_given = 1;
-    range_begin = (off_t) strtoll(range.pointer + bound1, nullptr, 10);
+  if (end != range.pointer) {
+    range_begin_given = true; //and we already parsed it
   }
-
-  /* parse number after hyphen */
-  for (bound1 = ++bound2; (bound2 < len) && isdigit(range[bound2]); bound2++) {
-  }
-
-  if ((bound2 != len) && (range[bound2] != ',')) {
+  range_end = strtoll(++end, &end, 10);
+  if (*end != ',') {
+    range_end = 0; //forget old as well as reject new
     return; /* must be end of string or a list to be valid */
   }
-
-  if (bound1 != bound2) {
-    range_end_given = 1;
-    range_end = (off_t) strtoll(range.pointer + bound1, nullptr, 10);
-  }
+  range_end_given = range_end != 0;
+  //behaves differently on case "2134234-0," where it should give an closed and invalid range but it instead gives an end of 0
 }
 
 /* Parse an HTTP request like "GET / HTTP/1.1" to get the method (GET), the
@@ -1598,40 +1611,35 @@ int DarkHttpd::connection::parse_request() {
   assert(request.length == strlen(request));
 
   /* parse method */
-  for (bound1 = 0; (bound1 < request.length) && (request[bound1] != ' '); bound1++) {
-  } //?! tabs  find exactly a space. strnchr
+  auto firstspace=strchr(request,' ');
 
-  method = split_string(request, 0, bound1);
-  strntoupper(method, bound1);
+  method = split_string(request, 0, firstspace-request.pointer);
+  method.toUpper();
 
   /* parse url */
-  for (; (bound1 < request.length) && (request[bound1] == ' '); bound1++) {
-  }
+  auto nextspace=strchr(++firstspace, ' ');
 
-  if (bound1 == request.length) {
+  if (!nextspace) {
     return 0; /* fail */
   }
 
   for (bound2 = bound1 + 1;
-    (bound2 < request.length) &&
-    (request[bound2] != ' ') &&
-    (request[bound2] != '\r') &&
-    (request[bound2] != '\n');
-    bound2++)
-    ;
+       (bound2 < request.length) &&
+       (request[bound2] != ' ') &&
+       (request[bound2] != '\r') &&
+       (request[bound2] != '\n');
+       bound2++);
 
   url = split_string(request, bound1, bound2);
 
   /* parse protocol to determine conn_closed */
   if (request[bound2] == ' ') {
     for (bound1 = bound2;
-      (bound1 < request.length) &&
-      (request[bound1] == ' ');
-      bound1++)
-      ;
+         (bound1 < request.length) &&
+         (request[bound1] == ' ');
+         bound1++);
 
-    for (bound2 = bound1 + 1; (bound2 < request.length) && (request[bound2] != ' ') && (request[bound2] != '\r'); bound2++) {
-    }
+    for (bound2 = bound1 + 1; (bound2 < request.length) && (request[bound2] != ' ') && (request[bound2] != '\r'); bound2++) {}
 
     AutoFree proto(split_string(request, bound1, bound2));
     if (strcasecmp(proto, "HTTP/1.1") == 0) {
@@ -1726,7 +1734,6 @@ static ssize_t make_sorted_dirlist(const char *path, dlent ***output) {
 
 /* Cleanly deallocate a sorted list of directory files. */
 static void cleanup_sorted_dirlist(dlent **list, const ssize_t size) {
-
   for (ssize_t i = 0; i < size; i++) {
     free(list[i]->name);
     free(list[i]);
@@ -1905,7 +1912,7 @@ void DarkHttpd::generate_dir_listing(connection &conn, const char *path, const c
     "Content-Length: %llu\r\n"
     "Content-Type: text/html; charset=UTF-8\r\n"
     "\r\n",
-    date, server_hdr.pointer, conn.keep_alive(), custom_hdrs.pointer,llu(conn.reply_length));
+    date, server_hdr.pointer, conn.keep_alive(), custom_hdrs.pointer, llu(conn.reply_length));
 
   conn.reply_type = DarkHttpd::connection::REPLY_GENERATED;
   conn.http_code = 200;
@@ -1914,10 +1921,10 @@ void DarkHttpd::generate_dir_listing(connection &conn, const char *path, const c
 /* Process a GET/HEAD request. */
 void DarkHttpd::connection::process_get() {
   char *end;
-  char date[DATE_LEN], lastmod[DATE_LEN];
+  char date[DATE_LEN];
+  char lastmod[DATE_LEN];
 
   const char *forward_to = nullptr;
-  struct stat filestat;
 
   /* strip out query params */
   if ((end = strchr(url, '?')) != nullptr) {
@@ -1938,7 +1945,7 @@ void DarkHttpd::connection::process_get() {
     AutoFree host(parse_field("Host: "));
     if (host) {
       debug("host=\"%s\"\n", host.pointer);
-      for (auto record : service.forward_map) {
+      for (auto record: service.forward_map) {
         if (strcasecmp(record.first, host) == 0) {
           forward_to = record.second;
           break;
@@ -2002,6 +2009,7 @@ void DarkHttpd::connection::process_get() {
   }
 
   /* stat the file */
+  struct stat filestat;
   if (fstat(reply_fd, &filestat) == -1) {
     default_reply(500, "Internal Server Error", "fstat() failed: %s.", strerror(errno));
     return;
@@ -2032,7 +2040,7 @@ void DarkHttpd::connection::process_get() {
       "%s" /* keep-alive */
       "%s" /* custom headers */
       "\r\n",
-      rfc1123_date(date, service.now), service.server_hdr.pointer, keep_alive(),service.custom_hdrs.pointer);
+      rfc1123_date(date, service.now), service.server_hdr.pointer, keep_alive(), service.custom_hdrs.pointer);
     reply_length = 0;
     reply_type = REPLY_GENERATED;
     header_only = true;
@@ -2040,7 +2048,8 @@ void DarkHttpd::connection::process_get() {
   }
 
   if (range_begin_given || range_end_given) {
-    off_t from, to;
+    off_t from;
+    off_t to;
 
     if (range_begin_given && range_end_given) {
       /* 100-200 */
@@ -2092,7 +2101,7 @@ void DarkHttpd::connection::process_get() {
       "Content-Type: %s\r\n"
       "Last-Modified: %s\r\n"
       "\r\n",
-      rfc1123_date(date, service.now), service.server_hdr.pointer, keep_alive(),service.custom_hdrs.pointer,llu(reply_length), llu(from), llu(to),llu(filestat.st_size), mimetype, lastmod);
+      rfc1123_date(date, service.now), service.server_hdr.pointer, keep_alive(), service.custom_hdrs.pointer, llu(reply_length), llu(from), llu(to), llu(filestat.st_size), mimetype, lastmod);
     http_code = 206;
     debug("sending %llu-%llu/%llu\n", llu(from), llu(to), llu(filestat.st_size));
   } else {
@@ -2109,7 +2118,7 @@ void DarkHttpd::connection::process_get() {
       "Content-Type: %s\r\n"
       "Last-Modified: %s\r\n"
       "\r\n",
-      rfc1123_date(date, service.now), service.server_hdr.pointer, keep_alive(),service.custom_hdrs.pointer, llu(reply_length), mimetype, lastmod);
+      rfc1123_date(date, service.now), service.server_hdr.pointer, keep_alive(), service.custom_hdrs.pointer, llu(reply_length), mimetype, lastmod);
     http_code = 200;
   }
 }
@@ -2173,7 +2182,7 @@ void DarkHttpd::connection::process_request() {
   state = SEND_HEADER;
 
   /* request not needed anymore */
-  request=nullptr;
+  request = nullptr;
 }
 
 /* Receiving request. */
@@ -2199,20 +2208,20 @@ void DarkHttpd::connection::poll_recv_request() {
 
   /* append to conn->request */
   assert(recvd > 0);
-  bool ok=request.cat(buf,recvd);
+  bool ok = request.cat(buf, recvd);
   if (!ok) {
     debug("failed to append chunk to request being received");
     //need to except.
   }
   auto newLength = request.length + recvd + 1;
   request = static_cast<char *>(xrealloc(request, newLength));
-  memcpy(&request[ request.length], buf, recvd);
+  memcpy(&request[request.length], buf, recvd);
   request.length += recvd;
   request[request.length] = 0;
   service.total_in += recvd;
 
   /* process request if we have all of it */
-  if (request.endsWith( "\n\n", 2) || request.endsWith("\r\n\r\n", 4)) {
+  if (request.endsWith("\n\n", 2) || request.endsWith("\r\n\r\n", 4)) {
     process_request();
   }
 
@@ -2393,7 +2402,6 @@ void DarkHttpd::connection::poll_send_reply() {
  * connections, handle receiving of requests, and sending of replies.
  */
 void DarkHttpd::httpd_poll() {
-
   bool bother_with_timeout = false;
 
   timeval timeout;
@@ -2417,7 +2425,7 @@ void DarkHttpd::httpd_poll() {
     MAX_FD_SET(int(sockin), &recv_set);
   }
 
-  for (auto conn : entries) {
+  for (auto conn: entries) {
     switch (conn->state) {
       case connection::DONE:
         /* do nothing, no connection should be left in this state */
@@ -2486,7 +2494,7 @@ void DarkHttpd::httpd_poll() {
     accept_connection();
   }
 
-  for (auto conn : entries) {
+  for (auto conn: entries) {
     conn->poll_check_timeout();
     int socket = conn->socket;
     switch (conn->state) {
@@ -2801,7 +2809,7 @@ void DarkHttpd::prepareToRun() {
 void DarkHttpd::freeall() {
   /* close and free connections */
 
-  for (auto conn : entries) {
+  for (auto conn: entries) {
     entries.remove(conn);
     conn->clear();
   }
@@ -2812,32 +2820,38 @@ void DarkHttpd::freeall() {
 
 /* Execution starts here. */
 int DarkHttpd::main(int argc, char **argv) {
-  printf("%s, %s.\n", pkgname, copyright);
-  parse_default_extension_map();
-  parse_commandline(argc, argv);
-  /* NB: parse_commandline() might override parts of the extension map by
-   * parsing a user-specified file. THat is why we use isnert_or_assign when adding to the map.
-   */
+  try {
+    printf("%s, %s.\n", pkgname, copyright);
+    parse_default_extension_map();
+    parse_commandline(argc, argv);
+    /* NB: parse_commandline() might override parts of the extension map by
+     * parsing a user-specified file. THat is why we use isnert_or_assign when adding to the map.
+     */
 
-  prepareToRun();
-  /* main loop */
-  running = true;
-  while (running) {
-    httpd_poll();
-  }
+    prepareToRun();
+    /* main loop */
+    running = true;
+    while (running) {
+      httpd_poll();
+    }
 
-  /* clean exit */
-  xclose(sockin);
-  if (logfile != nullptr) {
-    fclose(logfile);
-  }
-  if (pidfile_name) {
-    pidfile_remove();
-  }
-  freeall();
+    /* clean exit */
+    xclose(sockin);
+    if (logfile != nullptr) {
+      fclose(logfile);
+    }
+    if (pidfile_name) {
+      pidfile_remove();
+    }
+    freeall();
 
-  reportStats();
-  return 0;
+    reportStats();
+    return 0;
+  } catch (DarkException ex) {
+    printf("Exit %d attempted, ending polling loop in __FUNCTION__", ex.returncode);
+  } catch (...) {
+    printf("Unknown exception, probably from the std lib");
+  }
 }
 
 #if 0

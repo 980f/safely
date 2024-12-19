@@ -39,6 +39,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <forward_list>
+#include <locale>
 #include <map>
 #include <netinet/in.h>
 #include <unistd.h>
@@ -98,9 +99,10 @@ struct AutoFree {
    */
   bool cat(const char *str, size_t len = ~0);
 
-  AutoFree(char *pointer = nullptr, unsigned length = ~0) :
-      pointer(pointer), length(length) {
-    // todo:M strlen if length = ~0
+  AutoFree(char *pointer = nullptr, unsigned length = ~0) : pointer(pointer), length(length) {
+    if (pointer && length == ~0) {
+      this->length = strlen(pointer);
+    }
   }
 
   ~AutoFree() {
@@ -110,12 +112,23 @@ struct AutoFree {
     length = 0;
   }
 
-  void operator=(AutoFree &other) = delete;
-
+  AutoFree& operator=(AutoFree &other) {
+    free(pointer);
+    pointer = other.pointer;
+    length = other.length;
+    return *this;
+  }
   AutoFree &operator=(char *replacement) {
     free(pointer);
     pointer = replacement;
-    length = replacement ? ~0 : 0;
+    length = replacement ? strlen(pointer) : 0;
+    return *this;
+  }
+
+  AutoFree &toUpper() {
+    for (auto scanner=pointer;*scanner;) {
+      *scanner++=toupper(*scanner);
+    }
     return *this;
   }
 
@@ -123,34 +136,29 @@ struct AutoFree {
 };
 
 
+class DarkException;
+
 class DarkHttpd {
   static DarkHttpd *forSignals; // trusting BSS zero to clear this.
 
   DarkHttpd() {
     forSignals = this;
   }
-  class Exception : public std::exception {
-    // todo: internal malloc string with delete
-    const char *msg = nullptr;
-    int returncode = 0; // what would have been returned to a shell on exit.
-    ~Exception() override; // todo: free message
-  public:
-    Exception(int returncode, const char *msgf, ...) checkFargs(3,4);
-  };
+
 
   /** replacing inline reproduction of map logic with an std map, after verifying who did the allocations.
    * this uses the default key compare function 'less<const char *>', which we might want to replace with strncmp(...longest_ext) */
   struct mime_mapping : std::map<const char *, const char *> {
     // size_t longest_ext = 0;
     /** arg returned by 'add to map' */
-    using mime_ref = std::pair<std::_Rb_tree_iterator<std::pair<const char *const, const char *>>, bool>; // todo: indirect to a decltype on the function returning this.
+    using mime_ref = std::pair<std::_Rb_tree_iterator<std::pair<const char *const, const char *> >, bool>; // todo: indirect to a decltype on the function returning this.
     bool add(const char *extension, const char *mimetype);
 
     /** free contents, then forget them.*/
     void purge() {
       for (auto each: *this) {
-        free((void *)each.first);
-        free((void *)each.second);
+        free((void *) each.first);
+        free((void *) each.second);
       }
       clear();
     }
@@ -166,13 +174,12 @@ class DarkHttpd {
     /** free contents, then forget them.*/
     void purge() {
       for (auto each: *this) {
-        free((void *)each.first);
-        free((void *)each.second);
+        free((void *) each.first);
+        free((void *) each.second);
       }
       clear();
     }
   } forward_map;
-
 
 public:
   class Fd { // a minimal one compared to safely/posix
@@ -234,9 +241,7 @@ public:
     Fd() = default;
 
     // ReSharper disable once CppNonExplicitConvertingConstructor
-    Fd(int open) :
-        fd(open) {
-    }
+    Fd(int open) : fd(open) {}
   };
 
 
@@ -269,8 +274,8 @@ public:
 
     off_t range_begin = 0;
     off_t range_end = 0;
-    off_t range_begin_given = 0;
-    off_t range_end_given = 0;
+    bool range_begin_given = false;
+    bool range_end_given = false;
 
     AutoFree header;
 
@@ -280,9 +285,11 @@ public:
     int http_code = 0;
     bool conn_closed = true;
 
-    enum { REPLY_GENERATED,
+    enum {
+      REPLY_GENERATED,
       REPLY_FROMFILE,
-      REPLY_NONE } reply_type = REPLY_NONE;
+      REPLY_NONE
+    } reply_type = REPLY_NONE;
 
     AutoFree reply = nullptr;
     bool reply_dont_free = false;
@@ -293,8 +300,7 @@ public:
     off_t total_sent = 0;
     /* header + body = total, for logging */
   public:
-    connection(DarkHttpd &parent) :
-        service(parent) {
+    connection(DarkHttpd &parent) : service(parent) {
       memset(&client, 0, sizeof(client));
     }
 
@@ -305,6 +311,7 @@ public:
     void poll_check_timeout();
 
     const char *keep_alive() const;
+
     void default_reply(int errcode, const char *errname, const char *format, ...) checkFargs(4, 5);
 
     void redirect(const char *format, ...) checkFargs(2, 3);
@@ -335,6 +342,7 @@ public:
   void parse_extension_map_file(const char *filename);
 
   const char *url_content_type(const char *url);
+
   const char *get_address_text(const void *addr) const;
 
   void init_sockin();
@@ -383,8 +391,10 @@ public:
 
 private:
   Fd fd_null;
+
   struct PipePair {
     Fd fds[2];
+
     int operator[](bool which) {
       return fds[which];
     }
@@ -393,7 +403,6 @@ private:
       int punned[2] = {fds[0], fds[1]};
       return pipe(punned) != -1;
     }
-
   } lifeline;
 
 
@@ -404,7 +413,7 @@ private:
 
   const char *forward_all_url = nullptr;
 
-  bool forward_to_https = 0;
+  bool forward_to_https = false;
 
   /* If a connection is idle for timeout_secs or more, it gets closed and
    * removed from the connlist.
@@ -423,7 +432,7 @@ private:
 #define MAX_REQUEST_LENGTH 4000
 
   /* Defaults can be overridden on the command-line */
-  const char *bindaddr = nullptr;//only assigned from cmdline
+  const char *bindaddr = nullptr; //only assigned from cmdline
   uint16_t bindport = 8080; /* or 80 if running as root */
   int max_connections = -1; /* kern.ipc.somaxconn */
   const char *index_name = "index.html";
@@ -432,7 +441,7 @@ private:
 #ifdef HAVE_INET6
   bool inet6 = false; /* whether the socket uses inet6 */
 #endif
-  const char *default_mimetype = nullptr;//always a pointer into a map which manages free'ing
+  const char *default_mimetype = nullptr; //always a pointer into a map which manages free'ing
   AutoFree wwwroot; /* a path name */
 
   char *logfile_name = nullptr; /* NULL = no logging */
