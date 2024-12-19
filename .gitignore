@@ -19,3 +19,4 @@ safely.qws
 git.branch
 git.hash
 cmake-build-debug/
+**.pdf
