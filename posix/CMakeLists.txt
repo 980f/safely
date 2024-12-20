@@ -82,8 +82,6 @@ add_library(posix STATIC
   #when did this functionality disappear? what was it? vargs.cpp
   worstcase.cpp
   worstcase.h
-  filestats.cpp
-  filestats.h
 )
 
 
