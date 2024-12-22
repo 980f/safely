@@ -69,8 +69,8 @@
  */
 struct AutoFree {
   //these are exposed because we are mutating C code into C++ and hiding them is tedious. We should hide at least the pointer member, but there are a few contexts (*printf) where the implicit conversion doesn't get invoked.
-  char *pointer;
-  size_t length = ~0; //~0 indicates unknown
+  char *pointer=nullptr;
+  size_t length = 0;
 
   operator char *() const {
     return pointer;
@@ -82,6 +82,10 @@ struct AutoFree {
 
   bool operator!() const {
     return pointer == nullptr;
+  }
+
+  bool notTrivial() const {
+    return pointer && length > 0;
   }
 
   /**
@@ -112,12 +116,13 @@ struct AutoFree {
     length = 0;
   }
 
-  AutoFree& operator=(AutoFree &other) {
+  AutoFree &operator=(AutoFree &other) {
     free(pointer);
     pointer = other.pointer;
     length = other.length;
     return *this;
   }
+
   AutoFree &operator=(char *replacement) {
     free(pointer);
     pointer = replacement;
@@ -126,8 +131,8 @@ struct AutoFree {
   }
 
   AutoFree &toUpper() {
-    for (auto scanner=pointer;*scanner;) {
-      *scanner++=toupper(*scanner);
+    for (auto scanner = pointer; *scanner;) {
+      *scanner++ = toupper(*scanner);
     }
     return *this;
   }
@@ -146,7 +151,7 @@ class DarkHttpd {
   }
 
 
-  /** replacing inline reproduction of map logic with an std map, after verifying who did the allocations.
+  /** replaced inline reproduction of map logic with an std::map, after verifying who did the allocations.
    * this uses the default key compare function 'less<const char *>', which we might want to replace with strncmp(...longest_ext) */
   struct mime_mapping : std::map<const char *, const char *> {
     // size_t longest_ext = 0;
@@ -322,7 +327,7 @@ public:
 
     void parse_range_field();
 
-    int parse_request();
+    bool parse_request();
 
     void process_get();
 

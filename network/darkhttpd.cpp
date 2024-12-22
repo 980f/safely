@@ -191,9 +191,9 @@ template<typename Integrish> auto llu(Integrish x) {
 /* err - prints "error: format: strerror(errno)" to stderr and exit()s with
  * the given code.
  */
-static void err(const int code, const char *format, ...) checkFargs(2, 3);
+static void err(int code, const char *format, ...) checkFargs(2, 3);
 
-static void err(const int code, const char *format, ...) {
+static void err(int code, const char *format, ...) {
   fprintf(stderr, "err[%d]: %s", code, code > 0 ? strerror(code) : "is not an errno.");
   va_list va;
   va_start(va, format);
@@ -469,17 +469,16 @@ static void nonblock_socket(const int sock) {
   }
 }
 
-/* malloc a string out of src with range [left:right), adding a null. */
-static char *split_string(const char *src, const size_t left, const size_t right) {
-  char *dest;
-  assert(left <= right);
-  assert(left < strlen(src)); /* [left means must be smaller */
-  assert(right <= strlen(src)); /* right) means can be equal or smaller */
-  auto length = right - left;
-  dest = new char[length + 1];
-  memcpy(dest, src + left, length);
-  dest[length] = '\0';
-  return dest;
+/* strdup a sub string [begin:end), adding a null. */
+static char *sub_string(const char *begin, const char *end) {
+  if (end) {
+    auto length = end - begin;
+    char *dest = new char [length + 1]; //+1 for null
+    memcpy(dest, begin, length);
+    dest[length] = '\0';
+    return dest;
+  }
+  return strdup(begin);
 }
 
 /* Resolve /./ and /../ in a URL, in-place.
@@ -591,7 +590,7 @@ int DarkHttpd::parse_mimetype_line(const char *line) {
   if (!finish) {
     return -1;
   }
-  char *mimetype = split_string(line, start - line, finish - line);
+  char *mimetype = sub_string(start, finish);
   int fyi = 0;
   while (true) {
     start = removeLeadingWhitespace(++finish);
@@ -599,12 +598,12 @@ int DarkHttpd::parse_mimetype_line(const char *line) {
       break; // trailing whitespace
     }
     ++fyi;
-    finish = strchr(start, ' ');
+    finish = strchr(start, ' '); //space separate list.
     if (!finish) {
       mime_map.add(strdup(start), mimetype);
       break; // normal exit
     }
-    mime_map.add(split_string(line, start - line, finish - line), mimetype); // NB: the split_string new's the content, we must have mime_map delete it.
+    mime_map.add(sub_string(start, finish), mimetype); // NB: the sub_string new's the content, we must have mime_map delete it.
     // continue;
   }
   return fyi;
@@ -1522,22 +1521,18 @@ void DarkHttpd::connection::redirect(const char *format, ...) {
  * example: parse_field(conn, "Referer: ");
  */
 char *DarkHttpd::connection::parse_field(const char *field) {
-  char *pos;
-
   /* find start */
-  pos = strcasestr(request, field);
+  char *pos = strcasestr(request, field);
   if (pos == nullptr) {
     return nullptr;
   }
-  assert(pos >= request);
-  size_t bound1 = (size_t) (pos - request.pointer) + strlen(field);
-
-  /* find end */
-  size_t bound2;
-  for (bound2 = bound1; ((bound2 < request.length) && (request[bound2] != '\r') && (request[bound2] != '\n')); bound2++) {}
-
-  /* copy to buffer */
-  return split_string(request, bound1, bound2);
+  pos += strlen(field); //char just past end of 'field'
+  /* find end of line */
+  auto eol = strpbrk(pos, "\r\n");
+  if (!eol) { //already null terminated, just dup it
+    return strdup(pos);
+  }
+  return sub_string(pos, eol);
 }
 
 void DarkHttpd::connection::redirect_https() {
@@ -1572,8 +1567,9 @@ bool DarkHttpd::is_https_redirect(connection &conn) const {
 }
 
 /* Parse a Range: field into range_begin and range_end.  Only handles the
- * first range if a list is given.  Sets range_{begin,end}_given to 1 if
- * either part of the range is given.
+ * first range if a list is given.  Sets range_{begin,end}_given to true if
+ * associated part of the range is given.
+ * "Range: bytes=500-999"
  */
 void DarkHttpd::connection::parse_range_field() {
   AutoFree range(parse_field("Range: bytes="));
@@ -1585,9 +1581,8 @@ void DarkHttpd::connection::parse_range_field() {
   /* parse number up to hyphen */
   if (*end != '-') {
     range_begin = 0; //forget old as well as reject new
-    return; /* there must be a hyphen here */
+    return; /* we require a hyphen here */
   }
-
   if (end != range.pointer) {
     range_begin_given = true; //and we already parsed it
   }
@@ -1604,44 +1599,30 @@ void DarkHttpd::connection::parse_range_field() {
  * url (/), the referer (if given) and the user-agent (if given).  Remember to
  * deallocate all these buffers.  The method will be returned in uppercase.
  */
-int DarkHttpd::connection::parse_request() {
-  size_t bound1;
-  size_t bound2;
-
-  assert(request.length == strlen(request));
+bool DarkHttpd::connection::parse_request() {
+  assert(request.notTrivial());
 
   /* parse method */
-  auto firstspace=strchr(request,' ');
+  auto firstspace = strchr(request, ' ');
 
-  method = split_string(request, 0, firstspace-request.pointer);
+  method = sub_string(request, firstspace);
   method.toUpper();
 
   /* parse url */
-  auto nextspace=strchr(++firstspace, ' ');
+  const char *nextspace = strchr(++firstspace, ' ');
 
   if (!nextspace) {
-    return 0; /* fail */
+    return false; /* fail */
   }
-
-  for (bound2 = bound1 + 1;
-       (bound2 < request.length) &&
-       (request[bound2] != ' ') &&
-       (request[bound2] != '\r') &&
-       (request[bound2] != '\n');
-       bound2++);
-
-  url = split_string(request, bound1, bound2);
+  const char *end = strpbrk(nextspace, " \r\n");
+  url = sub_string(nextspace, end);
 
   /* parse protocol to determine conn_closed */
-  if (request[bound2] == ' ') {
-    for (bound1 = bound2;
-         (bound1 < request.length) &&
-         (request[bound1] == ' ');
-         bound1++);
+  if (*end == ' ') {
+    nextspace = removeLeadingWhitespace(end);
+    end = strpbrk(nextspace, " \r\n"); //old code insisted on \r, without safety of \n
 
-    for (bound2 = bound1 + 1; (bound2 < request.length) && (request[bound2] != ' ') && (request[bound2] != '\r'); bound2++) {}
-
-    AutoFree proto(split_string(request, bound1, bound2));
+    AutoFree proto(sub_string(nextspace, end));
     if (strcasecmp(proto, "HTTP/1.1") == 0) {
       conn_closed = false;
     }
