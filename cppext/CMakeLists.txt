@@ -137,6 +137,8 @@ add_library(cppext STATIC
 
   utf8.cpp
   utf8.h
+  toker.cpp
+  toker.h
 )
 
 #
