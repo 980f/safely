@@ -23,6 +23,9 @@
  * PERFORMANCE OF THIS SOFTWARE.
  *
  * It has been heavily modified to make it a module that can be included in other programs.
+ * todo: replace strduping the mimemap contents with loading and keeping the whole external mime list, malloc once instead of dozens of times.
+ * todo: replace strduping string values extracted from the request, instead poke nulls and point into it.
+ *
 */
 
 #include "darkhttpd.h"
@@ -151,7 +154,8 @@ static const unsigned DIR_LIST_MTIME_SIZE = 16 + 1; /* How large the buffer will
 #include <sys/procctl.h>
 #endif
 
-#if defined(__has_feature) &&  __has_feature(memory_sanitizer)
+
+#if __has_include(<sanitizer/msan_interface.h>)
 #include <sanitizer/msan_interface.h>
 #endif
 
@@ -241,14 +245,7 @@ static void xclose(DarkHttpd::Fd fd) {
   }
 }
 
-
-/* Uppercasify all characters in a string of given length. */
-static void strntoupper(char *str, size_t length) {
-  while (length-- > 0 && *str) {
-    *str++ = toupper(*str);
-  }
-}
-
+// removed  strntoupper as we are quite careful to enforce nulls on the end of anything we upperify.
 /* malloc that dies if it can't allocate. */
 static void *xmalloc(const size_t size) {
   void *ptr = malloc(size);
@@ -577,7 +574,8 @@ bool DarkHttpd::mime_mapping::add(const char *extension, const char *mimetype) {
   return chunk.second; // new entry, else updated old
 }
 
-/* Parses a mime.types line and adds the parsed data to the mime_map. */
+/* Parses a mime.types line and adds the parsed data to the mime_map.
+ * todo: strsep and on \r\n loop */
 int DarkHttpd::parse_mimetype_line(const char *line) {
   if (!line) {
     return -1;
@@ -658,16 +656,19 @@ void DarkHttpd::parse_default_extension_map() {
  * Adds contents of specified file to mime_map list.
  */
 void DarkHttpd::parse_extension_map_file(const char *filename) {
-  AutoFree buf;
-  FILE *fp = fopen(filename, "rb");
-
-  if (fp == nullptr) {
-    err(1, "fopen(\"%s\")", filename);
+  auto fd=open(filename,0);
+  if (fd>0) {
+    struct stat filestat;
+    if (fstat(fd,&filestat)==0) {
+      mimeFileContent=static_cast<char *>(malloc(filestat.st_size+1));
+      if (mimeFileContent) {
+        mimeFileContent[filestat.st_size]='\0';
+        if (read(fd, mimeFileContent, filestat.st_size)==filestat.st_size) {
+          parse_mimetype_line(mimeFileContent);
+        }
+      }
+    }
   }
-  while ((buf = read_line(fp)) != nullptr) {
-    parse_mimetype_line(buf);
-  }
-  fclose(fp);
 }
 
 const char *DarkHttpd::url_content_type(const char *url) {
@@ -687,7 +688,7 @@ const char *DarkHttpd::url_content_type(const char *url) {
 const char *DarkHttpd::get_address_text(const void *addr) const {
 #ifdef HAVE_INET6
   if (inet6) {
-    static char text_addr[INET6_ADDRSTRLEN];
+    thread_local char text_addr[INET6_ADDRSTRLEN];
     inet_ntop(AF_INET6, (const struct in6_addr *) addr, text_addr, INET6_ADDRSTRLEN);
     return text_addr;
   } else
@@ -892,7 +893,6 @@ void DarkHttpd::usage(const char *argv0) {
 #endif
 }
 
-// bug-fixed: DarkHttpd's base 64 encoder output excess chars at end of string when padding is needed.
 static unsigned char base64_mapped(unsigned char low6bits) {
 #if 1 // less code bytes
   low6bits &= 63; // do this here instead of at all points of use.
@@ -902,9 +902,7 @@ static unsigned char base64_mapped(unsigned char low6bits) {
                          'a' - 26 :
                          low6bits < 62 ?
                            '0' - 52 :
-                           low6bits == 62 ?
-                             '+' :
-                             '/');
+                           (low6bits == 62 ?'+' :'/')- low6bits );
 #else // easier to read
   const char *base64_table = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
                              "abcdefghijklmnopqrstuvwxyz"
@@ -914,6 +912,7 @@ static unsigned char base64_mapped(unsigned char low6bits) {
 #endif
 }
 
+// bug-fixed: DarkHttpd's base 64 encoder output excess chars at end of string when padding is needed.
 static unsigned char *base64_encode(char *str) {
   unsigned input_length = strlen(str);
   unsigned output_length = 4 * ((input_length + 2) / 3);
@@ -944,8 +943,7 @@ static unsigned char *base64_encode(char *str) {
       *writer++ = '=';
     }
   }
-
-  *writer++ = 0;
+  *writer = 0;
   return encoded_data;
 }
 
@@ -1403,7 +1401,7 @@ static char *urldecode(const char *url) {
   while (char c = *url++) {
     if (c == '%' && url[1] && isxdigit(url[1]) // because we have already used strlen we know there is a null char we can rely upon here
         && url[2] && isxdigit(url[2])) {
-      *writer++ = HEX_TO_DIGIT(*url++) * 16 + HEX_TO_DIGIT(*url++);
+      *writer++ = HEX_TO_DIGIT(*url++) <<4 + HEX_TO_DIGIT(*url++);
       continue;
     }
     *writer++ = c; /* straight copy */
@@ -1415,7 +1413,7 @@ static char *urldecode(const char *url) {
 
 /* Returns Connection or Keep-Alive header, depending on conn_closed. */
 const char *DarkHttpd::connection::keep_alive() const {
-  return conn_closed ? "Connection: close\r\n" : service.keep_alive_field.pointer;
+  return conn_closed ? "Connection: close\r\n" : static_cast<const char *>(service.keep_alive_field);
 }
 
 /* "Generated by " + pkgname + " on " + date + "\n"
@@ -1569,29 +1567,34 @@ bool DarkHttpd::is_https_redirect(connection &conn) const {
 /* Parse a Range: field into range_begin and range_end.  Only handles the
  * first range if a list is given.  Sets range_{begin,end}_given to true if
  * associated part of the range is given.
- * "Range: bytes=500-999"
+ * "Range: bytes=500-999"  is all that was supported, changing to also accept:
+ * "Range: - 456 last 456
+ * "Range: 789 -
+ * todo: strtok walk with "=-,\r\n"
  */
 void DarkHttpd::connection::parse_range_field() {
   AutoFree range(parse_field("Range: bytes="));
   if (!range) {
     return;
   }
+  range_end_given = range_begin_given = false; //ensure erased any prior attempt
   char *end = nullptr;
-  range_begin = strtol(range.pointer, &end, 10);
+  range_begin = strtoll(range.pointer, &end, 10);
+  range_begin_given = end > range; //and we already parsed it
   /* parse number up to hyphen */
-  if (*end != '-') {
-    range_begin = 0; //forget old as well as reject new
-    return; /* we require a hyphen here */
+  if (range_begin < 0) { // Range -456, no white space after
+    //offset is from end of file
   }
-  if (end != range.pointer) {
-    range_begin_given = true; //and we already parsed it
+  if (*end == '-') {
+    range_end = strtoll(++end, &end, 10);
+    if (*end != ',') {
+      range_end = 0; //forget old as well as reject new
+      return; /* must be end of string or a list to be valid */
+    }
+    range_end_given = range_end != 0;
+    return; /* we are done, "from here to end of file" is being requested */
   }
-  range_end = strtoll(++end, &end, 10);
-  if (*end != ',') {
-    range_end = 0; //forget old as well as reject new
-    return; /* must be end of string or a list to be valid */
-  }
-  range_end_given = range_end != 0;
+
   //behaves differently on case "2134234-0," where it should give an closed and invalid range but it instead gives an end of 0
 }
 
@@ -2028,11 +2031,11 @@ void DarkHttpd::connection::process_get() {
     return;
   }
 
-  if (range_begin_given || range_end_given) {
+  if (range_begin_given) { //was pointless to check range_end_given after checking begin, we never set the latter unless we have set the former
     off_t from;
     off_t to;
 
-    if (range_begin_given && range_end_given) {
+    if (range_end_given) {
       /* 100-200 */
       from = range_begin;
       to = range_end;
@@ -2196,9 +2199,9 @@ void DarkHttpd::connection::poll_recv_request() {
   }
   auto newLength = request.length + recvd + 1;
   request = static_cast<char *>(xrealloc(request, newLength));
-  memcpy(&request[request.length], buf, recvd);
+  memcpy(&request.pointer[request.length], buf, recvd);
   request.length += recvd;
-  request[request.length] = 0;
+  request.pointer[request.length] = 0;
   service.total_in += recvd;
 
   /* process request if we have all of it */
@@ -2673,7 +2676,7 @@ void DarkHttpd::change_root() {
   tzset(); /* read /etc/localtime before we chroot */
   if (want_single_file) {
     AutoFree path(xstrdup(wwwroot));
-    auto lastSlash = strrchr(path, '/');
+    auto lastSlash = strrchr(path.pointer, '/');
     /* wwwroot file is not presumed to be in the current directory */
     if (lastSlash) {
       lastSlash[0] = '\0'; // truncate path, wwwroot still as given
@@ -2806,7 +2809,7 @@ int DarkHttpd::main(int argc, char **argv) {
     parse_default_extension_map();
     parse_commandline(argc, argv);
     /* NB: parse_commandline() might override parts of the extension map by
-     * parsing a user-specified file. THat is why we use isnert_or_assign when adding to the map.
+     * parsing a user-specified file. THat is why we use insert_or_add when parsing it into the map.
      */
 
     prepareToRun();
@@ -2818,7 +2821,7 @@ int DarkHttpd::main(int argc, char **argv) {
 
     /* clean exit */
     xclose(sockin);
-    if (logfile != nullptr) {
+    if (logfile) {
       fclose(logfile);
     }
     if (pidfile_name) {
@@ -2830,8 +2833,10 @@ int DarkHttpd::main(int argc, char **argv) {
     return 0;
   } catch (DarkException ex) {
     printf("Exit %d attempted, ending polling loop in __FUNCTION__", ex.returncode);
+    return ex.returncode;
   } catch (...) {
     printf("Unknown exception, probably from the std lib");
+    return EXIT_FAILURE;
   }
 }
 

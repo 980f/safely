@@ -70,11 +70,24 @@
 struct AutoFree {
   //these are exposed because we are mutating C code into C++ and hiding them is tedious. We should hide at least the pointer member, but there are a few contexts (*printf) where the implicit conversion doesn't get invoked.
   char *pointer=nullptr;
+
+  char & operator[](off_t offset) const {
+    static char fakechar;
+    if (!pointer) {
+      return fakechar;
+    }
+    return pointer[offset];
+  }
+
   size_t length = 0;
 
   operator char *() const {
     return pointer;
   }
+
+  // operator const char *() const {
+  //   return pointer;
+  // }
 
   operator bool() const {
     return pointer != nullptr;
@@ -447,6 +460,8 @@ private:
   bool inet6 = false; /* whether the socket uses inet6 */
 #endif
   const char *default_mimetype = nullptr; //always a pointer into a map which manages free'ing
+  //file gets read into here.
+  char *mimeFileContent=nullptr;
   AutoFree wwwroot; /* a path name */
 
   char *logfile_name = nullptr; /* NULL = no logging */
@@ -464,12 +479,15 @@ private:
   bool want_keepalive = true;
   bool want_server_id = true;
   bool want_single_file = false;
+
   AutoFree server_hdr;
   AutoFree auth_key; /* NULL or "Basic base64_of_password" */
   AutoFree custom_hdrs;
+
   uint64_t num_requests = 0;
   uint64_t total_in = 0;
   uint64_t total_out = 0;
+
   bool accepting = true; /* set to 0 to stop accept()ing */
   bool syslog_enabled = false;
   volatile bool running = false; /* signal handler sets this to false */
