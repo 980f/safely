@@ -1,12 +1,13 @@
 #pragma once // (C) 2024 Andrew L. Heilveil, aka github/980F
 
+#include <epoller.h>
 #include <netinet/in.h> //because we template some stuff else this would have been only in the cpp file.
 #include <unistd.h>
 #include "fildes.h"
 
 #include "sigcuser.h"
 
-/** intermediate class for socket manipulation, mostly adding syntax to int fd usage */
+/** intermediate class for socket manipulation, mostly adding syntax to int fd usage. */
 struct IoSource : Fildes, SIGCTRACKABLE {
 
   IoSource(const char *traceName, int fd = ~0);
@@ -26,13 +27,21 @@ struct IoSource : Fildes, SIGCTRACKABLE {
   }
 };
 
-/** event manager for an IoSource */
+/** event manager for an IoSource.
+ * The event system only provides one user datum per event so we must add context to know that it is one of our objects.
+ * We do this by only register IoConnection objects with the private instance, allowing us to cast a void * pack into an object of this class.
+ *
+ */
 class IoConnections : SIGCTRACKABLE {
+  static Epoller watcher;
 public:
   IoConnections(IoSource &source);
   IoSource &source;
 
   using Slot = SimpleSlot;
+  Slot writeAction;
+  Slot readAction;
+  Slot closeAction;
   sigc::connection incoming;
   sigc::connection outgoing;
   sigc::connection hangup;
@@ -47,4 +56,20 @@ public:
   /** set listeners, was named hookup in a prior incarnation */
   void listen(Slot readAction, Slot hangupAction);
   // write slurpInput() -- calls input function until we run out of input
+
+  //epoller doesn't know about objects. It's idea of a callback has just 64 bits of data and that might be the size of a pointer.
+  static void EventAdapter(void *iocon,unsigned flags) {
+    if (iocon) {
+      IoConnections *ioc = static_cast<IoConnections *>(iocon);
+      if (flags&EPOLLIN) {
+        ioc->readAction();
+      }
+      if (flags&EPOLLOUT) {
+        ioc->writeAction();
+      }
+      if (flags&EPOLLHUP) {//todo:1  fold RDHUP, other ERRORs into this?
+        ioc->closeAction();
+      }
+    }
+  }
 };

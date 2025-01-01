@@ -1,5 +1,5 @@
-#ifndef EPOLLER_H
-#define EPOLLER_H "(C) Andrew L. Heilveil, 2017"
+#pragma once
+// "(C) Andrew L. Heilveil, 2017"
 
 #include "posixwrapper.h"
 #include "sys/epoll.h" //for event type
@@ -31,13 +31,17 @@ public:
   unsigned numEvents;
   /** FYI: number of times wait() has been called, will wrap so mostly just for debug.*/
   unsigned waitcount=0;
+
+  /** this must be called regularly to get events detected, is called by @see doEvents which actually processes the events detected. */
   bool wait(unsigned timeoutms);
 
   /** respond to an event report from wait: */
   static void exec(const epoll_event &ev);
 
-  /** core of event loop */
+  /** core of event loop.Must be called frequently.
+   * One mechanism is to register this guy's fd with your main application loop, watching for read events. */
   bool doEvents(NanoSeconds timeoutms);
+  /** for debug messages, prints out which flags are active in the epevs mask. */
   void explain(unsigned epevs);
 
   /** when events are processed this clock is updated, reading the clock once per event wakeup */
@@ -47,7 +51,24 @@ public:
 
 };
 
+#if 0 //man pagish stuff
+EpollEvents
+  EPOLLIN       request/report read event
+  EPOLLPRI      higher priority data received, no info on how to access that, you must somehow know that via the fd.
+  EPOLLOUT      request/report write event where write event means "you can send data"
+  EPOLLERR      error happened
+  EPOLLHUP      hangup (signalled) happened
 
+  EPOLLRDNORM
+  EPOLLRDBAND
+  EPOLLWRNORM   same as EPOLLOUT.
+  EPOLLWRBAND
+  EPOLLMSG  deprecated/probably useless
+  EPOLLRDHUP     shutdown on peer socket (remote hungup locally), there might still be data to read!
 
+  EPOLLEXCLUSIVE config to limit spamming of a shared actual event to many fd's
+  EPOLLWAKEUP    something to do with wakeup sources, ignored in many *nix's
+  EPOLLONESHOT   config for autodisabling on event delivery, use ctl_mod to re-enable
+  EPOLLET        config for edge triggered reporting
 
 #endif // EPOLLER_H

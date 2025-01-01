@@ -52,8 +52,8 @@ bool Epoller::remove(int fd){
 }
 
 bool Epoller::wait(unsigned timeoutms){
-  static StopWatch reactionTime(false,true);//perhaps using the wrong timebase caused epoller to not wait?
-  static unsigned long shortwait=0;
+  static StopWatch reactionTime(false,true);//diagnostic: perhaps using the wrong timebase caused epoller to not wait?
+  static unsigned long shortwait=0;//number of short waits, a diagnostic.
   reactionTime.start();
   ++waitcount;
   if(okValue(numEvents, unsigned(epoll_wait(epfd,&waitlist.peek(),int(waitlist.freespace()),int(timeoutms))))){
@@ -70,6 +70,7 @@ bool Epoller::wait(unsigned timeoutms){
   }
 }
 
+
 void Epoller::exec(const epoll_event &ev){
   if(ev.data.ptr){
     Handler &handler(*reinterpret_cast<Handler *>(ev.data.ptr));
@@ -83,7 +84,7 @@ bool Epoller::doEvents(NanoSeconds timeout){
   waitlist.rewind();
   if(wait(timeout.ms())){//HEREIS the actual blocking call!
 //too frequent    dbg("polled event count %d",waitlist.used());
-    Indexer<epoll_event> list(waitlist,~0);
+    Indexer list(waitlist,~0);//get head of list
     while(list.hasNext()){
       auto event=list.next();
       //dbg("event on fd: %d",event.data.fd);

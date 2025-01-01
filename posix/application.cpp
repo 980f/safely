@@ -1,6 +1,6 @@
 //"(C) Andrew L. Heilveil, 2017-2018"
 #include "application.h"
-#include "errno.h"
+// #include "errno.h"
 
 #include "logger.h"
 #include "fildes.h" //todo: move writer into filer and use that
@@ -11,7 +11,7 @@
 #include "sched.h" //setSched
 #include "textpointer.h" //Text class
 
-#include "time.h" //for epoll override
+// #include "time.h" //for epoll override
 #include "nanoseconds.h"
 #include "cheaptricks.h" //take()
 
