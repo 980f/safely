@@ -1,6 +1,6 @@
-  message("including usb with ftdi devices as well")
+message("including usb with ftdi devices as well")
 
-add_library(usb STATIC
+target_sources(${safely_target} PUBLIC
   mpsse.cpp
   mpsse.h
   usbid.cpp
@@ -31,14 +31,7 @@ add_library(usb STATIC
 
 )
 
+target_include_directories(${safely_target} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/libusb)
 
-  target_include_directories(usb PUBLIC
-    ${PROJECT_SOURCE_DIR}
-    ${PROJECT_SOURCE_DIR}/cppext
-    ${PROJECT_SOURCE_DIR}/system
-    ${PROJECT_SOURCE_DIR}/posix
-    ${CMAKE_CURRENT_SOURCE_DIR}
-  )
-
-  get_target_property(arf usb "INCLUDE_DIRECTORIES")
-  message("'usb' includes ${arf}")
+get_target_property(arf ${safely_target} "INCLUDE_DIRECTORIES")
+message("cppext includes: ${arf}")

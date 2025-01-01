@@ -1,10 +1,6 @@
-#cmake_minimum_required(VERSION 3.16)
-#project(system VERSION 1.0 LANGUAGES CXX)
 
 message("including 'system' ")
-set(CMAKE_INCLUDE_CURRENT_DIR ON)
-
-add_library(system STATIC
+target_sources(${safely_target} PUBLIC
   allocatedindexer.cpp
   allocatedindexer.h
   block.h
@@ -91,11 +87,7 @@ add_library(system STATIC
   watchable.h
 )
 
-target_include_directories(system PUBLIC
-  ${PROJECT_SOURCE_DIR}
-  ${PROJECT_SOURCE_DIR}/cppext
-  ${CMAKE_CURRENT_SOURCE_DIR}
-)
+target_include_directories(${safely_target} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} )
 
-get_target_property(arf system "INCLUDE_DIRECTORIES")
-message("'system' includes ${arf}")
+get_target_property(arf ${safely_target} "INCLUDE_DIRECTORIES")
+message("cppext includes: ${arf}")

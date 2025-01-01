@@ -1,5 +1,8 @@
 //"(C) Andrew L. Heilveil, 2017"
 #include "numberformat.h"
+
+#include <minimath.h>
+
 #include "index.h" //isValid(unsigned)
 
 NumberFormat::NumberFormat() {

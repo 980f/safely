@@ -24,35 +24,35 @@ enum OpBits {
 };
 
 
-MPSSE::MPSSE(u8 *buffer, unsigned sizeofBuffer):ByteScanner (buffer,sizeofBuffer){
+MPSSE::MPSSE(uint8_t *buffer, unsigned sizeofBuffer):ByteScanner (buffer,sizeofBuffer){
   //#nada
 }
 
 void MPSSE::setClockDivisor(unsigned divisor){
   next() = 0x86;//Set CLK divisor
-  putU16(divisor);
+  putuint16_t(divisor);
 }
 
-void MPSSE::sendBitsMsf(unsigned numberBits, u8 data, bool edginess){
-  next() = edginess?  u8( BitWad<bitly,doOutput,ockNegative>::mask) : u8( BitWad<bitly,doOutput>::mask);
-  next() = u8(numberBits-1);
+void MPSSE::sendBitsMsf(unsigned numberBits, uint8_t data, bool edginess){
+  next() = edginess?  uint8_t( BitWad<bitly,doOutput,ockNegative>::mask) : uint8_t( BitWad<bitly,doOutput>::mask);
+  next() = uint8_t(numberBits-1);
   next() = data;
 }
 
 void MPSSE::fetchBytes(unsigned numBYTES){
   next() = BitWad<doInput>::mask;
-  putU16(numBYTES - 1);
+  putuint16_t(numBYTES - 1);
 }
 
 
 void MPSSE::shiftoutBytes(unsigned quantity){
   if(quantity>0){
     next() = BitWad<doOutput>::mask;
-    putU16(quantity - 1);//length -1
+    putuint16_t(quantity - 1);//length -1
   }
 }
 
-void MPSSE::shiftoutBytes(Indexer<u8> blob){
+void MPSSE::shiftoutBytes(Indexer<uint8_t> blob){
   shiftoutBytes(blob.allocated());
   appendAll(blob);
 }
@@ -70,8 +70,8 @@ unsigned MPSSE::fetchGpio(bool ls, bool ms){
   return resplength;
 }
 
-void MPSSE::setGpio(u8 value, u8 dirbits,bool highbits){
-  next() = highbits? u8(BitWad<Configure,GpioMsbyte>::mask):u8(BitWad<Configure>::mask);
+void MPSSE::setGpio(uint8_t value, uint8_t dirbits,bool highbits){
+  next() = highbits? uint8_t(BitWad<Configure,GpioMsbyte>::mask):uint8_t(BitWad<Configure>::mask);
   next() = value;
   next() = dirbits;
 }

@@ -1,8 +1,7 @@
 //(C) 2017 Andrew Heilveil
 #include "logger.h"
-#include "eztypes.h"
-#include "textkey.h"
-#include "stdarg.h"
+#include "cheaptricks.h"
+#include <cstdarg>
 
 /** you must implement these two functions somewhere in your project */
 extern void logmessage(const char *prefix,const char *msg,va_list &args,bool moretocome);
@@ -31,11 +30,11 @@ void Logger::operator() (const char *fmt, ...){
   }
 }
 
-void Logger::flushline(){
+void Logger::flushline() const {
   logmessage(prefix,nullptr,NullRef(va_list),false);
 }
 
-void Logger::varg(const char *fmt, va_list &args){
+void Logger::varg(const char *fmt, va_list &args) const {
   if(enabled) {
     logmessage(prefix, fmt, args,combining);
   }

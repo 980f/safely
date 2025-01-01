@@ -2,7 +2,7 @@
 #include "bufferformatter.h"
 #include "string.h" //memmove
 
-BufferFormatter::BufferFormatter(const Indexer<u8> &other, TextKey format):
+BufferFormatter::BufferFormatter(const Indexer<uint8_t> &other, TextKey format):
   body(reinterpret_cast<char *>(other.peek()),other.freespace())
 {
   setFormat(format);
@@ -66,7 +66,7 @@ void BufferFormatter::substitute(double value){
   nf.onUse();//whether used successfully or not ...
 }
 
-void BufferFormatter::substitute(u64 value){
+void BufferFormatter::substitute(uint64_t value){
   //not punting to double, we don't want its formatting rules applied to actual integers
   char maxprintable[19+1];//19 digits , null
   CharFormatter workspace(maxprintable,sizeof(maxprintable));
@@ -76,7 +76,7 @@ void BufferFormatter::substitute(u64 value){
   }
 }
 
-void BufferFormatter::substitute(u32 value){
+void BufferFormatter::substitute(uint32_t value){
   //not punting to double, we don't want its formatting rules applied to actual integers
   char maxprintable[19+1];//19 digits , null
   CharFormatter workspace(maxprintable,sizeof(maxprintable));
@@ -86,12 +86,12 @@ void BufferFormatter::substitute(u32 value){
   }
 }
 
-void BufferFormatter::substitute(u16 value){
-  substitute(u32(value));
+void BufferFormatter::substitute(uint16_t value){
+  substitute(uint32_t(value));
 }
 
-void BufferFormatter::substitute(u8 value){
-  substitute(u32(value));
+void BufferFormatter::substitute(uint8_t value){
+  substitute(uint32_t(value));
 }
 
 void BufferFormatter::substitute(char value){
@@ -99,7 +99,7 @@ void BufferFormatter::substitute(char value){
 }
 
 
-void BufferFormatter::substitute(s32 value){
+void BufferFormatter::substitute(int32_t value){
   //not punting to double, we don't want its formatting rules applied to actual integers
   char maxprintable[19+1];//19 digits , null
   CharFormatter workspace(maxprintable,sizeof(maxprintable));
@@ -109,16 +109,16 @@ void BufferFormatter::substitute(s32 value){
   }
 }
 
-void BufferFormatter::substitute(s16 value){
-  substitute(s32(value));
+void BufferFormatter::substitute(int16_t value){
+  substitute(int32_t(value));
 } //
 
-void BufferFormatter::substitute(s8 value){
-  substitute(s32(value));//need this to distinguish char * from implied char &
+void BufferFormatter::substitute(int8_t value){
+  substitute(int32_t(value));//need this to distinguish char * from implied char &
 }
 
 void BufferFormatter::substitute(bool value){
-  substitute(u8(value));
+  substitute(uint8_t(value));
 } // TextFormatter::substitute
 
 

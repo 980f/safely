@@ -38,7 +38,7 @@ public:
 
 };
 
-/** utf8 to u32 push extractor */
+/** utf8 to uint32_t push extractor */
 class Utf8Escaper : public Unicoder {
 public:
   /** remaining utf8 bytes needed to finish assembling a Unicode char */
@@ -71,5 +71,3 @@ public:
   /** @returns whether state was 'Idle', if not then modifies uch as if a bunch of 0xB0's were seen */
   bool cleanup() override;
 };
-
-

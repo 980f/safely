@@ -1,6 +1,6 @@
 message("including posix library")
 
-add_library(posix STATIC
+target_sources(${safely_target} PUBLIC
   activityperformance.cpp
   activityperformance.h
   application.cpp
@@ -85,12 +85,7 @@ add_library(posix STATIC
 )
 
 
-target_include_directories(posix PUBLIC
-  ${PROJECT_SOURCE_DIR}
-  ${PROJECT_SOURCE_DIR}/cppext
-  ${PROJECT_SOURCE_DIR}/system
-  ${CMAKE_CURRENT_SOURCE_DIR}
-)
+target_include_directories(${safely_target} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} )
 
-get_target_property(arf posix "INCLUDE_DIRECTORIES")
-message("'posix' includes ${arf}")
+get_target_property(arf ${safely_target} "INCLUDE_DIRECTORIES")
+message("posix includes: ${arf}")

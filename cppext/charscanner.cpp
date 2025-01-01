@@ -26,7 +26,7 @@ int ourStrncmp(const char *one, const char *two, unsigned length){
 
 bool ByteScanner ::putBytes(unsigned value, unsigned numBytes){
   if(stillHas(numBytes)) {
-    const u8 *p = reinterpret_cast<const u8 *>(&value);
+    const uint8_t *p = reinterpret_cast<const uint8_t *>(&value);
     if(bigendian){
       p+=numBytes;//past the msb of interest
       while(numBytes-->0){
@@ -43,12 +43,12 @@ bool ByteScanner ::putBytes(unsigned value, unsigned numBytes){
   }
 } /* putBytes */
 
-u32 ByteScanner ::getU(unsigned numBytes, u32 def){
+uint32_t ByteScanner ::getU(unsigned numBytes, uint32_t def){
   //using a pointer to a local precludes compiler optimizing for register use.
   if(stillHas(numBytes)) {
-    u32 acc = 0;
+    uint32_t acc = 0;
     if(bigendian){
-      u8 *pun=reinterpret_cast<u8 *>(&acc)+numBytes;
+      uint8_t *pun=reinterpret_cast<uint8_t *>(&acc)+numBytes;
       while(numBytes-->0){
         *--pun=next();
       }
@@ -64,7 +64,7 @@ u32 ByteScanner ::getU(unsigned numBytes, u32 def){
 
 void ByteScanner::getTail(CharScanner &other){
   //#invalid cast:    grab(reinterpret_cast<ByteScanner>(other));
-  buffer = reinterpret_cast<u8*>(other.buffer);
+  buffer = reinterpret_cast<uint8_t*>(other.buffer);
   if(other.ordinal()>0) {//want front end.
     length = other.pointer;
     pointer = 0;
@@ -74,37 +74,37 @@ void ByteScanner::getTail(CharScanner &other){
   }
 } // ByteScanner::grab
 
-ByteScanner::ByteScanner(void) : Indexer<u8 >(){
+ByteScanner::ByteScanner(void) : Indexer<uint8_t >(){
   //#nada
 }
 
-ByteScanner::ByteScanner(u8  *content, unsigned size ) : Indexer<u8 >(content, size){
+ByteScanner::ByteScanner(uint8_t  *content, unsigned size ) : Indexer<uint8_t >(content, size){
   //#nada
 }
 
-ByteScanner::ByteScanner(const ByteScanner&other, int clip ) : Indexer<u8 >(other, clip){
+ByteScanner::ByteScanner(const ByteScanner&other, int clip ) : Indexer<uint8_t >(other, clip){
   //#nada
 }
 
 ByteScanner::ByteScanner(const CharScanner&other ) : //choices herein are for first use which is in type casting a ready-to-send string.
-  Indexer<u8 >( reinterpret_cast<u8*>(other.internalBuffer()), other.used()){
+  Indexer<uint8_t >( reinterpret_cast<uint8_t*>(other.internalBuffer()), other.used()){
   //#nada
 }
 
 
-u16 ByteScanner ::getU16(u16 def){
-  return u16(getU(2, def));
+uint16_t ByteScanner ::getuint16_t(uint16_t def){
+  return uint16_t(getU(2, def));
 }
 
-u32 ByteScanner ::getU24(u32 def){
+uint32_t ByteScanner ::getU24(uint32_t def){
   return getU(3, def);
 }
 
-u32 ByteScanner ::getU32(u32 def){
+uint32_t ByteScanner ::getuint32_t(uint32_t def){
   return getU(4, def);
 }
 
-bool ByteScanner ::putU16(unsigned value){
+bool ByteScanner ::putuint16_t(unsigned value){
   return putBytes(value, 2);
 }
 
@@ -112,12 +112,12 @@ bool ByteScanner ::putU24(unsigned value){
   return putBytes(value, 3);
 }
 
-bool ByteScanner ::putU32(unsigned value){
+bool ByteScanner ::putuint32_t(unsigned value){
   return putBytes(value, 4);
 }
 
 ByteScanner ByteScanner::subset(unsigned fieldLength, bool removing){
-  Indexer<u8> punter(Indexer<u8>::subset(fieldLength,removing));
+  Indexer<uint8_t> punter(Indexer<uint8_t>::subset(fieldLength,removing));
   return ByteScanner(punter.internalBuffer(),punter.allocated());
 }
 
@@ -164,7 +164,7 @@ CharScanner::CharScanner(const Indexer<char> &other): Indexer<char >(other, 0){
     //#nada
 }
 
-CharScanner::CharScanner(const Indexer<u8> &other):
+CharScanner::CharScanner(const Indexer<uint8_t> &other):
     Indexer<char >(reinterpret_cast<char *>(other.internalBuffer()), other.allocated()){
     //#nada
 }
@@ -186,7 +186,7 @@ TextKey CharScanner::asciiz() {
       previous() = 0;
     }
   }
-  return U8Z(internalBuffer());
+  return reinterpret_cast<TextKey>(internalBuffer());
 } /* asciiz */
 
 bool CharScanner::isTerminal(){
@@ -288,7 +288,7 @@ CharScanner CharScanner::cut(char separator){
 
 bool CharScanner ::putBytes(unsigned value, unsigned numBytes){
   if(stillHas(numBytes)) {
-    const u8 *p = reinterpret_cast<const u8 *>(&value);
+    const uint8_t *p = reinterpret_cast<const uint8_t *>(&value);
     if(bigendian){
       p+=numBytes;//past the msb of interest
       while(numBytes-->0){
@@ -305,12 +305,12 @@ bool CharScanner ::putBytes(unsigned value, unsigned numBytes){
   }
 } /* putBytes */
 
-u32 CharScanner ::getU(unsigned numBytes, u32 def){
+uint32_t CharScanner ::getU(unsigned numBytes, uint32_t def){
   //using a pointer to a local precludes compiler optimizing for register use.
   if(stillHas(numBytes)) {
-    u32 acc = 0;
+    uint32_t acc = 0;
     if(bigendian){
-      u8 *pun=reinterpret_cast<u8 *>(&acc)+numBytes;
+      uint8_t *pun=reinterpret_cast<uint8_t *>(&acc)+numBytes;
       while(numBytes-->0){
         *--pun=next();
       }
@@ -324,15 +324,15 @@ u32 CharScanner ::getU(unsigned numBytes, u32 def){
   }
 } // ByteScanner::getU
 
-u16 CharScanner ::getU16(u16 def){
+uint16_t CharScanner ::getU16(uint16_t def){
   return getU(2, def);
 }
 
-u32 CharScanner ::getU24(u32 def){
+uint32_t CharScanner ::getU24(uint32_t def){
   return getU(3, def);
 }
 
-u32 CharScanner ::getU32(u32 def){
+uint32_t CharScanner ::getU32(uint32_t def){
   return getU(4, def);
 }
 
@@ -348,14 +348,14 @@ bool CharScanner ::putU32(unsigned value){
   return putBytes(value, 4);
 }
 ///////////////////
-ByteLooker::ByteLooker(const u8  *content, unsigned size ) : Indexer<const u8 >(content, size){
+ByteLooker::ByteLooker(const uint8_t  *content, unsigned size ) : Indexer<const uint8_t >(content, size){
   //#nada
 }
 
-u32 ByteLooker ::getU(unsigned numBytes, u32 def){
+uint32_t ByteLooker ::getU(unsigned numBytes, uint32_t def){
   //using a pointer to a local precludes compiler optimizing for register use.
   if(stillHas(numBytes)) {
-    u32 acc = 0;
+    uint32_t acc = 0;
     copyObject(&peek(),&acc,numBytes);
     skip(numBytes);
     return acc;

@@ -3,7 +3,7 @@
 /* Table of CRC values, packed pairs of modbus example code.
 The cost of unpacking the two bytes is less than the cost of two indexed array accesses on the processor which needs this done fastest.
 */
-static const u16 PrecomputedCrc[256] = {
+static const uint16_t PrecomputedCrc[256] = {
   0x0000, 0xC1C0, 0x81C1, 0x4001, 0x01C3, 0xC003, 0x8002, 0x41C2,
   0x01C6, 0xC006, 0x8007, 0x41C7, 0x0005, 0xC1C5, 0x81C4, 0x4004,
   0x01CC, 0xC00C, 0x800D, 0x41CD, 0x000F, 0xC1CF, 0x81CE, 0x400E,
@@ -39,12 +39,12 @@ static const u16 PrecomputedCrc[256] = {
 };
 
 
-u16 Crc16m::compute(Indexer <u8>&summer){
-  u8 low(255);
-  u8 high(255);
+uint16_t Crc16m::compute(Indexer <uint8_t>&summer){
+  uint8_t low(255);
+  uint8_t high(255);
 
   while(summer.hasNext()) {
-    u16 precomp(PrecomputedCrc[high ^  summer.next()]);
+    uint16_t precomp(PrecomputedCrc[high ^  summer.next()]);
     high = low ^ (precomp >> 8);
     low = precomp;
   }

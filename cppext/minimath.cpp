@@ -1,13 +1,16 @@
 #include "minimath.h"
 
+#include <array>
+#include <cheaptricks.h>
+
 #ifdef __linux__
 #include <limits>
 const double Infinity = std::numeric_limits<double>::infinity();
 const double Nan = std::numeric_limits<double>::quiet_NaN();
 
-unsigned log2Exponent(u32 number) {
+unsigned log2Exponent(uint32_t number) {
   //can be really fast in asm
-  for (u32 exp = 0; exp < 32; ++exp) {
+  for (uint32_t exp = 0; exp < 32; ++exp) {
     if (number) {
       number >>= 1;
     } else {
@@ -41,55 +44,53 @@ constexpr bool isNormal(double d){//mimicing std::isnormal which means 'is fully
 
 #endif // ifdef __linux__
 
-
 //powers of 10 that fit into a 32 bit integer
-constexpr u32 Decimal1[] = {
+constexpr uint32_t Decimal1[] = {
   1,
   10,
   100,
   1000,
-  10000,
-  100000,
-  1000000,
-  10000000,
-  100000000,
-  1000000000
+  10'000,
+  100'000,
+  1'000'000,
+  10'000'000,
+  100'000'000,
+  1'000'000'000
 };
 
-/** @returns the number of decimal digits needed to represent the given integer, -1 if the number is 0 */
-int ilog10(u32 value) {
-  for (int log = countof(Decimal1); log-- > 0;) {
-    if (Decimal1[log] <= value) {
-      return log;
-    }
-  }
-  return -1;
-}
-
 // powers of 10 that fit into a 64 bit integer, but not a 32bit integer.
-constexpr u64 Decimal2[] = {
-  10000000000UL,
-  100000000000UL,
-  1000000000000UL,
-  10000000000000UL,
-  100000000000000UL,
-  1000000000000000UL,
-  10000000000000000UL,
-  100000000000000000UL,
-  1000000000000000000UL,
-  10000000000000000000UL
+constexpr uint64_t Decimal2[] = {
+  10'000'000'000UL,
+  100'000'000'000UL,
+  1'000'000'000'000UL,
+  10'000'000'000'000UL,
+  100'000'000'000'000UL,
+  1'000'000'000'000'000UL,
+  10'000'000'000'000'000UL,
+  100'000'000'000'000'000UL,
+  1'000'000'000'000'000'000UL,
+  10'000'000'000'000'000'000UL //10^19,
   //compiler reported overflow when I added one more.
 };
 
-/** @returns the number of decimal digits needed to represent the given integer, -1 if the number is 0 */
-int ilog10(u64 value) {
-  for (int log = countof(Decimal2); log-- > 0;) {
-    if (Decimal2[log] <= value) {
-      return log + 10;
-    }
+
+template<typename Integrish> constexpr Integrish rpepow10(unsigned n) {
+  Integrish result = 1;
+  Integrish based = 10;
+  for (; n; n >>= 1) {
+    if (n & 1) result *= based;
+    based *= based;
   }
-  return ilog10(u32(value));
+  return result;
 }
+
+template<class Function, std::size_t... domain> constexpr auto MakeLookUpTable(Function f, std::index_sequence<domain...>) -> std::array<typename std::result_of<Function(unsigned)>::type, sizeof...(domain)> {
+  return {{f(domain)...}};
+}
+
+constexpr std::array<unsigned, 10> tabull = MakeLookUpTable(rpepow10<unsigned>, std::make_index_sequence<10>());
+constexpr std::array<uint64_t, 10> tabull2 = MakeLookUpTable(rpepow10<uint64_t>, std::make_index_sequence<10>());//need 10 to 19, not 0 to 9
+
 
 unsigned i32pow10(unsigned power) {
   if (power < countof(Decimal1)) {
@@ -98,7 +99,7 @@ unsigned i32pow10(unsigned power) {
   return 0; //this should get the caller's attention.
 }
 
-u64 i64pow10(unsigned power) {
+uint64_t i64pow10(unsigned power) {
   if (power >= countof(Decimal1)) {
     power -= countof(Decimal1);
     if (power < countof(Decimal2)) {
@@ -110,11 +111,36 @@ u64 i64pow10(unsigned power) {
   }
 } // i64pow10
 
-u64 keepDecimals(u64 p19, unsigned digits) {
+
+/** @returns the number of decimal digits needed to represent the given integer, -1 if the number is 0
+ * If the chip has a single cycle 32 bit multiplier we could do this slightly faster by generating the powers in the loop rather than iterating over a table of them, although it might be equal rather than faster.
+ * But the tables are a significant boost for the pow10 functions when we don't have a multiplier (cortex M0), but then again if we are using one of those would we ever care about speed?
+ */
+int ilog10(uint32_t value) {
+  for (int log = countof(Decimal1); log-- > 0;) {
+    if (Decimal1[log] <= value) {
+      return log;
+    }
+  }
+  return -1;
+}
+
+/** @returns the number of decimal digits needed to represent the given integer, -1 if the number is 0 */
+int ilog10(uint64_t value) {
+  for (int log = countof(Decimal2); log-- > 0;) {
+    if (Decimal2[log] <= value) {
+      return log + 10;
+    }
+  }
+  return ilog10(uint32_t(value));
+}
+
+
+uint64_t keepDecimals(uint64_t p19, unsigned digits) {
   return rate(p19, i64pow10(19 - digits));
 }
 
-u64 truncateDecimals(u64 p19, unsigned digits) {
+uint64_t truncateDecimals(uint64_t p19, unsigned digits) {
   if (digits <= 19) {
     return p19 / i64pow10(19 - digits);
   }
@@ -122,7 +148,7 @@ u64 truncateDecimals(u64 p19, unsigned digits) {
 }
 
 //uround and sround are coded to be like they will in optimized assembly
-u16 uround(float scaled) {
+uint16_t uround(float scaled) {
   if (scaled < 0.5F) { //fp compares are the same cost as integer.
     return 0;
   }
@@ -131,10 +157,10 @@ u16 uround(float scaled) {
     return 65535;
   }
   int eye = int(scaled); //truncate
-  return u16(eye / 2);
+  return uint16_t(eye / 2);
 } /* uround */
 
-s16 sround(float scaled) { //#this would be so much cleaner and faster in asm!
+int16_t sround(float scaled) { //#this would be so much cleaner and faster in asm!
   if (scaled > 32766.5F) {
     return 32767;
   }
@@ -142,7 +168,7 @@ s16 sround(float scaled) { //#this would be so much cleaner and faster in asm!
     return -32768;
   }
   scaled += scaled >= 0 ? 0.5 : -0.5; //round away from 0. aka round the magnitude.
-  return s16(scaled);
+  return int16_t(scaled);
 }
 
 unsigned modulus(int value, unsigned cycle) {
@@ -223,7 +249,7 @@ double degree2radian(double theta) {
 static const double M_LN2(0.69314718055994530942);
 #endif
 
- double flog(u32 number){
+ double flog(uint32_t number){
   int exponent = log2Exponent(number);
   int malign = number << (30 - exponent); //unsigned 1.31
 
@@ -234,9 +260,9 @@ static const double M_LN2(0.69314718055994530942);
 
 #elif gotFlogWorking == 1
 static double LN2 = 0.69314718055994530942;
-double flog(u32 number){
+double flog(uint32_t number){
 
-  static u32 fractroots[] = { //fractional part of the roots of 2
+  static uint32_t fractroots[] = { //fractional part of the roots of 2
     0x6A09E667,
     0x306FE0A3,
     0x172B83C7,
@@ -275,14 +301,14 @@ double flog(u32 number){
   malign &= ~(1 << 31); //same as subtracting 1 in 1.31 format
   //malign is now a 0.31 format number, in the sub range of 0 to 1-2^-31.
   unsigned n = countof(fractroots);
-  u32 logish = 0;
-  u32 checker = 0; //we will iterate to make checker close to malign
-  u32 *fract = fractroots;
+  uint32_t logish = 0;
+  uint32_t checker = 0; //we will iterate to make checker close to malign
+  uint32_t *fract = fractroots;
 
   while(n-- > 0) { //#order matters
-    u64 tester = *fract * checker; //best done in asm
-    tester += u64(*fract + checker) << 32;
-    if(tester <= u64(malign) << 32) {
+    uint64_t tester = *fract * checker; //best done in asm
+    tester += uint64_t(*fract + checker) << 32;
+    if(tester <= uint64_t(malign) << 32) {
       checker = tester >> 32;
       logish |= 1 << (n); //maybe n+1?
     }
@@ -290,13 +316,13 @@ double flog(u32 number){
   }
   //logish is mantissa of base 2 log
   //pack fields
-  u64 packer = u64(exponent) << 52;
+  uint64_t packer = uint64_t(exponent) << 52;
   packer |= logish << (52 - 32);
   return pun(double, packer) * M_LN2; //M_LN2 log base e of 2.
 } /* flog */
 
 #else /* if gotFlogWorking == 2 */
-double flog(u32 number) {
+double flog(uint32_t number) {
   if (number == 0) {
     number = 1;
   }
@@ -306,7 +332,7 @@ double flog(u32 number) {
 #endif /* if gotFlogWorking == 2 */
 
 #if logoptimized
-double logRatio(u32 over, u32 under){
+double logRatio(uint32_t over, uint32_t under){
   unsigned underexp = 32 - log2Exponent(under); //leading zeroes
   unsigned overexp = 32 - log2Exponent(over); //leading zeroes
   int diff = overexp - underexp;
@@ -327,7 +353,7 @@ double logRatio(u32 over, u32 under){
 
 #else /* if logoptimized */
 //someday we will optimize the following:
-double logRatio(u32 over, u32 under) {
+double logRatio(uint32_t over, uint32_t under) {
   return flog(over) - flog(under);
 }
 
@@ -388,5 +414,5 @@ unsigned digitsAbove(unsigned int value, unsigned numDigits) {
 }
 
 int ilog10(double value) {
-  return ilog10(u64(fabs(value)));
+  return ilog10(uint64_t(fabs(value)));
 }

@@ -35,8 +35,9 @@ inline unsigned Zguard(unsigned allocation) {
 
 #define Mu    "\u03bc"
 #define Sigma "\u03c3"
+//feel free to add in other greek characters, like psi and phi and pi!
 
-/** @returns whether the @param string is null or just a null terminator */
+/** @returns whether the @param string is nullptr or just points to a null terminator */
 bool isTrivial(TextKey key);
 
 /** @returns whether @param  key is not null and the first char is not the null terminator*/

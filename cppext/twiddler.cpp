@@ -5,11 +5,11 @@ IntegerTwiddler::IntegerTwiddler(){
   freeze();
 }
 
-IntegerTwiddler::IntegerTwiddler(u32 numer, u32 denom, bool center){
+IntegerTwiddler::IntegerTwiddler(uint32_t numer, uint32_t denom, bool center){
   setRatio(numer,denom,center);
 }
 
-void IntegerTwiddler::setRatio(u32 numer, u32 denom, bool center){
+void IntegerTwiddler::setRatio(uint32_t numer, uint32_t denom, bool center){
   above = numer;
   below = denom;
   if(center) {

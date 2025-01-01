@@ -13,7 +13,6 @@ struct IoSource : Fildes, SIGCTRACKABLE {
   /** note: will close the fd is marked as owner. */
   ~IoSource();
 
-  using Slot = BooleanSlot;
   /** merge return from read or write with errno, @returns negative errno for most errors, 0 for errors worthy of simple retry (same as 0 bytes read or written) else the number of bytes successfully operated upon */
   static int recode(ssize_t rwreturn);
 
@@ -32,6 +31,8 @@ class IoConnections : SIGCTRACKABLE {
 public:
   IoConnections(IoSource &source);
   IoSource &source;
+
+  using Slot = SimpleSlot;
   sigc::connection incoming;
   sigc::connection outgoing;
   sigc::connection hangup;
@@ -42,8 +43,8 @@ public:
   /** call this when you have something to send.
    *  @returns whether it took some action to enable the write notification
    */
-  bool writeInterest(IoSource::Slot action);
+  bool writeInterest(Slot action);
   /** set listeners, was named hookup in a prior incarnation */
-  void listen(IoSource::Slot readAction, IoSource::Slot hangupAction);
+  void listen(Slot readAction, Slot hangupAction);
   // write slurpInput() -- calls input function until we run out of input
 };

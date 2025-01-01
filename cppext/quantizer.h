@@ -1,18 +1,14 @@
-#ifndef Quantizer_h
-#define Quantizer_h
+#pragma once
 #include "range.h"
-#include "interval.h"
-
+#include "ranged.h"
 /**
-  * first use is converting a range of digital values
-  * to floating point,
-  * with bounds checking.
+  * first use is converting a range of digital values to floating point, with bounds checking.
   */
 class Quantizer {
 public:
   //and since these are public we can't cache anything.
   IndexRange discrete;
-  Interval natural;
+  Ranged natural;
 public:
   Quantizer& operator = (const Quantizer &other) {
     discrete = other.discrete;
@@ -24,24 +20,22 @@ public:
     return natural.cmp(d);
   }
 
-  int bounds(u16 d) const {
+  int bounds(uint16_t d) const {
     return discrete.cmp(d);
   }
 
   /** clamp to range */
-  u16 quantize(double nat) const {
-    return discrete.start() + u16(discrete.span() * natural.fragment(natural.clamped(nat)));
+  uint16_t quantize(double nat) const {
+    return discrete.start() + uint16_t(discrete.span() * natural.fragment(natural.clamped(nat)));
   }
 
-  double interpret(u16 digital) const {
+  double interpret(uint16_t digital) const {
     return natural.clamped(raw(digital));
   }
 
-  double raw(u16 digital) const {
+  double raw(uint16_t digital) const {
     //even if out of bound convert it:
     return natural.start() + natural.width() * discrete.fragment(digital);
   }
 
 };
-
-#endif // LINEARTRANSFER_H

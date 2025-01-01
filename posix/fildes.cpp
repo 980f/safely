@@ -158,7 +158,7 @@ bool Fildes::isMarked(const FDset &fdset) const {
   return isOpen() && fdset.includes(fd);
 }
 
-bool Fildes::read(u8 *buf, unsigned len) {
+bool Fildes::read(uint8_t *buf, unsigned len) {
   if (isOpen()) {
     if (okValue(lastRead, ::read(fd, buf, len))) {
       if (traceRead) {
@@ -179,7 +179,7 @@ bool Fildes::read(u8 *buf, unsigned len) {
   }
 } // Fildes::read
 
-bool Fildes::read(Indexer<u8> &p) {
+bool Fildes::read(Indexer<uint8_t> &p) {
   if (read(&p.peek(), p.freespace())) {
     if (lastRead >= 0) {
       p.skip(lastRead);
@@ -191,7 +191,7 @@ bool Fildes::read(Indexer<u8> &p) {
 } // Fildes::read
 
 bool Fildes::read(Indexer<char> &p) {
-  if (read(reinterpret_cast<u8 *>(&p.peek()), p.freespace())) {
+  if (read(reinterpret_cast<uint8_t *>(&p.peek()), p.freespace())) {
     if (lastRead >= 0) {
       p.skip(lastRead);
     }
@@ -201,7 +201,7 @@ bool Fildes::read(Indexer<char> &p) {
   }
 } // Fildes::read
 
-bool Fildes::write(Indexer<u8> &p) {
+bool Fildes::write(Indexer<uint8_t> &p) {
   if (write(&p.peek(), p.freespace())) {
     if (lastWrote >= 0) {
       p.skip(lastWrote);
@@ -211,7 +211,7 @@ bool Fildes::write(Indexer<u8> &p) {
   return false;
 }
 
-bool Fildes::write(Indexer<u8> &&p) {
+bool Fildes::write(Indexer<uint8_t> &&p) {
   if (write(&p.peek(), p.freespace())) {
     if (lastWrote >= 0) {
       p.skip(lastWrote);
@@ -222,7 +222,7 @@ bool Fildes::write(Indexer<u8> &&p) {
 }
 
 bool Fildes::write(Indexer<char> &p) {
-  if (write(reinterpret_cast<const u8 *>(&p.peek()), p.freespace())) {
+  if (write(reinterpret_cast<const uint8_t *>(&p.peek()), p.freespace())) {
     if (lastWrote >= 0) {
       p.skip(lastWrote);
     }
@@ -232,7 +232,7 @@ bool Fildes::write(Indexer<char> &p) {
 }
 
 bool Fildes::write(Indexer<char> &&p) {
-  if (write(reinterpret_cast<const u8 *>(&p.peek()), p.freespace())) {
+  if (write(reinterpret_cast<const uint8_t *>(&p.peek()), p.freespace())) {
     if (lastWrote >= 0) {
       p.skip(lastWrote);
     }
@@ -241,7 +241,7 @@ bool Fildes::write(Indexer<char> &&p) {
   return false;
 }
 
-bool Fildes::write(const u8 *buf, unsigned len) {
+bool Fildes::write(const uint8_t *buf, unsigned len) {
   if (isOpen()) {
     if (okValue(lastWrote, ::write(fd, buf, len))) {
       if (traceWrite) {
@@ -258,8 +258,8 @@ bool Fildes::write(const u8 *buf, unsigned len) {
 
 bool Fildes::writeChars(char c, unsigned repeats) {
   if (repeats <= 4096) {
-    u8 reps[repeats];
-    fillObject(reps, repeats, u8(c)); // sizeof(reps) always gave 1
+    uint8_t reps[repeats];
+    fillObject(reps, repeats, uint8_t(c)); // sizeof(reps) always gave 1
     return write(reps, repeats);
   } else {
     return false;
@@ -271,7 +271,7 @@ bool Fildes::writeChars(char c, unsigned repeats) {
 
 int Fildes::moveto(Fildes &other) {
   // This presumes that write copies to an internal buffer before returning.
-  u8 localbuffer[CHUNK];
+  uint8_t localbuffer[CHUNK];
 
   ByteScanner wrapper(localbuffer, sizeof(localbuffer));
 //todo:00 this is very broken! It has been hacked to compile as we are going to use asynchio instead of polling.

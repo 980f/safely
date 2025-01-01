@@ -100,15 +100,15 @@ void NumberPieces::decompose(double d) {
 
     //todo:0 check against DecimalCutoff, intbin will truncate if d>than that.
     double fraction = d;
-    predecimal = intbin<u64, double>(fraction);
+    predecimal = intbin<uint64_t, double>(fraction);
     //preDigits= unsigned(1+ilog10(predecimal));//0=>-1=>0  1=>0=>1  9=>0=>1 10=>1=>2.
-    postdecimal = u64(fraction * p19); //as many digits as we dare
+    postdecimal = uint64_t(fraction * p19); //as many digits as we dare
     postDigits = maxDigits; //or is it 19?
     if (!negativeExponent && exponent > maxDigits) { //predecimal was truncated by intbin
       //divide by 10 until it fits
       pow10 = unsigned(exponent - maxDigits);
       fraction = d * dpow10(-pow10);
-      predecimal = intbin<u64, double>(fraction);
+      predecimal = intbin<uint64_t, double>(fraction);
       //preDigits=1+ilog10(predecimal);//we can compute this from the prior machinations.
       postdecimal = 0; //anything here is garbage
       postDigits = 0; //

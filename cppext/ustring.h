@@ -1,7 +1,7 @@
 #pragma once
 
 #include "utf8.h" //
-#include "textkey.h" //maybe base on Textpointer, or Indexer<u8>
+#include "textkey.h" //maybe base on Textpointer, or Indexer<uint8_t>
 
 
 #ifdef SAFELY_debug_Ustring

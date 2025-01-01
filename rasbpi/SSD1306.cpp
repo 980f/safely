@@ -3,7 +3,7 @@
 SSD1306::FrameBuffer::FrameBuffer(unsigned pixwidth, unsigned pixheight) : comspan(pixwidth), segspan(pixheight), // bounds
   stride((pixwidth + 7) / 8), // chunkiness
   databytes(stride * pixheight),
-  fb(new u8[2 + databytes]) { //* Extra bytes are allocated at each end of the frame buffer for use by the I2C interface code.
+  fb(new uint8_t[2 + databytes]) { //* Extra bytes are allocated at each end of the frame buffer for use by the I2C interface code.
   //#nada
 }
 
@@ -17,7 +17,7 @@ bool SSD1306::connect() {
 }
 
 bool SSD1306::send(const Register &reg, bool asdata) {
-  u8 cmd[reg.bytes + 1];
+  uint8_t cmd[reg.bytes + 1];
   reg(cmd); //reg's exist to poke their values into a buffer.
   cmd[0] = asdata ? DataMarker : 0;
   return dev.write(cmd, sizeof(cmd));
@@ -79,11 +79,11 @@ void SSD1306::sendInit() {
 
 
   // now to pack all of that into one big happy I2C operation:
-  u8 packer[64];                                                                                                                        // arbitrary at first, might cheat and use fb, else determine empirically what is needed, perhaps worst case.
+  uint8_t packer[64];                                                                                                                        // arbitrary at first, might cheat and use fb, else determine empirically what is needed, perhaps worst case.
   /* send a wad: each passes along a pointer after writing a few bytes with it.
  they will get sent right to left, if order is relevant then do follower(precedent(..)*/
-  u8 *last = osc(muxratio(displayOffset(startLine(something(memoryMode(hflip(vflip(compins(precharge(vcomh(contrast(packer)))))))))))); // excuse my lisp ;)
-  u8 *end = display(last); //34 command bytes on 1st run.
+  uint8_t *last = osc(muxratio(displayOffset(startLine(something(memoryMode(hflip(vflip(compins(precharge(vcomh(contrast(packer)))))))))))); // excuse my lisp ;)
+  uint8_t *end = display(last); //34 command bytes on 1st run.
   *last = 0; // the above functions prefix the continuation flag, we eliminate that with this line.
   dev.write(packer, end-packer);
   // todo: log actual length to see if we can reduce packer's allocation, or abuse the frame buffer and clear screen.
@@ -140,17 +140,17 @@ void SSD1306::eachMilli() {
 
 SSD1306::Register::Register(unsigned bytes) : pattern(0), bytes(bytes) {}
 
-u8 *SSD1306::Register::operator()(u8 *buffer) const {
+uint8_t *SSD1306::Register::operator()(uint8_t *buffer) const {
   *buffer++ = 0x80; // mark all as continuations, caller will clear bit on first byte
-  *buffer++ = u8(pattern);
+  *buffer++ = uint8_t(pattern);
   if (bytes > 1) {
-    *buffer++ = u8(pattern >> 8);
+    *buffer++ = uint8_t(pattern >> 8);
   }
   if (bytes > 2) {
-    *buffer++ = u8(pattern >> 16);
+    *buffer++ = uint8_t(pattern >> 16);
   }
   if (bytes > 3) {
-    *buffer++ = u8(pattern >> 24);
+    *buffer++ = uint8_t(pattern >> 24);
   }
   return buffer;
 }

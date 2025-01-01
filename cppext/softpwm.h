@@ -1,5 +1,4 @@
-#ifndef SOFTPWM_H
-#define SOFTPWM_H
+#pragma once
 
 #include "polledtimer.h"
 
@@ -37,5 +36,3 @@ public:
 
 };
 
-
-#endif // SOFTPWM_H

@@ -23,15 +23,15 @@ public:
   CharFormatter(ByteScanner &other);
   CharFormatter();
 
-  Indexer<u8> asBytes();
+  Indexer<uint8_t> asBytes();
   //good idea, but name conflicted.
 //  /** a type casting confounded constructor-of-sorts */
-//  static CharFormatter wrap(Indexer<u8> raw);
+//  static CharFormatter wrap(Indexer<uint8_t> raw);
 
   /** parse a double from current pointer */
   double parseDouble(void);
 
-  s64 parse64(s64 def = 0);
+  int64_t parse64(int64_t def = 0);
 
   int parseInt(int def = -1);
   /** parse for an unsigned value. If out of range return @param def */
@@ -52,8 +52,8 @@ public:
   /** sensible results for digit 0 through 15, potentially garbage if digit>15.*/
   bool printDigit(unsigned digit);
   bool printUnsigned(unsigned int value);
-  /** our parser handles these, our printer should too. Just beware that u64's might not be atomic. */
-  bool printUnsigned64(u64 value);
+  /** our parser handles these, our printer should too. Just beware that uint64_t's might not be atomic. */
+  bool printUnsigned64(uint64_t value);
 
   bool printSigned(int value);
   bool printNumber(double d, int sigfig = 9);//9: 200 million is biggest number that we won't lose a bit of.
@@ -79,9 +79,9 @@ public:
 /** a class that wraps a raw buffer, and on destruction updates the raw buffer with the changes done via the wrapper.
 *  Typically only create as a local and don't mix using this wrapper with direct access to the raw buffer wrapped. */
 class Caster : public CharFormatter {
-  Indexer<u8>&rawref;
+  Indexer<uint8_t>&rawref;
 public:
-  Caster(Indexer<u8>&raw) : CharFormatter(reinterpret_cast<char *>(&raw.peek()),raw.freespace()),
+  Caster(Indexer<uint8_t>&raw) : CharFormatter(reinterpret_cast<char *>(&raw.peek()),raw.freespace()),
     rawref(raw){
   }
 

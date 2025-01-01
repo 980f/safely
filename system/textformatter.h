@@ -46,10 +46,10 @@ private:
   void substitute(TextKey stringy);
   void substitute(double value);
 
-  void substitute(u64 value);
-  void substitute(u32 value);
-  void substitute(u16 value);
-  void substitute(u8 value);
+  void substitute(uint64_t value);
+  void substitute(uint32_t value);
+  void substitute(uint16_t value);
+  void substitute(uint8_t value);
   //todo: signed ints as well
   void substitute(bool value);
 
@@ -133,7 +133,7 @@ public:
     }
   }
 
-  Indexer<u8> asBytes();
+  Indexer<uint8_t> asBytes();
 
   /** @returns composition of arguments using NumberFormatter rules */
   template<typename ... Args> static Text compose(TextKey format, const Args ... args){

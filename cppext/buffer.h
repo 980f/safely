@@ -1,6 +1,5 @@
 #pragma once //"(C) Andrew L. Heilveil, 2017-2018 "
 
-#include "eztypes.h"
 #include "minimath.h"
 #include "sequence.h"
 #include "ordinator.h"
@@ -60,7 +59,7 @@ private:
 
 
   /** copy @param qty from start of source to end of this. This is a raw copy, no new objects are created */
-  void catFrom(Indexer<Content> &source, unsigned qty){
+  void catFrom(Indexer &source, unsigned qty){
     if(stillHas(qty) && qty <= source.used()) {
       copyObject(source.internalBuffer(), this->internalBuffer(), qty* sizeof(Content));
       source.skip(qty);
@@ -71,7 +70,7 @@ private:
 public:
   /** forgets present buffer and records start and length of some other one.
    *  @returns this */
-  Indexer<Content> &wrap(Content *wrapped, unsigned int sizeofBuffer){
+  Indexer &wrap(Content *wrapped, unsigned int sizeofBuffer){
     pointer = 0;
     length = sizeofBuffer / sizeof(Content);
     buffer = wrapped;
@@ -79,7 +78,7 @@ public:
   }
 
   /** make a useless one */
-  Indexer(void) : Ordinator(0),
+  Indexer() : Ordinator(0),
     buffer(0){
     //#nada
   }
@@ -154,16 +153,16 @@ public:
     pointer = other.pointer;
   }
 
-  /** tail end of other, without 'removing' it from other. Very suitable for a lookahead parser */
-  void getTail(const Indexer<Content> &other){
+  /** tail end of @param other, without 'removing' it from other. Very suitable for a lookahead parser */
+  void getTail(const Indexer &other){
     pointer = 0;
     buffer = &other.peek();
     length = other.freespace();
   }
 
   /** @returns an indexer that covers the freespace of this one. this one is not modified */
-  Indexer<Content> remainder() const {
-    Indexer<Content> rval;
+  Indexer remainder() const {
+    Indexer rval;
     rval.getTail(*this);
     return rval;
   }
@@ -177,9 +176,9 @@ public:
   /** @returns an Indexer that covers just the @param fieldLength next members of this, @param removing is whether to remove them from this one's scan.
    * substring starting from present pointer, if requested length overruns end of buffer return value is truncated.
    * This does not 'new' anything, the compiler hopefully can elide the implied copy.  */
-  Indexer<Content> subset(unsigned fieldLength,bool removing = true){
+  Indexer subset(unsigned fieldLength,bool removing = true){
     int length = lesser(fieldLength,freespace());
-    Indexer<Content> sub(&peek(),length*sizeof (Content));
+    Indexer sub(&peek(),length*sizeof (Content));
     if(removing) {
       skip(length);
     }
@@ -190,24 +189,24 @@ public:
    * if end is past the end (e.g. ~0) then the actual end is used.
    * if start is not valid then an empty indexer is returned.
    * This does not 'new' anything, the compiler hopefully can elide the implied copy.  */
-  Indexer<Content> view(unsigned start,unsigned end)const{
+  Indexer view(unsigned start,unsigned end)const{
     if(end>length){
       end=length;
     }
     if(start<length){
-      return Indexer<Content>(&buffer[start],(end-start)*sizeof (Content));
+      return Indexer(&buffer[start],(end-start)*sizeof (Content));
     } else {
-      return Indexer<Content>();
+      return Indexer();
     }
   }
 
   /** @returns an indexer which covers the leading part of this one. */
-  Indexer<Content> getHead() const{
+  Indexer getHead() const{
     return view(0,pointer);
   }
 
   /** @returns an indexer which covers the trailing part of this one. once upon a time called 'remainder' */
-  Indexer<Content> getTail() const{
+  Indexer getTail() const{
     return view(pointer,allocated());
   }
 
@@ -268,7 +267,7 @@ public:
     }
   } /* cat */
 
-  void cat(Indexer<Content> &source){
+  void cat(Indexer &source){
     int used = source.used();
     int free = freespace();
 
@@ -281,21 +280,21 @@ public:
   }
 
   /** @return index of next which is typically the same as the number of times 'next()' has been called*/
-  unsigned int used(void) const {
+  unsigned int used() const {
     return ordinal();
   }
 
   //publish parts of ordinator, without these derived classes are deemed abstract.
-  virtual bool hasNext(void) override {//const removed to allow derived classes to lookahead and cache
+  virtual bool hasNext() override {//const removed to allow derived classes to lookahead and cache
     return Ordinator::hasNext();
   }
 
-  bool hasPrevious(void) const override {
+  bool hasPrevious() const override {
     return Ordinator::hasPrevious();
   }
 
   /** on overrun of buffer returns last valid entry*/
-  virtual Content &next(void) override{
+  virtual Content &next() override{
     CppExtBufferFailureGuard
     return buffer[pointer < length ? pointer++ : length - 1];
   }
@@ -316,24 +315,24 @@ public:
     return hasNext();
   }
 
-  Content &operator *(void){
+  Content &operator *(){
     CppExtBufferFailureGuard
     return buffer[pointer < length ? pointer : length - 1];
   }
 
   /** you should avoid using this value for anything except diagnostics, it allows you to bypass the bounds checking which is the reason for existence of this class. */
-  Content *internalBuffer(void) const {
+  Content *internalBuffer() const {
     return buffer;
   }
 
   /** @return current object ('s reference), rigged for sensible behavior when buffer is used circularly*/
-  Content &peek(void) const override {
+  Content &peek() const override {
     CppExtBufferFailureGuard
     return buffer[pointer < length ? pointer : 0];
   }
 
   /** @returns reference to item most likely delivered by last call to next()*/
-  Content &previous(void) const {
+  Content &previous() const {
     CppExtBufferFailureGuard
     return buffer[pointer >= length ? length - 1 : (pointer ? pointer - 1 : 0)];
   }
@@ -343,7 +342,7 @@ public:
   }
 
   /** undo last next, undo at zero is still at 0. */
-  void unget(void){
+  void unget(){
     Ordinator::rewind(1);
   }
 
@@ -442,11 +441,11 @@ public:
   }
 
   /** append @param other 's 0 through pointer-1 to this, but will append all or none and leaves @param other unmodified */
-  Indexer appendUsed(const Indexer<Content> &other){
+  Indexer appendUsed(const Indexer &other){
     unsigned used = other.used();
 
     if(stillHas(used)) {
-      Indexer<Content> cat(other,~0); //make a non-const indexer around same data
+      Indexer cat(other,~0); //make a non-const indexer around same data
       catFrom(cat, used);
     }
     return *this;
@@ -454,7 +453,7 @@ public:
 
   /** append @param other 's pointer through length-1 to this, but will append all or none.
    * Suitable for picking up the end of a partially copied buffer */
-  Indexer appendRemaining(Indexer<Content> &other){//append tail of other
+  Indexer appendRemaining(Indexer &other){//append tail of other
     int qty = other.freespace();
     if(stillHas(qty)) {
       catFrom(other, qty);
@@ -463,9 +462,9 @@ public:
   }
 
   /** append all or none of the allocation of @param other to this, leaving @param other untouched. */
-  bool appendAll(const Indexer<Content> &other){
+  bool appendAll(const Indexer &other){
     if(stillHas(other.length)) {
-      Indexer<Content> cat(other, 0);
+      Indexer cat(other, 0);
       cat.dump();//this was missing for a long time.
       catFrom(cat, other.length);
       return true;
@@ -484,21 +483,21 @@ public:
   typedef void *(functoid)(Content &each);
   /** apply @param eff function to all members of this buffer, ignoring pointer */
   void forEach(functoid eff) const {
-    Indexer<Content> list(*this,0);
+    Indexer list(*this,0);
     while(list.hasNext()) {
       (*eff)(list.next());
     }
   }
 
   void forUsed(functoid eff) const{
-    Indexer<Content> list(*this,~0);
+    Indexer list(*this,~0);
     while(list.hasNext()) {
       (*eff)(list.next());
     }
   }
 
   void forRemaining(functoid eff) const {
-    Indexer<Content> list;
+    Indexer list;
     list.getTail(*this);
     while(list.hasNext()) {
       (*eff)(list.next());
@@ -525,7 +524,7 @@ public:
   /** YOU must arrange to delete the contents of what this function returns. The @see destroy() method is handy for that.
    * this method was originally created for text strings, got tired of repeating the 'make one and ensure null' paragraph
 */
-  static Indexer<Content> make(unsigned quantity, bool zterm=false){
+  static Indexer make(unsigned quantity, bool zterm=false){
     if(Index(quantity).isValid()){
       Content *path=new Content[quantity+(zterm?1:0)];
       if(zterm){
@@ -549,5 +548,4 @@ public:
 
 
 //raw (bytewise) access to object
-#define IndexBytesOf(indexer, thingy) Indexer<u8> indexer(reinterpret_cast<u8 *>(&thingy), sizeof(thingy))
-
+#define IndexBytesOf(indexer, thingy) Indexer<uint8_t> indexer(reinterpret_cast<uint8_t *>(&thingy), sizeof(thingy))

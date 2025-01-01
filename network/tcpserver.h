@@ -5,11 +5,11 @@
 
 class TcpServer : SIGCTRACKABLE {
   //@see spawnClient
-  using Spawner = sigc::slot<void(int /*fd*/, u32 /*ipv4*/)>;
+  using Spawner = sigc::slot<void(int /*fd*/, uint32_t /*ipv4*/)>;
 
   class ServerSocket : public TcpSocketBase, SIGCTRACKABLE {
     friend class TcpServer;
-    ServerSocket(u32 remoteAddress = ~0, int port = ~0);
+    ServerSocket(uint32_t remoteAddress = ~0, int port = ~0);
     Spawner spawner; // will be part of TcpServer
 
     /** @returns whether spawner might get called someday */
@@ -39,10 +39,10 @@ public:
   bool serveAt(int port, int interfaceIP = 0x7f000001, int backlog = 2);
   /** called when the underlying service accepts a connection
    *@return the socket (so that we can watch its lifecycle), return nullptr if refusing connection */
-  virtual TcpSocket *spawnClient(int fd, u32 ipv4) = 0;
+  virtual TcpSocket *spawnClient(int fd, uint32_t ipv4) = 0;
   /** close all sockets (if possible) and quit serving */
   virtual void shutdown(bool permanently);
   virtual ~TcpServer();
-  void onAttach(int fd, u32 ipv4);
+  void onAttach(int fd, uint32_t ipv4);
   bool isConnected();
 };

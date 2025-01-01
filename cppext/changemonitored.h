@@ -1,11 +1,13 @@
 #pragma once
+
 #if __has_include ("argset.h")
-#include "argset.h" //should seperate this guy out.
+#include "argset.h"
 #define haveArgsInterface 2
 #endif
+
 #include "cheaptricks.h" //flagged
 
-/** manages a "dirty" bit, extended must use the set functions rather than assignment */
+/** manages a "dirty" bit, extendsions must use the set functions rather than assignment */
 class ChangeMonitored {
 protected:
   //the 'dirty' bit.
@@ -68,7 +70,8 @@ public:
 }; // class ChangeMonitored
 
 /** a numeric value that is marked as having been changed since the last time you asked about it.
- *  Numeric should have an operator != Numeric, operator !=[0,1] */
+ *  Numeric should have an operator != Numeric, operator !=[0,1]
+ Note: while the Numeric(other) seems gratuitous it gets rid of pointless warnings. */
 template<typename Numeric> class Watched : public ChangeMonitored {
   Numeric thing;
 

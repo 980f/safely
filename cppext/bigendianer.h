@@ -1,25 +1,29 @@
-#ifndef BIGENDIANER_H
-#define BIGENDIANER_H
+#pragma once
 
-#include "eztypes.h" //sized ints
+#include <cstdint>
 #include "buffer.h" //for indexing access to data block
 
-
 /** utility for packing and unpacking binary values in byte order that might not match the platform order */
-class BigEndianer : public Indexer<u8> {
+class BigEndianer : public Indexer<uint8_t> {
 public:
-  BigEndianer(u8 * allocation, unsigned length);
+  BigEndianer(uint8_t *allocation, unsigned length);
 
-  BigEndianer(Indexer<u8> other, int clip = 0);
- virtual ~BigEndianer();
-  unsigned getU16(void);
-  int getI16(void);
-  void hilo(u16 datum);
-  u32 getu32(void);
-  double getFloat(void);
-  void put(u32 value);
+  BigEndianer(Indexer other, int clip = 0);
+
+  virtual ~BigEndianer() = default;
+
+  unsigned getu16();
+
+  int getI16();
+
+  void hilo(uint16_t datum);
+
+  uint32_t getu32();
+
+  double getFloat();
+
+  void put(uint32_t value);
+
   /** put 32 bit ieee format number into byte array. You might get a Nan for extreme @param value */
-  void put(double value);//will convert to 32 bit float.
-
+  void put(double value); //will convert to 32 bit float.
 }; // class BigEndianer
-#endif // BIGENDIANER_H

@@ -12,9 +12,9 @@ const char *JsonStore::Lexer::separator(":,{}[]"); //maydo: bare newline is a co
 /** consumes bytes from string to get a hex constant. Bytes are NOT removed.
  * *@param pointer points to first char after last hex char. read code for failure cases.
  */
-u32 parseHex(unsigned pointer, const std::string&image, unsigned numDigits){
+uint32_t parseHex(unsigned pointer, const std::string&image, unsigned numDigits){
   if(pointer + numDigits <= image.length()) {
-    u32 packed(0);
+    uint32_t packed(0);
     for(unsigned n = numDigits; n-- > 0; ) {
       packed <<= 4;
       auto c = static_cast<unsigned char> (image.at(pointer++));
@@ -35,7 +35,7 @@ u32 parseHex(unsigned pointer, const std::string&image, unsigned numDigits){
 
 /** in=place conversion of escape sequences to utf8 sequences */
 void replaceUEscape(std::string&tokenImage, unsigned&pointer, unsigned numDigits){
-  u32 packed(parseHex(pointer, tokenImage, numDigits));
+  uint32_t packed(parseHex(pointer, tokenImage, numDigits));
 
   if(packed != NaV) { //now expand packed to utf8:
     pointer -= 2;
@@ -89,7 +89,7 @@ void processEscapes(std::string&tokenImage){
       }
       break;
       case 'U': { //same as little u but with 8 chars
-        //          u32 packed(parseHex(pointer,tokenImage,8));
+        //          uint32_t packed(parseHex(pointer,tokenImage,8));
         //todo:0 see little u and do the same thing here
       }
       break;
@@ -260,7 +260,7 @@ void JsonStore::Printer::printText(const char *p, bool forceQuote){
         }
         continue;
       }
-      u32 packer(0);
+      uint32_t packer(0);
       //need to make a unicode point, then expand it?
       int numf(c.numFollowers());
       unsigned mask = fieldMask(6 - numf);
@@ -364,8 +364,8 @@ bool JsonStore::Printer::printValue(){
     //todo:1 output nans as keyword
     if(int(number) == number) {
       os << int(number); //makes small numbers more readable.
-    } else if(s64(number) == number) {
-      os << s64(number);
+    } else if(int64_t(number) == number) {
+      os << int64_t(number);
     } else {
       os << number; //high precision must be set by the creator of the os.
     }
@@ -385,4 +385,3 @@ bool JsonStore::Printer::printValue(){
   } /* switch */
   return true;
 } /* printValue */
-

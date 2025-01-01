@@ -1,6 +1,5 @@
 #include "unionizer.h"
 #include "logger.h"
-#include "eztypes.h"
 #include <cinttypes>
 
 Unionizer::Unionizer(){

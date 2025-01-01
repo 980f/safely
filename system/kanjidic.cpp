@@ -107,17 +107,17 @@ struct KanjiLookup : public ArtFile {
 
   /// kanjidic specific
   /** @returns whether @param euc is strictly a katakana char */
-  static bool isEucKatakana(u16 euc){
+  static bool isEucKatakana(uint16_t euc){
     return euc>=0xa5a1 && euc<=0xa5f6;
   }
 
   /** @returns whether @param euc is strictly a hiragana char */
-  static bool isEucHiragana(u16 euc){
+  static bool isEucHiragana(uint16_t euc){
     return euc>=0xa4a1 && euc<=0xa4f3;
   }
 
   /** @returns unicode for either katakana or hiragana, but not yet punctuation or other operators.*/
-  static Unichar euc2uni(u16 euc){
+  static Unichar euc2uni(uint16_t euc){
     if(isEucHiragana(euc)) {
       return euc - 0xa4a1 + 0x3041;
     }
@@ -148,7 +148,7 @@ struct KanjiLookup : public ArtFile {
       if(*eucp=='.') {
         break;//special rule for kanjidic, separates okurigani from name of kanji
       }
-      u16 euchar = 256 * *eucp++;
+      uint16_t euchar = 256 * *eucp++;
       euchar += *eucp++;
       utf8.append(1,euc2uni(euchar));
     }

@@ -1,11 +1,9 @@
-#ifndef UTF8_H
-#define UTF8_H
+#pragma once
 
-#include "eztypes.h"  //~stdint
 //this file has been lost! #include "ignoresignwarnings.h"  //much type mangling is done herein, so you don't have to in your code :)
-
+#include <cinttypes>
 /** an int that can hold a UTF32 character */
-using Unichar=uint32_t;
+using Unichar = uint32_t;
 
 #include "char.h" //makes a character like an object
 
@@ -14,17 +12,16 @@ using Unichar=uint32_t;
 
 
 */
-class UTF8: public Char {
+class UTF8 : public Char {
 public:
-  UTF8(char raw = 0):Char(raw){
-  }
+  UTF8(char raw = 0): Char(raw) {}
 
-  UTF8&operator =(char raw){
+  UTF8 &operator =(char raw) {
     this->raw = raw;
     return *this;
   }
 
-  bool is(UTF8 other) const  noexcept{
+  bool is(UTF8 other) const noexcept {
     return is(other.raw);
   }
 
@@ -41,27 +38,27 @@ public:
   }
 
   /** only valid if first char of a UTF8 sequence */
-  unsigned numFollowers(void) const noexcept;
+  unsigned numFollowers() const noexcept;
 
   /** bits extracted from this byte, @param nf is value from numFollers, ~0 means call numFollowers else if already done pass tha back in.*/
-  void firstBits(Unichar &uch, unsigned nf=~0) const noexcept;
+  void firstBits(Unichar &uch, unsigned nf = ~0) const noexcept;
+
   /** merges bits from tihs presumed to be continuation byte into @param uch */
   void moreBits(Unichar &uch) const noexcept;
+
   /** pretend remaining bytes were all zeroes */
   static void pad(Unichar &uch, unsigned followers) noexcept;
 
   /** @returns number of 10xxxxxx bytes needed for given @param unichar unicode char.*/
-  static unsigned numFollowers(u32 unichar)noexcept;
+  static unsigned numFollowers(uint32_t unichar) noexcept;
 
-  /** @returns 1st byte of sequence given @param followers value returned from @see numFollowers(u32)*/
-  static u8 firstByte(u32 unichar,unsigned followers)noexcept;
+  /** @returns 1st byte of sequence given @param followers value returned from @see numFollowers(uint32_t)*/
+  static uint8_t firstByte(uint32_t unichar, unsigned followers) noexcept;
 
   /** @returns intermediate or final byte, @param followers is 0 for the final one */
-  static u8 nextByte(u32 unichar,unsigned followers) noexcept;
+  static uint8_t nextByte(uint32_t unichar, unsigned followers) noexcept;
 
-  static char hexNibble(Unichar uch,unsigned sb) noexcept;
-
-
+  static char hexNibble(Unichar uch, unsigned sb) noexcept;
 }; // class UTF8
 
 #if 0
@@ -87,5 +84,3 @@ if(numfollowers>0){
 }
 
 #endif
-
-#endif // UTF8_H

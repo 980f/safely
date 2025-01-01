@@ -1,5 +1,5 @@
 
-add_library(rasbpi STATIC
+target_sources(${safely_target} PUBLIC
   clockgenerator.cpp
   clockgenerator.h
   din.cpp
@@ -22,13 +22,7 @@ add_library(rasbpi STATIC
   SSD1306.h
 )
 
-target_include_directories(rasbpi PUBLIC
-  ${PROJECT_SOURCE_DIR}
-  ${PROJECT_SOURCE_DIR}/cppext
-  ${PROJECT_SOURCE_DIR}/system
-  ${PROJECT_SOURCE_DIR}/posix
-  ${CMAKE_CURRENT_SOURCE_DIR}
-)
+target_include_directories(${safely_target} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} )
 
-get_target_property(arf rasbpi "INCLUDE_DIRECTORIES")
-message("rasbpi includes ${arf}")
+get_target_property(arf ${safely_target} "INCLUDE_DIRECTORIES")
+message("cppext includes: ${arf}")

@@ -2,6 +2,7 @@
 #include "continuedfractionratiogenerator.h"
 #include "minimath.h"
 
+
 ContinuedFractionRatioGenerator::ContinuedFractionRatioGenerator() {
   restart(0);
 }
@@ -17,7 +18,7 @@ bool ContinuedFractionRatioGenerator::restart(double ratio, unsigned limit) {
 }
 
 bool ContinuedFractionRatioGenerator::bump(unsigned hk[3]) {
-  u64 provisional = u64(an) * hk[1] + hk[0]; //using extra bits to make the math easier here.
+  uintmax_t provisional = uintmax_t(an) * hk[1] + hk[0]; //uintmax_t: using extra bits to make the math easier here.
   if (provisional <= limit) {
     hk[2] = unsigned(provisional);
     return true;
@@ -57,12 +58,12 @@ double ContinuedFractionRatioGenerator::best() {
 }
 
 bool ContinuedFractionRatioGenerator::split() {
-  static const double u32epsilon = pow(2, -maxWorkingBits); //confirmed perfect representation. 0x3df0000000000000
+  static const double uint32_tepsilon = pow(2, -maxWorkingBits); //confirmed perfect representation. 0x3df0000000000000
   if (fraction == 0.0) {
     return false;
   }
 
-  if (fraction < u32epsilon) { //subsequent math would overflow without notices.
+  if (fraction < uint32_tepsilon) { //subsequent math would overflow without notices.
     return false;
   }
 

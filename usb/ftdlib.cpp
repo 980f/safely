@@ -2,9 +2,9 @@
  * significantly rewritten but based on source that was  Copyright (C) 2008-2017 by Marek Vavruša / libftdi developers
  *
  */
-#include <libusb.h>
+#include "libusb/libusb.h"
 #include "ftdlib.h"
-#include "ftdi_i.h"
+// #include "ftdi_i.h"
 #include "ftdi.h"
 
 #include "cheaptricks.h"
@@ -271,4 +271,3 @@ FtdiDeviceList::FtdiDeviceList(Ftdi & context, uint16_t vendor, uint16_t product
     }
   }
 }
-

@@ -21,19 +21,17 @@ constexpr void parseTime(timeval &ts, double seconds) {
 struct MicroSeconds : timeval {
   static const int OneMeg = 1000000;
 
-  constexpr MicroSeconds(double seconds = 0.0) {
+  constexpr explicit MicroSeconds(double seconds = 0.0) {
     this->operator=(seconds);
   }
 
-  constexpr MicroSeconds(unsigned sec, unsigned micro) {
-    tv_sec = sec;
-    tv_usec = micro;
-  }
+  constexpr MicroSeconds(unsigned sec, unsigned micro): timeval{0, 0} {} //still getting familiar with {} instead of () init, looks weird!
 
   constexpr MicroSeconds(unsigned long long microseconds) : MicroSeconds(microseconds / OneMeg, microseconds % OneMeg) {}
 
-  constexpr void operator=(double seconds) {
+  constexpr MicroSeconds &operator=(double seconds) {
     parseTime(*this, seconds);
+    return *this;
   }
 
   constexpr double asSeconds() const {
@@ -44,7 +42,7 @@ struct MicroSeconds : timeval {
     return asSeconds();
   }
 
-
+  /* a practically unachievable value, a Nan for this type */
   static const MicroSeconds Never;
 
   /** @returns whether this microsecond is 'never', an unachievable value, a Nan for this type */
@@ -56,7 +54,13 @@ struct MicroSeconds : timeval {
     return tv_sec == 0 && tv_usec == 0;
   }
 
+  /** @returns whether this is neither never, nor zero, but it might be in the past if an absolute time value */
+  constexpr bool isReal() const noexcept {
+    return !isZero() && !isNever();
+  }
+
 public: //compares and math
+  /** beware that Never is always greater than anything other than Never */
   bool operator >(const MicroSeconds &that) const;
 
   bool operator >=(const MicroSeconds &that) const;

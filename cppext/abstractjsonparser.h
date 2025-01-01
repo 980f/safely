@@ -6,7 +6,6 @@ todo:1 replace template with abstract base classes.
 */
 
 #include "pushedjsonparser.h"
-#include "onexit.h"
 
 template <typename Storable, typename TextClass> class AbstractJSONparser;//forward ref for friendliness
 

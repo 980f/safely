@@ -1,19 +1,16 @@
 #include "bigendianer.h"
 
-BigEndianer::BigEndianer(u8 *allocation, unsigned length) : Indexer<u8>(allocation, length){
+BigEndianer::BigEndianer(uint8_t *allocation, unsigned length) : Indexer(allocation, length){
 }
 
-BigEndianer::BigEndianer(Indexer<u8> other, int clip) : Indexer<u8>(other, clip ){
+BigEndianer::BigEndianer(Indexer other, int clip) : Indexer(other, clip ){
 }
 
-BigEndianer::~BigEndianer(){
-  //exists to get rid of warning about multiple v-tables.
-}
 
-unsigned BigEndianer::getU16(){
+unsigned BigEndianer::getu16(){
   if(stillHas(2)) {
-    u8 high = next();
-    u8 low = next();
+    uint8_t high = next();
+    uint8_t low = next();
     return high << 8 | low;
   } else {
     return -1;
@@ -22,15 +19,15 @@ unsigned BigEndianer::getU16(){
 
 int BigEndianer::getI16(){
   if(stillHas(2)) {
-    s8 high = next();
-    u8 low = next();
+    uint8_t high = next();
+    uint8_t low = next();
     return high << 8 | low;
   } else {
     return -1;
   }
 }
 
-void BigEndianer::hilo(u16 datum){
+void BigEndianer::hilo(uint16_t datum){
   if(stillHas(2)) {
     next() = datum >> 8;
     next() = datum;
@@ -39,25 +36,25 @@ void BigEndianer::hilo(u16 datum){
   }
 }
 
-u32 BigEndianer::getu32(void){
-  u32 packed = getU16() << 16;
-  packed |= getU16();
+uint32_t BigEndianer::getu32(){
+  uint32_t packed = getu16() << 16;
+  packed |= getu16();
   return packed;
 }
 
-double BigEndianer::getFloat(void){
-  u32 packed = getu32();
+double BigEndianer::getFloat(){
+  uint32_t packed = getu32();
   return pun(float,packed);
 }
 
-void BigEndianer::put(u32 value){
+void BigEndianer::put(uint32_t value){
   hilo(value >> 16);
   hilo(value);
 }
 
 void BigEndianer::put(double value){
   float arf = value;
-  put(pun(u32,arf));
+  put(pun(uint32_t,arf));
 }
 
 //end of file

@@ -17,9 +17,9 @@ public:
   void operator() (const char *msg, ...);
 
   /** output newline and flush the file */
-  void flushline();
+  void flushline() const;
   //used for legacy in PosixWrapper
-  void varg(const char *fmt, va_list &args);
+  void varg(const char *fmt, va_list &args) const;
   //try to produce a stack trace, not as reliable as Java.
   void dumpStack(const char *prefix);
   //RIAA for merging messages:

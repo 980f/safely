@@ -27,8 +27,8 @@ bool FileWatcher::hasEvent(){
 }
 
 void FileWatcher::nextEvent(FileEventHandler *handler){
-  u8 buffer[sizeof (FileEvent) + NAME_MAX]  __attribute__((aligned(__alignof__(struct FileEvent))));
-  Indexer<u8> stuff(buffer,sizeof(buffer));
+  uint8_t buffer[sizeof (FileEvent) + NAME_MAX]  __attribute__((aligned(__alignof__(struct FileEvent))));
+  Indexer<uint8_t> stuff(buffer,sizeof(buffer));
   if(fd.read(stuff)&& fd.lastRead>= unsigned(sizeof (FileEvent))) {//#sign mismatch OK
     FileEvent &fe(*reinterpret_cast<FileEvent*>(buffer));
     if(stuff.used()>sizeof (FileEvent) + fe.len) {

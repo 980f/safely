@@ -25,7 +25,7 @@ void PolledTimer::onDone(void){
   running = 0;
 }
 
-void PolledTimer::restart(u32 value){
+void PolledTimer::restart(uint32_t value){
   systicksRemaining = value + 1; //to ensure minimum wait even if tick fires while we are in this code.
   if(value > 0) {//# leave expanded for debug
     running = 1; //this makes this retriggerable
@@ -39,7 +39,7 @@ void PolledTimer::restart(float seconds){
   if(seconds<=0){
     return;
   }
-  restart(u32(seconds));
+  restart(uint32_t(seconds));
 }
 
 void PolledTimer::freeze(){
@@ -50,7 +50,7 @@ void PolledTimer::freeze(){
 
 bool CyclicTimer::hasFired(){
   //maydo: LOCK, present intended uses can miss a tick without harm so we don't bother.
-  ClearOnExit <u32> z(fired); //trivial usage of ClearOnExit, for testing that.
+  ClearOnExit <uint32_t> z(fired); //trivial usage of ClearOnExit, for testing that.
   return fired != 0;
 }
 

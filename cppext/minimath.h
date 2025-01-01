@@ -6,7 +6,7 @@
 
 
 #include <cmath>
-#include "eztypes.h"
+#include <cstdint>
 
 //portable nan etc. symbols, our compilers don't seem to agree on these guys, or the syntax is horrible.
 const extern double Infinity;
@@ -142,7 +142,7 @@ constexpr unsigned chunks(double num, double denom){
   double _ratio = ratio(num, denom);
 
   if(_ratio >= 0) {
-    return u32(ceil(_ratio));
+    return uint32_t(ceil(_ratio));
   } else {
     return 0;
   }
@@ -174,8 +174,8 @@ template<typename Integrish, typename Integrash> Integrish constexpr revolutions
   return cycles;
 }
 
-/** standard math lib's f_r_exp does a stupid thing for some args, we wrap it here and fix that.*/
-int fexp(double d) ISRISH;
+/** wrapper for stdlib frexp which has some obnoxious behavior */
+int fexp(double d);
 
 /** @returns whether the difference of the two numbers is less than a power of two times the lesser of the two. */
 template<typename floating> bool constexpr nearly(floating value, floating other, int bits = 32) {
@@ -202,27 +202,27 @@ template<typename floating> bool constexpr nearly(floating value, floating other
 
 /** @returns The base 10 exponent of @param value. Note that the number of digits for values >0 is 1+ilog10().
  * For zero this returns -1, most logic will have problems if you don't check that. */
-int ilog10(u32 value);
+int ilog10(uint32_t value);
 
-int ilog10(u64 value);
+int ilog10(uint64_t value);
 
 int ilog10(double value);
 
 /** an integer power of 10. out of bounds arg gets you nothing but trouble ... */
-u32 i32pow10(unsigned power);
+uint32_t i32pow10(unsigned power);
 
 unsigned digitsAbove(unsigned int value, unsigned numDigits);
 
 /** an integer power of 10. out of bounds arg gets you nothing but trouble ... */
-u64 i64pow10(unsigned power);
+uint64_t i64pow10(unsigned power);
 
 /** @param p19 is 10^19 times a fractional value. @param digits is the number of digits past the virtual radix point you are interested in.
  *  @returns a properly rounded int that has those digits of interest, but you may need to pad with leading zeroes. */
-u64 keepDecimals(u64 p19, unsigned digits);
+uint64_t keepDecimals(uint64_t p19, unsigned digits);
 
 /** @param p19 is 10^19 times a fractional value. @param digits is the number of digits past the virtual radix point you are interested in.
  *  @returns a truncated int that has those digits of interest, but you may need to pad with leading zeroes. */
-u64 truncateDecimals(u64 p19, unsigned digits);
+uint64_t truncateDecimals(uint64_t p19, unsigned digits);
 
 /** filtering in case we choose to optimize this */
 double dpow10(int exponent);
@@ -324,20 +324,20 @@ constexpr unsigned splitteru(double &d){
 void nanoSpin(unsigned ticks);
 
 /** rounded and overflow managed 'multiply by ratio' */
-u32 muldivide(u32 arg, u32 num, u32 denom);
+uint32_t muldivide(uint32_t arg, uint32_t num, uint32_t denom);
 
 /** @returns static_cast<unsigned>(ceil( quantity * @param fractionThereof ))
  */
 unsigned saturated(unsigned quantity, double fractionThereof);
 
 /** fraction is a fractional multiplier, with numbits stating how many fractional bits it has.*/
-u16 fractionallyScale(u16 number, u16 fraction, u16 numbits);
+uint16_t fractionallyScale(uint16_t number, uint16_t fraction, uint16_t numbits);
 
 /** 1 + the integer part of log base 2 of the given number, pretty much is just "count the leading zeroes".
  * Note well that this will give 0 as the log of 0 rather than negative infinity, precheck the argument if you can't live with that.
  * mathematical definition: "number of right shifts necessary for an unsigned number to become 0"
  */
-unsigned log2Exponent(u32 number);
+unsigned log2Exponent(uint32_t number);
 
 /** @returns eff * 2^pow2  where pow2 is signed. This can be done rapidly via bitfiddling*/
 float shiftScale(float eff, int pow2);
@@ -349,14 +349,14 @@ double flog(unsigned number);
 double logRatio(unsigned over, unsigned under);
 
 //sane truncations:
-u16 uround(float scaled);
+uint16_t uround(float scaled);
 
-s16 sround(float scaled);
+int16_t sround(float scaled);
 
 /** NB: copyObject() and fillObject() can NOT be used with objects that contain polymorphic objects */
-void copyObject(const void *source, void *target, u32 length);
+void copyObject(const void *source, void *target, uint32_t length);
 
-void fillObject(void *target, u32 length, u8 fill);
+void fillObject(void *target, uint32_t length, uint8_t fill);
 
 //EraseThing only works on non-polymorphic types. On polymorphs it also kills the vtable!
 #define EraseThing(thing) fillObject(&(thing), sizeof(thing), 0);
@@ -366,7 +366,7 @@ void fillObject(void *target, u32 length, u8 fill);
 //documenting accessible portions of microcontroller startup code:
 void memory_copy(const void *source, void *target, void *sourceEnd);
 
-void memory_set(void *target, void *targetEnd, u8 value);
+void memory_set(void *target, void *targetEnd, uint8_t value);
 
 /** split a number into its integer and fractional parts, a wrapper around ::modf.
  * it is named after the number of bins, such as array elements, needed to span the range from 0..@param d .

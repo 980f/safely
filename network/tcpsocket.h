@@ -11,13 +11,13 @@ public:
   /** diagnostic counters */
   struct Stats {
     /** successful connection */
-    u32 connects;
+    unsigned connects;
     /** failed attempt or lost connection after succeeded */
-    u32 disconnects;
+    unsigned disconnects;
     /** read events */
-    u32 reads;
+    unsigned reads;
     /** write events */
-    u32 writes;
+    unsigned writes;
     /** returned values from last io read command */
     int lastRead;
     /** returned values from last io write command */
@@ -29,8 +29,8 @@ public:
   void connectionEvent(bool connected);
   /** host ordered connection parameters */
   struct ConnectArgs {
-    u32 ipv4;
-    u16 port;
+    uint32_t ipv4;
+    uint16_t port;
     /** request that the local tcp stack not try to accumulate bytes to send before sending. */
     bool noDelay;
     /** request that we block on connection, i.e. even on explicit failure to connect do not retry until timeout has expired */
@@ -47,17 +47,17 @@ protected:
   IoSource sock; // socket fd with socket queries added over basic fd operation
   IoConnections source; // stream connections to sock.
   /** create from an fd of an open (connected) socket or use the default arg and call connect() */
-  TcpSocketBase(int fd = ~0, u32 remoteAddress = 0, int port = 0);
+  TcpSocketBase(int fd = ~0, uint32_t remoteAddress = 0, int port = 0);
 
 public:
   virtual ~TcpSocketBase();
   /** @returns address of other end of link */
-  u32 remoteIpv4();
+  uint32_t remoteIpv4();
   /** @returns whether socket seems to be open */
   bool isConnected() const;
   /** call this to disconnect the socket.
  @returns false so that it easily drops into a TcpSocket::Slot*/
-  virtual bool disconnect(bool ignoredathislevel);
+  virtual void disconnect(bool ignoredathislevel);
 };
 
 //////////////////////////////////////////////
@@ -66,7 +66,7 @@ public:
 class TcpSocket : public TcpSocketBase, SIGCTRACKABLE {
 protected:
   /** create from an fd of an open (connected) socket or use the default arg and call connect() */
-  TcpSocket(int fd = ~0, u32 remoteAddress = 0, int port = 0);
+  TcpSocket(int fd = ~0, uint32_t remoteAddress = 0, int port = 0);
 
   /** enables attempts to reconnect */
   bool autoConnect;
@@ -86,7 +86,7 @@ public:
   /** @returns isConnected() */
   bool connect(unsigned ipv4, unsigned port, bool noDelay, bool block);
   /** disconnect and release socket, if @param andNotify then call 'onConnectionChange' actions*/
-  bool disconnect(bool andNotify) override;
+  void disconnect(bool andNotify) override;
   /** throw away all pending input, best effort-some bytes might sneak in right after it returns.
    * this is BLOCKING, but due to the way Glib works it will leave in a finite amount of time.
    * added to dump the qchardware incoming queue when the logic is way behind */
@@ -126,8 +126,8 @@ struct SocketAddress {
   SocketAddress();
   /** for one that is to be sent to a posix call */
   SocketAddress(TcpSocket::ConnectArgs &cargs);
-  u16 hostPort() const;
-  u32 hostAddress() const;
+  uint16_t hostPort() const;
+  uint32_t hostAddress() const;
   /** address for posix functions */
   const sockaddr *addr() const;
   sockaddr *addr();
@@ -143,7 +143,7 @@ class BlockingConnectSocket : public TcpSocketBase {
 public:
 protected:
   // create from an fd of an open (connected) socket or use the default arg and call connect()
-  BlockingConnectSocket(int fd = ~0, u32 remoteAddress = 0, int port = 0);
+  BlockingConnectSocket(int fd = ~0, uint32_t remoteAddress = 0, int port = 0);
 
   // enables attempts to reconnect
   bool autoConnect;
@@ -170,7 +170,7 @@ public:
   bool connect(unsigned ipv4, unsigned port);
 
   // disconnect and release socket, if @param andNotify then call 'onConnectionChange' actions
-  bool disconnect(bool andNotify);
+  void disconnect(bool andNotify);
 
   // throw away all pending input, best effort-some bytes might sneak in right after it returns.
   // this is BLOCKING, but due to the way Glib works it will leave in a finite amount of time.

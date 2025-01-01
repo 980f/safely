@@ -36,7 +36,7 @@ bool Ranged::clamp(double &raw) const{
 }
 
 /**smallest integer such that array[value in Interval/quantum] won't be an index out of bounds*/
-u16 Ranged::bin(unsigned numBins, double quantum) const {
+uint16_t Ranged::bin(unsigned numBins, double quantum) const {
   return uround(numBins * ratio((quantum - lowest), width()));
 }
 

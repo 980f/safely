@@ -12,7 +12,7 @@ void PushedNumberParser::reset() {
   lastParsed = Nan; //don't reset until after you have saved this away.
 }
 
-bool PushedNumberParser::applydigit(u64 &accum, char ch) {
+bool PushedNumberParser::applydigit(uint64_t &accum, char ch) {
   //check for accumulator overflow. If so then we don't shift in digits
   if (accum > DecimalCutoff) {
     return false;

@@ -1,15 +1,13 @@
-#ifndef CRC16M_H
-#define CRC16M_H
+#pragma once
+
 #include "buffer.h"
-#include "eztypes.h"
+#include <cstdint>
 /**
 compute a 16 bit CRC from an octet stream using the polynomial defined by Modbus.
 */
 class Crc16m {
 public:
-  static u16 compute(Indexer <u8>&summer);
+  static uint16_t compute(Indexer <uint8_t>&summer);
 private: //someday might make a state based one ...
   Crc16m();
 };
-
-#endif // CRC16M_H

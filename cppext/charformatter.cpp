@@ -1,14 +1,15 @@
+//todo:00 this no longer works, especially digit by digit printing
 #include "charformatter.h"
 #include "transactionalbuffer.h"
 
-#include "ctype.h"
-#include "limits.h"
+#include <cctype>
+#include <climits>
 #include "minimath.h" //for power
 #include <cmath>  //floot, log10
 //#include <cstdio> //snprintf
-#include "string.h"
+#include <cstring>
 #include "numberparser.h"
-#include "safely.h" //ascii framing characters
+// #include "safely.h" //ascii framing characters
 #include "cstr.h"
 
 struct NumberParser : public PushedNumberParser  {
@@ -62,11 +63,11 @@ CharFormatter::CharFormatter(){
 //#nada
 }
 
-Indexer<u8> CharFormatter::asBytes(){
-  return Indexer<u8>(reinterpret_cast<u8*>(buffer),used());
+Indexer<uint8_t> CharFormatter::asBytes(){
+  return Indexer<uint8_t>(reinterpret_cast<uint8_t*>(buffer),used());
 }
 
-//CharFormatter CharFormatter::wrap(Indexer<u8> raw){
+//CharFormatter CharFormatter::wrap(Indexer<uint8_t> raw){
 //  return CharFormatter(reinterpret_cast<char *>(raw.internalBuffer()),raw.allocated());
 //}
 
@@ -77,7 +78,7 @@ double CharFormatter::parseDouble(void){
 } /* parseDouble */
 
 int CharFormatter::parseInt(int def){
-  s64 dry = parse64(def);
+  int64_t dry = parse64(def);
   if(dry> INT_MAX) {
     return INT_MAX;
   } else if (dry< INT_MIN) {
@@ -88,7 +89,7 @@ int CharFormatter::parseInt(int def){
 }
 
 unsigned CharFormatter::parseUnsigned(unsigned def){
-  s64 dry = parse64(def);
+  int64_t dry = parse64(def);
   if(dry> UINT_MAX) {
     return def;
   } else if (dry< 0) {
@@ -131,7 +132,7 @@ bool CharFormatter::move(int delta, int keep){
   return true;
 } // CharFormatter::move
 
-s64 CharFormatter::parse64(s64 def){
+int64_t CharFormatter::parse64(int64_t def){
   NumberParser n;
 
   if(n.parseNumber(*this)) {
@@ -206,7 +207,7 @@ bool CharFormatter::printUnsigned(unsigned int value){
   }
 } // CharFormatter::printUnsigned
 
-bool CharFormatter::printUnsigned64(u64 value){
+bool CharFormatter::printUnsigned64(uint64_t value){
   if(value == 0) {
     return printChar('0');
   }
@@ -263,7 +264,7 @@ bool CharFormatter::printNumber(double d, int sigfig){
   double dint = floor(d);//print integer part of value
   bool is32 = (d == dint && d < _2gig);//#Exact FP compare intended.  todo:1 much better detection of fixed point versus scientific format.
   if(is32) {//try to preserve integers that were converted to double.
-    checker &= printUnsigned(u32(d));
+    checker &= printUnsigned(uint32_t(d));
   } else {
     double logd = log10(d);
     int div = 1 + logd - sigfig;
@@ -273,10 +274,10 @@ bool CharFormatter::printNumber(double d, int sigfig){
         div += sigfig - 9;
       }
       d /= dpow10(div);
-      checker &= printUnsigned(u32(d));
+      checker &= printUnsigned(uint32_t(d));
       if(div>3) {
         checker &= printChar('E');
-        checker &= printUnsigned(u32(div));
+        checker &= printUnsigned(uint32_t(div));
       } else {
         while(div-->0) {
           checker &= printChar('0');
@@ -284,14 +285,14 @@ bool CharFormatter::printNumber(double d, int sigfig){
       }
     } else if(div==0) { //exact number of desired digits to left of .
       if(sigfig<=9) {
-        checker &= printUnsigned(u32(d));
+        checker &= printUnsigned(uint32_t(d));
       } else {
         //todo:1 print first 9 digits then a decimal point then struggle.
         //struggle: add 10^excess, print that then replace the leading 1 with a '.'
       }
     } else { // 'div' decimals will be needed
       if(dint>0) { //we have some to the left of the dp
-        checker &= printUnsigned(u32(dint));
+        checker &= printUnsigned(uint32_t(dint));
         d -= dint;
         logd = log10(d);
       } else {
@@ -310,7 +311,7 @@ bool CharFormatter::printNumber(double d, int sigfig){
         while(numzeros-->0) {
           checker &= printChar('0');
         }
-        checker &= printUnsigned(u32(d));
+        checker &= printUnsigned(uint32_t(d));
         //todo:2 trim trailing zeroes here stop at DP  and if you see that add one back on.
       }
     }
@@ -322,10 +323,10 @@ bool CharFormatter::printNumber(double d, const NumberFormat &nf, bool addone){
   //first: round!
   if(d!=0.0) {
     if(nf.decimals>=0){
-      u64 lsd = i64pow10(unsigned(nf.decimals));
+      uint64_t lsd = i64pow10(unsigned(nf.decimals));
       d += 0.5 / lsd;
     } else {
-      u64 lsd = i64pow10(unsigned(-nf.decimals));
+      uint64_t lsd = i64pow10(unsigned(-nf.decimals));
       d += 0.5 * lsd;
     }
     //and now we can truncate later on
@@ -367,7 +368,7 @@ bool CharFormatter::printNumber(double d, const NumberFormat &nf, bool addone){
              stillwant-=numZeroes;
 
              if(digitsPresent>=stillwant) {//have more than desired
-               u64 postdec = truncateDecimals(np.postdecimal,stillwant);
+               uint64_t postdec = truncateDecimals(np.postdecimal,stillwant);
                checker &= printUnsigned64(postdec);
              } else {//neeed a few tailing zeroes
                checker &= printUnsigned64(np.postdecimal);

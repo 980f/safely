@@ -27,8 +27,8 @@ TextFormatter::TextFormatter(TextKey mf) :
   body.wrap(violated(),length());
 }
 
-Indexer<u8> TextFormatter::asBytes(){
-  return Indexer<u8> (reinterpret_cast<u8*>(body.internalBuffer()),body.used());
+Indexer<uint8_t> TextFormatter::asBytes(){
+  return Indexer<uint8_t> (reinterpret_cast<uint8_t*>(body.internalBuffer()),body.used());
 }
 
 TextFormatter::~TextFormatter(){
@@ -114,7 +114,7 @@ void TextFormatter::substitute(double value){
 } // TextFormatter::substitute
 
 
-void TextFormatter::substitute(u64 value){
+void TextFormatter::substitute(uint64_t value){
   //not punting to double, we don't want its formatting rules applied to actual integers
   width = Zguard(1 + ilog10(value));
   CharFormatter workspace = makeWorkspace();
@@ -126,20 +126,20 @@ void TextFormatter::substitute(u64 value){
   }
 }
 
-void TextFormatter::substitute(u32 value){
-  substitute(u64(value));//templating can't promote
+void TextFormatter::substitute(uint32_t value){
+  substitute(uint64_t(value));//templating can't promote
 } //
 
-void TextFormatter::substitute(u16 value){
-  substitute(u64(value));//templating can't promote
+void TextFormatter::substitute(uint16_t value){
+  substitute(uint64_t(value));//templating can't promote
 } //
 
-void TextFormatter::substitute(u8 value){
-  substitute(u64(value));//templating can't promote
+void TextFormatter::substitute(uint8_t value){
+  substitute(uint64_t(value));//templating can't promote
 } // TextFormatter::substitute
 
 void TextFormatter::substitute(bool value){
-  substitute(u64(value));//templating can't promote
+  substitute(uint64_t(value));//templating can't promote
 } // TextFormatter::substitute
 
 

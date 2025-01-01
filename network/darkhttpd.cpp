@@ -2804,6 +2804,7 @@ void DarkHttpd::freeall() {
 
 /* Execution starts here. */
 int DarkHttpd::main(int argc, char **argv) {
+  int exitcode=0;
   try {
     printf("%s, %s.\n", pkgname, copyright);
     parse_default_extension_map();
@@ -2811,33 +2812,30 @@ int DarkHttpd::main(int argc, char **argv) {
     /* NB: parse_commandline() might override parts of the extension map by
      * parsing a user-specified file. THat is why we use insert_or_add when parsing it into the map.
      */
-
     prepareToRun();
     /* main loop */
     running = true;
     while (running) {
       httpd_poll();
     }
-
     /* clean exit */
     xclose(sockin);
-    if (logfile) {
-      fclose(logfile);
-    }
     if (pidfile_name) {
-      pidfile_remove();
+      pidfile_remove();//systemd can be configured to do this for you.
     }
-    freeall();
-
-    reportStats();
-    return 0;
   } catch (DarkException ex) {
     printf("Exit %d attempted, ending polling loop in __FUNCTION__", ex.returncode);
-    return ex.returncode;
+    exitcode = ex.returncode;
   } catch (...) {
     printf("Unknown exception, probably from the std lib");
-    return EXIT_FAILURE;
+    exitcode =  EXIT_FAILURE;
   }
+  if (logfile) {
+    fclose(logfile);//guarantees we don't lose a final message.
+  }
+  freeall();//gratuitous, ending a process makes this moot.
+  reportStats();
+  return exitcode;
 }
 
 #if 0

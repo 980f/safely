@@ -1,8 +1,8 @@
-#ifndef CENTEREDSLICE_H
-#define CENTEREDSLICE_H
+#pragma once
+
 #include "buffer.h"
-/** a pointer-like thing into an array of integers */
-struct CenteredSlice {//python term
+/** a pointer-like thing into an array of integers, archtected for use by Savitsky-Golay filtering */
+struct CenteredSlice {//python terminology
 protected:
   /** caller must assure that this points to the center of allocated data */
   int *data;
@@ -30,5 +30,3 @@ public:
   CenteredSlice Half(bool upper)const;
   CenteredSlice Endpoint(bool upper,unsigned newwidth)const;
 };
-
-#endif // CENTEREDSLICE_H

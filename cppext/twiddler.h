@@ -1,6 +1,6 @@
-#ifndef TWIDDLER_H
-#define TWIDDLER_H
-#include "eztypes.h"
+#pragma once
+
+#include <cstdint>
 /** software PWM
   * implements as a ratio of two integers without using division except during some of the optional setup functions.
   */
@@ -13,10 +13,10 @@ protected:
 public:
   IntegerTwiddler();
   /** @see setRatio */
-  IntegerTwiddler(u32 numer, u32 denom, bool center = true);
+  IntegerTwiddler(uint32_t numer, uint32_t denom, bool center = true);
 
   /** numer out of (numer+denom) calls (in a row) to pwm() will return true. @param center true initializes the cycling to halfway through the longer part of the cycle.*/
-  void setRatio(u32 numer, u32 denom, bool center = true);
+  void setRatio(uint32_t numer, uint32_t denom, bool center = true);
 
   /** set ratio such that pwm is true once per @param rate calls
     * NB: rate of 0 makes pwm 'always true'*/
@@ -62,5 +62,3 @@ public:
   /** noFloat gives a rougher estimate but doesn't use floating point, relevent to an ISR*/
   unsigned quanta(unsigned chunk,bool noFloat=true);
 };
-
-#endif // TWIDDLER_H

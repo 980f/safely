@@ -26,7 +26,7 @@ NanoSeconds TimerFD::setPeriod(NanoSeconds seconds) {
 }
 
 bool TimerFD::ack() {
-  auto expirations = read(u64(~0)); //#type here is chosen by timer fd stuff, not us.
+  auto expirations = read(uint64_t(~0)); //#type here is chosen by timer fd stuff, not us.
 
   if (expirations) { //# expanded for breakpoint.
     return true;

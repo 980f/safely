@@ -1,16 +1,14 @@
 #include "iosource.h"
 
-IoSource::IoSource(const char * tracename, int fd):
-  Fildes(tracename){
-  if (fd>=0) {
-    preopened(fd,false);//if preopened we don't own it. But creator of this IoSource can pass ownership to it later.
+IoSource::IoSource(const char *tracename, int fd): Fildes(tracename) {
+  if (fd >= 0) {
+    preopened(fd, false); //if preopened we don't own it. But creator of this IoSource can pass ownership to it later.
   }
 }
 
-IoSource::~IoSource(){
+IoSource::~IoSource() {
   //make sure Fildes destructor is called.
 }
-
 
 int IoSource::recode(ssize_t rwreturn) {
   if (rwreturn == ~0) {
@@ -22,8 +20,10 @@ int IoSource::recode(ssize_t rwreturn) {
   }
   return rwreturn;
 }
-bool IoConnections::writeInterest(IoSource::Slot action) {
+
+bool IoConnections::writeInterest(Slot action) {
   //todo: replace this concept with asynchio?
   return false;
 }
 
+void IoConnections::listen(Slot readAction, Slot hangupAction) {}

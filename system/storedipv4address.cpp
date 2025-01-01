@@ -10,9 +10,9 @@ StoredIPV4Address::StoredIPV4Address(Storable &node) : Stored(node),
   dotted.onAnyChange(MyHandler(StoredIPV4Address::makeNumber),true);//on load conflict let dotted win.
 }
 
-Text StoredIPV4Address::dotstring(u32 ipv4){
-  u8 *bytes=reinterpret_cast<u8*>(&ipv4);
-  return TextFormatter::compose("$0.$1.$2.$3",u64(bytes[3]),u64(bytes[2]),u64(bytes[1]),u64(bytes[0]));
+Text StoredIPV4Address::dotstring(uint32_t ipv4){
+  uint8_t *bytes=reinterpret_cast<uint8_t*>(&ipv4);
+  return TextFormatter::compose("$0.$1.$2.$3",uint64_t(bytes[3]),uint64_t(bytes[2]),uint64_t(bytes[1]),uint64_t(bytes[0]));
 }
 
 void StoredIPV4Address::makeText(){
@@ -21,7 +21,7 @@ void StoredIPV4Address::makeText(){
 
 void StoredIPV4Address::makeNumber(){
   char *separator = Cstr::violate(dotted.c_str());//strtol is missing a const
-  u32 accumulator = 0;
+  uint32_t accumulator = 0;
   while(true) {
     long int octet = strtol(separator, &separator,10);
     accumulator <<= 8;

@@ -2,7 +2,7 @@
 #include "buffer.h"
 #include "utf8converter.h"
 
-//utf8 -> u32 -> \u or \U
+//utf8 -> uint32_t -> \u or \U
 Text Utf8Text::encode(Cstr utf8s, Index presized) {
   if (!presized.isValid()) {
     presized = encodedLength(utf8s);

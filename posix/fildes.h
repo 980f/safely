@@ -82,27 +82,27 @@ public:
   unsigned available(); // const was removed so that errors can be recorded.
 
   /** read into freespace/tail of buffer */
-  bool read(Indexer<u8> &p);
+  bool read(Indexer<uint8_t> &p);
 
   bool read(Indexer<char> &p);
 
-  bool read(u8 *buf, unsigned len);
+  bool read(uint8_t *buf, unsigned len);
 
   /** write from freespace/tail of buffer.
    * This choice is due to supporting partial sends, updating the referenced pointer as we progress.
    * When you are finished building something to send you create a new Indexer object from the head of that one.
    */
-  bool write(Indexer<u8> &p);
+  bool write(Indexer<uint8_t> &p);
 
-  bool write(Indexer<u8> &&p);
+  bool write(Indexer<uint8_t> &&p);
 
   bool write(Indexer<char> &p);
 
   bool write(Indexer<char> &&p);
 
-  bool write(const u8 *buf, unsigned len); // placeholder
+  bool write(const uint8_t *buf, unsigned len); // placeholder
   /** write a character a bunch of times. Handy for things like indenting a nested text printout. */
-  bool writeChars(char c, unsigned repeats); // adding a default arg makes this and write(Indexer<u8>) ambiguous
+  bool writeChars(char c, unsigned repeats); // adding a default arg makes this and write(Indexer<uint8_t>) ambiguous
 
   /** set the associated flag given this guy's fd.
    * @returns @see isOpen() */
@@ -130,7 +130,7 @@ public:
 
   template<typename Pod> Pod read(const Pod marker) {
     Pod result; //don't try to make 'marker' a Pod, we might get a partial read and then we would have corruption.
-    if (read(reinterpret_cast<u8 *>(&result), sizeof(Pod))) {
+    if (read(reinterpret_cast<uint8_t *>(&result), sizeof(Pod))) {
       if (sizeof(Pod) == lastRead) {
         return result;
       }
@@ -139,7 +139,7 @@ public:
   }
 
   template<typename Pod> bool write(Pod &&datum) {
-    if (write(reinterpret_cast<u8 *>(&datum), sizeof(Pod))) {
+    if (write(reinterpret_cast<uint8_t *>(&datum), sizeof(Pod))) {
       if (sizeof(Pod) == lastWrote) {
         return true;;
       }

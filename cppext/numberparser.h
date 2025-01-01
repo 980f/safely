@@ -37,7 +37,7 @@ public:
 
   /** @returns whether accum had room without overflow/wrapping.
    * an internal function that might be useful elsewhere. */
-  static bool applydigit(u64 &accum, char ch);
+  static bool applydigit(uint64_t &accum, char ch);
 
 private:
 

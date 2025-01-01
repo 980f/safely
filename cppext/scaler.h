@@ -1,8 +1,8 @@
+
+#pragma once
 /** convenience class for interpreting unsigned 16 bit digital values.*/
-#ifndef scaler_h
-#define scaler_h
-#include "eztypes.h"
-#include "minimath.h"
+#include <cstdint>
+#include "minimath.h" //chunks
 
 class Scaler {
 public:
@@ -12,21 +12,23 @@ public:
   Scaler(double gain = 0, double offset = 0): gain(gain), offset(offset){
     //defaults leave object unusable. gain=1.0 would make failure to init be too subtle.
   }
-  double real(u16 ticks) const {
+  double real(uint16_t ticks) const {
     return ticks * gain + offset;
   }
 
-  u16 quanta(double real) const {
+  /** limiting to 16 bits as this class was made for real world ADC/DAC interfacing */
+  uint16_t quanta(double real) const {
     double delta = real - offset;
 
     if(delta <= 0) {
       return 0;
     }
-    u32 bins = chunks(delta, gain);
+    //todo:1 we have this 'saturate to unsigned 16 somewhere in our libraries
+    auto bins = chunks(delta, gain);
     if(bins > 65535) {
       return 65535;
     }
-    return u16(bins);
+    return uint16_t(bins);
   } /* quanta */
 
   Scaler& setto(double gain, double offset){
@@ -36,4 +38,3 @@ public:
   }
 
 };
-#endif /* ifndef scaler_h */

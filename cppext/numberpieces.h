@@ -1,9 +1,7 @@
 #pragma once // "(C) Andrew L. Heilveil, 2017"
 
-#include <minimath.h>
-
-#include "eztypes.h"
-
+#include <limits>
+#include <cstdint>
 /** a description of the human-readable form of a number. */
 class NumberPieces {
 protected:
@@ -17,11 +15,11 @@ public:
   /** whether mantissa had a decimal point*/
   bool hadRadixPoint;
   /** actual digits left of decimal point, not the count thereof */
-  u64 predecimal;
+  uint64_t predecimal;
   /** additional digits found when parsing. If not zero then digits after decimal have been dropped. */
   unsigned pow10;
   /** actual digits after zero, divide by 10^postDigits for their mathematical value */
-  u64 postdecimal;
+  uint64_t postdecimal;
   /** how many post decimal digits are represented by 'postdecimal' value */
   unsigned postDigits;
   /** whether an explicit exponent was encountered */
@@ -29,7 +27,7 @@ public:
   /** whether an explicit exponent was negative*/
   bool negativeExponent;
   /** true exponent */
-  u64 exponent; //this large just so that we can easily share a function, 10 bits would suffice for ieee754 double.
+  uint64_t exponent; //this large just so that we can easily share a function, 10 bits would suffice for ieee754 double.
   /** set as if we just saw zero*/
   void reset();
 
@@ -46,7 +44,7 @@ public:
   }
 
   /** saturated signed version of number predecimal */
-  s64 asInteger() const;
+  int64_t asInteger() const;
 
   /** create clean one*/
   NumberPieces() {
@@ -64,7 +62,7 @@ public:
   void decompose(double d);
 
   /** maximum value that can be multiplied by 10 and not exceed 2^64: */
-  static constexpr u64 DecimalCutoff = (1ULL << 63) / 5; //2^64 /10 == 2^63/5, needed to take care that the compiler didn't get a wrap.
+  static constexpr uint64_t DecimalCutoff = (1ULL << 63) / 5; //2^64 /10 == 2^63/5, needed to take care that the compiler didn't get a wrap.
   static constexpr unsigned maxDigits = 19; /* (floor(log10(2^64) */
   static constexpr double p19 = 10e19;
 };

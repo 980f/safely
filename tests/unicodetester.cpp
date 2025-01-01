@@ -1,5 +1,5 @@
 #include "unicodetester.h"
-#include "eztypes.h"
+//#include "eztypes.h"
 #include "utf8text.h"
 #include "stdio.h"
 #include "logger.h"

@@ -64,7 +64,7 @@ bool Utf8ConverterOut::operator()(const char *peeker, Indexer<char> &packer){
     } break;
     case Utf8Escaper::Plain:
 //todo:00 generate slash escapes
-      packer.next()=u8(ex.fetch());
+      packer.next()=uint8_t(ex.fetch());
       break;
     case Utf8Escaper::End:
       //todo: if uch is not zero then we clipped the last char
@@ -131,7 +131,7 @@ bool Utf8ConverterIn::operator()(const char *peeker, Indexer<char> &packer){
       break;
     case Utf8Decoder::Plain:
       //todo: c-escapes here
-      packer.next()=u8(dx.fetch());
+      packer.next()=uint8_t(dx.fetch());
       break;
     case Utf8Decoder::End:
       if(dx.uch){//partial last char ...

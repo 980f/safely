@@ -15,7 +15,7 @@
 #include "application.h"
 
 
-static const u8 bybye[] = "Bye Bye!";
+static const uint8_t bybye[] = "Bye Bye!";
 
 struct BonnetDemo : Application {
   class ButtonTracker {
@@ -97,7 +97,7 @@ struct BonnetDemo : Application {
     bool dirty = false;
     auto incoming = cin.available(); //we went non-blocking on this because it wasn't always blocking anyway.
     if (incoming > 0) {
-      u8 cmd[incoming + 1];
+      uint8_t cmd[incoming + 1];
       cin.read(cmd, incoming);
       cmd[incoming] = 0; //guarantee null terminator so we can use naive string routines.
       switch (cmd[0]) {

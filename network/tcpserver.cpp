@@ -52,7 +52,7 @@ void TcpServer::shutdown(bool permanently){
   }
 }
 
-void TcpServer::onAttach(int fd, u32 ipv4){
+void TcpServer::onAttach(int fd, uint32_t ipv4){
   if(TcpSocket *spawned=spawnClient(fd,ipv4)){
     ++connects;
     dbg("Now serving %08X",spawned->connectArgs.ipv4);
@@ -65,7 +65,7 @@ bool TcpServer::isConnected(){
   return server.isConnected();
 }
 
-TcpServer::ServerSocket::ServerSocket(u32 remoteAddress, int port):
+TcpServer::ServerSocket::ServerSocket(uint32_t remoteAddress, int port):
   TcpSocketBase(~0,remoteAddress,port){
   //#nada
 }
@@ -90,7 +90,7 @@ bool TcpServer::ServerSocket::accept(int backlog, Spawner spawner){
         dbg("::listen failed with code %d errno: %d", listenRetval, errorNum);
       }
       this->spawner=spawner;
-      source.listen(sigc::hide_return( MyHandler(TcpServer::ServerSocket::incoming)),sigc::hide_return(MyHandler(TcpServer::ServerSocket::disconnect)));
+      source.listen( MyHandler(TcpServer::ServerSocket::incoming),MyHandler(TcpServer::ServerSocket::disconnect));
       return true;
     } else {
       dbg("failed to bind %08X", connectArgs.ipv4);

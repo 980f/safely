@@ -9,19 +9,19 @@
 class MPSSE : public ByteScanner{
 public:
   /** this constructor wraps a reference into the available data of the buffer allocated, typically pass it peek()/freespace() */
-  MPSSE(u8 *buffer, unsigned sizeofBuffer);
+  MPSSE(uint8_t *buffer, unsigned sizeofBuffer);
 
   /** TCK/SK period = 6MHz / (1 + @param divisor) for original series, need a flag and more logic to support the H series parts. */
   void setClockDivisor(unsigned divisor);
 
   /** adds command to emit up to 8 bits serially */
-  void sendBitsMsf(unsigned numberBits,u8 data,bool edginess);
+  void sendBitsMsf(unsigned numberBits,uint8_t data,bool edginess);
 
   /** adds command codes to have @param numBYTES returned, note that some commands talk of bits */
   void fetchBytes(unsigned numBYTES);
 
   /** adds instruction and data to shift out */
-  void shiftoutBytes(Indexer<u8> blob);
+  void shiftoutBytes(Indexer<uint8_t> blob);
 
   /** you must follow this with appending quantity bytes to message */
   void shiftoutBytes(unsigned quantity);
@@ -30,7 +30,7 @@ public:
   unsigned fetchGpio(bool ls,bool ms);
 
   /** set one of the gpio bytes, @param highbits selects which. @param dirbits defines which pins are outputs (1=output) @param value is the pattern of outputs. */
-  void setGpio(u8 value, u8 dirbits, bool highbits);
+  void setGpio(uint8_t value, uint8_t dirbits, bool highbits);
 };
 
 #endif // MPSSE_H

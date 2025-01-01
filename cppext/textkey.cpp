@@ -1,8 +1,7 @@
 #include "textkey.h"
-#include "stdlib.h"
-#include "string.h"
+#include <cstdlib>
+#include <cstring>
 #include "minimath.h" //nan
-#include "index.h"
 
 bool isTrivial(const char *string) {
   return string == nullptr || *string == 0;

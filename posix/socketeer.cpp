@@ -118,7 +118,7 @@ void Socketeer::disconnect(){
 } // Socketeer::disconnect
 
 void Socketeer::flush(){
-  u8 bytes[4096];
+  uint8_t bytes[4096];
   ByteScanner toilet(bytes,sizeof(bytes));
 //can we stat a socket fd?
   for(unsigned notforever = 10000;notforever-- && read(toilet)&&toilet.freespace()==0;) {

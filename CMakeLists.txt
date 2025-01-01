@@ -11,51 +11,54 @@ pkg_check_modules(DEPS REQUIRED sigc++-3.0)
 include_directories(${DEPS_INCLUDE_DIRS})
 #todo:00 target_link_libraries(yourprogram ${DEPS_LIBRARIES})
 
-add_subdirectory(cppext)
-add_subdirectory(system)
-add_subdirectory(posix)
-add_subdirectory(usb)
-add_subdirectory(rasbpi)
-
-add_library(safely STATIC
-  ./ignoresignwarnings.h
-  ./network/darkhttpd.cpp
-  ./network/darkhttpd.h
-  #sigc3 issues ./network/tcpserver.cpp
-  ./network/tcpserver.h
-  #sigc3 issues ./network/tcpsocket.cpp
-  ./network/tcpsocket.h
-  ./safely.h
-  ./storedloggermanager.cpp
-  ./storedloggermanager.h
-  ./versioning.cpp
-  ./versioning.h
-  system/textpointer.cpp
-  cppext/charformatter.cpp
-  cppext/cstr.cpp
-)
+#add_library(safely STATIC
+#  ./ignoresignwarnings.h
+#  ./network/darkhttpd.cpp
+#  ./network/darkhttpd.h
+#  #sigc3 issues ./network/tcpserver.cpp
+#  ./network/tcpserver.h
+#  #sigc3 issues ./network/tcpsocket.cpp
+#  ./network/tcpsocket.h
+#  ./safely.h
+#  ./storedloggermanager.cpp
+#  ./storedloggermanager.h
+#  ./versioning.cpp
+#  ./versioning.h
+#  system/textpointer.cpp
+#  cppext/charformatter.cpp
+#  cppext/cstr.cpp
+#)
 
 add_executable(
   testlink
   tests/bonnet.cpp
 )
 
+set(safely_target testlink)
+
 target_link_libraries( testlink
-  cppext
-  system
-  posix
-  rasbpi
-  safely
+  sigc++-3.0
 )
 
-include_directories(
- #useless: ${CMAKE_CURRENT_SOURCE_DIR}
-  .
-  cppext
-  system
-  posix
-  network
-  usb
-  usb/libusb
-  rasbpi
-)
+add_subdirectory(cppext)
+add_subdirectory(system)
+add_subdirectory(posix)
+add_subdirectory(network)
+add_subdirectory(usb)
+add_subdirectory(rasbpi)
+
+
+get_target_property(arf testlink "INCLUDE_DIRECTORIES")
+message("aggregate includes: ${arf}")
+
+#include_directories(
+# #useless: ${CMAKE_CURRENT_SOURCE_DIR}
+#  .
+#  cppext
+#  system
+#  posix
+#  network
+#  usb
+#  usb/libusb
+#  rasbpi
+#)

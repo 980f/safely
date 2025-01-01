@@ -47,9 +47,9 @@ public:
         <tr> <td>After</td>   <td>end item</td>          <td>--</td>           <td>(no event)</td> </tr>
       </tbody>     </table> */
   enum Phase {
-    Before, //nothing known, expect name or value
+    Before, //nothing known, such as in json expecting name or value
     Inside, //inside quotes
-    After, //inside unquoted text: we're tolerant so this can be a name or a symbolic value
+    After, //inside unquoted text: ignore the value of anything other than the endquote
   } phase = Before;
 
   /** 'location' recorded at start and end of token */

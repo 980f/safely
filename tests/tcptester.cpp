@@ -41,7 +41,7 @@ void TcpTester::TestService::goneQuiet(){
   //todo:2 can we get remote ip?
 }
 
-TcpTester::TestService::TestService(int fd, u32 ipv4, TestSlot container):
+TcpTester::TestService::TestService(int fd, uint32_t ipv4, TestSlot container):
   TcpSocket(fd,ipv4),
   onDisconnect(container),
   buffer(bufferAllocation,sizeof(bufferAllocation))
@@ -67,7 +67,7 @@ TcpTester::TcpTester(int port, int backlog):TcpServer(port,0x7F000001,backlog){
   //runMiniServer(port);
 }
 
-TcpSocket * TcpTester::spawnClient(int client_fd,u32 ipv4){//called on accept, needs to deploy
+TcpSocket * TcpTester::spawnClient(int client_fd,uint32_t ipv4){//called on accept, needs to deploy
   dbg("TcpTester::spawn fd:%d",client_fd);
   return spawned.append(new TestService(client_fd,ipv4,MyHandler(TcpTester::disconnect)));
 }

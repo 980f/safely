@@ -1,5 +1,4 @@
-#ifndef CHAR_H
-#define CHAR_H "(C) Andrew L. Heilveil, 2017"
+#pragma once // "(C) Andrew L. Heilveil, 2017"
 
 /** like strchr but with idiot checks on the parameters */
 bool isPresent(const char *flags, char flag);
@@ -36,7 +35,7 @@ public:
   /** @returns whether this is allowed in numeric constant or enum name */
   bool numAlpha() const noexcept;
 
-  /** @returns whether this is first char of an identifier, per JSON and C++ rules. This is pretty much anything that isn't a number, punctuation or a control char */
+  /** @returns whether this is first char of an identifier, per JSON and C++ rules. This is pretty much anything that isn't a digit, punctuation, or a control char */
   bool startsName() const noexcept;
 
   /** @returns whether this is a decimal digit */
@@ -49,7 +48,6 @@ public:
   bool isUpper() const noexcept;
 
   char asUpper() const noexcept;
-
 
   bool isControl() const noexcept;
 
@@ -71,7 +69,7 @@ public:
   /** @returns the math value of this which is presumed to be a hexdigit, wild (but repeatable) trash if not.*/
   unsigned hexDigit() const noexcept;
 
-  /** append this as hex digit to @param uch Unicode receiver. Presumes caller has already checked isHexDigit() */
+  /** append this as hex digit to @param uch such as a utf8 to Unicode assembler. Presumes caller has already checked isHexDigit() */
   template<typename Intish> void hexDigit(Intish &uch) const noexcept {
     uch <<= 4;
     uch |= hexDigit();
@@ -89,7 +87,7 @@ public:
 
   /** when you are really sure that this is a decimal digit then call this guy, else call @see appliedDigit */
   template<typename Intish> void applyTo(Intish &accumulator) const noexcept {
-    int digit = raw - '0';
+    unsigned digit = raw - '0';
     accumulator *= 10;
     accumulator += digit;
   }
@@ -104,7 +102,7 @@ public:
     }
   }
 
-  /** hex digit character for the 0th==low or 1th=high nibble of this char.
+  /** hex digit character for the @param sb th digit, 0==low or 1=high nibble of this char.
    * we could use a boolean for the nibble select, but want this to look like the unicode variation of this class.*/
   char hexNibble(unsigned sb) const noexcept;
 
@@ -114,5 +112,3 @@ public:
   /** @returns the c-escape partner of this. 'n' goes to newline, a newline goes to 'n' */
   char slashee() const noexcept;
 };
-
-#endif // CHAR_H

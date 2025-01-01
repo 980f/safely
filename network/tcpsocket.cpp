@@ -20,7 +20,7 @@ void TcpSocketBase::connectionEvent(bool connected) {
   }
 }
 
-TcpSocketBase::TcpSocketBase(int fd, u32 remoteAddress, int port) :connectArgs(remoteAddress, port), sock("TcpSocketBase", fd), source{sock} {}
+TcpSocketBase::TcpSocketBase(int fd, uint32_t remoteAddress, int port) :connectArgs(remoteAddress, port), sock("TcpSocketBase", fd), source{sock} {}
 
 TcpSocketBase::~TcpSocketBase() = default; //contained classes do any automatic closing needed.
 
@@ -30,7 +30,7 @@ bool TcpSocketBase::isConnected() const {
 
 ////
 
-TcpSocket::TcpSocket(int fd, u32 remoteAddress, int port) :
+TcpSocket::TcpSocket(int fd, uint32_t remoteAddress, int port) :
     TcpSocketBase(fd, remoteAddress, port),
     autoConnect(false),
     eagerToWrite(0),
@@ -42,16 +42,15 @@ TcpSocket::TcpSocket(int fd, u32 remoteAddress, int port) :
   }
 }
 
-u32 TcpSocketBase::remoteIpv4() {
+uint32_t TcpSocketBase::remoteIpv4() {
   return connectArgs.ipv4;
 }
 
-bool TcpSocketBase::disconnect(bool ignored) {
+void TcpSocketBase::disconnect(bool ignored) {
   source.disconnect();
   if (isConnected()) { // #checking for debug purposes
     sock.close();
   }
-  return false;
 }
 
 //////////////////////////////
@@ -136,7 +135,7 @@ bool TcpSocket::reconnect() {
   return true; // we didn't fail, doesn't mean 'actually connected'
 }
 
-bool TcpSocket::disconnect(bool andNotify) {
+void TcpSocket::disconnect(bool andNotify) {
   bool toReturn = TcpSocketBase::disconnect(andNotify);
   if (andNotify) {
     notifyConnected(false);
@@ -146,7 +145,7 @@ bool TcpSocket::disconnect(bool andNotify) {
 
 void TcpSocket::flush() {
   // there is no flush in TCP.
-  u8 bytes[4096] = {0};//at least one null in case we treat this as a string?
+  uint8_t bytes[4096] = {0};//at least one null in case we treat this as a string?
   // can we stat a socket fd?
   int notforever = 10000;
   while (sock.read(bytes, sizeof(bytes)) && sock.lastRead == sizeof(bytes)) { // todo:00 inform library we imported this from of its gross error!
@@ -158,7 +157,7 @@ void TcpSocket::flush() {
 }
 
 bool TcpSocket::readable() {
-  u8 bytes[4096] = {0};
+  uint8_t bytes[4096] = {0};
 
   if (!sock.read(bytes, sizeof(bytes))) { // todo:00 glib instance had bad bug here
     dbg("read err: %d on %08X:%d", -stats.lastRead, connectArgs.ipv4, connectArgs.port); // useful for debug, but it will spam you
@@ -226,7 +225,7 @@ bool TcpSocket::hangup() {
 
 void TcpSocket::writeInterest() {
   ++eagerToWrite; // we actually do want to send data
-  if (!connectionInProgress) { // in case we use a seperate callback for connection.
+  if (!connectionInProgress) { // in case we use a separate callback for connection.
     if (source.writeInterest(MyHandler(TcpSocket::writeable))) {
       ++newConnections;
     }
@@ -259,7 +258,7 @@ void TcpSocketBase::Stats::clear() {
 
 ///////////////////////////
 bool TcpSocket::ConnectArgs::isPossible() {
-  return port || ipv4;
+  return port || ipv4;//non zero port on 0.0.0.0 or port 0 on any other IP address.
 }
 
 TcpSocket::ConnectArgs::ConnectArgs(int ipv4, int port, bool noDelay, bool block) :
@@ -288,11 +287,11 @@ SocketAddress::SocketAddress(TcpSocket::ConnectArgs &cargs) {
   sin.sin_port = htons(cargs.port);
 }
 
-u16 SocketAddress::hostPort() const {
+uint16_t SocketAddress::hostPort() const {
   return ntohs(sin.sin_port);
 }
 
-u32 SocketAddress::hostAddress() const {
+uint32_t SocketAddress::hostAddress() const {
   return ntohl(sin.sin_addr.s_addr);
 }
 
@@ -312,7 +311,7 @@ int SocketAddress::connect(int fd) {
   return ::connect(fd, reinterpret_cast<sockaddr *>(&sin), sizeof(sin)) ? errno : 0;
 }
 
-BlockingConnectSocket::BlockingConnectSocket(int fd, u32 remoteAddress, int port) :
+BlockingConnectSocket::BlockingConnectSocket(int fd, uint32_t remoteAddress, int port) :
     TcpSocketBase(fd, remoteAddress, port),
     autoConnect(false) {
   if (sock.isOpen()) {
@@ -342,7 +341,7 @@ bool BlockingConnectSocket::hangup() {
 }
 
 bool BlockingConnectSocket::readable() {
-  u8 bytes[4096] = {0};
+  uint8_t bytes[4096] = {0};
 
   stats.lastRead = sock.read(bytes, sizeof(bytes));
   if (stats.lastRead < 0) {
@@ -388,7 +387,7 @@ bool BlockingConnectSocket::reconnect() {
   sock.setOption(SOL_SOCKET, SO_REUSEADDR, optval);
 
   if (wasConnected) {
-    ++stats.disconnects; // failure to make socket, so number in diags grows if problem persists.
+    ++stats.disconnects; // failure to make socket, make the number in diags grow while problem persists.
     notifyConnected(false);
   }
   // #setting the following should probaby be optional.
@@ -403,20 +402,17 @@ bool BlockingConnectSocket::reconnect() {
     // we did not immediately connect!  now emulate blocking socket with timeout!
     if (EINPROGRESS == errno) {
       SelectorSet selector;
-      socklen_t lon;
-      // struct timeval tv;
-      int valopt;
-      // fd_set myset;
-      int result;
+      // socklen_t lon;
       selector.setTimeout(3.0); ////todo:1 symbol or class option for this timeout
-      while (1) {
+      while (true) {//#spins on a select().
         selector.include(sock);
         // FD_SET(sock.asInt(), &myset);
-        result = selector.select("w");
+        int result = selector.select("w");
         if (result < 0 && sock.errornumber != EINTR) {
           disconnect(true);
           return false;
         } else if (result > 0) {
+          int valopt(0);//0 for debug
           if (sock.getOption(SOL_SOCKET, SO_ERROR, valopt) && valopt < 0) { // todo:1 can we fale to get SO_ERROR?
             disconnect(true);
             return false;

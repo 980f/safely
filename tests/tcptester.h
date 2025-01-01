@@ -13,7 +13,7 @@ class TcpTester: public TcpServer {
     /** expect this to be called with connected==false only when remote disconnects. */
     void connectionChanged(bool connected);
 
-    u8 bufferAllocation[100];
+    uint8_t bufferAllocation[100];
     ByteScanner buffer;
 
     void reader(ByteScanner&raw);
@@ -24,7 +24,7 @@ class TcpTester: public TcpServer {
     /** remote has gone quiet*/
     void goneQuiet();
   public:
-    TestService(int fd,u32 ipv4,TestSlot container);
+    TestService(int fd,uint32_t ipv4,TestSlot container);
 
     /** */
     bool disconnect(void);
@@ -38,7 +38,7 @@ class TcpTester: public TcpServer {
 public:
   TcpTester(int port,int backlog=3);
 
-  TcpSocket *spawnClient(int client_fd, u32 ipv4);
+  TcpSocket *spawnClient(int client_fd, uint32_t ipv4);
   /** BLOCKING server that responds with a fixed message to any message received. */
   bool runMiniServer(int port);
 };

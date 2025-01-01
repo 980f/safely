@@ -5,7 +5,7 @@
 #include "charscanner.h"
 
 class FileReader {
-  u8 buffer[2049]; //todo:1 how shall we make this user programmable?-> malloc the buffer based on input block size from FileInfo (via caller)
+  uint8_t buffer[2049]; //todo:1 how shall we make this user programmable?-> malloc the buffer based on input block size from FileInfo (via caller)
 
 protected:
   FileAsyncAccess freader;

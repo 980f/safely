@@ -78,7 +78,7 @@ public:
     const unsigned stride;
     const unsigned databytes;
     // The ram is dynamically allocated. This will be reworked with Buffer and Block from safely once arduino versions are tested.
-    u8 *fb;
+    uint8_t *fb;
 
     FrameBuffer(unsigned pixwidth, unsigned pixheight = 128);
 
@@ -90,7 +90,7 @@ public:
       memset(fb + 1, ink ? 255 : 0, databytes); //leave control bytes unchanged.
     }
 
-    u8 &operator()(unsigned page, unsigned segment) {
+    uint8_t &operator()(unsigned page, unsigned segment) {
       return fb[1 + page + stride * segment];
     }
 
@@ -109,7 +109,7 @@ public:
     PixelCoord logic;
 
   private:
-    u8 mask;
+    uint8_t mask;
     unsigned offset;
     FrameBuffer &fb;
 
@@ -156,7 +156,7 @@ private:
 
     virtual ~Register() = default; //to stifle warnings
     /** caller ensures that this won't overflow by prechecking that there is room for the bytes of this+1*/
-    u8 *operator()(u8 *buffer) const;
+    uint8_t *operator()(uint8_t *buffer) const;
   };
 
   /** code is the value for the first byte. bits is the field width, bytes is the number of command bytes, 1,2,3 are allowed but not checked, arf is an additional bit shift, for when the lsb of a field is not the lsb of the operand byte. */

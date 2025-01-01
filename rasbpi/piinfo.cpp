@@ -36,7 +36,7 @@ PiInfo::PiInfo(){
 
       Text revisionText=colonField(parser, "Revision");
 
-      u32 revision = strtol (revisionText.c_str(), nullptr, 16) ; // Hex number with no leading 0x
+      uint32_t revision = strtol (revisionText.c_str(), nullptr, 16) ; // Hex number with no leading 0x
 
       if (bit(revision ,23)){	// New way
         dbg("piBoardId: New Way: revision is: 0x%08X\n", revision) ;
