@@ -171,6 +171,7 @@ int16_t sround(float scaled) { //#this would be so much cleaner and faster in as
   return int16_t(scaled);
 }
 
+
 unsigned modulus(int value, unsigned cycle) {
   if (cycle <= 1) {
     return value; //GIGO

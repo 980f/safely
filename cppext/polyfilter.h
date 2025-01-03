@@ -7,7 +7,7 @@ class PolyFilter {
 protected:
   /** @param hw is half width of data span, full width is 2*hw+1. Odd width is forced due to significant performance gains */
   PolyFilter(unsigned hw);
-  virtual ~PolyFilter();
+  virtual ~PolyFilter()=default;
 public:
   const unsigned hw;
   struct Datum {

@@ -24,7 +24,7 @@ public:
   Ftdi();
   ~Ftdi();
 
-  bool isOpen();
+  bool isOpen() const;
   bool open(struct libusb_device *dev = 0);
   bool open(uint16_t vendor, uint16_t product);
   bool open(uint16_t vendor, uint16_t product, TextKey description, TextKey serial = "", unsigned int index = 0);
@@ -34,11 +34,11 @@ public:
 
   bool flush(bool theInput,bool theOutput);
   bool setInterface(enum ftdi_interface interface);
-  int &usbReadTtimeout();
-  int &usbWriteTimeout();
+  int &usbReadTtimeout() const;
+  int &usbWriteTimeout() const;
 
-  bool has(unsigned bytestoread);
-  bool startRead(ByteScanner &buf);
+  bool has(unsigned bytestoread) const;
+  bool startRead(const ByteScanner &buf) const;
 
   /** blocking reads into the freespace */
   bool read(ByteScanner &buf);
@@ -52,14 +52,14 @@ public:
   unsigned write_chunk_size();
 
   bool setLatency(unsigned char latency);
-  unsigned latency();
+  unsigned latency() const;
 
   /** enable MPSSE */
   bool setBitmode(unsigned char bitmask, enum ftdi_mpsse_mode mode);
-  bool bitbang_disable();
-  int read_pins(unsigned char *pins);
+  bool bitbang_disable() const;
+  int read_pins(unsigned char *pins) const;
 
-  const char* errorString();
+  const char* errorString() const;
 
   bool getStrings();
   bool get_strings_and_reopen();
@@ -67,7 +67,7 @@ public:
   void linkDevice(struct libusb_device_handle *devhandle);
   void linkDevice(struct libusb_device *dev);
 
-  struct ftdi_context* context();
+  struct ftdi_context* context() const;
   void set_context(struct ftdi_context* context);
 
 public:

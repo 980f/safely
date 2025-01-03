@@ -1,7 +1,7 @@
 #include "delimitedinputstream.h"
-#include "numberparser.h"
+// #include "numberparser.h"
 
-#include <string.h>
+#include <cstring>
 
 //private definition of whitespace, input file may not be local.
 

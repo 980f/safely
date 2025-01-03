@@ -136,11 +136,11 @@ bool TcpSocket::reconnect() {
 }
 
 void TcpSocket::disconnect(bool andNotify) {
-  bool toReturn = TcpSocketBase::disconnect(andNotify);
+  TcpSocketBase::disconnect(andNotify);
   if (andNotify) {
     notifyConnected(false);
   }
-  return toReturn;
+
 }
 
 void TcpSocket::flush() {
@@ -220,13 +220,14 @@ bool TcpSocket::writeable() {
 
 /** expect this when far end of socket spontaneously closes*/
 bool TcpSocket::hangup() {
-  return disconnect(true);
+  disconnect(true);
+  return false;
 }
 
 void TcpSocket::writeInterest() {
   ++eagerToWrite; // we actually do want to send data
   if (!connectionInProgress) { // in case we use a separate callback for connection.
-    if (source.writeInterest(MyHandler(TcpSocket::writeable))) {
+    if (source.writeInterest(sigc::hide_return(MyHandler(TcpSocket::writeable)))) {
       ++newConnections;
     }
   }
@@ -324,20 +325,19 @@ BlockingConnectSocket::~BlockingConnectSocket() {
 }
 
 void BlockingConnectSocket::startReception() {
-  source.listen(MyHandler(BlockingConnectSocket::readable), MyHandler(BlockingConnectSocket::hangup));
+  source.listen(sigc::hide_return(MyHandler(BlockingConnectSocket::readable)), MyHandler(BlockingConnectSocket::hangup));
 }
 
-bool BlockingConnectSocket::disconnect(bool notify) {
-  bool useless = TcpSocketBase::disconnect(notify);
+void BlockingConnectSocket::disconnect(bool notify) {
+  TcpSocketBase::disconnect(notify);
   if (notify) {
     ++stats.disconnects;
     notifyConnected(false);
   }
-  return useless;
 }
 
-bool BlockingConnectSocket::hangup() {
-  return disconnect(true);
+void BlockingConnectSocket::hangup() {
+  disconnect(true);
 }
 
 bool BlockingConnectSocket::readable() {
@@ -462,5 +462,5 @@ bool BlockingConnectSocket::writeable() {
 }
 
 void BlockingConnectSocket::writeInterest() {
-  source.writeInterest(MyHandler(BlockingConnectSocket::writeable));
+  source.writeInterest(sigc::hide_return(MyHandler(BlockingConnectSocket::writeable)));
 }

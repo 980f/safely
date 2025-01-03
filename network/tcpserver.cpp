@@ -90,7 +90,7 @@ bool TcpServer::ServerSocket::accept(int backlog, Spawner spawner){
         dbg("::listen failed with code %d errno: %d", listenRetval, errorNum);
       }
       this->spawner=spawner;
-      source.listen( MyHandler(TcpServer::ServerSocket::incoming),MyHandler(TcpServer::ServerSocket::disconnect));
+      //todo:00 sigc3 is killing me! source.listen( MyHandler(TcpServer::ServerSocket::incoming),bind((MyHandler(TcpServer::ServerSocket::disconnect),true));
       return true;
     } else {
       dbg("failed to bind %08X", connectArgs.ipv4);
@@ -102,7 +102,7 @@ bool TcpServer::ServerSocket::accept(int backlog, Spawner spawner){
   }
 }
 
-bool TcpServer::ServerSocket::incoming(){
+void TcpServer::ServerSocket::incoming(){
   SocketAddress sad;  // :(
   //bi-directional arg, max length in, actual length out
   socklen_t length(sad.len());
@@ -112,5 +112,4 @@ bool TcpServer::ServerSocket::incoming(){
   } else {
     dbg("ERROR on accept");
   }
-  return true;
 }

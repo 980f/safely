@@ -10,9 +10,16 @@ target_sources(${safely_target} PUBLIC
   ftdlib.cpp
   ftdlib.h
   #3rd party sources:
+  ftdi.c
   ftdi.h
   ftdi_i.h
   ftdi_version_i.h
+  libusb/core.c
+  libusb/descriptor.c
+  libusb/hotplug.c
+  libusb/io.c
+  libusb/strerror.c
+  libusb/sync.c
   libusb/config.h
   libusb/hotplug.h
   libusb/libusb.h
@@ -34,4 +41,4 @@ target_sources(${safely_target} PUBLIC
 target_include_directories(${safely_target} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/libusb)
 
 get_target_property(arf ${safely_target} "INCLUDE_DIRECTORIES")
-message("cppext includes: ${arf}")
+message("usb includes: ${arf}")

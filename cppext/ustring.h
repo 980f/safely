@@ -8,9 +8,10 @@
 #include "logger.h" //for wtf
 #elifndef Safely_Have_Wtf
 //perhaps: #define Safely_Have_Wtf
-void wtf(const char *fmt, ...){
-  // a place to breakpoint.
-}
+// void wtf(const char *fmt, ...){
+//   // a place to breakpoint.
+// }
+#define wtf(...)
 #endif
 
 /** wrapper for common subset of classes like Glib::ustring and std::string

@@ -31,13 +31,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/ioctl.h>
+// #include <sys/ioctl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <sys/utsname.h>
+// #include <sys/utsname.h>
 #include <sys/socket.h>
 #include <unistd.h>
-#include <libudev.h>
+#include <libudev.h> //deprecated, had to install package libudev-dev. Should migrate to systemd stuff.
 
 #include "libusbi.h"
 #include "linux_usbfs.h"

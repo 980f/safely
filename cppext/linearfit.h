@@ -1,21 +1,15 @@
-#ifndef LINEARFIT_H
-#define LINEARFIT_H
+#pragma once
 
 #include "realstatistic.h"
 #include "polynomial.h"
 using Linear = Polynomial<2>;
-/** adds generation of a formula for a line to RealCorrelation's fitting. */
+/** adds generation of a formula for a line to RealCorrelation's fitting.
+ * This is not part of RealCorrelation so as to not force the polynomial class upon users. */
 
-class LinearFit {
+class LinearFit:public RealCorrelation {
 public:
-  RealCorrelation correlation;
-  LinearFit();
-  Linear equation(){//#Linear's are cheap enough to copy, hence no '&' in the return.
-    return Linear(correlation.offset(),correlation. slope());
-  }
-  unsigned N()const{
-    return correlation.N();
+  LinearFit()=default;
+  Linear equation() const {//#Linear's are cheap enough to copy, hence no '&' in the return.
+    return {offset(), slope()};
   }
 };
-
-#endif // LINEARFIT_H

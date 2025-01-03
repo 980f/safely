@@ -66,8 +66,8 @@ EpollEvents
   EPOLLMSG  deprecated/probably useless
   EPOLLRDHUP     shutdown on peer socket (remote hungup locally), there might still be data to read!
 
-  EPOLLEXCLUSIVE config to limit spamming of a shared actual event to many fd's
-  EPOLLWAKEUP    something to do with wakeup sources, ignored in many *nix's
+  EPOLLEXCLUSIVE config to limit spamming of a shared actual event to many fd-es
+  EPOLLWAKEUP    something to do with wakeup sources, ignored in many *nices
   EPOLLONESHOT   config for autodisabling on event delivery, use ctl_mod to re-enable
   EPOLLET        config for edge triggered reporting
 

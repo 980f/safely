@@ -1,11 +1,11 @@
 
 message("including 'system' ")
+
+add_subdirectory("storable")
 target_sources(${safely_target} PUBLIC
   allocatedindexer.cpp
   allocatedindexer.h
   block.h
-  #cachedindextostored.cpp
-  #cachedindextostored.h
   chain.h
   chainsorter.h
   delimitedinputstream.cpp
@@ -22,8 +22,6 @@ target_sources(${safely_target} PUBLIC
   filename.h
   gatedsignal.cpp
   gatedsignal.h
-  jsonstore.cpp
-  jsonstore.h
   #needs ArtFile kanjidic.cpp
   #kanjidic.h
   linearfilter.cpp
@@ -47,29 +45,12 @@ target_sources(${safely_target} PUBLIC
   segmentedname.h
   sigcuser.cpp
   sigcuser.h
-  storable.cpp
-  storable.h
-  storageexporter.cpp
-  storageexporter.h
   storedcorrelation.cpp
   storedcorrelation.h
-  stored.cpp
-  storedenum.cpp
-  storedenum.h
-  storedgroup.cpp
-  storedgroup.h
-  stored.h
   storedipv4address.cpp
   storedipv4address.h
-  storedlabel.cpp
-  storedlabel.h
-  storednumeric.cpp
-  storednumeric.h
   storedrange.cpp
   storedrange.h
-  storedsettable.h
-  storejson.cpp
-  storejson.h
   textformatter.cpp
   textformatter.h
   textpointer.cpp
@@ -90,4 +71,4 @@ target_sources(${safely_target} PUBLIC
 target_include_directories(${safely_target} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} )
 
 get_target_property(arf ${safely_target} "INCLUDE_DIRECTORIES")
-message("cppext includes: ${arf}")
+message("'system'' includes: ${arf}")

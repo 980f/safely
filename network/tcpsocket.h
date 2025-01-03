@@ -155,7 +155,7 @@ protected:
   bool readable();
 
   // called by glib when remote disconnects (after startReception has once been called)
-  bool hangup();
+  void hangup();
 
   // call this when you would like to write something, get called back for the data inside writeable
   void writeInterest();

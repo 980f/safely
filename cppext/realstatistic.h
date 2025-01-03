@@ -1,13 +1,8 @@
 #pragma once
 
 /** standard statistics on a real number */
-// class RealCorrelation;
-// class StoredStatistic;
-
 class RealStatistic {
-  // friend class RealCorrelation;
-  // friend class StoredStatistic;
-public://friending wasn't working well enough.
+public://friending wasn't working well enough, needed raw access for non-volatile save and restore so as to not suffer from cumulative round off when doing round trips through math on the properly public interface.
   /** sum of data */
   double sum;
   /** sum of squares of data */
@@ -33,7 +28,7 @@ public:
   /** compute and return the average */
   double mean() const;
 
-  /** common subexpression of other members */
+  /** common subexpression of other method's bodies */
   double Lform() const;
 
   /** sum of squares of deviation from mean */
@@ -47,11 +42,11 @@ public:
   }
 }; // class RealStatistic
 
-class StoredCorrelation;
+
 /** standard statistics on paired data */
 class RealCorrelation {
-  friend class StoredCorrelation;
-protected:
+
+protected: //so that an extension can save and restore the raw content without accumulating round-off errors.
   RealStatistic xx;
   RealStatistic yy;
   double sumCross;

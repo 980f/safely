@@ -26,20 +26,22 @@ target_sources(${safely_target} PUBLIC
   filereader.cpp
   filereader.h
   filer.h
-  filewatcher.cpp
-  filewatcher.h
+  #fix later:
+  #filewatcher.cpp
+  #filewatcher.h
   filewriter.cpp
   filewriter.h
   incrementalfiletransfer.cpp
   incrementalfiletransfer.h
-  iosource.cpp
-  iosource.h
+  #iosource stuff  is far from working. there is so much legacy of glib confusing necessary functionality.
+  #iosource.cpp
+  #iosource.h
   jasoned.cpp
   jasoned.h
   jsonfile.cpp
   jsonfile.h
-  jsonfiletracker.cpp
-  jsonfiletracker.h
+  #jsonfiletracker.cpp
+  #jsonfiletracker.h
   memorymapper.cpp
   memorymapper.h
   microseconds.cpp
@@ -58,23 +60,12 @@ target_sources(${safely_target} PUBLIC
   posixwrapper.h
   serialdevice.cpp
   serialdevice.h
-  serveroptions.cpp
-  serveroptions.h
-  socketeer.cpp
-  socketeer.h
   stopwatch.cpp
   stopwatch.h
   streamformatter.cpp
   streamformatter.h
   streamprintf.cpp
   streamprintf.h
-  #tcpserver.cpp
-  #tcpserver.h
-  #tcpsocket.cpp
-  #tcpsocket.h
-#moved to tests project, not part of lib   tcptester.cpp  tcptester.h
-  telnetserver.cpp
-  telnetserver.h
   threader.cpp
   threader.h
   timerfd.cpp
@@ -82,6 +73,7 @@ target_sources(${safely_target} PUBLIC
   #when did this functionality disappear? what was it? vargs.cpp
   worstcase.cpp
   worstcase.h
+  platform.cpp
 )
 
 

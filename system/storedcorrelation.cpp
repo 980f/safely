@@ -19,16 +19,16 @@ void StoredStatistic::onPrint(){
 /////////////////////////////
 
 StoredCorrelation::StoredCorrelation(Storable &node) : Stored(node),
-  ConnectChild(xx,correlation.xx),
-  ConnectChild(yy,correlation.yy),
+  ConnectChild(xx,LinearFit::xx),
+  ConnectChild(yy,LinearFit::yy),
   ConnectChild(sumCross){
-  sumCross.onChangeUpdate(correlation.sumCross,true);
+  sumCross.onChangeUpdate(LinearFit::sumCross,true);
 }
 
 void StoredCorrelation::onPrint(){
   xx.onPrint();
   yy.onPrint();
-  sumCross = correlation.sumCross;
+  sumCross = LinearFit::sumCross;
 }
 
 WatchedCorrelation::WatchedCorrelation(Storable &node) : StoredCorrelation(node){

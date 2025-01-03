@@ -21,7 +21,8 @@ class PathIterator {
     /** whether immediately succesive slashes get treated as a single (//=>/)*/
     bool coalesce;
     /** using most frequent by runtime instances settings as defaults */
-    Rules(char slash='/', bool after = false,bool before = false,bool coalesce=true);
+    Rules(char slash = '/', bool after = false, bool before = false, bool coalesce = true): slash(slash), after(after), before(before), coalesce(coalesce) {}
+
     bool isSlash(const char token){
       return token==slash;
     }

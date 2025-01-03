@@ -15,7 +15,7 @@ class TcpServer : SIGCTRACKABLE {
     /** @returns whether spawner might get called someday */
     bool accept(int backlog, Spawner spawner);
     /** called when OS gets a connection, will call spawner */
-    bool incoming();
+    void incoming();
 
   public:
   } server;

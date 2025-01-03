@@ -32,12 +32,14 @@ include_directories(${DEPS_INCLUDE_DIRS})
 add_executable(
   testlink
   tests/bonnet.cpp
+  cppext/bundler.h
 )
 
 set(safely_target testlink)
 
 target_link_libraries( testlink
-  sigc++-3.0
+  sigc-3.0
+  udev
 )
 
 add_subdirectory(cppext)
