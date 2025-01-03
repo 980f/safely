@@ -6,11 +6,13 @@
 */
 class StoredLabel : public Stored {
 public:
-  StoredLabel(Storable &node, const TextValue  &fallback = TextValue());
-  StoredLabel(Storable&node, const char *fallback) ;
 
-  void setDefault(const TextValue  &deftext);
+  StoredLabel(Storable&node, const char *fallback) ;
+  StoredLabel(Storable &node, const TextValue &fallback = TextValue()) :StoredLabel(node,fallback.c_str()){}
+
+
   void setDefault(const char *deftext);
+  void setDefault(const TextValue &deftext) {setDefault(deftext.c_str());}
 
   /** pointer to storage, not safe to use to manipulate it. */
   TextKey c_str() const;
