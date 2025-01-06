@@ -4,19 +4,23 @@
 #include "incrementalfiletransfer.h"
 #include "aio.h"
 #include <csignal>
-#include "fildes.h" //our file <-> safe buffer routines
-#include "hook.h"  //used for callbacks to process file.
 /** mate aio calls to FilDes class
  * Note that the file is left open at the end of transfer, you can chain more data on writes.
  * The file will be closed when the FileAsyncAccess is deleted. */
 class FileAsyncAccess : public IncrementalFileTransfer {
   /** the thing we are wrapping use of: */
 
-  struct Aiocb: aiocb {
-    Aiocb() {
+  struct Aiocb : aiocb {
+    Aiocb() { // NOLINT(*-pro-type-member-init) init by zeroing the struct.
       EraseThing(*this);
     }
   } cb;
+
+protected:
+  ~FileAsyncAccess() override {
+    aio_cancel(fd, &cb);
+    //and let base class close the fd.
+  }
 
 public:
   /* connect to user allocated file and buffer objects. This makes it easier to change synch code to async. */
@@ -47,7 +51,7 @@ public:
   void cancel();
 
 private:
-  /** this will call back to our member fn */
+  /** this will call back to our member fn using a pointer passed to and returned from the system via the @param info  */
   static void sighandler(int signo, siginfo_t *info, void *);
 
   /* @param code is siginfo_t.si_code */
@@ -58,7 +62,7 @@ private:
 
   // IncrementalFileTransfer interface
 public:
-  bool onEachBlock(__ssize_t amount) override;
+  bool onEachBlock(ssize_t amount) override;
 
-  void onDone() override;
+  //the onDone() is left pure virtual to make users take some final action.
 };

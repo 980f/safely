@@ -1,5 +1,5 @@
 #pragma once
-#define FILDES_H "(C) 2024(and bits earlier) Andrew L.Heilveil, github / 980f"
+// "(C) 2024(and bits earlier) Andrew L.Heilveil, github / 980f"
 
 #include "buffer.h" //safe buffer
 #include "posixwrapper.h" //manages errno and logging
@@ -55,6 +55,7 @@ public:
 
   /** close the fd IFFI we own it and we think that it is open.
    * @returns what system's close returns.
+   * @note the auto close on destruction does not call overloads, only this exact function.
    */
   virtual int close();
 

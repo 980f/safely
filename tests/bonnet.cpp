@@ -8,8 +8,8 @@
 
 #include "cheaptricks.h"
 
-#include "textpointer.h"
-//rpi i2c
+// #include "textpointer.h"
+//rpi i2c interface display.
 #include "SSD1306.h"
 #include "din.h"
 #include "application.h"

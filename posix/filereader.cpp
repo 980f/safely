@@ -4,26 +4,17 @@
 #include "fcntlflags.h"
 #include "fileinfo.h"
 
-// #include "logger.h"
-
 static Logger bug("FileReader", false);
 
-bool FileReader::action() {
-  bug("Received: %ld of %ld, \tBlocks: %d of %d", freader.transferred, freader.expected, freader.blockstransferred, freader.blocksexpected);
-  return true;
+//
+// void FileReader::onDone() {
+//   bug("Completed: %ld of %ld, \tBlocks: %d of %d", transferred, expected, blockstransferred, blocksexpected);
+// }
+
+FileReader::FileReader(): FileAsyncAccess(true/*read*/) {
+  EraseThing(buffer);//4debug
 }
 
-void FileReader::onCompletion() {
-  bug("Completed: %ld of %ld, \tBlocks: %d of %d", freader.transferred, freader.expected, freader.blockstransferred, freader.blocksexpected);
-}
-
-FileReader::FileReader(): freader(true/*read*/) {
-  //#nada
-}
-
-FileReader::~FileReader() {
-  //#avert trivial warning about vtables.
-}
 
 
 bool FileReader::process(TextKey fname) {
@@ -32,18 +23,19 @@ bool FileReader::process(TextKey fname) {
     bug("stat(%s) failed, errno:%d (%s)", fname, finfo.errornumber, finfo.errorText());
     return false;
   }
-  freader.prepare(finfo.size());
-  if (freader.fd.open(fname,O_RDONLY)) {
+  prepare(finfo.size());
+  if (fd.open(fname,O_RDONLY)) {
     bug("Launching read of file %s", fname);
-    freader.buf.rewind(); //when this was missing I learned things about how aio_read worked :)
-    if (freader.go()) {
+    buf.rewind(); //when this was missing I learned things about how aio_read worked :)
+    if (go()) {
       return true;
     }
   }
   return false;
 }
 
-void FileReader::loiter() {
-  //todo:00 hang around until transfer is complete.
-  //find out where original code went!
+//we expect this to be overridden frequently by something that reads and rewinds the buffer.
+bool FileReader::onEachBlock(ssize_t amount) {
+  bug("Received: %zu, total: %ld of %ld, \tBlocks: %d of %d", amount, transferred, expected, blockstransferred, blocksexpected);
+  return true;
 }

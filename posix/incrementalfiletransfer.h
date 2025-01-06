@@ -8,12 +8,12 @@ class IncrementalFileTransfer : public PosixWrapper {
 protected:
   /** transfer direction. */
   const bool amReader; //const, make a separate IFT object to move bytes in the other direction.
-public:
-  /** the file that is managed by the derived class.
-   */
+protected:
+  /** the file that is managed by the derived class. */
   Fildes fd;
-  /** a view into the data source or sink, data and pointer allocated by user, or the derived class. */
+  /** a view into the data source or sink, data and pointer allocated by user/derived class. */
   ByteScanner buf;
+public://these are just FYI
   /** progress report */
   ssize_t expected;
   ssize_t transferred;
@@ -22,18 +22,19 @@ public:
   unsigned blocksexpected;
 
   //called each time data had been delivered or removed from buf
-  virtual bool onEachBlock(__ssize_t amount);
+  virtual bool onEachBlock(ssize_t amount);
 
   //called when transfer is complete
   virtual void onDone();
 
-  IncrementalFileTransfer(bool reader);
+  IncrementalFileTransfer(bool reader); // NOLINT(*-explicit-constructor)
 
-  virtual ~IncrementalFileTransfer() = default;
+  /** an attempt to get files to close on destruction. */
+  virtual ~IncrementalFileTransfer();
 
   /** @param amount is file size for read, blocksize for write, the size of buf is used for the other size involved */
   void prepare(unsigned amount);
 
   /** actual chunk mover must call this at end of each incremental transfer */
-  bool onChunk(__ssize_t amount);
+  bool onChunk(ssize_t amount);
 };

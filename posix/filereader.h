@@ -1,27 +1,15 @@
-#pragma once
-#define FILEREADER_H "(C) Andrew L. Heilveil, 2017,2024"
+#pragma once //"(C) Andrew L. Heilveil, 2017,2024"
 
 #include "fileasynchio.h"
 #include "charscanner.h"
 
-class FileReader {
-  uint8_t buffer[2049]; //todo:1 how shall we make this user programmable?-> malloc the buffer based on input block size from FileInfo (via caller)
-
-protected:
-  FileAsyncAccess freader;
-
-protected: //starting with overloads, will replace with delegates once it is tested.
-  virtual bool action();
-
-  virtual void onCompletion();
+class FileReader : public FileAsyncAccess {
+  uint8_t buffer[2049]{}; //todo:1 how shall we make this user programmable?-> malloc the buffer based on input block size from FileInfo (via caller)
 
 public:
   FileReader();
 
-  virtual ~FileReader(); //ensures fildes is released.
   bool process(TextKey fname);
 
-  /** hang around (block) until transfer seems complete.
-   * implemented for module testing.  */
-  void loiter();
+  bool onEachBlock(ssize_t amount) override;
 };

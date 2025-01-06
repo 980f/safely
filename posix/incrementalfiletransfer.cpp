@@ -1,8 +1,15 @@
 //"(C) Andrew L. Heilveil, 2017,2024"
 #include "incrementalfiletransfer.h"
+
+#include <aio.h>
+
 #include "logger.h"
 
 IncrementalFileTransfer::IncrementalFileTransfer(bool reader) : PosixWrapper{"incrementalFile"}, amReader(reader), fd(reader ? "IFT-reader" : "IFT-writer") {}
+
+IncrementalFileTransfer::~IncrementalFileTransfer() {
+  fd.close();//and expect a flurry of errors that do god knows what.
+}
 
 void IncrementalFileTransfer::prepare(unsigned amount) {
   fd.setBlocking(false); // don't trust callers.
@@ -17,7 +24,7 @@ void IncrementalFileTransfer::prepare(unsigned amount) {
   }
 }
 
-bool IncrementalFileTransfer::onChunk(__ssize_t amount) {
+bool IncrementalFileTransfer::onChunk(ssize_t amount) {
   if (amount >= 0) { // then it is # of bytes transferred
     ++blockstransferred;
     transferred += amount;
@@ -42,7 +49,7 @@ bool IncrementalFileTransfer::onChunk(__ssize_t amount) {
 }
 
 // stub virtual functions.
-bool IncrementalFileTransfer::onEachBlock(__ssize_t amount) {
+bool IncrementalFileTransfer::onEachBlock(ssize_t amount) {
   dbg("block: %d \tbytes: %ld \tchunk:%ld", blockstransferred, transferred, amount);
   return true;
 }

@@ -3,7 +3,7 @@
 #include <cstring>
 
 #include "dout.h" //reset pin
-#include "i2c.h"  //safely wrapper, not the OS's
+#include "i2c.h"  // the safely wrapper, not the OS's header.
 
 /**
 
@@ -86,7 +86,7 @@ public:
       delete[] fb;
     }
 
-    void clear(bool ink = false) {
+    void clear(bool ink = false) const {
       memset(fb + 1, ink ? 255 : 0, databytes); //leave control bytes unchanged.
     }
 
