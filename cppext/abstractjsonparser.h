@@ -46,7 +46,7 @@ public:
   }
 
   /** some useless info about the parsed data */
-  JsonStats stats;
+  PushedJSON::Stats stats;
 
 protected:
   JsonConstructor<Storable, TextClass> &data;
@@ -56,11 +56,11 @@ protected:
   Storable *assembleItem(Storable *parent,bool evenIfEmpty=false){
     Storable *nova=nullptr;
     //we have a value if it was empty quotes or nonTrivial content. JSON null is an anonymous value at this layer of the parser.
-    bool haveValue= parser.wasQuoted || !parser.value.empty();
+    bool haveValue= parser.wasQuote || !parser.value.empty();
     if(evenIfEmpty || haveValue){ //checking haveValue here ignores extraneous ',' in the source
       TextClass name(parser.haveName?data.extract(parser.name):"");
       TextClass value(data.extract(parser.value));
-      nova=data.applyToChild(parent,name,haveValue,value,parser.wasQuoted);
+      nova=data.applyToChild(parent,name,haveValue,value,parser.wasQuote);
       stats.onNode(haveValue);
     }
     parser.itemCompleted();//ensure we don't reuse old data on next item.
@@ -69,7 +69,7 @@ protected:
 
   /** @returns whether there are more children, for recursively parsing wads. This exists for the BeginWad clause herein. */
   bool parseChild(Storable *parent){
-    JsonStats::DepthTracker doe(stats);
+    PushedJSON::Stats::DepthTracker doe(stats);
     //look for name
     while(data.hasNext()) {
       switch (parser.next(data.next())) {

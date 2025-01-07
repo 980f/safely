@@ -13,20 +13,21 @@
  */
 
 class Cstr {
-protected://we are a base class
+protected: //we are a base class
   const char *ptr;
   /** pointer to a shared null char. */
   static constexpr const char *const emptyString = "";
 
 public:
   Cstr();
-  Cstr(TextKey target);//# we desire implicit conversions
-  Cstr(const unsigned char *target);//# we desire implicit conversions
+
+  Cstr(TextKey target); //# we desire implicit conversions
+  Cstr(const unsigned char *target); //# we desire implicit conversions
 
   //virtual destructor as this is a base for classes which may do smart things with the pointer on destruction.
-  virtual ~Cstr() = default;//we never take ownership of ptr, see class Text for such a beast.
+  virtual ~Cstr() = default; //we never take ownership of ptr, see class Text for such a beast.
   /** change internal pointer */
-  virtual TextKey operator =(TextKey ptr);//# we desire passthrough on argument
+  virtual TextKey operator =(TextKey ptr); //# we desire passthrough on argument
 
   /** @returns pointer member, allowing you to bypass the checks of this class.  */
   operator TextKey() const;
@@ -36,9 +37,9 @@ public:
   TextKey c_str() const;
 
   /** as byte vs human readable character */
-  const unsigned char*raw() const;
+  const unsigned char *raw() const;
 
-  /** @returns a nevern null pointer. If the wrapped pointer is null this returns a pointer to a shared empty string. */
+  /** @returns a never null pointer. If the wrapped pointer is null this returns a pointer to a shared empty string. */
   const char *notNull() const;
 
   /** @returns the pointer if the string length is >0 else returns nullptr.*/
@@ -62,7 +63,7 @@ public:
   char at(const Index &index) const noexcept;
 
   /** @returns whether the string was modified. NB: this violates constness of the original string, user beware*/
-  bool setAt(const Index&index,char see) const noexcept;
+  bool setAt(const Index &index, char see) const noexcept;
 
   /** needed by changed() template function */
   bool operator !=(TextKey other) const noexcept {
@@ -125,19 +126,22 @@ public:
   /** marker for tedious syntax const_cast<char *>()
    * this should only be used when passing the pointer to old stdlib functions, and only when you have verified the string is null terminated.
    */
-  char *violated(){
+  char *violated() {
     return const_cast<char *>(ptr);
   }
 
-  unsigned char *casted(){
+  unsigned char *casted() {
     return const_cast<unsigned char *>(reinterpret_cast<const unsigned char *>(ptr));
   }
-
 }; // class Cstr
 
 //versions implemented in cstr.cpp. You should probably add others here if the type is intrinsic or already known to this module.
 template<> bool Cstr::cvt(bool onNull, Cstr *units) const noexcept;
+
 template<> long Cstr::cvt(long onNull, Cstr *units) const noexcept;
+
 template<> unsigned Cstr::cvt(unsigned onNull, Cstr *units) const noexcept;
+
 template<> int Cstr::cvt(int onNull, Cstr *units) const noexcept;
+
 template<> double Cstr::cvt(double onNull, Cstr *units) const noexcept;

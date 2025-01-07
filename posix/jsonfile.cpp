@@ -38,9 +38,10 @@ int JsonFile::loadFile(Cstr thename){
   StoreJsonParser parser(arg);
   parser.core.root=&root;
   //allow variation of syntax where an '=' is the same as an ':' (when not quoted of course)
-  parser.parser.rule.equalscolon=true;//todo: make this configurable
-  parser.parser.rule.semicomma=true;//needed in case we embed dp5 config :(
-  parser.parser.lookFor(StandardJSONFraming ";=");
+  parser.parser.rule.equalscolon=true;//todo:1 replace these booleans and matching addition to seperators with synonyms a=la quoters.
+  parser.parser.rule.semicomma=true;
+  parser.parser.PushedParser::rule.seperators= ":,{}[];=";//don't trust default.
+  parser.parser.PushedParser::rule.quoters= "\"\"''";//don't trust default.
 
   parser.parse();
   dbg("loaded %d nodes, %d levels, from %s",parser.stats.totalNodes,parser.stats.maxDepth.extremum,thename.c_str());

@@ -48,7 +48,9 @@ protected:
   }
 }; // class TextBlock
 
-/** core of a parser looking into an immutable block of text. */
+/** core of a parser looking into an immutable block of text.
+ * Most libraries would name this "StringView" or somesuch.
+ */
 class TextChunk {
 public:
   const TextBlock &block;
@@ -59,5 +61,6 @@ public:
   /** @returns a  TextBlock which covers the span */
   operator TextBlock() const noexcept;
 
+  /** alters span to start after its present location, extending up to but not including the next instance of @param comma .If there are no such instances the span is 'started' (no end) */
   void next(char comma);
 };

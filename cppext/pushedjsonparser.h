@@ -1,5 +1,5 @@
-#ifndef PUSHEDJSONPARSER_H
-#define PUSHEDJSONPARSER_H "(C) Andrew L. Heilveil, 2017"
+#pragma once
+//"(C) Andrew L. Heilveil, 2017"
 
 /** this class maintains parser state and renders an opinion on characters received.
  * See StoredJSONParser for a user.
@@ -7,45 +7,45 @@
  * It is very tolerant, especially of missing quotes around names and text values.
  * It does not interpret data values, it leaves them as strings as it doesn't actually retain the string in any sense.
  */
-#include "halfopen.h"
 #include "pushedparser.h"
 #include "onexit.h"
 
 #include "extremer.h"
-struct JsonStats {
-  /**number of values */
-  unsigned totalNodes = 0;
-  /**number of terminal values */
-  unsigned totalScalar = 0;
-  /** greatest depth of nesting */
-  SimpleExtremer<unsigned> maxDepth;
-  /** number of unmatched braces at end of parsing. If massive then more closes than opens. */
-  unsigned nested = 0;
-
-  /** call when you push to a child */
-  void nest();
-  /** call when you complete a child */
-  void popnest();
-  /** prepare for fresh use */
-  void reset();
-
-  /** update node counters, @param scalar should be true for just leaf nodes. */
-  void onNode(bool scalar);
-
-  class DepthTracker:public CountedLock {
-  public:
-    DepthTracker(JsonStats &s);
-  };
-
-};
 
 namespace PushedJSON {
 
+  struct Stats {
+    /**number of values */
+    unsigned totalNodes = 0;
+    /**number of terminal values */
+    unsigned totalScalar = 0;
+    /** greatest depth of nesting */
+    SimpleExtremer<unsigned> maxDepth;
+    /** number of unmatched braces at end of parsing. If massive then more closes than opens. */
+    unsigned nested = 0;
+
+    /** call when you push to a child */
+    void nest();
+    /** call when you complete a child */
+    void popnest();
+    /** prepare for fresh use */
+    void reset();
+
+    /** update node counters, @param scalar should be true for just leaf nodes. */
+    void onNode(bool scalar);
+
+    class DepthTracker:public CountedLock {
+    public:
+      DepthTracker(Stats &s);
+    };
+
+  };
+
 enum Action {
-  Illegal,    //not a valid char given state, user must decide how to recover.
   Continue,   //continue scanning
-  BeginWad, //open brace encountered
+  Illegal,    //not a valid char given state, user must decide how to recover.
   EndItem,  //comma between siblings
+  BeginWad, //open brace encountered
   EndWad,   //closing wad
   Done
 };
@@ -67,6 +67,8 @@ public://extended return value
   bool quotedName;
   /** our first user doesn't care about the difference between [ and {, but someone else may so: */
   bool orderedWad;
+
+  Span value;
   /**
    *  records locations for text extents, passes major events back to caller
    */
@@ -85,12 +87,9 @@ public://extended return value
   Parser();
 
 private:
-  void recordName();
-//todo: when did this go away?  void endToken(unsigned mark);
+  bool recordName();
+  void recordItem(unsigned mark);
 }; // class Parser
 
-// standard punctuation of json.
-#define StandardJSONFraming ":{,}[]"
 
 } // namespace PushedJSON
-#endif // PUSHEDJSONPARSER_H

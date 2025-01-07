@@ -58,6 +58,7 @@ struct Span: HalfOpen<Index> {
   /** intersection */
   static Span overlap(const Span &one,const Span&other);
 
+  bool include(Index index) noexcept;
   /** make it @param more bigger. @returns if this makes span become semi-valid */
   bool stretchUp(unsigned more=1);
 };

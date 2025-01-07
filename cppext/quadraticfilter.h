@@ -2,7 +2,10 @@
 
 #include "polyfilter.h"
 
-/** fit parabola to data */
+/** fit parabola to data
+ * The variable names come from [github]/980f/maths/svg-main.html file.
+ *
+ */
 class QuadraticFilter : public PolyFilter {
   //cached dependents on hw:
   const unsigned hw2;//hw*hw

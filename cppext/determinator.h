@@ -37,18 +37,16 @@ public:
 
 /** this template exists to coordinate allocating related structures */
 template<int MaxProblem = 4> //maximum matrix size, defaulted to the smallest that isn't hard coded as pre-computed case.
-class Determinator : private DeterminatorCore {
+class Determinator : protected DeterminatorCore {
   using Gater = bool [MaxProblem];
   using Column = double[MaxProblem];
 
-  Gater&ignorer; //caller can clip the problem
   Gater rower;   //tracks progress in processing rows
   Gater columner;//tracks progress in processing columns
 public:
-  Determinator(Gater&ignore, double ys[], Column xs[]) :
+  Determinator(Gater&ignore, Column ys, Column xs[]) :
     DeterminatorCore(MaxProblem,rower,columner,ignore,ys,xs){
     //this class exists to allocate the right sized data and then pass it all to the core.
   }
 
 }; // class Determinator
-

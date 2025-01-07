@@ -2,6 +2,7 @@
 /**
 // Created by andyh on 12/22/24.
 // Copyright (c) 2024 Andy Heilveil, (github/980f). All rights reserved.
+This was devised for the project of converting DarkHttpd into a c++ module rather than a c process.
 */
 
 #pragma once

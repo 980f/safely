@@ -112,22 +112,26 @@ struct Index {
   }
 
   /** set this to the max of itself and other */
-  void elevate(unsigned other){
+  bool elevate(unsigned other){
     if(isValid()&&other<=raw) {
-      return;
+      return false;
     }
     raw = other;
+    return true;
   }
 
   /** set this to the greater of this and other depending upon validity */
-  void elevate(Index other){
+  bool elevate(Index other){
     if(isValid()) {
       if(other.isValid() && raw<other.raw) {
         raw = other.raw;
+        return true;
       }
     } else {
       raw = other.raw;
+      return true;
     }
+    return false;
   }
 
   /** @returns present value, then sets it to zero. NB it is set to 0 not invalidated. */
