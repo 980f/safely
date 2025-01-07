@@ -42,7 +42,7 @@ bool PushedNumberParser::next(char u) {
   ++processed; //includes char that causes termination.
   switch (phase) {
     default:
-      return fail(); //if you push at me when I'm done I will bitch back at you.
+      return fail(); //if you push at me when I'm done or failed I will bitch back at you.
     case Start:
       switch (u) {
         case '-':

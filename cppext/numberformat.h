@@ -23,6 +23,8 @@ struct NumberFormat {
 
   NumberFormat();
 
+  unsigned minCharsNeeded() const;
+
   /** worst case required*/
   unsigned needs() const;
 
@@ -36,5 +38,3 @@ struct NumberFormat {
    * when the designated number of usages has been reached this object is altered to the default (clear()) state. */
   void onUse();
 };
-
-

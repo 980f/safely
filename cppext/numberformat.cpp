@@ -9,11 +9,17 @@ NumberFormat::NumberFormat() {
   clear();
 }
 
-unsigned NumberFormat::needs() const { //todo:0 very bogus math herein
-  if (isValid(fieldWidth) && fieldWidth > 0) {
+unsigned NumberFormat::minCharsNeeded() const {
+  //todo:0 somewhat bogus math herein, but is overestimate, not under.
+  return decimals >= 0 ? 19 + 1 + 1 + decimals : 3 - decimals;
+}
+
+unsigned NumberFormat::needs() const {
+  auto charsNeeded = minCharsNeeded();
+  if (fieldWidth > charsNeeded) {
     return fieldWidth;
   }
-  return decimals >= 0 ? 19 + 1 + 1 + decimals : 3 - decimals;
+  return charsNeeded;
 }
 
 //this code must track charformatter::printnumber
@@ -36,10 +42,10 @@ unsigned NumberFormat::needs(double value, NumberPieces *preprint) const {
   if (scientific) {
     //sigfigs+1 if sigfigs>exponent we'll need a d.p.
     //exponent if >sigfigs then add pow10 for its extra zeroes
-    necessary += 10; //todo:00 finish this!
+    necessary += decimals<0?-decimals:decimals + 1 + 5 /*E-123*/;//todo:00 still far from correct!
   } else {
     //leading zero if number <0, else add room
-    necessary += decimals + (decimals > 0); //todo:00 suspicious for negative decimals.
+    necessary += decimals > 0? decimals + 1: 19; //todo:00 suspicious for negative decimals.
     if (preprint->negativeExponent) {
       ++necessary;
     } else {
@@ -51,7 +57,7 @@ unsigned NumberFormat::needs(double value, NumberPieces *preprint) const {
     ++necessary;
   }
 
-  if (isValid(fieldWidth)) {
+  if (fieldWidth) {
     if (necessary <= fieldWidth) {
       //will print some blanks and proceed, we only implement right-align in fixed fields.
       return fieldWidth;
@@ -67,7 +73,7 @@ unsigned NumberFormat::needs(double value, NumberPieces *preprint) const {
 }
 
 void NumberFormat::clear() {
-  fieldWidth = BadLength;
+  fieldWidth = 0;
   decimals = 0;
   scientific = false;
   showsign = false;
