@@ -2,6 +2,38 @@
 // "(C) Andrew L. Heilveil, 2017"
 
 #include <functional>
+
+
+
+/** until I figure out how to code a void type for a return in Hooker here is a simpler version of that. Might be able to solve that with a constexper if in invopker. */
+template<typename... Args> class Hook {
+public: //expose function's type for use in arguments to be passed to this guy
+  using Pointer = std::function<void(Args...)>;
+
+private:
+  Pointer pointer;
+
+public:
+  Hook(Pointer fn = nullptr): pointer(fn) {}
+
+  Pointer operator =(Pointer fn) {
+    Pointer was = pointer;
+    pointer = fn;
+    return was;
+  }
+
+  void operator ()(Args... args) const {
+    if (pointer) {
+      pointer(args...);
+    }
+  }
+
+  /** @returns whether there is any point in calling this hook. (can distinguish between return of default and return that happens to match default)*/
+  operator bool() const {
+    return bool(pointer);
+  }
+};
+
 /** hook with a return value.
 */
 template<typename RetType, typename... Args> class Hooker {
@@ -52,33 +84,3 @@ template<typename InAndOout> using Filter = Hooker<InAndOout, InAndOout>;
 template<typename InAndOout> InAndOout trivialFilter(InAndOout in) {
   return in;
 }
-
-
-/** until I figure out how to code a void type for a return in Hooker here is a simpler version of that. Might be able to solve that with a constexper if in invopker. */
-template<typename... Args> class Hook {
-public: //expose function's type for use in arguments to be passed to this guy
-  using Pointer = std::function<void(Args...)>;
-
-private:
-  Pointer pointer;
-
-public:
-  Hook(Pointer fn = nullptr): pointer(fn) {}
-
-  Pointer operator =(Pointer fn) {
-    Pointer was = pointer;
-    pointer = fn;
-    return was;
-  }
-
-  void operator ()(Args... args) const {
-    if (pointer) {
-      pointer(args...);
-    }
-  }
-
-  /** @returns whether there is any point in calling this hook. (can distinguish between return of default and return that happens to match default)*/
-  operator bool() const {
-    return bool(pointer);
-  }
-};
