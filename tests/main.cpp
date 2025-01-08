@@ -9,6 +9,12 @@
 #include "unistd.h" //getcwd
 
 #include "storable.h"
+void testStorable(){
+  Storable node("safely system library");
+  node.child("a chld").setNumber(15.678);
+  printf("Stored: %s",node.image().c_str());
+}
+
 #include "numericalvalue.h" //union + type enum
 #include "stddef.h"
 /** test harness for qtcreator debugger helper*/
