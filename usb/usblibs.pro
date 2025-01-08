@@ -44,4 +44,3 @@ SOURCES += \
 
 #usb lib uses these so's
 LIBS += -lpthread -ludev
-

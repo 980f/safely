@@ -46,11 +46,12 @@ public:
   }
   /** "renice" */
   bool setPriority(int niceness);
+  /** one tool for boosting process priority, trying to get gpio polling to 10kHz on a 3B+ */
   bool setScheduler(bool fast);
 public: //utilities
-  /** @returns a copy of the hostname, not a static function as it records errors from the attempt */
-  Text hostname();//not static as we record errors
-  /** write pid to file. best practice is for that file to be in /tmp so that it evaporates on a crash of the system. */
+  /** @returns a copy of the hostname. It is not a static function as it records errors from the attempt */
+  Text hostname();
+  /** write current thread's pid to file. best practice is for that file to be in /tmp so that it evaporates on a crash of the system.
+   * Note: systemd knows about such files, but does not create them. It uses them to determine which child process after a fork is the 'main' process of an application. */
   static bool writepid(TextKey pidname);
 };
-

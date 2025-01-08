@@ -5,7 +5,7 @@
 
 SafeLogger(FAA, false);
 
-/** add a constructor and convenience method to C object*/
+/** adds a constructor and convenience method to C object*/
 struct SigAttacher : sigaction {
   SigAttacher() { // NOLINT(*-pro-type-member-init)
     sigemptyset(&sa_mask);

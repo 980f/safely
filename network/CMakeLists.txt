@@ -7,7 +7,7 @@ target_sources(${safely_target} PUBLIC
   #telnetserver.cpp
   telnetserver.h
   #tcpsocket.cpp
-  #tcpserver.cpp
+  tcpserver.cpp
 )
 
 target_include_directories(${safely_target} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} )
