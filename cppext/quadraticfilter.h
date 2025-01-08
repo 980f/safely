@@ -22,6 +22,7 @@ class QuadraticFilter : public PolyFilter {
   int delta[3];
   //criteria memory
   int est[3];
+
 public:
   explicit QuadraticFilter(unsigned hw);
   /** actual quadratic term at present point */
@@ -40,7 +41,7 @@ public:
    *  amplitude() * 5 * (D4*S4/S2) */
   int ampEstimate() const;
 
-  void init(const CenteredSlice &slice) override;
+  void init(const CenteredSlice &slice,bool fastly=true) override;
   void step(CenteredSlice &slice) override;
 
 protected:

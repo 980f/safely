@@ -20,7 +20,8 @@ double LinearFilter::amplitude() const {
   return ratio(double(Y[0]),S0);
 }
 
-void LinearFilter::init(const CenteredSlice &slice){
+void LinearFilter::init(const CenteredSlice &slice,bool fastly){
+  this->fastly = fastly;
   Y[1] = 0.0; //accumulators
   Y[0] = slice[0];
   for(int fi = 1; fi<=hw; ++fi) {
@@ -45,7 +46,7 @@ void LinearFilter::step(CenteredSlice &slice){
 void LinearFilter::scan(const CenteredSlice &slice, ScanReport &report){
   CenteredSlice slider = slice.Endpoint(0,hw);
 
-  init(slider);
+  init(slider);//2nd arg is for unit tests.
 
   for(int location = -slice.hwidth; location++<slice.hwidth; ) {//#can post inc as the init call handles the first point.
     int prevy = Y[1];

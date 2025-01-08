@@ -20,7 +20,7 @@ namespace PushedJSON {
     /**number of terminal values */
     unsigned totalScalar = 0;
     /** greatest depth of nesting */
-    SimpleExtremer<unsigned> maxDepth;
+    SimpleExtremer<unsigned,true,false> maxDepth;
     /** number of unmatched braces at end of parsing. If massive then more closes than opens. */
     unsigned nested = 0;
 

@@ -19,7 +19,7 @@ unsigned UrlText::encodedLength(const char *it){
 unsigned UrlText::decodedLength(const char *it){
   CountDown hidgetting;
   unsigned totes(0);
-  while(Char ch = (*it++)) {
+  while(Char ch = *it++) {
     if(hidgetting){
       continue;
     }
@@ -52,9 +52,7 @@ const char &Expander::next(){
   }
 } // UrlText::next
 
-Expander::Expander(const char *ptr, unsigned length) : Indexer<const char>(ptr,length){
-  //#nada
-}
+Expander::Expander(const char *ptr, unsigned length) : Indexer(ptr,length){}
 
 Expander::~Expander(){
 }
@@ -65,7 +63,7 @@ bool Decoder::push(char incoming){
   if(hidgetting){
     //todo: what if char is not a hex digit?
     ch.hexDigit(packer);
-    if(hidgetting.done()){
+    if(hidgetting.isDone()){
       next()=packer;
     }
   } else if(hasNext()){
@@ -79,10 +77,6 @@ bool Decoder::push(char incoming){
   return hasNext();
 }
 
-Decoder::Decoder(char *ptr, unsigned length):Indexer< char> (ptr,length){
-  //#nada
-}
+Decoder::Decoder(char *ptr, unsigned length): Indexer<char>(ptr, length), packer{0} {}
 
-Decoder::~Decoder(){
-  //#nada
-}
+Decoder::~Decoder(){}

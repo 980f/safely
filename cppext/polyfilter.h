@@ -8,6 +8,8 @@ protected:
   /** @param hw is half width of data span, full width is 2*hw+1. Odd width is forced due to significant performance gains */
   PolyFilter(unsigned hw);
   virtual ~PolyFilter()=default;
+  /** whether to use incremental computation, versus direct where the latter is sure to be perfect and the former not yet confirmed. */
+  bool fastly=false;
 public:
   const unsigned hw;
   struct Datum {
@@ -38,7 +40,7 @@ public:
   virtual double slope() const = 0;
   virtual int signA1() const = 0;
   virtual double amplitude() const = 0;
-  virtual void init(const CenteredSlice &slice) = 0;
+  virtual void init(const CenteredSlice &slice,bool fastly=true) = 0;
   virtual void step(CenteredSlice &slice) = 0;
 
   struct ScanReport {

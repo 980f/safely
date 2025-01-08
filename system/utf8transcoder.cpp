@@ -26,7 +26,7 @@ char Unicoder::slashee(char afterslash) {
 
 
 Unichar Unicoder::fetch() {
-  ClearOnExit<Unichar> coe(uch);
+  ClearOnExit coe(uch);
   cleanup();
   return uch;
 }
@@ -42,7 +42,7 @@ Utf8Escaper::Event Utf8Escaper::operator ()(UTF8 ch) {
 
   if (followers--) {
     ch.moreBits(uch);
-    if (followers.done()) {
+    if (followers.isDone()) {
       //figure \u and 4 or \U and 8
       bigu = uch >= (1 << 16);
       return Done;
@@ -81,11 +81,11 @@ bool Utf8Decoder::cleanup() {
     return false;
   } else if (xing) { //\x at end of string, perfectly legal and somewhat common \x00
     //uch copacetic
-    xing = 0;
+    xing = false;
     return false;
   } else if (slashing) {
     uch = '\\'; //trailing slash is a slash
-    slashing = 0;
+    slashing = false;
     return false;
   }
   return true;
@@ -101,7 +101,7 @@ Utf8Decoder::Event Utf8Decoder::operator ()(UTF8 ch) {
 
   if (uchers--) {
     ch.hexDigit(uch);
-    if (uchers.done()) {
+    if (uchers.isDone()) {
       return Done;
     }
     return More; //feed me Seymour ;)
@@ -110,7 +110,7 @@ Utf8Decoder::Event Utf8Decoder::operator ()(UTF8 ch) {
   if (octers--) {
     uch <<= 3;
     uch |= ch.raw & 7;
-    if (octers.done()) {
+    if (octers.isDone()) {
       return Done;
     }
     return More;
