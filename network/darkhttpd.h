@@ -67,11 +67,11 @@
  *
  * This frees what it has been given at constructor or by assignment when there is an assignment or a destruction. As such never assign to it from anything not malloc'd.
  */
-struct AutoFree {
+struct AutoString {
   //these are exposed because we are mutating C code into C++ and hiding them is tedious. We should hide at least the pointer member, but there are a few contexts (*printf) where the implicit conversion doesn't get invoked.
-  char *pointer=nullptr;
+  char *pointer = nullptr;
 
-  char & operator[](off_t offset) const {
+  char &operator[](off_t offset) const {
     static char fakechar;
     if (!pointer) {
       return fakechar;
@@ -116,43 +116,94 @@ struct AutoFree {
    */
   bool cat(const char *str, size_t len = ~0);
 
-  AutoFree(char *pointer = nullptr, unsigned length = ~0) : pointer(pointer), length(length) {
+  AutoString(char *pointer = nullptr, unsigned length = ~0) : pointer(pointer), length(length) {
     if (pointer && length == ~0) {
       this->length = strlen(pointer);
     }
   }
 
-  ~AutoFree() {
+  ~AutoString() {
     free(pointer);
     // null fields in case someone tries to use this after it is deleted
     pointer = nullptr;
     length = 0;
   }
 
-  AutoFree &operator=(AutoFree &other) {
+  AutoString &operator=(AutoString &other) {
     free(pointer);
     pointer = other.pointer;
     length = other.length;
     return *this;
   }
 
-  AutoFree &operator=(char *replacement) {
+  AutoString &operator=(char *replacement) {
     free(pointer);
     pointer = replacement;
     length = replacement ? strlen(pointer) : 0;
     return *this;
   }
 
-  AutoFree &toUpper() {
+  AutoString &toUpper() {
     for (auto scanner = pointer; *scanner;) {
       *scanner++ = toupper(*scanner);
     }
     return *this;
   }
 
-  AutoFree(AutoFree &&other) = delete;
+  AutoString(AutoString &&other) = delete;
 };
 
+/** add conveniences to an in6_addr **/
+struct Inaddr6 : in6_addr {
+  Inaddr6 &clear() {
+    for (auto index = 4; index-- > 0;) { //gcc converts this to a memset.
+      __in6_u.__u6_addr32[index] = 0;
+    }
+    return *this;
+  }
+
+  Inaddr6() : in6_addr() {
+    clear();
+  }
+
+  bool isUnspecified() const {
+    return __in6_u.__u6_addr32[0] == 0 && __in6_u.__u6_addr32[1] == 0 && __in6_u.__u6_addr32[2] == 0 && __in6_u.__u6_addr32[3] == 0;
+  }
+
+  bool isLoopback() const {
+    return __in6_u.__u6_addr32[0] == 0 && __in6_u.__u6_addr32[1] == 0 && __in6_u.__u6_addr32[2] == 0 && __in6_u.__u6_addr32[3] == htonl(1);
+  }
+
+  bool isLinkLocal() const {
+    return __in6_u.__u6_addr32[0] & htonl(0xffc00000) == htonl(0xfe800000);
+  }
+
+  bool isSiteLocal() const {
+    return __in6_u.__u6_addr32[0] & htonl(0xffc00000) == htonl(0xfec00000);
+  }
+
+  /** @returns whether this ipv6 address is a mapped ipv4*/
+  bool wasIpv4() const {
+    return __in6_u.__u6_addr32[0] == 0 && __in6_u.__u6_addr32[1] == 0 && __in6_u.__u6_addr32[2] == htonl(0xffff);
+  }
+
+  bool isV4compatible() const {
+    return __in6_u.__u6_addr32[0] == 0 && __in6_u.__u6_addr32[1] == 0 && __in6_u.__u6_addr32[2] == 0 && ntohl(__in6_u.__u6_addr32[3]) > 1;
+  }
+
+  bool operator ==(const Inaddr6 &other) const {
+    for (auto index = 4; index-- > 0;) {
+      if (__in6_u.__u6_addr32[index] != other.__in6_u.__u6_addr32[index]) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  bool isMulticast() const {
+    return __in6_u.__u6_addr8[0] == 0xff;
+  }
+};
 
 class DarkException;
 
@@ -244,7 +295,7 @@ public:
       return fd > 2;
     }
 
-    /** close this oneif open, then make it attach to same file as fdother
+    /** close this one if open, then make it attach to same file as fdother
      * @returns whether the OS was happy with doing this.
      */
     bool duplicate(int fdother) const {
@@ -281,21 +332,22 @@ public:
     } state = DONE; // DONE makes it harmless so it gets garbage-collected if it should, for some reason, fail to be correctly filled out.
 
     /* char request[request_length+1] is null-terminated */
-    AutoFree request;
+    AutoString request;
 
     /* request fields */
-    AutoFree method; // as in GET, POST, ...
-    AutoFree url;
-    AutoFree referer;
-    AutoFree user_agent;
-    AutoFree authorization;
+    AutoString method; // as in GET, POST, ...  //sub_string(request)
+    AutoString url; //sub_string(request)
+    AutoString referer; //parse_field
+    AutoString user_agent; //parse_field
+    AutoString authorization; //parse_field
 
+    //should structure this group, values come from parse_field
     off_t range_begin = 0;
     off_t range_end = 0;
     bool range_begin_given = false;
     bool range_end_given = false;
 
-    AutoFree header;
+    AutoString header; //outgoing message, could replace with generator rather than cat strings together then sending block, in fact could fprintf to a temp file then netcat that file.
 
     size_t header_sent = 0;
     bool header_dont_free = false;
@@ -309,7 +361,7 @@ public:
       REPLY_NONE
     } reply_type = REPLY_NONE;
 
-    AutoFree reply = nullptr;
+    AutoString reply = nullptr;
     bool reply_dont_free = false;
     Fd reply_fd;
     off_t reply_start = 0;
@@ -437,7 +489,7 @@ private:
    * removed from the connlist.
    */
   unsigned timeout_secs = 30;
-  AutoFree keep_alive_field;
+  AutoString keep_alive_field; //xasprintf but only ever filled from that one instance.
 
   /* Time is cached in the event loop to avoid making an excessive number of
    * gettimeofday() calls.
@@ -461,8 +513,8 @@ private:
 #endif
   const char *default_mimetype = nullptr; //always a pointer into a map which manages free'ing
   //file gets read into here.
-  char *mimeFileContent=nullptr;
-  AutoFree wwwroot; /* a path name */
+  char *mimeFileContent = nullptr;
+  AutoString wwwroot; /* a path name */ //argv[1] which might go away if process goes demon via forking a child. gets written just once.
 
   char *logfile_name = nullptr; /* NULL = no logging */
   FILE *logfile = nullptr;
@@ -480,9 +532,9 @@ private:
   bool want_server_id = true;
   bool want_single_file = false;
 
-  AutoFree server_hdr;
-  AutoFree auth_key; /* NULL or "Basic base64_of_password" */
-  AutoFree custom_hdrs;
+  AutoString server_hdr; //pkgname in building of replys
+  AutoString auth_key; /* NULL or "Basic base64_of_password" */  //base64 expansion of a cli arg.
+  AutoString custom_hdrs; //parse_commandline concatenation of argv's with formatting. Should just record their indexes and generate on sending rather than cacheing here.
 
   uint64_t num_requests = 0;
   uint64_t total_in = 0;

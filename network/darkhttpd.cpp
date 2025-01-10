@@ -101,7 +101,7 @@ public:
   DebugLog(bool startup) : spew(startup) {}
 };
 
-#define countOf(a) (sizeof(a) / sizeof(a[0]))
+#define countOf(a) (sizeof(a) / sizeof(*a))
 
 // It is best to always have the debug statements present even when it is disabled, to reduce the difference between debug build execution and 'release' builds.
 #ifndef DEBUG
@@ -186,6 +186,8 @@ static const unsigned DIR_LIST_MTIME_SIZE = 16 + 1; /* How large the buffer will
 
 static_assert(sizeof(unsigned long long) >= sizeof(off_t), "inadequate ull, not large enough for an off_t");
 
+
+//for printf, make it easy to know which token to use by forcing the data to the largest integer supported by it.
 template<typename Integrish> auto llu(Integrish x) {
   return static_cast<unsigned long long>(x);
 }
@@ -221,17 +223,20 @@ static void warn(const char *format, ...) {
 
 /** @returns nullptr if the line is blank or EOL or EOL comment char, else points to first char not a space nor a tab */
 static const char *removeLeadingWhitespace(const char *text) {
-  while (auto c = *text++) {
+  auto first=strspn(text, " \t\n\r");
+
+  while (auto c = text[first]) {
     switch (c) {
       case ' ':
       case '\t':
         continue;
-      case '#':
-      case '\r':
-      case '\n':
+      case 0: //text is all blanks or tabs, index is of the null terminator
+      case '#'://EOL comment marker
+      case '\r'://in case we pull these out of
+      case '\n':// ... the whitespace string
         return nullptr;
       default:
-        return text;
+        return &text[first];
     }
   }
   return nullptr;
@@ -371,10 +376,10 @@ struct Vsprinter {
 };
 
 /* vasprintf() that dies if it fails. */
-static unsigned int xvasprintf(AutoFree &ret, const char *format, va_list ap)
+static unsigned int xvasprintf(AutoString &ret, const char *format, va_list ap)
 checkFargs(2, 0);
 
-static unsigned int xvasprintf(AutoFree &ret, const char *format, va_list ap) {
+static unsigned int xvasprintf(AutoString &ret, const char *format, va_list ap) {
   ret = nullptr; // forget the old
   unsigned len = vasprintf(&ret.pointer, format, ap);
   ret.length = len;
@@ -385,9 +390,9 @@ static unsigned int xvasprintf(AutoFree &ret, const char *format, va_list ap) {
 }
 
 /* asprintf() that dies if it fails. */
-static unsigned int xasprintf(AutoFree &ret, const char *format, ...) checkFargs(2, 3);
+static unsigned int xasprintf(AutoString &ret, const char *format, ...) checkFargs(2, 3);
 
-static unsigned int xasprintf(AutoFree &ret, const char *format, ...) {
+static unsigned int xasprintf(AutoString &ret, const char *format, ...) {
   va_list va;
   unsigned int len;
 
@@ -540,14 +545,14 @@ static char *make_safe_url(char *const url) {
 #undef ends
 }
 
-bool AutoFree::endsWith(const char *str, unsigned len) const {
+bool AutoString::endsWith(const char *str, unsigned len) const {
   if (len == ~0) {
     len = strlen(str);
   }
   return length > len && memcmp(&pointer[length - len], str, len) == 0;
 }
 
-bool AutoFree::cat(const char *str, size_t len) {
+bool AutoString::cat(const char *str, size_t len) {
   if (len == ~0) {
     len = strlen(str);
   }
@@ -608,7 +613,7 @@ int DarkHttpd::parse_mimetype_line(const char *line) {
 }
 
 
-/* Default mimetype mappings - make sure this array is NULL terminated.
+/* Default mimetype mappings
  * //todo: either pairs or pack as json ... and use xdg-mime on systems which have it */
 static const char *default_extension_map[] = {
   "application/json: json",
@@ -1124,7 +1129,7 @@ bool DarkHttpd::parse_commandline(int argc, char *argv[]) {
         errx(1, "missing 'user:pass' after --auth");
       }
 
-      AutoFree key = reinterpret_cast<char *>(base64_encode(argv[i]));
+      AutoString key = reinterpret_cast<char *>(base64_encode(argv[i]));
       xasprintf(auth_key, "Basic %s", key.pointer);
     } else if (strcmp(argv[i], "--forward-https") == 0) {
       forward_to_https = true;
@@ -1252,10 +1257,10 @@ static char *clf_date(char *dest, const time_t when) {
 
 /* Add a connection's details to the logfile. */
 void DarkHttpd::log_connection(const connection *conn) {
-  AutoFree safe_method;
-  AutoFree safe_url;
-  AutoFree safe_referer;
-  AutoFree safe_user_agent;
+  AutoString safe_method;
+  AutoString safe_url;
+  AutoString safe_referer;
+  AutoString safe_user_agent;
   char dest[CLF_DATE_LEN];
 
   if (logfile == nullptr) {
@@ -1326,6 +1331,7 @@ void DarkHttpd::connection::clear() {
   }
   if (!reply_dont_free) {
     reply = nullptr;
+    reply_length=0;// was missing from original, will remove via AutoString's .
   }
 }
 
@@ -1434,7 +1440,7 @@ void DarkHttpd::connection::default_reply(const int errcode, const char *errname
   va_list va;
 
   va_start(va, format);
-  AutoFree reason;
+  AutoString reason;
   xvasprintf(reason, format, va);
   va_end(va);
 
@@ -1474,7 +1480,7 @@ void DarkHttpd::connection::default_reply(const int errcode, const char *errname
 }
 
 void DarkHttpd::connection::redirect(const char *format, ...) {
-  AutoFree where;
+  AutoString where;
   char date[DATE_LEN];
   va_list va;
 
@@ -1535,7 +1541,7 @@ char *DarkHttpd::connection::parse_field(const char *field) {
 
 void DarkHttpd::connection::redirect_https() {
   /* work out path of file being requested */
-  AutoFree url(urldecode(url));
+  AutoString url(urldecode(url));
 
   /* make sure it's safe */
   if (make_safe_url(url) == nullptr) {
@@ -1543,7 +1549,7 @@ void DarkHttpd::connection::redirect_https() {
     return;
   }
 
-  AutoFree host(parse_field("Host: "));
+  AutoString host(parse_field("Host: "));
   if (host == nullptr) {
     default_reply(400, "Bad Request",
       "Missing 'Host' header.");
@@ -1557,7 +1563,7 @@ bool DarkHttpd::is_https_redirect(connection &conn) const {
     return false; /* --forward-https was never used */
   }
 
-  AutoFree proto(conn.parse_field("X-Forwarded-Proto: "));
+  AutoString proto(conn.parse_field("X-Forwarded-Proto: "));
   if (proto == nullptr || strcasecmp(proto, "https") == 0) {
     return false;
   }
@@ -1573,13 +1579,13 @@ bool DarkHttpd::is_https_redirect(connection &conn) const {
  * todo: strtok walk with "=-,\r\n"
  */
 void DarkHttpd::connection::parse_range_field() {
-  AutoFree range(parse_field("Range: bytes="));
+  AutoString range(parse_field("Range: bytes="));
   if (!range) {
     return;
   }
   range_end_given = range_begin_given = false; //ensure erased any prior attempt
   char *end = nullptr;
-  range_begin = strtoll(range.pointer, &end, 10);
+  range_begin = strtoll(range, &end, 10);
   range_begin_given = end > range; //and we already parsed it
   /* parse number up to hyphen */
   if (range_begin < 0) { // Range -456, no white space after
@@ -1625,14 +1631,14 @@ bool DarkHttpd::connection::parse_request() {
     nextspace = removeLeadingWhitespace(end);
     end = strpbrk(nextspace, " \r\n"); //old code insisted on \r, without safety of \n
 
-    AutoFree proto(sub_string(nextspace, end));
+    AutoString proto(sub_string(nextspace, end));
     if (strcasecmp(proto, "HTTP/1.1") == 0) {
       conn_closed = false;
     }
   }
 
   /* parse connection field */
-  AutoFree tmp(parse_field("Connection: "));
+  AutoString tmp(parse_field("Connection: "));
   if (tmp) {
     if (strcasecmp(tmp, "close") == 0) {
       conn_closed = true;
@@ -1684,7 +1690,7 @@ static ssize_t make_sorted_dirlist(const char *path, dlent ***output) {
     return -1;
   }
 
-  AutoFree currname(static_cast<char *>(xmalloc(strlen(path) + MAXNAMLEN + 1)));
+  AutoString currname(static_cast<char *>(xmalloc(strlen(path) + MAXNAMLEN + 1)));
   dlent **list = static_cast<struct dlent **>(xmalloc(sizeof(struct dlent *) * pool));
 
   /* construct list */
@@ -1829,7 +1835,7 @@ void DarkHttpd::generate_dir_listing(connection &conn, const char *path, const c
   append_escaped(listing, decoded_url);
   append(listing, "</h1>\n<pre>\n");
 
-  AutoFree spaces = static_cast<char *>(xmalloc(maxlen));
+  AutoString spaces = static_cast<char *>(xmalloc(maxlen));
   memset(spaces.pointer, ' ', maxlen);
 
   /* append ".." entry if not in wwwroot */
@@ -1916,7 +1922,7 @@ void DarkHttpd::connection::process_get() {
   }
 
   /* work out path of file being requested */
-  AutoFree decoded_url(urldecode(url));
+  AutoString decoded_url(urldecode(url));
 
   /* make sure it's safe */
   if (make_safe_url(decoded_url) == nullptr) {
@@ -1926,7 +1932,7 @@ void DarkHttpd::connection::process_get() {
 
   /* test the host against web forward options */
   if (service.forward_map.size() > 0) {
-    AutoFree host(parse_field("Host: "));
+    AutoString host(parse_field("Host: "));
     if (host) {
       debug("host=\"%s\"\n", host.pointer);
       for (auto record: service.forward_map) {
@@ -1947,7 +1953,7 @@ void DarkHttpd::connection::process_get() {
 
   const char *mimetype = nullptr;
 
-  AutoFree target(nullptr);
+  AutoString target(nullptr);
   if (service.want_single_file) {
     target = xstrdup(service.wwwroot);
     mimetype = service.url_content_type(service.wwwroot);
@@ -2012,7 +2018,7 @@ void DarkHttpd::connection::process_get() {
   rfc1123_date(lastmod, filestat.st_mtime);
 
   /* check for If-Modified-Since, may not have to send */
-  AutoFree if_mod_since(parse_field("If-Modified-Since: "));
+  AutoString if_mod_since(parse_field("If-Modified-Since: "));
   if ((if_mod_since) && (strcmp(if_mod_since, lastmod) == 0)) {
     debug("not modified since %s\n", if_mod_since.pointer);
     http_code = 304;
@@ -2032,8 +2038,8 @@ void DarkHttpd::connection::process_get() {
   }
 
   if (range_begin_given) { //was pointless to check range_end_given after checking begin, we never set the latter unless we have set the former
-    off_t from;
-    off_t to;
+    off_t from=~0;//init to ridiculous value ...
+    off_t to=~0;  //... so that things will blow up if we don't actually set the fields
 
     if (range_end_given) {
       /* 100-200 */
@@ -2351,7 +2357,7 @@ void DarkHttpd::connection::poll_send_reply() {
     assert(reply_length >= reply_sent);
     sent = send_from_file(socket, reply_fd, reply_start + reply_sent, send_len);
     if (sent < 1) {
-      debug("send_from_file returned %lld (errno=%d %s)\n", (long long) sent, errno, strerror(errno));
+      debug("send_from_file returned %lld (errno=%d %s)\n", llu(sent), errno, strerror(errno));
     }
   }
   last_active = service.now;
@@ -2675,7 +2681,7 @@ void DarkHttpd::change_root() {
 
   tzset(); /* read /etc/localtime before we chroot */
   if (want_single_file) {
-    AutoFree path(xstrdup(wwwroot));
+    AutoString path(xstrdup(wwwroot));
     auto lastSlash = strrchr(path.pointer, '/');
     /* wwwroot file is not presumed to be in the current directory */
     if (lastSlash) {
