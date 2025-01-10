@@ -121,7 +121,7 @@ template< typename ... Args> class RunOnceSlot : SIGCTRACKABLE {
 public:
   /** make a new self deleting slot runner */
   static Action makeInstance(Action slot){
-    RunOnceSlot *dou(new RunOnceSlot(slot));
+    auto dou(new RunOnceSlot(slot));
     return sigc::mem_fun(dou, &RunOnceSlot::run);
   }
 

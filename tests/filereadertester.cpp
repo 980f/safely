@@ -13,7 +13,7 @@ bool FileReaderTester::action(){
   return true;
 }
 
-void FileReaderTester::onCompletion(){
+void FileReaderTester::onDone(){
   info("completed");
 }
 

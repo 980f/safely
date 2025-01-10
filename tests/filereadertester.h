@@ -4,8 +4,8 @@
 #include "filereader.h"
 
 class FileReaderTester: public FileReader{
-  bool action() override;
-  void onCompletion() override;
+  // bool action() override;
+  // void onCompletion() override;
 public:
   FileReaderTester();
   void run(unsigned which);

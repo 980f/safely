@@ -26,7 +26,7 @@ public:
   /** makes a slot that after @param after/@param stepsize touches fires then deletes itself */
   static Action makeInstance(const Action &action, int after){
     auto thing = new RunOnceNthTime(action, after); //DEL@ hit()
-    return sigc::mem_fun(thing, &RunOnceNthTime::run);
+    return sigc::mem_fun(*thing, &RunOnceNthTime::run);
   }
 
 }; // class RunOnceNthTime

@@ -3,7 +3,7 @@
 #include "textpointer.h"
 #include "stopwatch.h"
 
-#include <jsonfile.h>
+#include "jsonfile.h"
 
 static const char*jsontests[] = {
   "{array:[one,{two:blue}]}",

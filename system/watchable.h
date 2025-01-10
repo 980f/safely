@@ -13,7 +13,7 @@ protected:
   Scalar varb;
 
 private:
-  sigc::signal<void,Scalar> watchers;
+  sigc::signal<void(Scalar)> watchers;
 
 protected:
   void post(){
