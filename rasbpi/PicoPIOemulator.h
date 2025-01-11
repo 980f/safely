@@ -9,6 +9,7 @@
 
 class PicoPIOemulator {
 public:
+  bool V1=false;//allow dynamic switching of architecture.
   uint16_t mem[32];
 
   //tokens for memory mapped access by host
@@ -25,7 +26,6 @@ public:
   public:
      SM(PicoPIOemulator *group,unsigned yourIndex) : group{*group}, ownIndex {yourIndex} {}
 
-  private:
     struct Fifo {
       unsigned mem[8]; //alloate max
       unsigned memSize = 4; //defaults to 4
@@ -63,44 +63,62 @@ public:
       }
     } inject;
 
+struct BitSpan {
+  unsigned lsb;
+  unsigned count;
+};
+
     struct GPIO {
       unsigned pin = 0;
       unsigned dir = 0;
 
-      unsigned input(unsigned lsb, unsigned numBits) const;
+      unsigned input(BitSpan span);
 
-      void output(unsigned lsb, unsigned numBits, unsigned value);
+      void output(BitSpan pins, unsigned value);
+      void outdir(BitSpan pins, unsigned value);
     } gpio;
 
     /** for our first cut at it we are not worrying about the packing into control register words */
     struct Config {
-      unsigned fifoThreshold = 0;
-      bool fifoTestRx = 0; //else tx
+      bool stalled = 0;//unclear whether this is control or status.
+
+      unsigned jmpPin = 0;
+
+      struct FstatTest {
+        unsigned threshold = 0;
+        bool testRx = 0; //else tx
+        unsigned operator()(unsigned rx, unsigned tx){
+          return (testRx ? rx : tx) < threshold ? 0 : ~0;//RTFM
+        }
+      } ftest;
+
       unsigned starOfLoop = 0;
       unsigned endOfLoop = 31;
+
       bool outIsLatched = 0;
       bool inIsLatched = 0;
       unsigned OEpin = 0;
-      unsigned jmpPin = 0;
-      bool sideSetOEsnotPins = 0;
-      bool useSideSetEnable = 0;
-      bool stalled = 0;
-      bool autoPush = 0;
-      bool autoPull = 0;
-      bool inputShiftsRight = 0;
-      bool outpuShiftsRight = 0;
-      unsigned pushCount = 0;
-      unsigned pullCount = 0;
+
+      struct SideSet {
+        bool OEsnotPins = 0;
+        bool useEnable = 0;
+        BitSpan pins;
+      } sideset;
+
+      struct ShiftControl {
+        unsigned threshold = 0;
+        bool autoRefresh;//auto pull on OSR going empty
+        bool shiftRight;//
+        BitSpan pins;
+      };
+      ShiftControl IN;
+      ShiftControl OUT;
+
       bool allFifosTX = 0;
       bool allFifosRX = 0;
 
-      unsigned outputLsPin = 0;
-      unsigned setLsPin = 0;
-      unsigned sidesetLsPin = 0;
-      unsigned inputLsPin = 0;
+      BitSpan set;
 
-      unsigned numberSetPins = 0;
-      unsigned numberSideSetPins = 0; //max 5, if sidSetORsnotPins then maxis4
       unsigned nyi = ~0; //for things we don't yet know.
     } cfg;
 
@@ -150,7 +168,7 @@ public:
       Ynzd,
       XneY,
       Pin,
-      OSRne
+      OSRne,
     };
 
 
@@ -177,9 +195,6 @@ public:
 
     void WAIT();
 
-    //from register to pins
-    void OUT();
-
     //from instruction to pins
     void SET() {}
 
@@ -187,14 +202,15 @@ public:
 
     bool simulating;
 
+    void OUT(unsigned int opoptions, unsigned int indexCount);
+
     void run();
   }; //end SM
 
-  SM sm[4]={SM(this,0),SM(this,1),SM(this,2),SM(this,3)};
-
-
   //back to PIO itself
 
+  SM sm[4]={SM(this,0),SM(this,1),SM(this,2),SM(this,3)};
+  static const unsigned SMsize=4;
 
   enum RegisterName {
     CTRL = 0,
@@ -213,8 +229,42 @@ public:
     IRQ1_EFS = IRQ0_EFS + 3,
   };
 
-  //read only for now
-  unsigned operator[](unsigned index) {
+  /** base for implementing pack/unpack from memory mapped values to easy to work with objects. */
+  struct PsuedoMemory {
+    PicoPIOemulator &group;
+    PsuedoMemory(PicoPIOemulator *super):group{*super}{}
+    uint32_t image=0;
+    virtual operator uint32_t() {
+      return image;
+    }
+    virtual void operator =(uint32_t pattern) {
+      image = pattern;
+    }
+  };
+
+  /** full and empty bits of all fifos. */
+  struct FifoStatus: PsuedoMemory {
+    FifoStatus(PicoPIOemulator *super) : PsuedoMemory(super) {}
+
+    operator uint32_t() override {
+      image=0;
+      for (unsigned i= SMsize; i-->0;) {
+        SM &sm=group.sm[i];
+        image|= sm.RX.isFull()<<(i+0);
+        image|= sm.RX.isEmpty()<<(i+8);
+        image|= sm.TX.isFull()<<(i+16);
+        image|= sm.TX.isEmpty()<<(i+24);
+      }
+      return image;
+    }
+
+    void operator=(uint32_t pattern) override {
+      //no specification on what a write does.
+    }
+  };
+  FifoStatus theFSTAT();
+
+  PsuedoMemory& operator[](unsigned index) {
     switch (index) {
       case CTRL:
         break;
