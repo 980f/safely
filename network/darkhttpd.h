@@ -208,12 +208,12 @@ struct Inaddr6 : in6_addr {
 class DarkException;
 
 class DarkHttpd {
+  /** until we use the full signal set ability to pass our object we only allow one DarkHttpd per process.*/
   static DarkHttpd *forSignals; // trusting BSS zero to clear this.
 
   DarkHttpd() {
     forSignals = this;
   }
-
 
   /** replaced inline reproduction of map logic with an std::map, after verifying who did the allocations.
    * this uses the default key compare function 'less<const char *>', which we might want to replace with strncmp(...longest_ext) */
@@ -365,7 +365,7 @@ public:
     bool reply_dont_free = false;
     Fd reply_fd;
     off_t reply_start = 0;
-    off_t reply_length = 0;
+    off_t file_length = 0;
     off_t reply_sent = 0;
     off_t total_sent = 0;
     /* header + body = total, for logging */
@@ -473,6 +473,8 @@ private:
       int punned[2] = {fds[0], fds[1]};
       return pipe(punned) != -1;
     }
+
+    void close();
   } lifeline;
 
 
