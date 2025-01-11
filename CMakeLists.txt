@@ -4,8 +4,12 @@ project(staticlib VERSION 1.0 LANGUAGES C CXX)
 add_executable(
   testcppext
   tests/main.cpp
+  rasbpi/PicoPIOemulator.cpp
+  rasbpi/PicoPIOemulator.h
 )
 set(safely_target testcppext)
+
+set_property(TARGET ${safely_target} PROPERTY CXX_STANDARD 20)
 
 #below here should be generic enough to be a separate cmake file that other projects include
 include(GNUInstallDirs)
