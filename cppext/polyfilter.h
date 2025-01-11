@@ -15,7 +15,7 @@ public:
   struct Datum {
     int amplitude = 0; //discriminant for "biggest" whatever determination.
     int location = 0; //not unsigned as this is an abstract user coordinate, not necessarily an array index.
-    Datum() = default;
+    // Datum() = default;
   };
   /** places where derivatives are zero or maximum is often the main goal in filtering. */
   struct Inflection {
@@ -29,8 +29,10 @@ public:
 
     /** use return to reduce cost of computing the tweak
     @returns whether the inflection was updated */
-    bool morePositive(const Datum &testpoint);
-    bool moreNegative(const Datum &testpoint);
+    bool morePositive(Datum &&testpoint);
+    // bool morePositive(const Datum &testpoint);
+    // bool moreNegative(const Datum &testpoint);
+    bool moreNegative(Datum &&testpoint);
   protected:
     /** @returns @param changeit,  code common to morePositive and moreNegative, use them. */
     bool recordif(bool changeit, const Datum &testpoint);

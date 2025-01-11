@@ -24,11 +24,10 @@ bool PolyFilter::Inflection::recordif(bool changeit,const Datum &testpoint){
 }
 
 /** use return to reduce cost of computing the tweak */
-bool PolyFilter::Inflection::morePositive(const Datum & testpoint){
+bool PolyFilter::Inflection::morePositive(Datum && testpoint){
   return recordif(point.amplitude<testpoint.amplitude,testpoint);
 }
 
-bool PolyFilter::Inflection::moreNegative(const Datum & testpoint){
+bool PolyFilter::Inflection::moreNegative(Datum && testpoint){
   return recordif(point.amplitude>testpoint.amplitude,testpoint);
 }
-
