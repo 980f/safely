@@ -30,7 +30,6 @@
 
 #include "darkhttpd.h"
 
-#include <cstdarg>
 
 static const char pkgname[] = "darkhttpd/1.16.from.git/980f";
 static const char copyright[] = "copyright (c) 2003-2024 Emil Mikulic"
@@ -53,6 +52,7 @@ static const char copyright[] = "copyright (c) 2003-2024 Emil Mikulic"
 #include <csignal>
 #include <cstdio>
 #include <cstdlib>
+#include <cstdarg>
 #include <cstring>
 #include <ctime>
 #include <dirent.h>
@@ -281,104 +281,24 @@ static char *xstrdup(const char *src) {
   return dest;
 }
 
-/* read a line from fp, return its contents in a dynamically allocated buffer,
- * not including the line ending.
- *
- * Handles CR, CRLF and LF line endings, as well as NOEOL correctly.  If
- * already at EOF, returns NULL.  Will err() or errx() in case of
- * unexpected file error or running out of memory.
- * //todo: replace this with whole file reader, we only use it for mime type files.
- */
-static char *read_line(FILE *fp) {
-  long startpos = ftell(fp);
-  if (startpos == -1) {
-    err(1, "ftell()");
-  }
-
-  /* find end of line (or file) */
-  size_t linelen = 0;
-  int c;
-
-  for (;;) {
-    c = fgetc(fp);
-    if ((c == EOF) || (c == (int) '\n') || (c == (int) '\r')) {
-      break;
-    }
-    linelen++;
-  }
-
-  /* return NULL on EOF (and empty line) */
-  if (linelen == 0 && c == EOF) {
-    return nullptr;
-  }
-
-  long endpos = ftell(fp);
-  if (endpos == -1) {
-    err(1, "ftell()");
-  }
-
-  /* skip CRLF */
-  if ((c == (int) '\r') && (fgetc(fp) == (int) '\n')) {
-    endpos++;
-  }
-
-  char *buf = static_cast<char *>(xmalloc(linelen + 1));
-
-  /* rewind file to where the line stared and load the line */
-  if (fseek(fp, startpos, SEEK_SET) == -1) {
-    err(1, "fseek()");
-  }
-  size_t numread = fread(buf, 1, linelen, fp);
-  if (numread != linelen) {
-    errx(1, "fread() %zu bytes, expecting %zu bytes", numread, linelen);
-  }
-
-  /* terminate buffer */
-  buf[linelen] = 0;
-
-  /* advance file pointer over the endline */
-  if (fseek(fp, endpos, SEEK_SET) == -1) {
-    err(1, "fseek()");
-  }
-
-  return buf;
-}
-
 /** delete vasprintf allocation when exit scope.
- * vasprintf() internally allocates from heap, returning via a pointer pointer with a length by normal return
- *
- */
-struct Vsprinter {
-  char *malloced = nullptr;
-  int length = 0;
-
-  /** @returns whether we have a nontrivial block*/
-  explicit operator bool() const {
-    return malloced != nullptr && length >= 0;
-  }
-
+ * vasprintf() internally allocates from heap, returning via a pointer to pointer with a length by normal return
+  */
+struct Vsprinter : AutoString {
   Vsprinter(const char *format, va_list ap) {
-    length = vasprintf(&malloced, format, ap);
+    length = vasprintf(&pointer, format, ap);
   }
 
   Vsprinter(const char *format, ...) checkFargs(2, 3) {
     va_list va;
     va_start(va, format);
-    length = vasprintf(&malloced, format, va);
+    length = vasprintf(&pointer, format, va);
     va_end(va);
-  }
-
-  ~Vsprinter() {
-    free(malloced);
-    malloced = nullptr;
-    length = 0;
   }
 };
 
 /* vasprintf() that dies if it fails. */
-static unsigned int xvasprintf(AutoString &ret, const char *format, va_list ap)
-checkFargs(2, 0);
-
+static unsigned int xvasprintf(AutoString &ret, const char *format, va_list ap) checkFargs(2, 0);
 static unsigned int xvasprintf(AutoString &ret, const char *format, va_list ap) {
   ret = nullptr; // forget the old
   unsigned len = vasprintf(&ret.pointer, format, ap);
@@ -438,7 +358,7 @@ struct apbuf { // this looks like an std::vector<char>
   }
 
   void appendl(const Vsprinter &vs) {
-    appendl(vs.malloced, vs.length);
+    appendl(vs.pointer, vs.length);
   }
 
   void appendf(const char *format, ...) checkFargs(2, 3) {
@@ -570,93 +490,182 @@ bool AutoString::cat(const char *str, size_t len) {
   return true;
 }
 
-
-bool DarkHttpd::mime_mapping::add(const char *extension, const char *mimetype) {
-  if (!mimetype || strlen(mimetype) == 0 || !extension) {
-    return false;
-  }
-  auto chunk = insert_or_assign(extension, mimetype);
-  return chunk.second; // new entry, else updated old
+AutoString & AutoString::operator=(AutoString &other) {
+  free(pointer);
+  pointer = other.pointer;
+  length = other.length;
+  return *this;
 }
 
-/* Parses a mime.types line and adds the parsed data to the mime_map.
- * todo: strsep and on \r\n loop */
-int DarkHttpd::parse_mimetype_line(const char *line) {
-  if (!line) {
-    return -1;
-  }
-  const char *start = removeLeadingWhitespace(line);
-  if (!start) {
-    return -1;
-  }
-  const char *finish = strchr(start, ':');
-  if (!finish) {
-    return -1;
-  }
-  char *mimetype = sub_string(start, finish);
-  int fyi = 0;
-  while (true) {
-    start = removeLeadingWhitespace(++finish);
-    if (!start) {
-      break; // trailing whitespace
-    }
-    ++fyi;
-    finish = strchr(start, ' '); //space separate list.
-    if (!finish) {
-      mime_map.add(strdup(start), mimetype);
-      break; // normal exit
-    }
-    mime_map.add(sub_string(start, finish), mimetype); // NB: the sub_string new's the content, we must have mime_map delete it.
-    // continue;
-  }
-  return fyi;
+AutoString & AutoString::operator=(char *replacement) {
+  Free();
+  pointer = replacement;
+  length = replacement ? strlen(pointer) : 0;
+  return *this;
 }
+
+AutoString & AutoString::toUpper() {
+  for (auto scanner = pointer; *scanner;) {
+    *scanner++ = toupper(*scanner);
+  }
+  return *this;
+}
+
+bool AutoString::malloc(size_t amount) {
+  if (amount == 0) {
+    return false; //don't want to find out what malloc does with a request for zero bytes.
+  }
+  Free();
+  pointer = static_cast<char *>(::malloc(amount + 1));
+  if (pointer) {
+    length = amount;
+    pointer[length] = '\0';
+  }
+  return pointer != nullptr;
+}
+
+char * StringView::put(char *bigenough, bool honorNull) const {
+  if (bigenough) {
+    if (pointer) {
+      if (length) {
+        for (size_t count = 0; count < length; ++count) {
+          *bigenough++ = pointer[count];
+          if (honorNull && !pointer[count]) {
+            break;
+          }
+        }
+
+      }
+    }
+    //this needs to be conditional for when we insert this guy into a right-sized hole inside *bigenough=0;
+  }
+  return bigenough;
+}
+
+char * StringView::cat(char *bigenough, bool honorNull) const {
+  auto end=put(bigenough,honorNull);
+  if (end) {
+    *end=0;
+  }
+  return end;
+}
+
+size_t StringView::put(FILE *out) const {
+  return fwrite(pointer, length, 1, out);
+}
+
+void StringView::trimTrailing(const char *trailers) {
+  if (pointer == nullptr) {
+    return;
+  }
+  while (length && strchr(trailers, pointer[start + length - 1])) {
+    --length;
+  }
+}
+
+StringView::StringView(const char *pointer, size_t length, size_t start): pointer{pointer},
+  length{length},
+  start{start} {
+  if (pointer && length == ~0) {
+    this->length = strlen(&pointer[start]);
+  }
+}
+
+StringView &StringView::operator=(const char *str) {
+  pointer = str;
+  length = strlen(str);
+  start = 0;
+  return *this;
+}
+
+
+// bool DarkHttpd::mime_mapping::add(const char *extension, const char *mimetype) {
+//   if (!mimetype || strlen(mimetype) == 0 || !extension) {
+//     return false;
+//   }
+//   auto chunk = insert_or_assign(extension, mimetype);
+//   return chunk.second; // new entry, else updated old
+// }
+//
+// /* Parses a mime.types line and adds the parsed data to the mime_map.
+//  * todo: strsep and on \r\n loop */
+// int DarkHttpd::parse_mimetype_line(const char *line) {
+//   if (!line) {
+//     return -1;
+//   }
+//   const char *start = removeLeadingWhitespace(line);
+//   if (!start) {
+//     return -1;
+//   }
+//   const char *finish = strchr(start, ':');
+//   if (!finish) {
+//     return -1;
+//   }
+//   char *mimetype = sub_string(start, finish);
+//   int fyi = 0;
+//   while (true) {
+//     start = removeLeadingWhitespace(++finish);
+//     if (!start) {
+//       break; // trailing whitespace
+//     }
+//     ++fyi;
+//     finish = strchr(start, ' '); //space separate list.
+//     if (!finish) {
+//       mime_map.add(strdup(start), mimetype);
+//       break; // normal exit
+//     }
+//     mime_map.add(sub_string(start, finish), mimetype); // NB: the sub_string new's the content, we must have mime_map delete it.
+//     // continue;
+//   }
+//   return fyi;
+// }
 
 
 /* Default mimetype mappings
  * //todo: either pairs or pack as json ... and use xdg-mime on systems which have it */
-static const char *default_extension_map[] = {
-  "application/json: json",
-  "application/pdf: pdf",
-  "application/wasm: wasm",
-  "application/xml: xsl xml",
-  "application/xml-dtd: dtd",
-  "application/xslt+xml: xslt",
-  "application/zip: zip",
-  "audio/flac: flac",
-  "audio/mpeg: mp2 mp3 mpga",
-  "audio/ogg: ogg opus oga spx",
-  "audio/wav: wav",
-  "audio/x-m4a: m4a",
-  "font/woff: woff",
-  "font/woff2: woff2",
-  "image/apng: apng",
-  "image/avif: avif",
-  "image/gif: gif",
-  "image/jpeg: jpeg jpe jpg",
-  "image/png: png",
-  "image/svg+xml: svg",
-  "image/webp: webp",
-  "text/css: css",
-  "text/html: html htm",
-  "text/javascript: js",
-  "text/plain: txt asc",
-  "video/mpeg: mpeg mpe mpg",
-  "video/quicktime: qt mov",
-  "video/webm: webm",
-  "video/x-msvideo: avi",
-  "video/mp4: mp4 m4v",
+static const char *default_extension_map = { //todo: move to class
+  "application/json: json\n"
+  "application/pdf: pdf\n"
+  "application/wasm: wasm\n"
+  "application/xml: xsl xml\n"
+  "application/xml-dtd: dtd\n"
+  "application/xslt+xml: xslt\n"
+  "application/zip: zip\n"
+  "audio/flac: flac\n"
+  "audio/mpeg: mp2 mp3 mpga\n"
+  "audio/ogg: ogg opus oga spx\n"
+  "audio/wav: wav\n"
+  "audio/x-m4a: m4a\n"
+  "font/woff: woff\n"
+  "font/woff2: woff2\n"
+  "image/apng: apng\n"
+  "image/avif: avif\n"
+  "image/gif: gif\n"
+  "image/jpeg: jpeg jpe jpg\n"
+  "image/png: png\n"
+  "image/svg+xml: svg\n"
+  "image/webp: webp\n"
+  "text/css: css\n"
+  "text/html: html htm\n"
+  "text/javascript: js\n"
+  "text/plain: txt asc\n"
+  "video/mpeg: mpeg mpe mpg\n"
+  "video/quicktime: qt mov\n"
+  "video/webm: webm\n"
+  "video/x-msvideo: avi\n"
+  "video/mp4: mp4 m4v\n"
 };
+//file gets read into here.
 
 /* Adds contents of default_extension_map[] to mime_map list.  The array must
  * be NULL terminated.
  */
-void DarkHttpd::parse_default_extension_map() {
-  for (size_t i = countOf(default_extension_map); i-- > 0;) {
-    parse_mimetype_line(default_extension_map[i]);
-  }
-}
-
+// void DarkHttpd::parse_default_extension_map() {
+//   for (size_t i = countOf(default_extension_map); i-- > 0;) {
+//     parse_mimetype_line(default_extension_map[i]);
+//   }
+// }
+//
 /* ---------------------------------------------------------------------------
  * Adds contents of specified file to mime_map list.
  */
@@ -665,29 +674,53 @@ void DarkHttpd::parse_extension_map_file(const char *filename) {
   if (fd > 0) {
     struct stat filestat;
     if (fstat(fd, &filestat) == 0) {
-      mimeFileContent = static_cast<char *>(malloc(filestat.st_size + 1));
-      if (mimeFileContent) {
-        mimeFileContent[filestat.st_size] = '\0';
+      if (mimeFileContent.malloc(filestat.st_size)) {
         if (read(fd, mimeFileContent, filestat.st_size) == filestat.st_size) {
-          parse_mimetype_line(mimeFileContent);
+          //null the whitespaces so as to make individual strings of each token.
+          for (auto killer = mimeFileContent.length; killer-- > 0;) { //using index so that we can tolerate input with nulls already present between tokens
+            if (strchr(" \t\r\n", mimeFileContent[killer])) { //need a sharable "isWhite"
+              mimeFileContent[killer] = 0;
+            }
+          }
+        } else {
+          warn("File I/O issue loading mimetypes file, %s, content ignored", filename);
+          mimeFileContent.Free();
         }
       }
     }
   }
 }
 
-const char *DarkHttpd::url_content_type(const char *url) {
+
+StringView DarkHttpd::url_content_type(const char *url) {
   if (url != nullptr) { // useful guard, and lets us get to the default of the default.
     if (auto period = strrchr(url, '.')) {
-      auto result = mime_map.find(period + 1);
-      if (result != mime_map.end()) {
-        // assert(strcmp(period + 1, result->extension) == 0);
-        return result->second;
+      const char *pool = mimeFileContent ? mimeFileContent : default_extension_map;
+
+      if (pool) { //always true unless someone deletes the built-in one.
+        auto nameLength = strlen(period);
+        size_t poolLength = mimeFileContent ? mimeFileContent.length : sizeof(default_extension_map);
+
+        for (const char *searcher = &pool[poolLength - nameLength]; searcher > pool;) {
+          if (*searcher == *period) { //found start of search item
+            if (strncasecmp(searcher, period, nameLength) == 0) { //name match
+              if (searcher[nameLength] != ':') { //not a synonym for a mime type
+
+                while (--searcher >= pool) { //read back for a ':'
+                  if (*searcher == ':') {
+                    //found end of mime string
+                  }
+                }
+              }
+            }
+          }
+          //not followed by a ':'
+        }
       }
     }
   }
-  /* else no period found in the string */
-  return default_mimetype ? default_mimetype : "application/octet-stream";
+  /* no period found in the string or extension not found in map */
+  return default_mimetype;
 }
 
 const char *DarkHttpd::get_address_text(const void *addr) const {
@@ -852,7 +885,7 @@ void DarkHttpd::usage(const char *argv0) {
   printf("\t--mimetypes filename (optional)\n"
     "\t\tParses specified file for extension-MIME associations.\n\n");
   printf("\t--default-mimetype string (optional, default: %s)\n"
-    "\t\tFiles with unknown extensions are served as this mimetype.\n\n", url_content_type(nullptr));
+    "\t\tFiles with unknown extensions are served as this mimetype.\n\n", default_mimetype.pointer);
   printf("\t--uid uid/uname, --gid gid/gname (default: don't privdrop)\n"
     "\t\tDrops privileges to given uid:gid after initialization.\n\n");
   printf("\t--chroot (default: don't chroot)\n"
@@ -961,7 +994,7 @@ static bool str_to_num(const char *str, long long *num) {
   errno = 0;
   n = strtoll(str, &endptr, 10);
   if (*endptr != 0) {
-    return false;
+    return false;//todo:1 check for KMG multiplier.
   }
   if (n == LLONG_MIN && errno == ERANGE) {
     return false;
@@ -988,38 +1021,32 @@ static long long xstr_to_num(const char *str) {
 }
 
 bool DarkHttpd::parse_commandline(int argc, char *argv[]) {
-  int i;
   if (argc < 2 || (argc == 2 && strcmp(argv[1], "--help") == 0)) {
     usage(argv[0]); /* no wwwroot given */
     // exit(EXIT_SUCCESS);
     return false;
   }
-
-  if (getuid() == 0) {
-    bindport = 80; // default if run as root.
-  }
+  bindport = getuid() ? 8080 : 80; // default if run as root.
   custom_hdrs = nullptr;
-  wwwroot = xstrdup(argv[1]);
+
+  wwwroot = argv[1];
   /* Strip ending slash.
    * todo: should use the url cleaner to deal with . and .. in the string */
-  wwwroot.length = strlen(wwwroot);
   if (wwwroot.length == 0) {
     errx(1, "/path/to/wwwroot cannot be empty");
     return false;
   }
 
-  if (wwwroot.endsWith("/", 1)) {
-    wwwroot[--wwwroot.length] = '\0';
-  }
+  wwwroot.trimTrailing("/");//former code only trimmed a single trailing slash, 980f trims multiple.
 
   /* walk through the remainder of the arguments (if any) */
-  for (i = 2; i < argc; i++) {
+  for (int i = 2; i < argc; i++) {
     if (strcmp(argv[i], "--port") == 0) {
       if (++i >= argc) {
         errx(1, "missing number after --port");
         return false;
       }
-      bindport = (uint16_t) xstr_to_num(argv[i]);
+      bindport =  xstr_to_num(argv[i]);
     } else if (strcmp(argv[i], "--addr") == 0) {
       if (++i >= argc) {
         errx(1, "missing ip after --addr");
@@ -1838,7 +1865,7 @@ void DarkHttpd::generate_dir_listing(connection &conn, const char *path, const c
   memset(spaces.pointer, ' ', maxlen);
 
   /* append ".." entry if not in wwwroot */
-  if (strncmp(path, wwwroot, strlen(path) - 1) != 0) {
+  if (strncmp(path, wwwroot.begin(), std::min((strlen(path) - 1),wwwroot.length)) != 0) {
     append(listing, "<a href=\"../\">..</a>/\n");
   }
 
@@ -1909,15 +1936,16 @@ void DarkHttpd::generate_dir_listing(connection &conn, const char *path, const c
 
 /* Process a GET/HEAD request. */
 void DarkHttpd::connection::process_get() {
-  char *end;
+  // char *end;
   char date[DATE_LEN];
   char lastmod[DATE_LEN];
 
   const char *forward_to = nullptr;
 
   /* strip out query params */
-  if ((end = strchr(url, '?')) != nullptr) {
-    *end = '\0';
+  auto end = strchr(url, '?');
+  if (end != nullptr) {
+    *end = '\0';//modifies url!
   }
 
   /* work out path of file being requested */
@@ -1934,12 +1962,7 @@ void DarkHttpd::connection::process_get() {
     AutoString host(parse_field("Host: "));
     if (host) {
       debug("host=\"%s\"\n", host.pointer);
-      for (auto record: service.forward_map) {
-        if (strcasecmp(record.first, host) == 0) {
-          forward_to = record.second;
-          break;
-        }
-      }
+      forward_to = service.forward_map.at(host);
     }
   }
   if (!forward_to) {
@@ -1950,13 +1973,12 @@ void DarkHttpd::connection::process_get() {
     return;
   }
 
-  const char *mimetype = nullptr;
-
-  AutoString target(nullptr);
+  StringView mimetype;
+  AutoString target;
   if (service.want_single_file) {
-    target = xstrdup(service.wwwroot);
-    mimetype = service.url_content_type(service.wwwroot);
-  } else if (decoded_url[strlen(decoded_url) - 1] == '/') {
+    target = service.wwwroot.clone();
+    mimetype = service.url_content_type(target);
+  } else if (decoded_url.endsWith( '/')) {
     /* does it end in a slash? serve up url/index_name */
     xasprintf(target, "%s%s%s", service.wwwroot.pointer, decoded_url.pointer, service.index_name);
     if (!file_exists(target)) {
@@ -1979,7 +2001,7 @@ void DarkHttpd::connection::process_get() {
     mimetype = service.url_content_type(decoded_url);
   }
 
-  debug("url=\"%s\", target=\"%s\", content-type=\"%s\"\n", url.pointer, target.pointer, mimetype);
+  debug("url=\"%s\", target=\"%s\", content-type=\"%s\"\n", url.pointer, target.pointer, mimetype.pointer);
 
   /* open file */
   reply_fd = open(target, O_RDONLY | O_NONBLOCK);
@@ -2090,7 +2112,7 @@ void DarkHttpd::connection::process_get() {
       "Content-Type: %s\r\n"
       "Last-Modified: %s\r\n"
       "\r\n",
-      rfc1123_date(date, service.now), service.server_hdr.pointer, keep_alive(), service.custom_hdrs.pointer, llu(file_length), llu(from), llu(to), llu(filestat.st_size), mimetype, lastmod);
+      rfc1123_date(date, service.now), service.server_hdr.pointer, keep_alive(), service.custom_hdrs.pointer, llu(file_length), llu(from), llu(to), llu(filestat.st_size), mimetype.pointer, lastmod);
     http_code = 206;
     debug("sending %llu-%llu/%llu\n", llu(from), llu(to), llu(filestat.st_size));
   } else {
@@ -2107,7 +2129,7 @@ void DarkHttpd::connection::process_get() {
       "Content-Type: %s\r\n"
       "Last-Modified: %s\r\n"
       "\r\n",
-      rfc1123_date(date, service.now), service.server_hdr.pointer, keep_alive(), service.custom_hdrs.pointer, llu(file_length), mimetype, lastmod);
+      rfc1123_date(date, service.now), service.server_hdr.pointer, keep_alive(), service.custom_hdrs.pointer, llu(file_length), mimetype.pointer, lastmod);
     http_code = 200;
   }
 }
@@ -2148,7 +2170,7 @@ bool password_equal(const char *user_input, const char *secret) {
 
 /* Process a request: build the header and reply, advance state. */
 void DarkHttpd::connection::process_request() {
-  service.num_requests++;
+  service.fyi.num_requests++;
 
   if (!parse_request()) {
     default_reply(400, "Bad Request", "You sent a request that the server couldn't understand.");
@@ -2207,7 +2229,7 @@ void DarkHttpd::connection::poll_recv_request() {
   memcpy(&request.pointer[request.length], buf, recvd);
   request.length += recvd;
   request.pointer[request.length] = 0;
-  service.total_in += recvd;
+  service.fyi.total_in += recvd;
 
   /* process request if we have all of it */
   if (request.endsWith("\n\n", 2) || request.endsWith("\r\n\r\n", 4)) {
@@ -2255,7 +2277,7 @@ void DarkHttpd::connection::poll_send_header() {
   assert(sent > 0);
   header_sent += sent;
   total_sent += sent;
-  service.total_out += sent;
+  service.fyi.total_out += sent;
 
   /* check if we're done sending header */
   if (header_sent == header.length) {
@@ -2340,7 +2362,6 @@ static ssize_t send_from_file(const int s, const int fd, off_t ofs, size_t size)
 void DarkHttpd::connection::poll_send_reply() {
   ssize_t sent;
 
-
   assert(state == SEND_REPLY);
   assert(!header_only);
   if (reply_type == REPLY_GENERATED) {
@@ -2380,7 +2401,7 @@ void DarkHttpd::connection::poll_send_reply() {
   }
   reply_sent += sent;
   total_sent += sent;
-  service.total_out += sent;
+  service.fyi.total_out += sent;
 
   /* check if we're done sending */
   if (reply_sent == file_length) {
@@ -2677,16 +2698,16 @@ void DarkHttpd::change_root() {
 
   tzset(); /* read /etc/localtime before we chroot */
   if (want_single_file) {
-    AutoString path(xstrdup(wwwroot));
-    auto lastSlash = strrchr(path.pointer, '/');
+    AutoString path=wwwroot.clone();
+    auto lastSlash = strrchr(path, '/');
     /* wwwroot file is not presumed to be in the current directory */
     if (lastSlash) {
       lastSlash[0] = '\0'; // truncate path, wwwroot still as given
       if (chdir(path) == -1) {
         err(1, "chdir(%s)", path.pointer);
       }
-      strcpy(wwwroot, &lastSlash[1]);
-    } else {
+      wwwroot=&lastSlash[1];
+    } else {//should be same as cwd
       path[0] = '.'; //?! this trusts that wwwroot has at least one char before its null.
       path[1] = '\0';
     }
@@ -2695,14 +2716,14 @@ void DarkHttpd::change_root() {
     }
     printf("chrooted to `%s'\n", path.pointer);
   } else {
-    if (chdir(wwwroot) == -1) {
-      err(1, "chdir(%s)", wwwroot.pointer);
+    if (chdir(wwwroot.begin()) == -1) {
+      err(1, "chdir(%s)", wwwroot.begin());
     }
-    if (chroot(wwwroot) == -1) {
-      err(1, "chroot(%s)", wwwroot.pointer);
+    if (chroot(wwwroot.begin()) == -1) {
+      err(1, "chroot(%s)", wwwroot.begin());
     }
-    printf("chrooted to `%s'\n", wwwroot.pointer);
-    wwwroot[0] = '\0'; /* empty string */
+    printf("chrooted to `%s'\n", wwwroot.begin());
+    wwwroot.length = 0; /* empty string */
   }
 }
 
@@ -2720,8 +2741,8 @@ void DarkHttpd::reportStats() const {
     static_cast<unsigned int>(r.ru_utime.tv_usec / 10000),
     static_cast<unsigned int>(r.ru_stime.tv_sec),
     static_cast<unsigned int>(r.ru_stime.tv_usec / 10000));
-  printf("Requests: %llu\n", llu(num_requests));
-  printf("Bytes: %llu in, %llu out\n", llu(total_in), llu(total_out));
+  printf("Requests: %llu\n", llu(fyi.num_requests));
+  printf("Bytes: %llu in, %llu out\n", llu(fyi.total_in), llu(fyi.total_out));
 }
 
 void DarkHttpd::prepareToRun() {
@@ -2800,7 +2821,6 @@ void DarkHttpd::freeall() {
     conn->clear();
   }
 
-  mime_map.clear();
   forward_map.clear(); // todo; free contents first! Must establish that all were malloc'd
 }
 
@@ -2809,7 +2829,6 @@ int DarkHttpd::main(int argc, char **argv) {
   int exitcode = 0;
   try {
     printf("%s, %s.\n", pkgname, copyright);
-    parse_default_extension_map();
     parse_commandline(argc, argv);
     /* NB: parse_commandline() might override parts of the extension map by
      * parsing a user-specified file. THat is why we use insert_or_add when parsing it into the map.

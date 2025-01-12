@@ -85,12 +85,9 @@ struct AutoString {
     return pointer;
   }
 
-  // operator const char *() const {
-  //   return pointer;
-  // }
-
+  /** @returns whether we have a nontrivial block*/
   operator bool() const {
-    return pointer != nullptr;
+    return pointer != nullptr && length >= 0;
   }
 
   bool operator!() const {
@@ -103,54 +100,89 @@ struct AutoString {
 
   /**
    * @param str is this what the string ends with?
-   * @param len length if known, else leave off or pass ~0
+   * @param len length if known, else leave off or pass ~0 and strlen will be called on str
    * @returns whether the internal string ends with str .
    */
   bool endsWith(const char *str, unsigned len = ~0) const;
 
+  /** @returns whether last char is @param slash*/
+  bool endsWith(char slash) {
+    return pointer && length > 0 && slash == pointer[length -1];
+  }
+
   /**
-   *
-   * @param str to append to end after allocating room for it
+   * @param str to append to end after reallocating room for it
    * @param len length of string if known, ~0 for unknown (default)
    * @returns whether the append happened, won't if out of heap
    */
   bool cat(const char *str, size_t len = ~0);
 
+  /** construct around an allocated content. */
   AutoString(char *pointer = nullptr, unsigned length = ~0) : pointer(pointer), length(length) {
     if (pointer && length == ~0) {
       this->length = strlen(pointer);
     }
   }
 
-  ~AutoString() {
+  void Free() {
     free(pointer);
     // null fields in case someone tries to use this after it is deleted
     pointer = nullptr;
     length = 0;
   }
 
-  AutoString &operator=(AutoString &other) {
-    free(pointer);
-    pointer = other.pointer;
-    length = other.length;
-    return *this;
+  ~AutoString() {
+    Free();
   }
 
-  AutoString &operator=(char *replacement) {
-    free(pointer);
-    pointer = replacement;
-    length = replacement ? strlen(pointer) : 0;
-    return *this;
-  }
+  AutoString &operator=(AutoString &other);
 
-  AutoString &toUpper() {
-    for (auto scanner = pointer; *scanner;) {
-      *scanner++ = toupper(*scanner);
-    }
-    return *this;
-  }
+  AutoString &operator=(char *replacement);
+
+  AutoString &toUpper();
+
+  /** frees present content and mallocs @param amount bytes plus one for a null that it inserts. */
+  bool malloc(size_t amount);
 
   AutoString(AutoString &&other) = delete;
+};
+
+/** a not-null terminated string that we can't alter through this object. This class exists so that we can sub-string without touching the orignal string OR copying it.*/
+
+struct StringView {
+  const char *pointer = nullptr;
+  size_t length = 0;
+  size_t start = 0;
+
+  StringView(const char *pointer = nullptr, size_t length = ~0, size_t start = 0);
+
+  StringView &operator=(const char *str);
+
+  /** @returns pointer to byte after where this StringView's content was inserted. If this guy is trivial then this will be the same as @param bigenough.
+   * @param honorNull is whether to stop inserting this guy if a null is found short of the length.
+   */
+  char *put(char *bigenough, bool honorNull = true) const;
+
+  /** calls @see put then adds a terminator and returns a pointer to that terminator. */
+  char *cat(char *bigenough, bool honorNull = true) const;
+
+  size_t put(FILE *out) const;
+
+  const char *begin() const {
+    return pointer + start;
+  }
+
+  void trimTrailing(const char *trailers);
+
+  AutoString clone() const {
+    char *clone = static_cast<char *>(malloc(length + 1));
+    if (clone == nullptr) {
+      return AutoString();
+    }
+    memcpy(clone, begin(), length);
+    clone[length] = 0;
+    return AutoString(clone, length);
+  }
 };
 
 /** add conveniences to an in6_addr **/
@@ -214,24 +246,6 @@ class DarkHttpd {
   DarkHttpd() {
     forSignals = this;
   }
-
-  /** replaced inline reproduction of map logic with an std::map, after verifying who did the allocations.
-   * this uses the default key compare function 'less<const char *>', which we might want to replace with strncmp(...longest_ext) */
-  struct mime_mapping : std::map<const char *, const char *> {
-    // size_t longest_ext = 0;
-    /** arg returned by 'add to map' */
-    using mime_ref = std::pair<std::_Rb_tree_iterator<std::pair<const char *const, const char *> >, bool>; // todo: indirect to a decltype on the function returning this.
-    bool add(const char *extension, const char *mimetype);
-
-    /** free contents, then forget them.*/
-    void purge() {
-      for (auto each: *this) {
-        free((void *) each.first);
-        free((void *) each.second);
-      }
-      clear();
-    }
-  } mime_map;
 
   /** todo: this seems to have become the same as mime_mapping except for idiot checks */
   struct forward_mapping : std::map<const char *, const char *> {
@@ -405,13 +419,15 @@ public:
     void poll_send_reply();
   };
 
-  int parse_mimetype_line(const char *line);
-
-  void parse_default_extension_map();
+  // int parse_mimetype_line(const char *line);
+  //
+  // void parse_default_extension_map();
 
   void parse_extension_map_file(const char *filename);
 
-  const char *url_content_type(const char *url);
+  const char *mime_map_find(const char *str);
+
+  StringView url_content_type(const char *url);
 
   const char *get_address_text(const void *addr) const;
 
@@ -505,7 +521,7 @@ private:
 
   /* Defaults can be overridden on the command-line */
   const char *bindaddr = nullptr; //only assigned from cmdline
-  uint16_t bindport = 8080; /* or 80 if running as root */
+  uint16_t bindport; /* or 80 if running as root */
   int max_connections = -1; /* kern.ipc.somaxconn */
   const char *index_name = "index.html";
   bool no_listing = false;
@@ -513,10 +529,10 @@ private:
 #ifdef HAVE_INET6
   bool inet6 = false; /* whether the socket uses inet6 */
 #endif
-  const char *default_mimetype = nullptr; //always a pointer into a map which manages free'ing
-  //file gets read into here.
-  char *mimeFileContent = nullptr;
-  AutoString wwwroot; /* a path name */ //argv[1] which might go away if process goes demon via forking a child. gets written just once.
+  StringView default_mimetype{"application/octet-stream"}; //an argv or builtin constant
+  /** file of mime mappings gets read into here.*/
+  AutoString mimeFileContent;
+  StringView wwwroot; /* a path name */ //argv[1]  and even if we demonize it is still present
 
   char *logfile_name = nullptr; /* NULL = no logging */
   FILE *logfile = nullptr;
@@ -534,13 +550,17 @@ private:
   bool want_server_id = true;
   bool want_single_file = false;
 
-  AutoString server_hdr; //pkgname in building of replys
-  AutoString auth_key; /* NULL or "Basic base64_of_password" */  //base64 expansion of a cli arg.
+  AutoString server_hdr; //pkgname in building of replys //todo: replace with conditional sending of constant.
+  AutoString auth_key; /* NULL or "Basic base64_of_password" */ //base64 expansion of a cli arg.
+  //todo: load only from file, not commandline. Might even drop feature. Alternative is a std::vector of headers rather than a blob.
   AutoString custom_hdrs; //parse_commandline concatenation of argv's with formatting. Should just record their indexes and generate on sending rather than cacheing here.
 
-  uint64_t num_requests = 0;
-  uint64_t total_in = 0;
-  uint64_t total_out = 0;
+  /** things that are interesting but don't affect operation */
+  struct Fyi {
+    uint64_t num_requests = 0;
+    uint64_t total_in = 0;
+    uint64_t total_out = 0;
+  } fyi;
 
   bool accepting = true; /* set to 0 to stop accept()ing */
   bool syslog_enabled = false;
