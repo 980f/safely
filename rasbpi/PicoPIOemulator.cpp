@@ -76,6 +76,28 @@ unsigned PicoPIOemulator::SM::ShiftRegister::output(unsigned numBits, bool fromM
   return target;
 }
 
+void PicoPIOemulator::SM::sideset(unsigned opfield) {
+  bool hasEnable = cfg.sideset.useEnable;
+  if (hasEnable) {
+    if (!bit(opfield, 4)) {
+      return;
+    }
+  }
+
+  if (cfg.sideset.pins.count > (hasEnable ? 4 : 5)) {
+    IllegalOP(true); //and if user doesn't handle these they will get spammed with them!
+    return;
+  }
+  int numDelayBits = 5 - hasEnable - cfg.sideset.pins.count;
+  if (numDelayBits < 0) {
+    IllegalOP(true);
+    return;
+  }
+
+  auto fn = cfg.sideset.OEsnotPins ? &GPIO::outdir : &GPIO::output;
+  (gpio.*fn)(cfg.sideset.pins, opfield >> numDelayBits);
+}
+
 bool PicoPIOemulator::SM::testCondition(Condition condition) {
   switch (condition) {
     case Always:
@@ -91,9 +113,9 @@ bool PicoPIOemulator::SM::testCondition(Condition condition) {
     case XneY:
       return reg.X != reg.Y;
     case Pin:
-      return bit(gpio.pin,cfg.jmpPin);
+      return bit(gpio.pin, cfg.jmpPin);
     case OSRne:
-      return !reg.outputSR.hasDone(32); //not our job to worry about fractional last field?
+      return !reg.outputSR.isConsumed(); //not our job to worry about fractional last field?
     default:
       return false;
   }
@@ -121,10 +143,10 @@ void PicoPIOemulator::SM::IN(unsigned source, unsigned bitCount) {
       incoming = 0;
       break;
     case 4:
-      IllegalOP();
+      IllegalOP(false);
       return;
     case 5:
-      IllegalOP();
+      IllegalOP(false);
       return;
     case 6:
       incoming = reg.inputSR.all();
@@ -143,9 +165,10 @@ void PicoPIOemulator::SM::IN(unsigned source, unsigned bitCount) {
 
 bool PicoPIOemulator::SM::PULL(bool ifEmpty, bool block) {
   if (ifEmpty) {
-    if (reg.outputSR.hasDone(cfg.OUT.threshold)) {}
+    // if (reg.outputSR.isConsumed()) {
+    //   //todo:some kind of wait
+    // }
   }
-
 
   if (block) {
     if (TX.isEmpty()) {
@@ -168,6 +191,8 @@ bool PicoPIOemulator::SM::PULL(bool ifEmpty, bool block) {
   return false;
 }
 
+void PicoPIOemulator::SM::WAIT() {}
+
 void PicoPIOemulator::SM::MOV(unsigned int target, bool reverse, bool invert, unsigned source) {
   unsigned incoming = 0;
   switch (source) {
@@ -184,10 +209,10 @@ void PicoPIOemulator::SM::MOV(unsigned int target, bool reverse, bool invert, un
       incoming = 0;
       break;
     case 4:
-      IllegalOP();
+      IllegalOP(false);
       return;
     case 5:
-      incoming = cfg.ftest(RX.available(),TX.available());
+      incoming = cfg.ftest(RX.available(), TX.available());
       break;
     case 6:
       reg.inputSR.all();
@@ -201,7 +226,7 @@ void PicoPIOemulator::SM::MOV(unsigned int target, bool reverse, bool invert, un
   }
   if (reverse && invert) {
     if (group.V1) {} else {
-      IllegalOP();
+      IllegalOP(false);
       return;
     }
   }
@@ -223,7 +248,7 @@ void PicoPIOemulator::SM::MOV(unsigned int target, bool reverse, bool invert, un
       break;
     case 3:
       if (group.V1) {} else {
-        IllegalOP();
+        IllegalOP(false);
         return;
       }
       break;
@@ -278,6 +303,12 @@ void PicoPIOemulator::SM::OUT(unsigned int opoptions, unsigned int indexCount) {
   }
 }
 
+void PicoPIOemulator::SM::irqWait(unsigned which, bool toBeSet) {
+  while (bit(reg.irqFlags, which) != toBeSet) {
+    simulatedClock();
+  }
+}
+
 void PicoPIOemulator::SM::run() {
   simulating = true;
   while (simulating) {
@@ -291,13 +322,14 @@ void PicoPIOemulator::SM::run() {
       //and PC is untouched
     } else {
       reg.IR = group.mem[reg.PC]; //todo: move exec and external write to exec.
-      //do PC adjustments before we potentially execute a JMP
+      //do PC adjustments before we potentially execute a JMP or MOV to PC
       if (reg.PC == cfg.endOfLoop) {
         reg.PC = cfg.starOfLoop;
       } else {
         ++reg.PC;
       }
     }
+    sideset(extractField(reg.IR, 12, 8));
     auto opoptions = extractField(reg.IR, 7, 5);
     auto indexCount = extractField(reg.IR, 4, 0);
     switch (extractField(reg.IR, 15, 13)) {
@@ -305,6 +337,14 @@ void PicoPIOemulator::SM::run() {
         JMP(static_cast<Condition>(opoptions), indexCount);
         break;
       case 1: //wait
+        if (bit(reg.IR, 6)) { //an irq wait
+        } else { //gpio wait
+          if (bit(reg.IR, 5)) {
+            indexCount += cfg.IN.pins.lsb;
+            indexCount %= 32;
+          }
+          pinWait(indexCount, bit(reg.IR, 7));
+        }
         WAIT();
         break;
       case 2: //in
@@ -315,7 +355,7 @@ void PicoPIOemulator::SM::run() {
         break;
       case 4:
         if (opoptions & 3 == 0) {
-          IllegalOP(); //V1: RX as mailboxes
+          IllegalOP(false); //V1: RX as mailboxes
         } else {
           if (bit(reg.IR, 7)) {
             if (PULL(bit(reg.IR, 6), bit(reg.IR, 5))) {}
@@ -327,8 +367,26 @@ void PicoPIOemulator::SM::run() {
       case 5:
         MOV(opoptions, bit(reg.IR, 4), bit(reg.IR, 3), indexCount & 7);
         break;
-      case 6:
-        break;
+      case 6: {
+        //the following could be done in one hairy conditional, but that was hard to read and explain so we do it in baby steps
+        unsigned irqnum = indexCount & 3; //starting with the 2 lsbs
+        if (bit(indexCount, 4)) { //if the msb of the field is set
+          irqnum += ownIndex; //then add ownIndex
+          irqnum %= 4; //modulo 4 (compiler knows to and with 3)
+        }
+        irqnum |= bit(indexCount, 2) << 2; //bit 2 is always used as is.
+        if (bit(reg.IR, 6)) {
+          clearBit(reg.irqFlags, irqnum);
+          //and maybe wait for it to clear
+        } else { //just clear and proceed
+          setBit(reg.irqFlags, irqnum);
+          if (bit(reg.IR, 7)) {
+            irqWait(irqnum, false);
+          }
+          //and do the above wait before we start the delay!
+        }
+      }
+      break;
       case 7:
         SET();
         break;
@@ -336,12 +394,18 @@ void PicoPIOemulator::SM::run() {
         InternalError();
         break;
     }
-    //side set, definitely after OUT executes
-    //then delay
-    //then any other waiting
-    //Wait for Irq(whicOf8) to get acked
-    //Wait for Irq(whicOf8) to occur, auto ack when it does
-
-    //now advance the PC
+    //and now we do delay = timed wait
   }
+}
+
+PicoPIOemulator::FifoStatus::operator unsigned int() {
+  image = 0;
+  for (unsigned i = SMsize; i-- > 0;) {
+    SM &sm = group.sm[i];
+    image |= sm.RX.isFull() << (i + 0);
+    image |= sm.RX.isEmpty() << (i + 8);
+    image |= sm.TX.isFull() << (i + 16);
+    image |= sm.TX.isEmpty() << (i + 24);
+  }
+  return image;
 }

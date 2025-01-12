@@ -9,7 +9,7 @@
 
 class PicoPIOemulator {
 public:
-  bool V1=false;//allow dynamic switching of architecture.
+  bool V1 = false; //allow dynamic switching of architecture.
   uint16_t mem[32];
 
   //tokens for memory mapped access by host
@@ -19,12 +19,12 @@ public:
   };
 
   class SM {
-  public:
+    friend class PicoPIOemulator;
     PicoPIOemulator &group;
-    unsigned ownIndex;
+    unsigned ownIndex = ~0; //blow hard if not explicitly initialized
+    unsigned long clockCounter = 0; //for cycle tiem estimates
 
-  public:
-     SM(PicoPIOemulator *group,unsigned yourIndex) : group{*group}, ownIndex {yourIndex} {}
+    SM(PicoPIOemulator *group, unsigned yourIndex) : group{*group}, ownIndex{yourIndex}, reg(cfg) {}
 
     struct Fifo {
       unsigned mem[8]; //alloate max
@@ -54,19 +54,21 @@ public:
 
     /** driver can push instructions at the device. This is checked at the start of every instruction execution.*/
     struct InstructionInjector {
-      uint16_t IR;
-      bool haveInjection;
+      uint16_t IR = 0;
+      bool haveInjection = false;
 
+      /** record the instruction and set a flag to indicate it overrides the instruction memory. */
       void operator()(uint16_t opcode) {
+        //todo: mutex here, like java synchronized
         haveInjection = true;
         IR = opcode;
       }
     } inject;
 
-struct BitSpan {
-  unsigned lsb;
-  unsigned count;
-};
+    struct BitSpan {
+      unsigned lsb;
+      unsigned count;
+    };
 
     struct GPIO {
       unsigned pin = 0;
@@ -75,20 +77,21 @@ struct BitSpan {
       unsigned input(BitSpan span);
 
       void output(BitSpan pins, unsigned value);
+
       void outdir(BitSpan pins, unsigned value);
     } gpio;
 
     /** for our first cut at it we are not worrying about the packing into control register words */
     struct Config {
-      bool stalled = 0;//unclear whether this is control or status.
+      bool stalled = 0; //unclear whether this is control or status.
 
       unsigned jmpPin = 0;
 
       struct FstatTest {
         unsigned threshold = 0;
         bool testRx = 0; //else tx
-        unsigned operator()(unsigned rx, unsigned tx){
-          return (testRx ? rx : tx) < threshold ? 0 : ~0;//RTFM
+        unsigned operator()(unsigned rx, unsigned tx) {
+          return (testRx ? rx : tx) < threshold ? 0 : ~0; //RTFM
         }
       } ftest;
 
@@ -100,22 +103,23 @@ struct BitSpan {
       unsigned OEpin = 0;
 
       struct SideSet {
-        bool OEsnotPins = 0;
-        bool useEnable = 0;
+        bool OEsnotPins = false;
+        bool useEnable = false;
         BitSpan pins;
       } sideset;
 
       struct ShiftControl {
         unsigned threshold = 0;
-        bool autoRefresh;//auto pull on OSR going empty
-        bool shiftRight;//
+        bool autoRefresh = false; //auto pull on OSR going empty
+        bool shiftRight = false; //todo: check manual for reset state
         BitSpan pins;
       };
+
       ShiftControl IN;
       ShiftControl OUT;
 
-      bool allFifosTX = 0;
-      bool allFifosRX = 0;
+      bool allFifosTX = false;
+      bool allFifosRX = false;
 
       BitSpan set;
 
@@ -126,15 +130,19 @@ struct BitSpan {
       uint32_t SR = 0;
       const int size = std::numeric_limits<decltype(SR)>::digits;
       unsigned consumed = 0;
+      Config::ShiftControl &cfg;
 
     public:
+      explicit ShiftRegister(Config::ShiftControl &cfg) : cfg{cfg} {}
+
+      /** load all bits and clear cumulative shift count */
       void load(uint32_t value);
 
       /** @returns whether at least @param numBits has been shifted since the last load.
        * The user can confuse themselves by having the threshold not be a multiple of the bit quantities being moved by input/output.
        */
-      bool hasDone(unsigned numBits) {
-        return consumed >= numBits;
+      bool isConsumed() const {
+        return consumed >= cfg.threshold;
       }
 
       /** modify SR with incoming bit field */
@@ -157,6 +165,8 @@ struct BitSpan {
       unsigned PC = 0;
       unsigned IR = 0; //separate from what pico writes to so that we can use two actual threads for emulation and get real realtime troubles.
       unsigned clock = 0; //diagnostic, for us to count instruction cycles and annotate output traces
+      unsigned irqFlags = 0;
+      Registers(Config &cfg): inputSR{cfg.IN}, outputSR{cfg.OUT} {}
     } reg;
 
     /////////////////////////////
@@ -176,9 +186,11 @@ struct BitSpan {
       //emulator has goofed up!
     }
 
-    void IllegalOP() {
+    void IllegalOP(bool dueToConfig) {
       //unimplemented opcode pattern, or otherwise officially "undefined operation"
     }
+
+    void sideset(unsigned opfield);
 
     /** @returns wheter to jump, including doing the decrements on scratch registers. */
     bool testCondition(Condition condition);
@@ -204,13 +216,23 @@ struct BitSpan {
 
     void OUT(unsigned int opoptions, unsigned int indexCount);
 
+    void simulatedClock() {
+      //todo: yield via minimal OSwait()
+      // Anything altering pins or irq or config needs to wake up this thread.
+      ++clockCounter;
+    }
+
+    void irqWait(unsigned which, bool toBeSet);
+
+    void pinWait(unsigned bitnum, bool toBeSet);
+
     void run();
   }; //end SM
-
+  /////////////////////////////////////////////////////////////////////////////////////////////////
   //back to PIO itself
 
-  SM sm[4]={SM(this,0),SM(this,1),SM(this,2),SM(this,3)};
-  static const unsigned SMsize=4;
+  SM sm[4] = {SM(this, 0), SM(this, 1), SM(this, 2), SM(this, 3)};
+  static const unsigned SMsize = 4;
 
   enum RegisterName {
     CTRL = 0,
@@ -232,39 +254,32 @@ struct BitSpan {
   /** base for implementing pack/unpack from memory mapped values to easy to work with objects. */
   struct PsuedoMemory {
     PicoPIOemulator &group;
-    PsuedoMemory(PicoPIOemulator *super):group{*super}{}
-    uint32_t image=0;
+    PsuedoMemory(PicoPIOemulator *super): group{*super} {}
+    uint32_t image = 0;
+
     virtual operator uint32_t() {
       return image;
     }
+
     virtual void operator =(uint32_t pattern) {
       image = pattern;
     }
   };
 
   /** full and empty bits of all fifos. */
-  struct FifoStatus: PsuedoMemory {
+  struct FifoStatus : PsuedoMemory {
     FifoStatus(PicoPIOemulator *super) : PsuedoMemory(super) {}
 
-    operator uint32_t() override {
-      image=0;
-      for (unsigned i= SMsize; i-->0;) {
-        SM &sm=group.sm[i];
-        image|= sm.RX.isFull()<<(i+0);
-        image|= sm.RX.isEmpty()<<(i+8);
-        image|= sm.TX.isFull()<<(i+16);
-        image|= sm.TX.isEmpty()<<(i+24);
-      }
-      return image;
-    }
+    operator uint32_t() override;
 
     void operator=(uint32_t pattern) override {
       //no specification on what a write does.
     }
   };
+
   FifoStatus theFSTAT();
 
-  PsuedoMemory& operator[](unsigned index) {
+  PsuedoMemory &operator[](unsigned index) {
     switch (index) {
       case CTRL:
         break;
