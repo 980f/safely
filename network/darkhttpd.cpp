@@ -30,6 +30,8 @@
 
 #include "darkhttpd.h"
 
+#include <iostream>
+
 
 static const char pkgname[] = "darkhttpd/1.16.from.git/980f";
 static const char copyright[] = "copyright (c) 2003-2024 Emil Mikulic"
@@ -299,6 +301,7 @@ struct Vsprinter : AutoString {
 
 /* vasprintf() that dies if it fails. */
 static unsigned int xvasprintf(AutoString &ret, const char *format, va_list ap) checkFargs(2, 0);
+
 static unsigned int xvasprintf(AutoString &ret, const char *format, va_list ap) {
   ret = nullptr; // forget the old
   unsigned len = vasprintf(&ret.pointer, format, ap);
@@ -490,21 +493,21 @@ bool AutoString::cat(const char *str, size_t len) {
   return true;
 }
 
-AutoString & AutoString::operator=(AutoString &other) {
+AutoString &AutoString::operator=(AutoString &other) {
   free(pointer);
   pointer = other.pointer;
   length = other.length;
   return *this;
 }
 
-AutoString & AutoString::operator=(char *replacement) {
+AutoString &AutoString::operator=(char *replacement) {
   Free();
   pointer = replacement;
   length = replacement ? strlen(pointer) : 0;
   return *this;
 }
 
-AutoString & AutoString::toUpper() {
+AutoString &AutoString::toUpper() {
   for (auto scanner = pointer; *scanner;) {
     *scanner++ = toupper(*scanner);
   }
@@ -524,7 +527,7 @@ bool AutoString::malloc(size_t amount) {
   return pointer != nullptr;
 }
 
-char * StringView::put(char *bigenough, bool honorNull) const {
+char *StringView::put(char *bigenough, bool honorNull) const {
   if (bigenough) {
     if (pointer) {
       if (length) {
@@ -534,7 +537,6 @@ char * StringView::put(char *bigenough, bool honorNull) const {
             break;
           }
         }
-
       }
     }
     //this needs to be conditional for when we insert this guy into a right-sized hole inside *bigenough=0;
@@ -542,10 +544,10 @@ char * StringView::put(char *bigenough, bool honorNull) const {
   return bigenough;
 }
 
-char * StringView::cat(char *bigenough, bool honorNull) const {
-  auto end=put(bigenough,honorNull);
+char *StringView::cat(char *bigenough, bool honorNull) const {
+  auto end = put(bigenough, honorNull);
   if (end) {
-    *end=0;
+    *end = 0;
   }
   return end;
 }
@@ -563,6 +565,84 @@ void StringView::trimTrailing(const char *trailers) {
   }
 }
 
+Inaddr6 & Inaddr6::clear() {
+  for (auto index = 4; index-- > 0;) { //gcc converts this to a memset.
+    __in6_u.__u6_addr32[index] = 0;
+  }
+  return *this;
+}
+
+bool Inaddr6::isUnspecified() const {
+  return __in6_u.__u6_addr32[0] == 0 && __in6_u.__u6_addr32[1] == 0 && __in6_u.__u6_addr32[2] == 0 && __in6_u.__u6_addr32[3] == 0;
+}
+
+bool Inaddr6::isLoopback() const {
+  return __in6_u.__u6_addr32[0] == 0 && __in6_u.__u6_addr32[1] == 0 && __in6_u.__u6_addr32[2] == 0 && __in6_u.__u6_addr32[3] == htonl(1);
+}
+
+bool Inaddr6::isLinkLocal() const {
+  return __in6_u.__u6_addr32[0] & htonl(0xffc00000) == htonl(0xfe800000);
+}
+
+bool Inaddr6::isSiteLocal() const {
+  return __in6_u.__u6_addr32[0] & htonl(0xffc00000) == htonl(0xfec00000);
+}
+
+bool Inaddr6::wasIpv4() const {
+  return __in6_u.__u6_addr32[0] == 0 && __in6_u.__u6_addr32[1] == 0 && __in6_u.__u6_addr32[2] == htonl(0xffff);
+}
+
+bool Inaddr6::isV4compatible() const {
+  return __in6_u.__u6_addr32[0] == 0 && __in6_u.__u6_addr32[1] == 0 && __in6_u.__u6_addr32[2] == 0 && ntohl(__in6_u.__u6_addr32[3]) > 1;
+}
+
+bool Inaddr6::operator==(const Inaddr6 &other) const {
+  for (auto index = 4; index-- > 0;) {
+    if (__in6_u.__u6_addr32[index] != other.__in6_u.__u6_addr32[index]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+bool Inaddr6::isMulticast() const {
+  return __in6_u.__u6_addr8[0] == 0xff;
+}
+
+bool SockAddr6::presentationToNetwork(const char *bindaddr) {
+  addr6.clear();
+  if (inet_pton(AF_INET6, bindaddr ? bindaddr : "::", &addr6) != 1) {
+    errx(1, "malformed --addr argument");
+    return false;
+  }
+  return true;
+}
+
+size_t DarkHttpd::Fd::vprintln(const char *format, va_list va) {
+  FILE *stream = getStream();
+  auto added = fprintf(stream, format, va);
+  fputc('\n', stream);
+  return ++added;
+}
+
+
+size_t DarkHttpd::Fd::putln(const char *content) {
+  FILE *stream = getStream();
+  auto added = fputs(content, stream);
+  fputc('\n', stream);
+  return ++added;
+}
+
+size_t DarkHttpd::Fd::printf(const char *format, ...) {
+  FILE *stream = getStream();
+  va_list args;
+  va_start(args, format);
+  auto added = vfprintf(stream, format, args);
+  va_end(args);
+  return added;
+}
+
+///////////////////////////
 StringView::StringView(const char *pointer, size_t length, size_t start): pointer{pointer},
   length{length},
   start{start} {
@@ -578,51 +658,10 @@ StringView &StringView::operator=(const char *str) {
   return *this;
 }
 
-
-// bool DarkHttpd::mime_mapping::add(const char *extension, const char *mimetype) {
-//   if (!mimetype || strlen(mimetype) == 0 || !extension) {
-//     return false;
-//   }
-//   auto chunk = insert_or_assign(extension, mimetype);
-//   return chunk.second; // new entry, else updated old
-// }
-//
-// /* Parses a mime.types line and adds the parsed data to the mime_map.
-//  * todo: strsep and on \r\n loop */
-// int DarkHttpd::parse_mimetype_line(const char *line) {
-//   if (!line) {
-//     return -1;
-//   }
-//   const char *start = removeLeadingWhitespace(line);
-//   if (!start) {
-//     return -1;
-//   }
-//   const char *finish = strchr(start, ':');
-//   if (!finish) {
-//     return -1;
-//   }
-//   char *mimetype = sub_string(start, finish);
-//   int fyi = 0;
-//   while (true) {
-//     start = removeLeadingWhitespace(++finish);
-//     if (!start) {
-//       break; // trailing whitespace
-//     }
-//     ++fyi;
-//     finish = strchr(start, ' '); //space separate list.
-//     if (!finish) {
-//       mime_map.add(strdup(start), mimetype);
-//       break; // normal exit
-//     }
-//     mime_map.add(sub_string(start, finish), mimetype); // NB: the sub_string new's the content, we must have mime_map delete it.
-//     // continue;
-//   }
-//   return fyi;
-// }
-
-
 /* Default mimetype mappings
- * //todo: either pairs or pack as json ... and use xdg-mime on systems which have it */
+ * //todo: use xdg-mime on systems which have it
+ * //todo: only use file, with cli options to generate one from this string.
+ */
 static const char *default_extension_map = { //todo: move to class
   "application/json: json\n"
   "application/pdf: pdf\n"
@@ -657,19 +696,10 @@ static const char *default_extension_map = { //todo: move to class
 };
 //file gets read into here.
 
-/* Adds contents of default_extension_map[] to mime_map list.  The array must
- * be NULL terminated.
- */
-// void DarkHttpd::parse_default_extension_map() {
-//   for (size_t i = countOf(default_extension_map); i-- > 0;) {
-//     parse_mimetype_line(default_extension_map[i]);
-//   }
-// }
-//
 /* ---------------------------------------------------------------------------
  * Adds contents of specified file to mime_map list.
  */
-void DarkHttpd::parse_extension_map_file(const char *filename) {
+void DarkHttpd::load_mime_map_file(const char *filename) {
   auto fd = open(filename, 0);
   if (fd > 0) {
     struct stat filestat;
@@ -696,25 +726,26 @@ StringView DarkHttpd::url_content_type(const char *url) {
   if (url != nullptr) { // useful guard, and lets us get to the default of the default.
     if (auto period = strrchr(url, '.')) {
       const char *pool = mimeFileContent ? mimeFileContent : default_extension_map;
-
       if (pool) { //always true unless someone deletes the built-in one.
         auto nameLength = strlen(period);
         size_t poolLength = mimeFileContent ? mimeFileContent.length : sizeof(default_extension_map);
-
         for (const char *searcher = &pool[poolLength - nameLength]; searcher > pool;) {
           if (*searcher == *period) { //found start of search item
             if (strncasecmp(searcher, period, nameLength) == 0) { //name match
               if (searcher[nameLength] != ':') { //not a synonym for a mime type
-
                 while (--searcher >= pool) { //read back for a ':'
                   if (*searcher == ':') {
                     //found end of mime string
+                    const char *end = searcher;
+                    while (--searcher > pool) {
+                      //search for white
+                      //and if so the one after it to one short of searcher is our mimetype
+                    }
                   }
                 }
               }
             }
           }
-          //not followed by a ':'
         }
       }
     }
@@ -727,12 +758,12 @@ const char *DarkHttpd::get_address_text(const void *addr) const {
 #ifdef HAVE_INET6
   if (inet6) {
     thread_local char text_addr[INET6_ADDRSTRLEN];
-    inet_ntop(AF_INET6, (const struct in6_addr *) addr, text_addr, INET6_ADDRSTRLEN);
+    inet_ntop(AF_INET6, (const in6_addr *) addr, text_addr, INET6_ADDRSTRLEN);
     return text_addr;
   } else
 #endif
   {
-    return inet_ntoa(*(const struct in_addr *) addr);
+    return inet_ntoa(*(const in_addr *) addr);
   }
 }
 
@@ -740,17 +771,16 @@ const char *DarkHttpd::get_address_text(const void *addr) const {
  * connections from.
  */
 void DarkHttpd::init_sockin() {
-  struct sockaddr_in addrin;
+  sockaddr_in addrin;
 #ifdef HAVE_INET6
-  struct sockaddr_in6 addrin6;
+  SockAddr6 sock6;
 #endif
   socklen_t addrin_len;
   int sockopt;
 
 #ifdef HAVE_INET6
   if (inet6) {
-    memset(&addrin6, 0, sizeof(addrin6));
-    if (inet_pton(AF_INET6, bindaddr ? bindaddr : "::", &addrin6.sin6_addr) != 1) {
+    if (!sock6.presentationToNetwork(bindaddr)) {
       errx(1, "malformed --addr argument");
     }
     sockin = socket(PF_INET6, SOCK_STREAM, 0);
@@ -806,27 +836,27 @@ void DarkHttpd::init_sockin() {
   /* bind socket */
 #ifdef HAVE_INET6
   if (inet6) {
-    addrin6.sin6_family = AF_INET6;
-    addrin6.sin6_port = htons(bindport);
-    if (bind(sockin, reinterpret_cast<sockaddr *>(&addrin6), sizeof(sockaddr_in6)) == -1) {
+    sock6.sin6_family = AF_INET6;
+    sock6.sin6_port = htons(bindport);
+    if (bind(sockin, reinterpret_cast<sockaddr *>(&sock6), sizeof(sockaddr_in6)) == -1) {
       err(1, "bind(port %u)", bindport);
     }
 
-    addrin_len = sizeof(addrin6);
-    if (getsockname(sockin, reinterpret_cast<sockaddr *>(&addrin6), &addrin_len) == -1) {
+    addrin_len = sizeof(sock6);
+    if (getsockname(sockin, reinterpret_cast<sockaddr *>(&sock6), &addrin_len) == -1) {
       err(1, "getsockname()");
     }
-    printf("listening on: http://[%s]:%u/\n", get_address_text(&addrin6.sin6_addr), ntohs(addrin6.sin6_port));
+    printf("listening on: http://[%s]:%u/\n", get_address_text(&sock6.sin6_addr), ntohs(sock6.sin6_port));
   } else
 #endif
   {
-    addrin.sin_family = (u_char) PF_INET;
+    addrin.sin_family = PF_INET;
     addrin.sin_port = htons(bindport);
-    if (bind(sockin, (struct sockaddr *) &addrin, sizeof(struct sockaddr_in)) == -1) {
+    if (bind(sockin, (sockaddr *) &addrin, sizeof(sockaddr_in)) == -1) {
       err(1, "bind(port %u)", bindport);
     }
     addrin_len = sizeof(addrin);
-    if (getsockname(sockin, (struct sockaddr *) &addrin, &addrin_len) == -1) {
+    if (getsockname(sockin, (sockaddr *) &addrin, &addrin_len) == -1) {
       err(1, "getsockname()");
     }
     printf("listening on: http://%s:%u/\n", get_address_text(&addrin.sin_addr), ntohs(addrin.sin_port));
@@ -994,7 +1024,7 @@ static bool str_to_num(const char *str, long long *num) {
   errno = 0;
   n = strtoll(str, &endptr, 10);
   if (*endptr != 0) {
-    return false;//todo:1 check for KMG multiplier.
+    return false; //todo:1 check for KMG multiplier.
   }
   if (n == LLONG_MIN && errno == ERANGE) {
     return false;
@@ -1027,7 +1057,7 @@ bool DarkHttpd::parse_commandline(int argc, char *argv[]) {
     return false;
   }
   bindport = getuid() ? 8080 : 80; // default if run as root.
-  custom_hdrs = nullptr;
+  custom_hdrs.clear();
 
   wwwroot = argv[1];
   /* Strip ending slash.
@@ -1037,7 +1067,7 @@ bool DarkHttpd::parse_commandline(int argc, char *argv[]) {
     return false;
   }
 
-  wwwroot.trimTrailing("/");//former code only trimmed a single trailing slash, 980f trims multiple.
+  wwwroot.trimTrailing("/"); //former code only trimmed a single trailing slash, 980f trims multiple.
 
   /* walk through the remainder of the arguments (if any) */
   for (int i = 2; i < argc; i++) {
@@ -1046,7 +1076,7 @@ bool DarkHttpd::parse_commandline(int argc, char *argv[]) {
         errx(1, "missing number after --port");
         return false;
       }
-      bindport =  xstr_to_num(argv[i]);
+      bindport = xstr_to_num(argv[i]);
     } else if (strcmp(argv[i], "--addr") == 0) {
       if (++i >= argc) {
         errx(1, "missing ip after --addr");
@@ -1082,7 +1112,7 @@ bool DarkHttpd::parse_commandline(int argc, char *argv[]) {
         errx(1, "missing filename after --mimetypes");
         return false;
       }
-      parse_extension_map_file(argv[i]);
+      load_mime_map_file(argv[i]);
     } else if (strcmp(argv[i], "--default-mimetype") == 0) {
       if (++i >= argc) {
         errx(1, "missing string after --default-mimetype");
@@ -1120,7 +1150,7 @@ bool DarkHttpd::parse_commandline(int argc, char *argv[]) {
       if (++i >= argc) {
         errx(1, "missing filename after --pidfile");
       }
-      pidfile_name = argv[i];
+      pid.file_name = argv[i];
     } else if (strcmp(argv[i], "--no-keepalive") == 0) {
       want_keepalive = false;
     } else if (strcmp(argv[i], "--accf") == 0) {
@@ -1168,8 +1198,7 @@ bool DarkHttpd::parse_commandline(int argc, char *argv[]) {
         errx(1, "malformed argument after --header");
       }
       //the following is not efficient, what we really need is a list of strings that we cat together in the stream output.
-      custom_hdrs.cat(argv[i]);
-      custom_hdrs.cat("\r\n");
+      custom_hdrs.push_back(argv[i]);
     }
 #ifdef HAVE_INET6
     else if (strcmp(argv[i], "--ipv6") == 0) {
@@ -1187,25 +1216,25 @@ bool DarkHttpd::parse_commandline(int argc, char *argv[]) {
 
 /* Accept a connection from sockin and add it to the connection queue. */
 void DarkHttpd::accept_connection() {
-  struct sockaddr_in addrin;
+  sockaddr_in addrin;
 #ifdef HAVE_INET6
-  struct sockaddr_in6 addrin6;
+  sockaddr_in6 addrin6;
 #endif
   socklen_t sin_size;
-  struct connection *conn;
+  Connection *conn;
   int fd;
 
 #ifdef HAVE_INET6
   if (inet6) {
     sin_size = sizeof(addrin6);
     memset(&addrin6, 0, sin_size);
-    fd = accept(sockin, (struct sockaddr *) &addrin6, &sin_size);
+    fd = accept(sockin, (sockaddr *) &addrin6, &sin_size);
   } else
 #endif
   {
     sin_size = sizeof(addrin);
     memset(&addrin, 0, sin_size);
-    fd = accept(sockin, (struct sockaddr *) &addrin, &sin_size);
+    fd = accept(sockin, (sockaddr *) &addrin, &sin_size);
   }
 
   if (fd == -1) {
@@ -1218,12 +1247,7 @@ void DarkHttpd::accept_connection() {
   }
 
   /* Allocate and initialize struct connection. */
-  conn = new connection(*this); // connections have defaults from the DarkHttpd that creates them.
-  conn->socket = fd;
-  nonblock_socket(conn->socket);
-
-  conn->state = connection::RECV_REQUEST;
-  conn->last_active = now;
+  conn = new Connection(*this,fd); // connections have defaults from the DarkHttpd that creates them.
 
 #ifdef HAVE_INET6
   if (inet6) {
@@ -1272,10 +1296,9 @@ static void logencode(const char *src, char *dest) {
  */
 #define CLF_DATE_LEN 29 /* strlen("[10/Oct/2000:13:55:36 -0700]")+1 */
 
-static char *clf_date(char *dest, const time_t when) {
-  time_t when_copy = when;
+static char *clf_date(char *dest, time_t when) {
   tm tm;
-  localtime_r(&when_copy, &tm);
+  localtime_r(&when, &tm);
   if (strftime(dest, CLF_DATE_LEN, "[%d/%b/%Y:%H:%M:%S %z]", &tm) == 0) {
     dest[0] = 0;
   }
@@ -1283,7 +1306,7 @@ static char *clf_date(char *dest, const time_t when) {
 }
 
 /* Add a connection's details to the logfile. */
-void DarkHttpd::log_connection(const connection *conn) {
+void DarkHttpd::log_connection(const Connection *conn) {
   AutoString safe_method;
   AutoString safe_url;
   AutoString safe_referer;
@@ -1345,8 +1368,14 @@ void DarkHttpd::log_connection(const connection *conn) {
 #undef use_safe
 }
 
+DarkHttpd::Connection::Connection(DarkHttpd &parent, int fd): service(parent),socket(fd) {
+  memset(&client, 0, sizeof(client));
+  nonblock_socket(socket);
+  state = RECV_REQUEST;
+  last_active = service.now;
+}
 /* Log a connection, then cleanly deallocate its internals. */
-void DarkHttpd::connection::clear() {
+void DarkHttpd::Connection::clear() {
   request = nullptr;
   method = nullptr;
   url = nullptr;
@@ -1362,7 +1391,7 @@ void DarkHttpd::connection::clear() {
 }
 
 /* Recycle a finished connection for HTTP/1.1 Keep-Alive. */
-void DarkHttpd::connection::recycle() {
+void DarkHttpd::Connection::recycle() {
   clear(); //legacy, separate heap usage clear from the rest.
   debug("free_connection(%d)\n", int(socket));
   xclose(socket);
@@ -1390,7 +1419,7 @@ void DarkHttpd::connection::recycle() {
 /* If a connection has been idle for more than timeout_secs, it will be
  * marked as DONE and killed off in httpd_poll().
  */
-void DarkHttpd::connection::poll_check_timeout() {
+void DarkHttpd::Connection::poll_check_timeout() {
   if (service.timeout_secs > 0) {
     if (service.now - last_active >= service.timeout_secs) {
       debug("poll_check_timeout(%d) marking connection closed\n", int(socket));
@@ -1405,9 +1434,8 @@ void DarkHttpd::connection::poll_check_timeout() {
  */
 #define DATE_LEN 30 /* strlen("Fri, 28 Feb 2003 00:02:08 GMT")+1 */
 
-static char *rfc1123_date(char *dest, const time_t when) {
-  time_t when_copy = when;
-  dest[strftime(dest, DATE_LEN, "%a, %d %b %Y %H:%M:%S GMT", gmtime(&when_copy))] = 0; // strftime returns number of chars it put into dest.
+static char *rfc1123_date(char *dest, time_t when) {
+  dest[strftime(dest, DATE_LEN, "%a, %d %b %Y %H:%M:%S GMT", gmtime(&when))] = 0; // strftime returns number of chars it put into dest.
   return dest;
 }
 
@@ -1444,7 +1472,7 @@ static char *urldecode(const char *url) {
 }
 
 /* Returns Connection or Keep-Alive header, depending on conn_closed. */
-const char *DarkHttpd::connection::keep_alive() const {
+const char *DarkHttpd::Connection::keep_alive() const {
   return conn_closed ? "Connection: close\r\n" : static_cast<const char *>(service.keep_alive_field);
 }
 
@@ -1461,86 +1489,129 @@ const char *DarkHttpd::generated_on(const char date[DATE_LEN]) const {
   return _generated_on_buf;
 }
 
+
+void DarkHttpd::Connection::startHeader(const int errcode, const char *errtext) {
+  header_fd.printf("HTTP/1.1 %d %s\r\n", http_code = errcode, errtext);
+}
+
+void DarkHttpd::Connection::catDate() {
+  header_fd.printf("Date: %s\r\n", service.now.image);
+}
+
+void DarkHttpd::Connection::catServer() {
+  if (service.want_server_id) {
+    header_fd.printf("Server: %s\r\n", pkgname);
+  }
+}
+
+void DarkHttpd::Connection::catFixed(const char *fixedText) {
+  header_fd.printf(fixedText);
+}
+
+void DarkHttpd::Connection::catKeepAlive() {
+  if (conn_closed) {
+    header_fd.printf("Connection: close\r\n");
+  } else {
+    header_fd.printf("Keep-Alive: timeout=%d\r\n", service.timeout_secs);
+  }
+}
+
+void DarkHttpd::Connection::catCustomHeaders() {
+  for (auto custom_Hdr: service.custom_hdrs) {
+    header_fd.printf("%s\r\n", custom_Hdr);
+  }
+}
+
+void DarkHttpd::Connection::catContentLength(off_t off) {
+  header_fd.printf("Content-Length: %llu\r\n", llu(off));
+}
+
+void DarkHttpd::Connection::startCommonHeader(int errcode, const char *errtext, off_t contentLenght=~0UL) {
+  startHeader( errcode,errtext);
+  catDate();
+  catServer();
+  catFixed("Accept-Ranges: bytes\r\n");
+  catKeepAlive();
+  catCustomHeaders();
+  if (~contentLenght!=0) {
+    catContentLength(contentLenght);
+  }
+}
+
+
+void DarkHttpd::Connection::catAuth() {
+  if (service.auth_key) {
+    header_fd.printf( //AI: "Authorization: Basic %s\r\n", service.auth_key); //leak our key to the world!!
+      "WWW-Authenticate: Basic realm=\"User Visible Realm\"\r\n");
+  }
+}
+
+void DarkHttpd::Connection::catGeneratedOn(bool toReply) {
+  if (service.want_server_id) {
+    (toReply ? reply_fd : header_fd).printf("Generated by %s on %s\n", pkgname, service.now.image);
+  }
+}
+
+
+void DarkHttpd::Connection::endHeader() {
+  header_fd.printf("\r\n");
+}
+
+void DarkHttpd::Connection::startReply(int errcode, const char *errtext) {
+  reply_fd.printf("<!DOCTYPE html><html><head><title>%d %s</title></head><body>\n" "<h1>%s</h1>\n", errcode, errtext, errtext);
+}
+
+void DarkHttpd::Connection::addFooter() {
+  reply_fd.putln("<hr>");
+  catGeneratedOn(true);
+  reply_fd.putln("</body></html>");
+}
+
 /* A default reply for any (erroneous) occasion. */
-void DarkHttpd::connection::default_reply(const int errcode, const char *errname, const char *format, ...) {
+void DarkHttpd::Connection::default_reply(const int errcode, const char *errname, const char *format, ...) {
+  startReply(errcode, errname);
   va_list va;
-
   va_start(va, format);
-  AutoString reason;
-  xvasprintf(reason, format, va);
+  reply_fd.vprintln(format, va);
   va_end(va);
+  addFooter();
 
-  /* Only really need to calculate the date once. */
-  char date[DATE_LEN];
-  rfc1123_date(date, service.now);
-
-  xasprintf(reply,
-    "<!DOCTYPE html><html><head><title>%d %s</title></head><body>\n"
-    "<h1>%s</h1>\n" /* errname */
-    "%s\n" /* reason */
-    "<hr>\n"
-    "%s" /* generated on */
-    "</body></html>\n",
-    errcode, errname, errname, reason.pointer, service.generated_on(date));
-
-  const char auth_header[] = "WWW-Authenticate: Basic realm=\"User Visible Realm\"\r\n";
-
-  xasprintf(header,
-    "HTTP/1.1 %d %s\r\n"
-    "Date: %s\r\n"
-    "%s" /* server */
-    "Accept-Ranges: bytes\r\n"
-    "%s" /* keep-alive */
-    "%s" /* custom headers */
-    "Content-Length: %llu\r\n"
-    "Content-Type: text/html; charset=UTF-8\r\n"
-    "%s"
-    "\r\n",
-    errcode, errname, date, service.server_hdr.pointer, keep_alive(), service.custom_hdrs.pointer, llu(file_length), (service.auth_key != nullptr ? auth_header : ""));
+  //todo:file_length is not related to the file length!
+  startCommonHeader(errcode, errname,file_length);
+  catFixed("Content-Type: text/html; charset=UTF-8\r\n"); //todo: use catMime();
+  catAuth();
+  endHeader();
 
   reply_type = REPLY_GENERATED;
-  http_code = errcode;
-
   /* Reset reply_start in case the request set a range. */
   reply_start = 0;
 }
 
-void DarkHttpd::connection::redirect(const char *format, ...) {
+void DarkHttpd::Connection::redirect(const char *format, ...) {
   AutoString where;
-  char date[DATE_LEN];
-  va_list va;
 
+  va_list va;
   va_start(va, format);
   xvasprintf(where, format, va);
   va_end(va);
 
-  /* Only really need to calculate the date once. */
-  rfc1123_date(date, service.now);
+  startReply(http_code = 301, "Moved Permanently");
+  reply_fd.printf("Moved to: <a href=\"%s\">%s</a>\n", where.pointer, where.pointer); /* where x 2 */
+  addFooter();
 
-  xasprintf(reply,
-    "<!DOCTYPE html><html><head><title>301 Moved Permanently</title></head><body>\n"
-    "<h1>Moved Permanently</h1>\n"
-    "Moved to: <a href=\"%s\">%s</a>\n" /* where x 2 */
-    "<hr>\n"
-    "%s" /* generated on */
-    "</body></html>\n",
-    where.pointer, where.pointer, service.generated_on(date));
+  startHeader(301, "Moved Permanently");
+  reply_fd.printf("Date: %s\r\n", service.now.image);
+  catServer();
 
-  xasprintf(header,
-    "HTTP/1.1 301 Moved Permanently\r\n"
-    "Date: %s\r\n"
-    "%s" /* server */
-    /* "Accept-Ranges: bytes\r\n" - not relevant here */
-    "Location: %s\r\n"
-    "%s" /* keep-alive */
-    "%s" /* custom headers */
-    "Content-Length: %llu\r\n"
-    "Content-Type: text/html; charset=UTF-8\r\n"
-    "\r\n",
-    date, service.server_hdr.pointer, where.pointer, keep_alive(), service.custom_hdrs.pointer, llu(file_length));
-
+  /* "Accept-Ranges: bytes\r\n" - not relevant here */
+  reply_fd.printf("Location: %s\r\n", where.pointer);
+  catKeepAlive();
+  catCustomHeaders();
+  catContentLength(file_length);//todo:suspicious, iseither 0 or stale.
+  catFixed("Content-Type: text/html; charset=UTF-8\r\n"); //todo: use catMime();
+  //no auth?
+  endHeader();
   reply_type = REPLY_GENERATED;
-  http_code = 301;
 }
 
 /* Parses a single HTTP request field.  Returns string from end of [field] to
@@ -1550,7 +1621,7 @@ void DarkHttpd::connection::redirect(const char *format, ...) {
  * You need to remember to deallocate the result.
  * example: parse_field(conn, "Referer: ");
  */
-char *DarkHttpd::connection::parse_field(const char *field) {
+char *DarkHttpd::Connection::parse_field(const char *field) const {
   /* find start */
   char *pos = strcasestr(request, field);
   if (pos == nullptr) {
@@ -1565,7 +1636,7 @@ char *DarkHttpd::connection::parse_field(const char *field) {
   return sub_string(pos, eol);
 }
 
-void DarkHttpd::connection::redirect_https() {
+void DarkHttpd::Connection::redirect_https() {
   /* work out path of file being requested */
   AutoString url(urldecode(url));
 
@@ -1584,12 +1655,12 @@ void DarkHttpd::connection::redirect_https() {
   redirect("https://%s%s", host.pointer, url.pointer);
 }
 
-bool DarkHttpd::is_https_redirect(connection &conn) const {
-  if (forward_to_https == false) {
+bool DarkHttpd::Connection::is_https_redirect() const {
+  if (service.forward_to_https == false) {
     return false; /* --forward-https was never used */
   }
 
-  AutoString proto(conn.parse_field("X-Forwarded-Proto: "));
+  AutoString proto(parse_field("X-Forwarded-Proto: "));
   if (proto == nullptr || strcasecmp(proto, "https") == 0) {
     return false;
   }
@@ -1604,7 +1675,7 @@ bool DarkHttpd::is_https_redirect(connection &conn) const {
  * "Range: 789 -
  * todo: strtok walk with "=-,\r\n"
  */
-void DarkHttpd::connection::parse_range_field() {
+void DarkHttpd::Connection::parse_range_field() {
   AutoString range(parse_field("Range: bytes="));
   if (!range) {
     return;
@@ -1634,7 +1705,7 @@ void DarkHttpd::connection::parse_range_field() {
  * url (/), the referer (if given) and the user-agent (if given).  Remember to
  * deallocate all these buffers.  The method will be returned in uppercase.
  */
-bool DarkHttpd::connection::parse_request() {
+bool DarkHttpd::Connection::parse_request() {
   assert(request.notTrivial());
 
   /* parse method */
@@ -1733,9 +1804,9 @@ static ssize_t make_sorted_dirlist(const char *path, dlent ***output) {
     }
     if (entries == pool) {
       pool *= 2;
-      list = static_cast<struct dlent **>(xrealloc(list, sizeof(struct dlent *) * pool));
+      list = static_cast<dlent **>(xrealloc(list, sizeof(dlent *) * pool));
     }
-    list[entries] = static_cast<struct dlent *>(xmalloc(sizeof(struct dlent)));
+    list[entries] = static_cast<dlent *>(xmalloc(sizeof(dlent)));
     list[entries]->name = xstrdup(ent->d_name);
     list[entries]->is_dir = S_ISDIR(s.st_mode);
     list[entries]->size = s.st_size;
@@ -1743,7 +1814,7 @@ static ssize_t make_sorted_dirlist(const char *path, dlent ***output) {
     entries++;
   }
   closedir(dir);
-  qsort(list, entries, sizeof(struct dlent *), dlent_cmp);
+  qsort(list, entries, sizeof(dlent *), dlent_cmp);
   *output = list;
   return (ssize_t) entries;
 }
@@ -1798,7 +1869,7 @@ static void urlencode(const char *src, char *dest) {
 }
 
 /* Escape < > & ' " into HTML entities. */
-static void append_escaped(struct apbuf *dst, const char *src) {
+static void append_escaped(apbuf *dst, const char *src) {
   int pos = 0;
   while (src[pos] != '\0') {
     switch (src[pos]) {
@@ -1824,7 +1895,7 @@ static void append_escaped(struct apbuf *dst, const char *src) {
   }
 }
 
-void DarkHttpd::generate_dir_listing(connection &conn, const char *path, const char *decoded_url) {
+void DarkHttpd::Connection::generate_dir_listing(  const char *path, const char *decoded_url) {
   size_t maxlen = 3; /* There has to be ".." */
 
   dlent **list;
@@ -1832,11 +1903,11 @@ void DarkHttpd::generate_dir_listing(connection &conn, const char *path, const c
   if (listsize == -1) {
     /* opendir() failed */
     if (errno == EACCES) {
-      conn.default_reply(403, "Forbidden", "You don't have permission to access this URL.");
+      default_reply(403, "Forbidden", "You don't have permission to access this URL.");
     } else if (errno == ENOENT) {
-      conn.default_reply(404, "Not Found", "The URL you requested was not found.");
+      default_reply(404, "Not Found", "The URL you requested was not found.");
     } else {
-      conn.default_reply(500, "Internal Server Error", "Couldn't list directory: %s", strerror(errno));
+      default_reply(500, "Internal Server Error", "Couldn't list directory: %s", strerror(errno));
     }
     return;
   }
@@ -1865,7 +1936,7 @@ void DarkHttpd::generate_dir_listing(connection &conn, const char *path, const c
   memset(spaces.pointer, ' ', maxlen);
 
   /* append ".." entry if not in wwwroot */
-  if (strncmp(path, wwwroot.begin(), std::min((strlen(path) - 1),wwwroot.length)) != 0) {
+  if (strncmp(path, service.wwwroot.begin(), std::min((strlen(path) - 1), service.wwwroot.length)) != 0) {
     append(listing, "<a href=\"../\">..</a>/\n");
   }
 
@@ -1909,33 +1980,23 @@ void DarkHttpd::generate_dir_listing(connection &conn, const char *path, const c
 
   append(listing, "</pre>\n<hr>\n");
 
-  char date[DATE_LEN];
-  rfc1123_date(date, now);
-  append(listing, generated_on(date));
+  append(listing, service.generated_on(service.now.image));
   append(listing, "</body>\n</html>\n");
 
-  conn.reply = listing->str;
+  reply = listing->str;
   // conn.reply_length = (off_t) listing->length;
   free(listing); /* don't free inside of listing */
 
-  xasprintf(conn.header,
-    "HTTP/1.1 200 OK\r\n"
-    "Date: %s\r\n"
-    "%s" /* server */
-    "Accept-Ranges: bytes\r\n"
-    "%s" /* keep-alive */
-    "%s" /* custom headers */
-    "Content-Length: %llu\r\n"
-    "Content-Type: text/html; charset=UTF-8\r\n"
-    "\r\n",
-    date, server_hdr.pointer, conn.keep_alive(), custom_hdrs.pointer, llu(conn.reply.length));
+  startCommonHeader(200,"OK",reply.length);
 
-  conn.reply_type = DarkHttpd::connection::REPLY_GENERATED;
-  conn.http_code = 200;
+  catFixed("Content-Type: text/html; charset=UTF-8\r\n");
+  endHeader();
+  reply_type = REPLY_GENERATED;
+
 }
 
 /* Process a GET/HEAD request. */
-void DarkHttpd::connection::process_get() {
+void DarkHttpd::Connection::process_get() {
   // char *end;
   char date[DATE_LEN];
   char lastmod[DATE_LEN];
@@ -1945,7 +2006,7 @@ void DarkHttpd::connection::process_get() {
   /* strip out query params */
   auto end = strchr(url, '?');
   if (end != nullptr) {
-    *end = '\0';//modifies url!
+    *end = '\0'; //modifies url!
   }
 
   /* work out path of file being requested */
@@ -1978,7 +2039,7 @@ void DarkHttpd::connection::process_get() {
   if (service.want_single_file) {
     target = service.wwwroot.clone();
     mimetype = service.url_content_type(target);
-  } else if (decoded_url.endsWith( '/')) {
+  } else if (decoded_url.endsWith('/')) {
     /* does it end in a slash? serve up url/index_name */
     xasprintf(target, "%s%s%s", service.wwwroot.pointer, decoded_url.pointer, service.index_name);
     if (!file_exists(target)) {
@@ -1991,7 +2052,7 @@ void DarkHttpd::connection::process_get() {
         return;
       }
       xasprintf(target, "%s%s", service.wwwroot.pointer, decoded_url.pointer);
-      service.generate_dir_listing(*this, target, decoded_url);
+      generate_dir_listing(target, decoded_url);
       return;
     }
     mimetype = service.url_content_type(service.index_name);
@@ -2040,18 +2101,13 @@ void DarkHttpd::connection::process_get() {
 
   /* check for If-Modified-Since, may not have to send */
   AutoString if_mod_since(parse_field("If-Modified-Since: "));
+
   if ((if_mod_since) && (strcmp(if_mod_since, lastmod) == 0)) {
     debug("not modified since %s\n", if_mod_since.pointer);
-    http_code = 304;
-    xasprintf(header,
-      "HTTP/1.1 304 Not Modified\r\n"
-      "Date: %s\r\n"
-      "%s" /* server */
-      "Accept-Ranges: bytes\r\n"
-      "%s" /* keep-alive */
-      "%s" /* custom headers */
-      "\r\n",
-      rfc1123_date(date, service.now), service.server_hdr.pointer, keep_alive(), service.custom_hdrs.pointer);
+    startCommonHeader(http_code = 304, "Not Modified");//leaving off third arg leaves off ContentLength header
+
+    endHeader();
+
     reply = nullptr; //free(), don't just forget and hope we remember to free it later: reply_length = 0;
     reply_type = REPLY_GENERATED;
     header_only = true;
@@ -2100,37 +2156,23 @@ void DarkHttpd::connection::process_get() {
     reply_start = from;
     file_length = to - from + 1;
 
-    xasprintf(header,
-      "HTTP/1.1 206 Partial Content\r\n"
-      "Date: %s\r\n"
-      "%s" /* server */
-      "Accept-Ranges: bytes\r\n"
-      "%s" /* keep-alive */
-      "%s" /* custom headers */
-      "Content-Length: %llu\r\n"
-      "Content-Range: bytes %llu-%llu/%llu\r\n"
-      "Content-Type: %s\r\n"
-      "Last-Modified: %s\r\n"
-      "\r\n",
-      rfc1123_date(date, service.now), service.server_hdr.pointer, keep_alive(), service.custom_hdrs.pointer, llu(file_length), llu(from), llu(to), llu(filestat.st_size), mimetype.pointer, lastmod);
-    http_code = 206;
+    startCommonHeader( 206,"Partial Content",file_length);
+    header_fd.printf(   "Content-Range: bytes %llu-%llu/%llu\r\n",llu(from), llu(to),llu(filestat.st_size));
+
+    header_fd.printf(   "Content-Type: %s\r\n",mimetype.pointer);
+    header_fd.printf(      "Last-Modified: %s\r\n" , lastmod);
+
+    endHeader();
+
     debug("sending %llu-%llu/%llu\n", llu(from), llu(to), llu(filestat.st_size));
   } else {
     /* no range stuff */
     file_length = filestat.st_size;
-    xasprintf(header,
-      "HTTP/1.1 200 OK\r\n"
-      "Date: %s\r\n"
-      "%s" /* server */
-      "Accept-Ranges: bytes\r\n"
-      "%s" /* keep-alive */
-      "%s" /* custom headers */
-      "Content-Length: %llu\r\n"
-      "Content-Type: %s\r\n"
-      "Last-Modified: %s\r\n"
-      "\r\n",
-      rfc1123_date(date, service.now), service.server_hdr.pointer, keep_alive(), service.custom_hdrs.pointer, llu(file_length), mimetype.pointer, lastmod);
-    http_code = 200;
+startCommonHeader(200,"OK",file_length);
+
+    header_fd.printf(   "Content-Type: %s\r\n",mimetype.pointer);
+    header_fd.printf(      "Last-Modified: %s\r\n" , lastmod);
+    endHeader();
   }
 }
 
@@ -2169,12 +2211,12 @@ bool password_equal(const char *user_input, const char *secret) {
 }
 
 /* Process a request: build the header and reply, advance state. */
-void DarkHttpd::connection::process_request() {
+void DarkHttpd::Connection::process_request() {
   service.fyi.num_requests++;
 
   if (!parse_request()) {
     default_reply(400, "Bad Request", "You sent a request that the server couldn't understand.");
-  } else if (service.is_https_redirect(*this)) {
+  } else if (is_https_redirect()) {
     redirect_https();
   }
   /* fail if: (auth_enabled) AND (client supplied invalid credentials) */
@@ -2197,7 +2239,7 @@ void DarkHttpd::connection::process_request() {
 }
 
 /* Receiving request. */
-void DarkHttpd::connection::poll_recv_request() {
+void DarkHttpd::Connection::poll_recv_request() {
   char buf[1 << 15];
 
   assert(state == RECV_REQUEST);
@@ -2251,7 +2293,7 @@ void DarkHttpd::connection::poll_recv_request() {
 }
 
 /* Sending header.  Assumes conn->header is not NULL. */
-void DarkHttpd::connection::poll_send_header() {
+void DarkHttpd::Connection::poll_send_header() {
   ssize_t sent;
 
   assert(state == SEND_HEADER);
@@ -2359,7 +2401,7 @@ static ssize_t send_from_file(const int s, const int fd, off_t ofs, size_t size)
 }
 
 /* Sending reply. */
-void DarkHttpd::connection::poll_send_reply() {
+void DarkHttpd::Connection::poll_send_reply() {
   ssize_t sent;
 
   assert(state == SEND_REPLY);
@@ -2438,17 +2480,17 @@ void DarkHttpd::httpd_poll() {
 
   for (auto conn: entries) {
     switch (conn->state) {
-      case connection::DONE:
+      case Connection::DONE:
         /* do nothing, no connection should be left in this state */
         break;
 
-      case connection::RECV_REQUEST:
+      case Connection::RECV_REQUEST:
         MAX_FD_SET(int(conn->socket), &recv_set);
         bother_with_timeout = true;
         break;
 
-      case connection::SEND_HEADER:
-      case connection::SEND_REPLY:
+      case Connection::SEND_HEADER:
+      case Connection::SEND_REPLY:
         MAX_FD_SET(int(conn->socket), &send_set);
         bother_with_timeout = true;
         break;
@@ -2498,7 +2540,7 @@ void DarkHttpd::httpd_poll() {
   }
 
   /* update time */
-  now = time(nullptr);
+  now.refresh(); //read clock and textify
 
   /* poll connections that select() says need attention */
   if (FD_ISSET(int(sockin), &recv_set)) {
@@ -2509,31 +2551,31 @@ void DarkHttpd::httpd_poll() {
     conn->poll_check_timeout();
     int socket = conn->socket;
     switch (conn->state) {
-      case connection::RECV_REQUEST:
+      case Connection::RECV_REQUEST:
         if (FD_ISSET(socket, &recv_set)) {
           conn->poll_recv_request();
         }
         break;
 
-      case connection::SEND_HEADER:
+      case Connection::SEND_HEADER:
         if (FD_ISSET(socket, &send_set)) {
           conn->poll_send_header();
         }
         break;
 
-      case connection::SEND_REPLY:
+      case Connection::SEND_REPLY:
         if (FD_ISSET(socket, &send_set)) {
           conn->poll_send_reply();
         }
         break;
 
-      case connection::DONE:
+      case Connection::DONE:
         /* (handled later; ignore for now as it's a valid state) */
         break;
     }
 
     /* Handling SEND_REPLY could have set the state to done. */
-    if (conn->state == connection::DONE) {
+    if (conn->state == Connection::DONE) {
       /* clean out finished connection */
       if (conn->conn_closed) {
         entries.remove(conn);
@@ -2618,73 +2660,6 @@ void DarkHttpd::daemonize_finish() {
   }
 }
 
-#define PIDFILE_MODE 0600
-
-void DarkHttpd::pidfile_remove() {
-  if (unlink(pidfile_name) == -1) {
-    err(1, "unlink(pidfile) failed");
-  }
-  /* if (flock(pidfile_fd, LOCK_UN) == -1)
-         err(1, "unlock(pidfile) failed"); */
-  xclose(pidfile_fd);
-  pidfile_fd = -1;
-}
-
-int DarkHttpd::pidfile_read() {
-  char buf[16];
-  long long pid;
-
-  Fd fd(open(pidfile_name, O_RDONLY));
-  if (fd == -1) {
-    err(1, " after create failed");
-  }
-
-  auto i = read(fd, buf, sizeof(buf) - 1);
-  if (i == -1) {
-    err(1, "read from pidfile failed");
-  }
-  xclose(fd);
-  buf[i] = '\0';
-
-  if (!str_to_num(buf, &pid)) {
-    err(1, "invalid pidfile contents: \"%s\"", buf);
-  }
-  return pid;
-}
-
-void DarkHttpd::pidfile_create() {
-  int error, fd;
-  char pidstr[16];
-
-  /* Open the PID file and obtain exclusive lock. */
-  fd = open(pidfile_name,
-    O_WRONLY | O_CREAT | O_EXLOCK | O_TRUNC | O_NONBLOCK, PIDFILE_MODE);
-  if (fd == -1) {
-    if ((errno == EWOULDBLOCK) || (errno == EEXIST)) {
-      errx(1, "daemon already running with PID %d", pidfile_read());
-    } else {
-      err(1, "can't create pidfile %s", pidfile_name);
-    }
-  }
-  pidfile_fd = fd;
-
-  if (ftruncate(fd, 0) == -1) {
-    error = errno;
-    pidfile_remove();
-    errno = error;
-    err(1, "ftruncate() failed");
-  }
-
-  snprintf(pidstr, sizeof(pidstr), "%d", (int) getpid());
-  if (pwrite(fd, pidstr, strlen(pidstr), 0) != (ssize_t) strlen(pidstr)) {
-    error = errno;
-    pidfile_remove();
-    errno = error;
-    err(1, "pwrite() failed");
-  }
-}
-
-/* [<-] end of pidfile helpers. */
 
 void DarkHttpd::change_root() {
 #ifdef HAVE_NON_ROOT_CHROOT
@@ -2698,7 +2673,7 @@ void DarkHttpd::change_root() {
 
   tzset(); /* read /etc/localtime before we chroot */
   if (want_single_file) {
-    AutoString path=wwwroot.clone();
+    AutoString path = wwwroot.clone();
     auto lastSlash = strrchr(path, '/');
     /* wwwroot file is not presumed to be in the current directory */
     if (lastSlash) {
@@ -2706,8 +2681,8 @@ void DarkHttpd::change_root() {
       if (chdir(path) == -1) {
         err(1, "chdir(%s)", path.pointer);
       }
-      wwwroot=&lastSlash[1];
-    } else {//should be same as cwd
+      wwwroot = &lastSlash[1];
+    } else { //should be same as cwd
       path[0] = '.'; //?! this trusts that wwwroot has at least one char before its null.
       path[1] = '\0';
     }
@@ -2732,13 +2707,18 @@ void DarkHttpd::stop_running(int sig unused) {
   forSignals->running = false;
 }
 
+// too soon, giving me gried with deleted functions that are the main reason ostream exists.
+// std::ostream operator<<( std::ostream & lhs, const struct timeval & rhs) {
+//   return lhs << rhs.tv_sec <<'.'<<rhs.tv_usec / 10000;//todo: fixed with zero filled format for second field
+// }
+
 /* usage stats */
 void DarkHttpd::reportStats() const {
   rusage r;
   getrusage(RUSAGE_SELF, &r);
   printf("CPU time used: %u.%02u user, %u.%02u system\n",
     static_cast<unsigned int>(r.ru_utime.tv_sec),
-    static_cast<unsigned int>(r.ru_utime.tv_usec / 10000),
+    static_cast<unsigned int>(r.ru_utime.tv_usec),
     static_cast<unsigned int>(r.ru_stime.tv_sec),
     static_cast<unsigned int>(r.ru_stime.tv_usec / 10000));
   printf("Requests: %llu\n", llu(fyi.num_requests));
@@ -2803,10 +2783,8 @@ void DarkHttpd::prepareToRun() {
     printf("set uid to %d\n", (int) drop_uid);
   }
 
-  /* create pidfile */
-  if (pidfile_name) {
-    pidfile_create();
-  }
+    pid.create();
+
 
   if (want_daemon) {
     daemonize_finish();
@@ -2841,8 +2819,8 @@ int DarkHttpd::main(int argc, char **argv) {
     }
     /* clean exit */
     xclose(sockin);
-    if (pidfile_name) {
-      pidfile_remove(); //systemd can be configured to do this for you.
+    if (pid.file_name) {
+      pid.remove(); //systemd can be configured to do this for you.
     }
   } catch (DarkException ex) {
     printf("Exit %d attempted, ending polling loop in __FUNCTION__", ex.returncode);
@@ -2865,6 +2843,73 @@ void DarkHttpd::PipePair::close() {
   }
   if (!fds[1].close()) {
     warn("couldn't cut the lifeline");
+  }
+}
+
+void DarkHttpd::PidFiler::remove() {
+  if (unlink(file_name) == -1) {
+    err(1, "unlink(pidfile) failed");
+  }
+  /* if (flock(pidfile_fd, LOCK_UN) == -1)
+             err(1, "unlock(pidfile) failed"); */
+  close();
+}
+
+void DarkHttpd::PidFiler::Remove(const char *why) {
+  int error= errno;
+  remove();
+  errno = error;
+  err(1, why);//ignore format-security warning, it can't work here.
+}
+
+int DarkHttpd::PidFiler::file_read() {
+  char buf[16];
+  long long pid;
+
+  Fd::operator=(open(file_name, O_RDONLY));
+  if (!seemsOk()) {
+    err(1, " after create failed");
+  }
+
+  auto i = read(fd, buf, sizeof(buf) - 1);
+  if (i == -1) {
+    err(1, "read from pidfile failed");
+  }
+  close();
+  buf[i] = '\0';
+
+  if (!str_to_num(buf, &pid)) {
+    err(1, "invalid pidfile contents: \"%s\"", buf);
+  }
+  return pid;
+}
+
+#define PIDFILE_MODE 0600
+
+void DarkHttpd::PidFiler::create() {
+  if (!file_name) {
+    return;
+  }
+
+  char pidstr[16];
+
+  /* Open the PID file and obtain exclusive lock. */
+  fd = open(file_name,    O_WRONLY | O_CREAT | O_EXLOCK | O_TRUNC | O_NONBLOCK, PIDFILE_MODE);
+  if (fd == -1) {
+    if ((errno == EWOULDBLOCK) || (errno == EEXIST)) {
+      errx(1, "daemon already running with PID %d", file_read());
+    } else {
+      err(1, "can't create pidfile %s", file_name);
+    }
+  }
+
+  if (ftruncate(fd, 0) == -1) {
+    Remove("ftruncate() failed");
+  }
+
+  snprintf(pidstr, sizeof(pidstr), "%d", getpid());
+  if (pwrite(fd, pidstr, strlen(pidstr), 0) != strlen(pidstr)) {
+    Remove("pwrite() failed");
   }
 }
 

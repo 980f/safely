@@ -34,15 +34,19 @@
 #endif
 #endif
 
+#include <cheaptricks.h>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <fcntl.h>
 #include <forward_list>
 #include <locale>
 #include <map>
+#include <stdarg.h>
 #include <netinet/in.h>
 #include <unistd.h>
+#include <vector>
 
 /** build options */
 #ifndef NO_IPV6
@@ -85,17 +89,17 @@ struct AutoString {
     return pointer;
   }
 
+  bool notTrivial() const {
+    return pointer && length > 0;
+  }
+
   /** @returns whether we have a nontrivial block*/
   operator bool() const {
-    return pointer != nullptr && length >= 0;
+    return notTrivial();
   }
 
   bool operator!() const {
-    return pointer == nullptr;
-  }
-
-  bool notTrivial() const {
-    return pointer && length > 0;
+    return pointer == nullptr || length == 0;
   }
 
   /**
@@ -145,6 +149,12 @@ struct AutoString {
   bool malloc(size_t amount);
 
   AutoString(AutoString &&other) = delete;
+
+  unsigned int catf( const char *format, ...) {
+
+    return length;
+  }
+
 };
 
 /** a not-null terminated string that we can't alter through this object. This class exists so that we can sub-string without touching the orignal string OR copying it.*/
@@ -187,54 +197,35 @@ struct StringView {
 
 /** add conveniences to an in6_addr **/
 struct Inaddr6 : in6_addr {
-  Inaddr6 &clear() {
-    for (auto index = 4; index-- > 0;) { //gcc converts this to a memset.
-      __in6_u.__u6_addr32[index] = 0;
-    }
-    return *this;
-  }
+  Inaddr6 &clear();
 
   Inaddr6() : in6_addr() {
     clear();
   }
 
-  bool isUnspecified() const {
-    return __in6_u.__u6_addr32[0] == 0 && __in6_u.__u6_addr32[1] == 0 && __in6_u.__u6_addr32[2] == 0 && __in6_u.__u6_addr32[3] == 0;
-  }
+  bool isUnspecified() const;
 
-  bool isLoopback() const {
-    return __in6_u.__u6_addr32[0] == 0 && __in6_u.__u6_addr32[1] == 0 && __in6_u.__u6_addr32[2] == 0 && __in6_u.__u6_addr32[3] == htonl(1);
-  }
+  bool isLoopback() const;
 
-  bool isLinkLocal() const {
-    return __in6_u.__u6_addr32[0] & htonl(0xffc00000) == htonl(0xfe800000);
-  }
+  bool isLinkLocal() const;
 
-  bool isSiteLocal() const {
-    return __in6_u.__u6_addr32[0] & htonl(0xffc00000) == htonl(0xfec00000);
-  }
+  bool isSiteLocal() const;
 
   /** @returns whether this ipv6 address is a mapped ipv4*/
-  bool wasIpv4() const {
-    return __in6_u.__u6_addr32[0] == 0 && __in6_u.__u6_addr32[1] == 0 && __in6_u.__u6_addr32[2] == htonl(0xffff);
-  }
+  bool wasIpv4() const;
 
-  bool isV4compatible() const {
-    return __in6_u.__u6_addr32[0] == 0 && __in6_u.__u6_addr32[1] == 0 && __in6_u.__u6_addr32[2] == 0 && ntohl(__in6_u.__u6_addr32[3]) > 1;
-  }
+  bool isV4compatible() const;
 
-  bool operator ==(const Inaddr6 &other) const {
-    for (auto index = 4; index-- > 0;) {
-      if (__in6_u.__u6_addr32[index] != other.__in6_u.__u6_addr32[index]) {
-        return false;
-      }
-    }
-    return true;
-  }
+  bool operator ==(const Inaddr6 &other) const;
 
-  bool isMulticast() const {
-    return __in6_u.__u6_addr8[0] == 0xff;
-  }
+  bool isMulticast() const;
+};
+
+struct SockAddr6:sockaddr_in6 {
+  Inaddr6 &addr6 ;
+  SockAddr6() : addr6(*reinterpret_cast<Inaddr6*>(&sin6_addr)) {}
+
+  bool presentationToNetwork(const char *bindaddr);
 };
 
 class DarkException;
@@ -266,7 +257,20 @@ class DarkHttpd {
 
 public:
   class Fd { // a minimal one compared to safely/posix
+  protected:
     int fd = -1;
+    FILE *stream=nullptr;
+
+  public:
+    FILE *getStream() {//this "create at need"
+      if (fd==-1) {
+        return nullptr;//todo: or perhaps spew to stderr?? This will likely segv.
+      }
+      if (stream == nullptr) {
+        stream=fdopen(fd,"wb");//using b as we must use network line endings, not the platform's idea of them
+      }
+      return stream;
+    }
 
   public:
     // ReSharper disable once CppNonExplicitConversionOperator
@@ -274,8 +278,13 @@ public:
       return fd;
     }
 
+    bool seemsOk() {
+      return fd != -1;
+    }
+
     int operator=(int newfd) { // NOLINT(*-unconventional-assign-operator)
       fd = newfd;
+      //consider caching stream here, if fd is open.
       return newfd;
     }
 
@@ -290,10 +299,9 @@ public:
 
     /** @returns whether close() thinks it worked , but we discard our fd value regardless of that */
     bool close() {
-      if (fd != -1) {
+      if (seemsOk()) {
         int fi = ::close(fd);
         fd = -1;
-
         return fi != -1;
       }
       return true; // already closed is same as just now successfully closed.
@@ -321,14 +329,20 @@ public:
       return dup2(fd, fdother) != -1;
     }
 
+    size_t vprintln(const char *format, va_list va);
+
+    size_t putln(const char *content);
+
     Fd() = default;
 
     // ReSharper disable once CppNonExplicitConvertingConstructor
     Fd(int open) : fd(open) {}
+
+    size_t printf(const char*format ,...);
   };
 
 
-  struct connection {
+  struct Connection {
     Fd socket;
     DarkHttpd &service;
 #ifdef HAVE_INET6
@@ -365,7 +379,7 @@ public:
 
     size_t header_sent = 0;
     bool header_dont_free = false;
-    int header_only = 0;
+    bool header_only = false;
     int http_code = 0;
     bool conn_closed = true;
 
@@ -375,7 +389,9 @@ public:
       REPLY_NONE
     } reply_type = REPLY_NONE;
 
-    AutoString reply = nullptr;
+    Fd header_fd;
+
+    AutoString reply = nullptr;//wil be replacing this with creating a temp file and then always sending header as a file then reply as a file. Later on we'll figure out how to merge them when the reply is internally generated.
     bool reply_dont_free = false;
     Fd reply_fd;
     off_t reply_start = 0;
@@ -384,9 +400,7 @@ public:
     off_t total_sent = 0;
     /* header + body = total, for logging */
   public:
-    connection(DarkHttpd &parent) : service(parent) {
-      memset(&client, 0, sizeof(client));
-    }
+    Connection(DarkHttpd &parent,int fd);//only called via new in socket acceptor code.
 
     void clear();
 
@@ -396,13 +410,41 @@ public:
 
     const char *keep_alive() const;
 
+    void startHeader(int errcode, const char *errtext);
+
+    void catDate();
+
+    void catServer();
+
+    void catFixed(const char *fixedText);
+
+    void catKeepAlive();
+
+    void catCustomHeaders();
+
+    void catContentLength(off_t off);
+
+    void startCommonHeader(int errcode,const char *errtext,off_t contentLenght);
+
+    void catAuth();
+
+    void catGeneratedOn(bool toReply);
+
+    void endHeader();
+
+    void startReply(int errcode, const char *errtext);
+
+    void addFooter();
+
     void default_reply(int errcode, const char *errname, const char *format, ...) checkFargs(4, 5);
 
     void redirect(const char *format, ...) checkFargs(2, 3);
 
-    char *parse_field(const char *field);
+    char *parse_field(const char *field) const;
 
     void redirect_https();
+
+    bool is_https_redirect() const;
 
     void parse_range_field();
 
@@ -417,15 +459,12 @@ public:
     void poll_send_header();
 
     void poll_send_reply();
-  };
 
-  // int parse_mimetype_line(const char *line);
-  //
-  // void parse_default_extension_map();
+    void generate_dir_listing(const char *path, const char *decoded_url) ;
 
-  void parse_extension_map_file(const char *filename);
+  };//end of connection child class
 
-  const char *mime_map_find(const char *str);
+  void load_mime_map_file(const char *filename);
 
   StringView url_content_type(const char *url);
 
@@ -435,19 +474,11 @@ public:
 
   void usage(const char *argv0);
 
-  void generate_dir_listing(connection &conn, const char *path, const char *decoded_url);
-
-  // void process_get(connection &conn);
-
   void httpd_poll();
 
   bool daemonize_start();
 
   void daemonize_finish();
-
-  void pidfile_remove();
-
-  int pidfile_read();
 
   void freeall();
 
@@ -455,19 +486,15 @@ public:
 
   void accept_connection();
 
-  void log_connection(const connection *conn);
+  void log_connection(const Connection *conn);
 
   void prepareToRun();
-
-  void pidfile_create();
 
   void change_root();
 
 #define DATE_LEN 30 /* strlen("Fri, 28 Feb 2003 00:02:08 GMT")+1 */
 
   const char *generated_on(const char date[DATE_LEN]) const;
-
-  bool is_https_redirect(connection &conn) const;
 
   static void stop_running(int sig);
 
@@ -497,7 +524,7 @@ private:
   Fd sockin; /* socket to accept connections from */
 
   /** the entries will all be dynamically allocated */
-  std::forward_list<connection *> entries;
+  std::forward_list<Connection *> entries;
 
   const char *forward_all_url = nullptr;
 
@@ -512,7 +539,21 @@ private:
   /* Time is cached in the event loop to avoid making an excessive number of
    * gettimeofday() calls.
    */
-  time_t now;
+  struct Now {
+  private:
+    time_t raw=0;
+  public:
+    operator time_t() {
+      return raw;
+    }
+    time_t utc;
+    char image[DATE_LEN];
+    void refresh() {
+      raw = time(&utc);//twofer: both are set to the same value
+      //rfc11whatever format.
+      image[strftime(image, DATE_LEN, "%a, %d %b %Y %H:%M:%S GMT", gmtime(&utc))] = 0; // strftime returns number of chars it put into dest.
+    }
+  } now ;
 
   /* To prevent a malformed request from eating up too much memory, die once the
    * request exceeds this many bytes:
@@ -540,8 +581,19 @@ private:
   /* [->] pidfile helpers, based on FreeBSD src/lib/libutil/pidfile.c,v 1.3
    * Original was copyright (c) 2005 Pawel Jakub Dawidek <pjd@FreeBSD.org>
    */
-  Fd pidfile_fd;
-  char *pidfile_name = nullptr; /* NULL = no pidfile */
+  struct PidFiler:Fd {
+    char *file_name = nullptr; /* NULL = no pidfile */
+
+    void remove();
+
+    void Remove(const char *why);
+
+    int file_read();
+
+    void create();
+
+
+  } pid;
 
   bool want_chroot = false;
   bool want_daemon = false;
@@ -553,7 +605,7 @@ private:
   AutoString server_hdr; //pkgname in building of replys //todo: replace with conditional sending of constant.
   AutoString auth_key; /* NULL or "Basic base64_of_password" */ //base64 expansion of a cli arg.
   //todo: load only from file, not commandline. Might even drop feature. Alternative is a std::vector of headers rather than a blob.
-  AutoString custom_hdrs; //parse_commandline concatenation of argv's with formatting. Should just record their indexes and generate on sending rather than cacheing here.
+  std::vector<const char *> custom_hdrs; //parse_commandline concatenation of argv's with formatting. Should just record their indexes and generate on sending rather than cacheing here.
 
   /** things that are interesting but don't affect operation */
   struct Fyi {
