@@ -8,19 +8,22 @@
 #include <bit> //rotate instructions are still new to C++, despite being present in nearly every microcomputer ever, at least since hte early 1970's when C was invented.
 
 void PicoPIOemulator::SM::Fifo::push(unsigned value) {
-  if (!isFull()) {
+  if (isFull()) {
+    oopsed |= true;
+  } else {
     mem[++writepointer] = value;
     ++quantity;
   }
-  //else do we do anything? overrun?
 }
 
 unsigned PicoPIOemulator::SM::Fifo::pull() {
-  if (!isEmpty()) {
+  if (isEmpty()) {
+    oopsed |= true;
+    return mem[readpointer]; //guessing at what hardware does, caller should check isEmpty before pull'ing.
+  } else {
     --quantity;
     return mem[readpointer++];
   }
-  return mem[readpointer]; //guessing at what hardware does, caller should check isEmpty before pull'ing.
 }
 
 void PicoPIOemulator::SM::Fifo::setSize(unsigned size) {
@@ -51,7 +54,26 @@ void PicoPIOemulator::SM::ShiftRegister::load(uint32_t value) {
   consumed = 0;
 }
 
+bool PicoPIOemulator::SM::ShiftRegister::isConsumed() const {
+  return cfg.threshold ? consumed >= cfg.threshold : consumed >= 32;
+}
+
+unsigned PicoPIOemulator::SM::Config::getDelay(unsigned ir) {
+  unsigned msb = 12 - sideset.pins.count;
+  return extractField(ir, msb, 8);
+}
+
+void PicoPIOemulator::SM::ShiftRegister::bumpCount(unsigned numBits) {
+  consumed += numBits;
+  if (consumed > 32) consumed = 32; //claim is this saturates, probably sets a "full flag" and refuses operations.
+}
+
 void PicoPIOemulator::SM::ShiftRegister::input(unsigned numBits, bool fromMsb, unsigned source) {
+  if (numBits == 0) { //means 32
+    SR = source;
+    consumed = 32;
+    return;
+  }
   if (fromMsb) {
     SR >>= numBits;
     SR |= (source & fieldMask(numBits, 0)) << (size - numBits);
@@ -59,11 +81,15 @@ void PicoPIOemulator::SM::ShiftRegister::input(unsigned numBits, bool fromMsb, u
     SR <<= numBits;
     SR |= source & fieldMask(numBits, 0);
   }
-  consumed += numBits; //which might go over 32, but that is apparently undefined behavior.
+  bumpCount(numBits);
 }
 
 unsigned PicoPIOemulator::SM::ShiftRegister::output(unsigned numBits, bool fromMsb) {
-  //todo: what do we do if more bits than are present is asked for?
+  if (numBits == 0) {
+    consumed = 32;
+    return take(SR);
+  }
+  //todo: what do we do if more bits than are present is asked for? My guess is shift as commanded and let
   unsigned target = 0;
   if (fromMsb) {
     target = SR & fieldMask(numBits, 0);
@@ -72,8 +98,16 @@ unsigned PicoPIOemulator::SM::ShiftRegister::output(unsigned numBits, bool fromM
     target = SR & fieldMask(size, size - numBits);
     SR <<= numBits;
   }
-  consumed += numBits; //which might go over 32, but that is apparently undefined behavior.
+  bumpCount(numBits);
   return target;
+}
+
+unsigned PicoPIOemulator::SM::Registers::opField(unsigned msb, unsigned lsb) {
+  return extractField(IR, msb, lsb);
+}
+
+unsigned PicoPIOemulator::SM::Registers::opBit(unsigned msb) {
+  return bit(IR, msb);
 }
 
 void PicoPIOemulator::SM::sideset(unsigned opfield) {
@@ -163,7 +197,16 @@ void PicoPIOemulator::SM::IN(unsigned source, unsigned bitCount) {
   }
 }
 
-bool PicoPIOemulator::SM::PULL(bool ifEmpty, bool block) {
+void PicoPIOemulator::SM::PUSH(bool ifFull, bool block) {
+  if (ifFull) {}
+  if (block) {
+    if (RX.isFull()) {
+      rxWait();
+    }
+  }
+}
+
+void PicoPIOemulator::SM::PULL(bool ifEmpty, bool block) {
   if (ifEmpty) {
     // if (reg.outputSR.isConsumed()) {
     //   //todo:some kind of wait
@@ -171,8 +214,8 @@ bool PicoPIOemulator::SM::PULL(bool ifEmpty, bool block) {
   }
 
   if (block) {
-    if (TX.isEmpty()) {
-      return true; //do nothing but signal that a WAIT is needed.
+    if (TX.isEmpty()) { //while this is the same condition as is tested in txWait we don't want the extra clock that presently txWait and the like emit.
+      txWait();
     }
 
     reg.outputSR.load(reg.X);
@@ -182,13 +225,12 @@ bool PicoPIOemulator::SM::PULL(bool ifEmpty, bool block) {
 
   if (TX.isEmpty()) {
     if (ifEmpty) {
-      //do nothing
+      //officially do nothing
     }
     reg.outputSR.load(reg.X);
   } else {
     reg.outputSR.load(TX.pull());
   }
-  return false;
 }
 
 void PicoPIOemulator::SM::WAIT() {}
@@ -254,7 +296,7 @@ void PicoPIOemulator::SM::MOV(unsigned int target, bool reverse, bool invert, un
       break;
     case 4:
       inject(incoming);
-    //todo: delay is not taken, but sideset is.
+    //todo: delay is not taken, but sideset executes.
       break;
     case 5:
       reg.PC = incoming;
@@ -273,6 +315,12 @@ void PicoPIOemulator::SM::MOV(unsigned int target, bool reverse, bool invert, un
 
 void PicoPIOemulator::SM::OUT(unsigned int opoptions, unsigned int indexCount) {
   auto pattern = reg.outputSR.output(indexCount, cfg.OUT.shiftRight);
+  if (cfg.OUT.autoRefresh && reg.outputSR.isConsumed()) {
+    if (TX.isEmpty()) {
+      txWait();
+    }
+    reg.outputSR.load(TX.pull());
+  }
   switch (opoptions) {
     case 0:
       gpio.output(cfg.OUT.pins, pattern);
@@ -303,9 +351,52 @@ void PicoPIOemulator::SM::OUT(unsigned int opoptions, unsigned int indexCount) {
   }
 }
 
-void PicoPIOemulator::SM::irqWait(unsigned which, bool toBeSet) {
-  while (bit(reg.irqFlags, which) != toBeSet) {
+void PicoPIOemulator::SM::stall(std::function<bool()> condition) {
+  cfg.stalled = true;
+  while (condition()) {
     simulatedClock();
+  }
+  cfg.stalled = false;
+}
+
+void PicoPIOemulator::SM::irqWait(unsigned which, bool toBeSet) {
+  stall([this,which,toBeSet] {
+    return group.irq.is(which, !toBeSet);
+  });
+}
+
+void PicoPIOemulator::SM::txWait() {
+  stall([this] {
+    return TX.isEmpty();
+  });
+}
+
+void PicoPIOemulator::SM::rxWait() {
+  stall([this] {
+    return RX.isFull();
+  });
+}
+
+
+void PicoPIOemulator::SM::pinWait(unsigned bitnum, bool toBeSet) {
+  stall([this,bitnum,toBeSet] {
+    return bit(gpio.pin, bitnum) != toBeSet;
+  });
+}
+
+void PicoPIOemulator::SM::IRQ(unsigned indexCount) {
+  //the following could be done in one hairy conditional, but that was hard to read and explain so we do it in baby steps
+  unsigned irqnum = indexCount & 3; //starting with the 2 lsbs
+  if (bit(indexCount, 4)) { //if the msb of the field is set
+    irqnum += ownIndex; //then add ownIndex
+    irqnum %= 4; //modulo 4 (compiler knows to and with 3)
+  }
+  irqnum |= bit(indexCount, 2) << 2; //bit 2 is always used as is.
+
+  auto raise=reg.opBit(6);
+  group.irq.irqOp( irqnum,raise);
+  if (raise && reg.opBit(5)) {
+    irqWait(irqnum, false);
   }
 }
 
@@ -329,21 +420,22 @@ void PicoPIOemulator::SM::run() {
         ++reg.PC;
       }
     }
-    sideset(extractField(reg.IR, 12, 8));
-    auto opoptions = extractField(reg.IR, 7, 5);
-    auto indexCount = extractField(reg.IR, 4, 0);
-    switch (extractField(reg.IR, 15, 13)) {
+    sideset(reg.opField(12, 8)); //todo: side set needs to take priority over other gio setting by instructions, but must proceed waiting. The resolution will be to have multiple 'pin' fields in gpio and merge them via priority rules to get the value that we inform the outside world of with each simulated clock cycle.
+
+    auto opoptions = reg.opField(7, 5);
+    auto indexCount = reg.opField(4, 0);
+    switch (reg.opField(15, 13)) {
       case 0:
         JMP(static_cast<Condition>(opoptions), indexCount);
         break;
       case 1: //wait
-        if (bit(reg.IR, 6)) { //an irq wait
+        if (reg.opBit(6)) { //an irq wait
         } else { //gpio wait
-          if (bit(reg.IR, 5)) {
+          if (reg.opBit(5)) {
             indexCount += cfg.IN.pins.lsb;
             indexCount %= 32;
           }
-          pinWait(indexCount, bit(reg.IR, 7));
+          pinWait(indexCount, reg.opBit(7));
         }
         WAIT();
         break;
@@ -357,36 +449,21 @@ void PicoPIOemulator::SM::run() {
         if (opoptions & 3 == 0) {
           IllegalOP(false); //V1: RX as mailboxes
         } else {
-          if (bit(reg.IR, 7)) {
-            if (PULL(bit(reg.IR, 6), bit(reg.IR, 5))) {}
+          auto conditionally = reg.opBit(6);
+          auto block = reg.opBit(5);
+          if (reg.opBit(7)) {
+            PULL(conditionally, block);
           } else {
-            PUSH();
+            PUSH(conditionally, block);
           }
         }
         break;
       case 5:
         MOV(opoptions, bit(reg.IR, 4), bit(reg.IR, 3), indexCount & 7);
         break;
-      case 6: {
-        //the following could be done in one hairy conditional, but that was hard to read and explain so we do it in baby steps
-        unsigned irqnum = indexCount & 3; //starting with the 2 lsbs
-        if (bit(indexCount, 4)) { //if the msb of the field is set
-          irqnum += ownIndex; //then add ownIndex
-          irqnum %= 4; //modulo 4 (compiler knows to and with 3)
-        }
-        irqnum |= bit(indexCount, 2) << 2; //bit 2 is always used as is.
-        if (bit(reg.IR, 6)) {
-          clearBit(reg.irqFlags, irqnum);
-          //and maybe wait for it to clear
-        } else { //just clear and proceed
-          setBit(reg.irqFlags, irqnum);
-          if (bit(reg.IR, 7)) {
-            irqWait(irqnum, false);
-          }
-          //and do the above wait before we start the delay!
-        }
-      }
-      break;
+      case 6:
+        IRQ(indexCount);
+        break;
       case 7:
         SET();
         break;
@@ -394,7 +471,11 @@ void PicoPIOemulator::SM::run() {
         InternalError();
         break;
     }
-    //and now we do delay = timed wait
+    //delay comes last as it might get modified by instruction execution:
+    unsigned delayCount = inject.haveInjection ? 0 : cfg.getDelay(reg.IR); //if we overwrite the IR while processing an instruction we ditch the delay from the original instruction but also do not use that of the injected one.
+    do {
+      simulatedClock(); //we do this once even if we are not going to delay, to inform the world of what the instruction did.
+    } while (delayCount--);
   }
 }
 
