@@ -8,9 +8,6 @@ target_sources(${safely_target} PUBLIC
   telnetserver.h
   #tcpsocket.cpp
   #tcpserver.cpp
-  darkhttpd.cpp
-  darkhttpd.h
-
 )
 
 target_include_directories(${safely_target} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} )
