@@ -5,13 +5,24 @@
 #include "sys/epoll.h" //for event type
 /** wrap the epoll function set */
 #include "buffer.h"
-#include <functional> //for callback
-
 #include "stopwatch.h" //for time services
 
-class Epoller : public PosixWrapper {
+struct EpollHandler {
+  virtual ~EpollHandler() = default;
+  virtual void operator()(unsigned flags)=0;
+  static void Thunk(const epoll_event& event) {
+    (*static_cast<EpollHandler *>(event.data.ptr))(event.events);
+  }
+};
+
+class Epoller : public PosixWrapper, EpollHandler {
   int epfd;
 
+  void processList();
+  void operator()(unsigned flags) override;
+  /** data returned from wait():*/
+  Indexer<epoll_event> waitlist;
+  unsigned numEvents;
 public:
   /** epoll_create. @param maxreport is the maximum #of triggered fd's to handle on any one wait call. */
   Epoller(unsigned maxreport);
@@ -26,37 +37,30 @@ public:
     return epfd >= 0;
   }
 
-  using Handler = std::function<void(unsigned /*eventbits*/)>;
+  bool watch(int fd, unsigned eventbits, EpollHandler &handler);
 
-  bool watch(int fd, unsigned eventbits, Handler handler);
-
-  bool modify(int fd, unsigned eventbits, Handler handler);
+  bool modify(int fd, unsigned eventbits, EpollHandler &handler);
 
   bool remove(int fd);
 
-  /** data returned from wait():*/
-  Indexer<epoll_event> waitlist;
-  unsigned numEvents;
+  /** core of event loop.Must be called frequently. xOr register this guy's fd with your main application epoll loop, watching for read events. */
+  bool loop(NanoSeconds timeout);
+
+  /** add to higher level watcher */
+  void registerWith(Epoller &myWatcher);
+public:
+
   /** FYI: number of times wait() has been called, will wrap so mostly just for debug.*/
   unsigned waitcount = 0;
 
-  /** this must be called regularly to get events detected, is called by @see doEvents which actually processes the events detected. */
-  bool wait(NanoSeconds timeoutms);
-
-  /** respond to an event report from wait: */
-  static void exec(const epoll_event &ev);
-
-  /** core of event loop.Must be called frequently.
-   * One mechanism is to register this guy's fd with your main application loop, watching for read events. */
-  bool doEvents(NanoSeconds timeoutms);
-
-  /** for debug messages, prints out which flags are active in the epevs mask. */
-  void explain(unsigned epevs, Logger &explainTo = ::dbg); //todo:1 add logger argument defaulted to present hardcoded one.
-
   /** when events are processed this clock is updated, reading the clock once per event wakeup. The event handlers then reference this rather than reading the clock which read is delayed by other event handlers. */
   StopWatch eventTime;
-  //cached call to eventTime.elapsed(). If someone screws it up it will be fixed on next event.
-  double elapsed;
+  //cached call to eventTime.elapsed(). All handlers should reference this as the best estimate of when the event occurred, rather than sampling the clock when the event handler gets called.
+  NanoSeconds elapsed;
+
+  /** for debug messages, prints out which flags are active in the epevs mask. */
+  static void explain(unsigned epevs, Logger &explainTo = ::dbg); //todo:1 add logger argument defaulted to present hardcoded one.
+
 };
 
 #if 0 //man pagish stuff

@@ -3,6 +3,8 @@
 #include <epoller.h>
 #include <netinet/in.h> //because we template some stuff else this would have been only in the cpp file.
 // #include <unistd.h>
+#include <functional>
+
 #include "fildes.h"
 
 /** intermediate class for socket manipulation, mostly adding syntax to int fd usage. */
@@ -23,50 +25,59 @@ struct IoSource : Fildes {
     socklen_t length(sizeof(OptionArgument));
     return ok(getsockopt(fd, optFamily, optname, &optval, &length));
   }
+};
 
-  using IoEventHandler=std::function<void()>;
+struct IoAgent : IoSource ,EpollHandler{
+  IoAgent(const char *traceName, int fd=BADFD) : IoSource{traceName, fd} {}
+
+  //one watcher serves all IoAgents. This is similar to timer fd's. Each class needs its own epoller in order to recover the type of the object whose fd is being watched.
+  static Epoller watcher;
+
+  //formerly in a wrapping class, but there is no value to the separation.
+  unsigned epollFlags = 0;
+  using IoEventHandler = std::function<void()>;
   IoEventHandler readAction;
   IoEventHandler writeAction;
   IoEventHandler closeAction;
   IoEventHandler errorAction;
 
-//one watcher serves all iosources. This is similar to timer fd's. Each class needs its own epoller in order to recover the type of the object whose fd is being watched.
-  static Epoller watcher;
-
 public:
-
   /** drop all watching
    *  Note: that is automatic on destruction of each member, we don't need an explicit destructor.
    */
   void disconnect();
 
+  void setWatching(unsigned flag, bool postem);
 
   /** call this when you have something to send.
    *
    */
-  void writeInterest(bool postem=true);
+  void writeInterest(bool postem = true) {
+    setWatching(EPOLLOUT,postem);
+  }
 
   /** set listeners, was named hookup in a prior incarnation */
   void listen(bool postReads, bool postCloses);
 
   // write slurpInput() -- calls input function until we run out of input
 
-  //epoller doesn't know about objects. It's idea of a callback has just 64 bits of data and that might be the size of a pointer.
-  static void EventAdapter(void *iocon, unsigned flags) {
-    if (iocon) {
-      IoSource &ioc = *static_cast<IoSource *>(iocon);
-      if (flags & EPOLLIN) {
-        ioc.readAction();
-      }
-      if (flags & EPOLLOUT) {
-        ioc.writeAction();
-      }
-      if (flags & EPOLLHUP) { //todo:1  fold RDHUP, other ERRORs into this?
-        ioc.closeAction();
-      }
-      if (flags & (EPOLLERR)) {
-        ioc.errorAction();
-      }
+  //epoller doesn't know about objects. Its idea of a callback has just 64 bits of data and that might be the size of a pointer.
+  void operator()(unsigned flags) override{
+    if (flags & EPOLLIN) {
+      readAction();
+    }
+    if (flags & EPOLLOUT) {
+      writeAction();
+    }
+    if (flags & EPOLLRDHUP) {
+      closeAction();
+    }
+    if (flags & EPOLLERR) {
+      errorAction();
     }
   }
+
+  ~IoAgent() override;
+
+
 };

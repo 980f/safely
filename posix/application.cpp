@@ -70,7 +70,7 @@ int Application::run() {
       looper.elapsed = looper.eventTime.roll(); //emulate looper's wait.
       beRunning = keepAlive();
     } else {
-      if (looper.doEvents(nextPeriod)) {
+      if (looper.loop(nextPeriod)) {
         beRunning = keepAlive();
       } else {
         //some failures are not really something to get upset about

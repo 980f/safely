@@ -77,6 +77,8 @@ public:
     return *this;
   }
 
+
+
   /** make a useless one */
   Indexer() : Ordinator(0),
     buffer(0){
@@ -191,6 +193,11 @@ public:
   /** @returns an indexer which covers the leading part of this one. */
   Indexer getHead() const{
     return view(0,pointer);
+  }
+
+  /** @returns a list covering the used portion of this one, while restting this one to none-used. */
+  Indexer takeHead() {
+    return view(0,take(pointer));
   }
 
   /** @returns an indexer which covers the trailing part of this one. once upon a time called 'remainder' */
