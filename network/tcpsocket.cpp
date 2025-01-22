@@ -159,7 +159,7 @@ void TcpSocket::flush() {
 bool TcpSocket::readable() {
   uint8_t bytes[4096] = {0};
 
-  if (!sock.read(bytes, sizeof(bytes))) { // todo:00 glib instance had bad bug here
+  if (!sock.read(bytes, sizeof(bytes))) { // todo:00 glib version had bad bug here
     dbg("read err: %d on %08X:%d", -stats.lastRead, connectArgs.ipv4, connectArgs.port); // useful for debug, but it will spam you
     disconnect(true);
     return false;

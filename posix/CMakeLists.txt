@@ -34,8 +34,8 @@ target_sources(${safely_target} PUBLIC
   incrementalfiletransfer.cpp
   incrementalfiletransfer.h
   #iosource stuff  is far from working. there is so much legacy of glib confusing necessary functionality.
-  #iosource.cpp
-  #iosource.h
+  iosource.cpp
+  iosource.h
   jasoned.cpp
   jasoned.h
   jsonfile.cpp

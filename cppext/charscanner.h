@@ -45,8 +45,8 @@ public:
   virtual bool matches(const char*s);
 
   /** copy content, cf: clone() which just points into the other one's buffer!*/
-  void operator =(CharScanner &&other);
-  bool isBlank();
+  void operator =(CharScanner &&other) noexcept;
+  bool isBlank() const;
 
   /** @return a null terminated subset of this, modifying this to omit the returned part and the separator.
    *  If the separator is not found then the remainder of the buffer is returned.*/
@@ -94,14 +94,14 @@ public:
   uint32_t getU(unsigned numBytes, uint32_t def = 0);
 
   /**had to copy from the base class, couldn't figure out how to cast one template into another.*/
-  void getTail(CharScanner&other);
+  void getTailOf(const CharScanner&other);
 
   void getTail(const ByteScanner&other){
-    Indexer::getTail(other);
+    getTailOf(other);
   }
 
   void getTail(Indexer&other){
-    Indexer::getTail(other);
+    getTailOf(other);
   }
 
   /** access to base class version is a syntactic cf */

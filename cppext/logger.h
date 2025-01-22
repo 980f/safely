@@ -30,7 +30,7 @@ public:
       wasCombining = logger.combining;
       logger.combining = true;
     }
-
+    //NB: ensure that Move constructor works or this class will be costly at runtime, issuing a useless flushline.
     ~Combiner(){
       if(!wasCombining) {
         logger.flushline();
@@ -40,6 +40,9 @@ public:
 
   };
 
+  Combiner beMerging() {
+    return Combiner(*this);
+  }
 public:
   /** 1st implementation coupled to a json file for enabling/disbling by logger name.
    * Logger construction and destruction call these members if a global one exists. */

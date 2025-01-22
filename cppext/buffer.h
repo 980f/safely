@@ -137,13 +137,6 @@ public:
     return amount;
   }
 
-  /** reworks this one to be visited region of @param other.
-   *   carefully implemented so that idx.snap(idx) works sensibly.*/
-  void getHead(const Indexer &other){
-    buffer = other.buffer;
-    length = other.pointer;
-    pointer = 0;
-  }
 
   /** reworks this one to be just like @param other. snap() usually is what you want rather than this.
    * this is useful for threadsafeness, especially over keeping a pointer to the other.*/
@@ -153,19 +146,14 @@ public:
     pointer = other.pointer;
   }
 
-  /** tail end of @param other, without 'removing' it from other. Very suitable for a lookahead parser */
-  void getTail(const Indexer &other){
-    pointer = 0;
-    buffer = &other.peek();
-    length = other.freespace();
-  }
 
-  /** @returns an indexer that covers the freespace of this one. this one is not modified */
-  Indexer remainder() const {
-    Indexer rval;
-    rval.getTail(*this);
-    return rval;
-  }
+
+  // /** @returns an indexer that covers the freespace of this one. this one is not modified */
+  // Indexer remainder() const {
+  //   Indexer rval;
+  //   rval.getTail(*this);
+  //   return rval;
+  // }
 
   /** reduce length to be that used and reset pointer.
    * useful for converting from a write buffer to a read buffer, but note that the original buffer size is lost.*/
@@ -208,6 +196,21 @@ public:
   /** @returns an indexer which covers the trailing part of this one. once upon a time called 'remainder' */
   Indexer getTail() const{
     return view(pointer,allocated());
+  }
+
+  /** reworks this one to be visited region of @param other.
+ *   carefully implemented so that idx.snap(idx) works sensibly.*/
+  void getHeadOf(const Indexer &other){
+    buffer = other.buffer;
+    length = other.pointer;
+    pointer = 0;
+  }
+
+  /** reworks this to become tail end of @param other, without 'removing' it from other. Very suitable for a lookahead parser */
+  void getTailOf(const Indexer &other){
+    pointer = 0;
+    buffer = &other.peek();
+    length = other.freespace();
   }
 
   /** reworks this to move start of buffer to be @param howmany past present start.
@@ -514,8 +517,8 @@ public:
   /** You probably want  @see forget!
    * free contents and forget them. Only safe todo if you know this buffer is created from a malloc. */
   void destroy(){
-    if(length){//# testing 4debug, delete[] can handle a zero.
-      delete []buffer;
+    if(length){//# testing 4debug, delete[] can handle a zero allocation.
+      delete [] buffer;
     }
     //and now forget we ever saw those
     forget();

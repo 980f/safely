@@ -9,6 +9,8 @@
  */
 template<typename Content> class Sequence {
 public:
+  virtual ~Sequence() = default;
+
   virtual bool hasNext(void) = 0;
   virtual Content&next(void) = 0;
 

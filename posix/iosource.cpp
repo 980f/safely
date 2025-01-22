@@ -21,9 +21,10 @@ int IoSource::recode(ssize_t rwreturn) {
   return rwreturn;
 }
 
-bool IoConnections::writeInterest(Slot action) {
-  //todo: replace this concept with asynchio?
-  return false;
+void IoSource::disconnect() {
+  watcher.remove(fd);
 }
 
-void IoConnections::listen(Slot readAction, Slot hangupAction) {}
+void IoSource::writeInterest(bool postem) {
+  watcher.modify(fd,~0,&EventAdapter)
+}

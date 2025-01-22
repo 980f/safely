@@ -8,32 +8,40 @@
 #include <functional> //for callback
 
 #include "stopwatch.h" //for time services
-class Epoller:public PosixWrapper {
+
+class Epoller : public PosixWrapper {
   int epfd;
 
 public:
   /** epoll_create. @param maxreport is the maximum #of triggered fd's to handle on any one wait call. */
   Epoller(unsigned maxreport);
+
   ~Epoller();
+
   /** automatically called by destructor */
   bool close();
-  /** @returns whether the underlying epoller was successfully created */
-  operator bool()const{
-    return epfd>=0;
-  }
-  using Handler=std::function<void(unsigned /*eventbits*/)>;
 
-  bool watch(int fd, unsigned eventbits,Handler handler);
-  bool modify(int fd, unsigned eventbits,Handler handler);
+  /** @returns whether the underlying epoller was successfully created */
+  operator bool() const {
+    return epfd >= 0;
+  }
+
+  using Handler = std::function<void(unsigned /*eventbits*/)>;
+
+  bool watch(int fd, unsigned eventbits, Handler handler);
+
+  bool modify(int fd, unsigned eventbits, Handler handler);
+
   bool remove(int fd);
+
   /** data returned from wait():*/
   Indexer<epoll_event> waitlist;
   unsigned numEvents;
   /** FYI: number of times wait() has been called, will wrap so mostly just for debug.*/
-  unsigned waitcount=0;
+  unsigned waitcount = 0;
 
   /** this must be called regularly to get events detected, is called by @see doEvents which actually processes the events detected. */
-  bool wait(unsigned timeoutms);
+  bool wait(NanoSeconds timeoutms);
 
   /** respond to an event report from wait: */
   static void exec(const epoll_event &ev);
@@ -41,14 +49,14 @@ public:
   /** core of event loop.Must be called frequently.
    * One mechanism is to register this guy's fd with your main application loop, watching for read events. */
   bool doEvents(NanoSeconds timeoutms);
-  /** for debug messages, prints out which flags are active in the epevs mask. */
-  void explain(unsigned epevs);
 
-  /** when events are processed this clock is updated, reading the clock once per event wakeup */
+  /** for debug messages, prints out which flags are active in the epevs mask. */
+  void explain(unsigned epevs, Logger &explainTo = ::dbg); //todo:1 add logger argument defaulted to present hardcoded one.
+
+  /** when events are processed this clock is updated, reading the clock once per event wakeup. The event handlers then reference this rather than reading the clock which read is delayed by other event handlers. */
   StopWatch eventTime;
   //cached call to eventTime.elapsed(). If someone screws it up it will be fixed on next event.
   double elapsed;
-
 };
 
 #if 0 //man pagish stuff
