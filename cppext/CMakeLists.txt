@@ -23,6 +23,8 @@ target_sources(${safely_target} PUBLIC
   determinator.cpp
   enumerated.cpp
   enumerizer.cpp
+  fastsort.cpp
+  fastsort.h
   fitstat.cpp
   halfopen.cpp
   linearfit.cpp

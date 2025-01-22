@@ -8,6 +8,8 @@ target_sources(${safely_target} PUBLIC
   block.h
   chain.h
   chainsorter.h
+  cliscanner.cpp
+  cliscanner.h
   delimitedinputstream.cpp
   delimitedinputstream.h
   delimitingoutputstream.cpp
