@@ -1,6 +1,6 @@
 //"(C) Andrew L. Heilveil, 2017-2018"
 
-#include "epoller.h"
+#include "EpollerCore.h"
 
 
 #include <sys/epoll.h>
@@ -12,21 +12,20 @@
 //  return sizeof (epoll_event)*number;
 //}
 
-Epoller::Epoller(unsigned maxreport): PosixWrapper("Epoller"),
+EpollerCore::EpollerCore(const char *tracename): PosixWrapper(tracename) ,
   epfd(-1),
-  BuildIndexer(epoll_event, waitlist, maxreport),
+  // BuildIndexer(epoll_event, waitlist, maxreport),
   numEvents(BadLength), //init for debug
   eventTime(true, true) //use real time, process may sleep
 {
   epfd = epoll_create1(0);
 }
 
-Epoller::~Epoller() {
-  waitlist.destroy(); //BuildIndexer uses malloc.
+EpollerCore::~EpollerCore() {
   close();
 }
 
-bool Epoller::close() {
+bool EpollerCore::close() {
   if (*this) { //checking for debug purpose, avoid recording irrelevant error
     return ok(::close(epfd));
   } else {
@@ -34,23 +33,23 @@ bool Epoller::close() {
   }
 }
 
-bool Epoller::watch(int fd, unsigned eventbits, EpollHandler &handler) {
+bool EpollerCore::watch(int fd, unsigned eventbits, EpollHandler &handler) {
   epoll_event event{eventbits, {&handler}};
   return ok(epoll_ctl(epfd,EPOLL_CTL_ADD, fd, &event));
 }
 
-bool Epoller::modify(int fd, unsigned eventbits, EpollHandler &handler) {
+bool EpollerCore::modify(int fd, unsigned eventbits, EpollHandler &handler) {
   epoll_event event{eventbits, {&handler}};
 
   return ok(epoll_ctl(epfd,EPOLL_CTL_MOD, fd, &event));
 }
 
-bool Epoller::remove(int fd) {
+bool EpollerCore::remove(int fd) {
   return ok(epoll_ctl(epfd,EPOLL_CTL_DEL, fd, nullptr));
 }
 
 
-void Epoller::processList() {
+void EpollerCore::processList() {
   Indexer list = waitlist.takeHead(); //get head of list
   while (list.hasNext()) {
     auto event = list.next();
@@ -64,8 +63,8 @@ void Epoller::processList() {
   }
 }
 
-//this guy gets called when a master epoller has found a change in it
-void Epoller::operator()(unsigned flags) {
+//this guy gets called when a master epoller has found a change in it, and instantly returns so we don't do all the reactTime and tieout stuff of @see loop()
+void EpollerCore::operator()(unsigned flags) {
   auto list = waitlist.getTail();
   ++waitcount;
   if (okValue(numEvents, unsigned(epoll_pwait2(epfd, list.internalBuffer(), list.allocated(), nullptr, nullptr)))) {
@@ -74,7 +73,7 @@ void Epoller::operator()(unsigned flags) {
   }
 }
 
-bool Epoller::loop(NanoSeconds timeout) {
+bool EpollerCore::loop(NanoSeconds timeout) {
   static StopWatch reactionTime(false, true); //diagnostic: perhaps using the wrong timebase caused epoller to not wait?
   static unsigned long shortwait = 0; //number of short waits, a diagnostic.
   reactionTime.start();
@@ -97,14 +96,14 @@ bool Epoller::loop(NanoSeconds timeout) {
   }
 }
 
-void Epoller::registerWith(Epoller &myWatcher) {
+void EpollerCore::registerWith(EpollerCore &myWatcher) {
   myWatcher.watch(epfd,EPOLLIN | EPOLLRDHUP, *this);
 }
 
 //todo:1 does the dbg() have a stacking 'don't do newlines' facility?
 #define epollexplain(evname) if(epevs & evname){ explainTo( "\t" #evname);}
 
-void Epoller::explain(unsigned epevs, Logger &explainTo) {
+void EpollerCore::explain(unsigned epevs, Logger &explainTo) {
   auto namedButNotReferenced = explainTo.beMerging();
   epollexplain(EPOLLIN);
   epollexplain(EPOLLPRI);
