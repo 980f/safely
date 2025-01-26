@@ -7,34 +7,39 @@
 
 /**
 wrapper around timespec struct
+
+BEWARE: assigning or constructing from an integer the argument is nanoseconds, from float it is seconds.
 */
 
-constexpr double from(const timespec &ts) {
-  return ts.tv_sec + 1e-9 * ts.tv_nsec;
-}
-
-
-constexpr void parseTime(timespec &ts, double seconds){
-  if(seconds==0.0) {//frequent case
-    ts.tv_sec = 0;
-    ts.tv_nsec = 0;
-    return;
-  }
-
-  ts.tv_sec = splitter(seconds);
-  ts.tv_nsec = 1e9 * seconds;
-}
 
 struct NanoSeconds : timespec {
-
-  constexpr NanoSeconds(double seconds) {
-    this->operator=(seconds);
+  static constexpr double from(const timespec &ts) {
+    return ts.tv_sec + 1e-9 * ts.tv_nsec;
   }
 
-  constexpr NanoSeconds(unsigned long long nanoseconds) {
-    tv_nsec = nanoseconds;
-    tv_sec = nanoseconds / 1'000'000'000;//truncating divide is desired
+  static constexpr void parseTime(timespec &ts, double seconds) {
+    if (seconds == 0.0) { //frequent case
+      ts.tv_sec = 0;
+      ts.tv_nsec = 0;
+      return;
+    }
+
+    ts.tv_sec = splitter(seconds);
+    ts.tv_nsec = 1e9 * seconds;
   }
+
+  template<typename Scalar> constexpr NanoSeconds(Scalar something) {
+    this->operator=(something);
+  }
+
+  // constexpr NanoSeconds(double seconds) {
+  //   this->operator=(seconds);
+  // }
+  //
+  // constexpr NanoSeconds(unsigned long long nanoseconds) {
+  //   tv_nsec = nanoseconds;
+  //   tv_sec = nanoseconds / 1'000'000'000;//truncating divide is desired
+  // }
 
   /** for timerfd we wish to create nonoseconds inline from a seconds value as double. */
 
@@ -55,7 +60,6 @@ struct NanoSeconds : timespec {
     tv_nsec = 1000 * us.tv_usec;
   }
 
-
   template<typename Scalar> constexpr NanoSeconds &operator=(Scalar seconds) {
     if constexpr (std::is_same<timespec, Scalar>::value) {
       tv_sec = seconds.tv_sec;
@@ -63,8 +67,8 @@ struct NanoSeconds : timespec {
     } else if constexpr (std::is_floating_point<Scalar>::value) {
       parseTime(*this, seconds);
     } else if constexpr (std::is_integral<Scalar>::value) {
-      tv_sec = seconds;
-      tv_nsec = 0;
+      tv_nsec = seconds;
+      tv_sec = seconds / 1'000'000'000; //truncating divide is desired
     }
     return *this;
   }
