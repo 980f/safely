@@ -6,10 +6,21 @@
 #include "epoller.h"
 #include "posixwrapper.h"
 
+/* a user tweaks this performance parameter to optimize event response time versus memory usage. number of open files and streams,and 2 more for some library event watchers.
+ * The cost of it being too low is that you will transition from user to kernel space and back again more frequently, to get more groups of events.
+ * OTOH if you are getting more than a few handfuls of events per polling attempt you probably need multiple threads with their own pollers.
+ *
+ *
+ */
+#ifndef SafelyApplicationEvents
+#define SafelyApplicationEvents 9
+#warning "Number of events handled per 'wait for event' has been set to a default low number, define SafelyApplicationEvents to raise it."
+#endif
+
 class Application: public PosixWrapper {
 protected:
   Indexer<TextKey> arglist;
-  Epoller looper;
+  Epoller<SafelyApplicationEvents> looper;//todo: need to bring back runtime allocation of max number of events or hae a safely build flag for this constant.
 
   /** time until next keepalive/sampling */
   NanoSeconds period;

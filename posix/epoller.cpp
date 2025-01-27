@@ -1,6 +1,6 @@
 //"(C) Andrew L. Heilveil, 2017-2018"
 
-#include "EpollerCore.h"
+#include "epoller.h"
 
 
 #include <sys/epoll.h>
@@ -12,7 +12,7 @@
 //  return sizeof (epoll_event)*number;
 //}
 
-EpollerCore::EpollerCore(const char *tracename): PosixWrapper(tracename) ,
+EpollerCore::EpollerCore(const char *tracename): PosixWrapper(tracename),
   epfd(-1),
   // BuildIndexer(epoll_event, waitlist, maxreport),
   numEvents(BadLength), //init for debug
@@ -64,7 +64,7 @@ void EpollerCore::processList() {
 }
 
 //this guy gets called when a master epoller has found a change in it, and instantly returns so we don't do all the reactTime and tieout stuff of @see loop()
-void EpollerCore::operator()(unsigned flags) {
+void EpollerCore::onEpoll(unsigned flags) {
   auto list = waitlist.getTail();
   ++waitcount;
   if (okValue(numEvents, unsigned(epoll_pwait2(epfd, list.internalBuffer(), list.allocated(), nullptr, nullptr)))) {

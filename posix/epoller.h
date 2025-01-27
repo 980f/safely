@@ -9,9 +9,19 @@
 
 struct EpollHandler {
   virtual ~EpollHandler() = default;
-  virtual void operator()(unsigned flags)=0;
+
+  virtual void onEpoll(unsigned flags)=0;
+  //epoll is passed this function and an instance of a handler, the operator () is then called in the handler instance.
   static void Thunk(const epoll_event& event) {
-    (*static_cast<EpollHandler *>(event.data.ptr))(event.events);
+    (*static_cast<EpollHandler *>(event.data.ptr)).onEpoll(event.events);
+  }
+
+  EpollHandler* thunker() {
+    return this;
+  }
+
+  operator EpollHandler*() {
+    return this;
   }
 };
 
@@ -24,7 +34,7 @@ class EpollerCore : public PosixWrapper, EpollHandler {
   void processList();
 
   /**this guy gets called when a master epoller has found a change in it, and instantly returns so we don't do all the reactTime and timeout stuff of @see loop() */
-  void operator()(unsigned flags) override;
+  void onEpoll(unsigned flags) override;
 
   /** data returned from wait():*/
   Indexer<epoll_event> waitlist;

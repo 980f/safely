@@ -21,11 +21,11 @@ int IoSource::recode(ssize_t rwreturn) {
   return rwreturn;
 }
 ///////////////////////////////////////////////////////////
-#ifndef SafelyIoAgentMax
-#define SafelyIoAgentMax 20
-#warning "SafelyIoAgentMax: setting soft maximum number of active event driven IO streams to 20, you will need at least one per socket connection to ensure no starvation of I/O handling."
-#endif
-Epoller IoAgent::watcher(SafelyIoAgentMax);
+// #ifndef SafelyIoAgentMax
+// #define SafelyIoAgentMax 20
+// #warning "SafelyIoAgentMax: setting soft maximum number of active event driven IO streams to 20, you will need at least one per socket connection to ensure no starvation of I/O handling."
+// #endif
+// Epoller IoAgent::watcher(SafelyIoAgentMax);
 
 void IoAgent::disconnect() {
   watcher.remove(fd);
@@ -55,5 +55,5 @@ void IoAgent::listen(bool postReads, bool postCloses) {
 }
 
 IoAgent::~IoAgent() {
-  disconnect();
+  disconnect();//nicely this gets done before base class close(), averting having to read the documentation on epoll and closed fd's still having readable data.
 }

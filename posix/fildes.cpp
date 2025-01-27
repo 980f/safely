@@ -6,6 +6,8 @@
 #include "fdset.h"
 
 // just for name research
+#include <linux/limits.h>
+
 #include "charformatter.h"
 
 Fildes::Fildes(const char *whatfor) :
@@ -87,7 +89,7 @@ Text &Fildes::getName() {
   procself.printNumber(fd);
   procself.next() = 0;
 
-  char temp[512]; // todo: symbol for max path
+  thread_local char temp[NAME_MAX+1];//+1 COA.
   CharScanner response(temp, sizeof(temp));
   response.zguard();
   auto target = procself.internalBuffer(); // 4 debug
@@ -95,7 +97,7 @@ Text &Fildes::getName() {
   if (actualsize > 0) { // always get -1 here, errno:0
     response.skip(unsigned(actualsize));
     response.next() = 0;
-    name = response.internalBuffer(); // should strdup.
+    name = response.internalBuffer();
   } else {
     // name is still what 'open' was given.
   }

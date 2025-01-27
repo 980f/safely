@@ -151,6 +151,8 @@ public:
 protected:
   Text name; // not always valid, call getName to ensure.
 public:
-  /** recover name from OS. Uses linux PROC file system specific routine, and is not cheap. */
+  /** recover name from OS. Uses linux PROC file system specific routine, and is not cheap.
+   * Also the reference is into a thread_local, you had better copy it somewhere pretty damn soon (worst case is before calling getname again).
+   */
   Text &getName();
 }; // class Fildes

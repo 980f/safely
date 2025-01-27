@@ -5,7 +5,7 @@
 #include "logger.h"
 #include "fildes.h" //todo: move writer into filer and use that
 
-#include "fcntlflags.h"
+// #include "fcntlflags.h"
 #include "unistd.h"
 #include "sys/resource.h"  //setPriority
 #include "sched.h" //setSched
@@ -32,7 +32,7 @@ bool Application::keepAlive() {
 
 Application::Application(unsigned argc, char *argv[]): PosixWrapper("APP"), //todo:1 name logstream from arg0 last member
   arglist(const_cast<const char **>(argv), argc * sizeof(const char *)),
-  looper(32), //maydo: figure out size of maximum reasonable poll set.
+  // looper, //maydo: figure out size of maximum reasonable poll set.
   period(NanoSeconds(0.1)), //start at 10 Hz, a rather slow value.
   beRunning(false) { //construct idle.
   startup_pid = getpid(); //if we add demon functionality we will have the fork change this pid and the pidfile.

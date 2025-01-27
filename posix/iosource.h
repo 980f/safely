@@ -7,6 +7,11 @@
 
 #include "fildes.h"
 
+#ifndef SafelyIoSourceEvents
+#define SafelyIoSourceEvents 7
+#warning "using default Io events per poll value, define SafelyIoSourceEvents to optimize space (low value) or performance (frequent IO)"
+#endif
+
 /** intermediate class for socket manipulation, mostly adding syntax to int fd usage. */
 struct IoSource : Fildes {
   IoSource(const char *traceName, int fd = ~0);
@@ -27,12 +32,10 @@ struct IoSource : Fildes {
   }
 };
 
-struct IoAgent : IoSource ,EpollHandler{
-  IoAgent(const char *traceName, int fd=BADFD) : IoSource{traceName, fd} {}
-
-  //one watcher serves all IoAgents. This is similar to timer fd's. Each class needs its own epoller in order to recover the type of the object whose fd is being watched.
-  static Epoller watcher;
-
+struct IoAgent : IoSource, EpollHandler {
+  /* given a name, and a epoll resource and a possibly open fd */
+  IoAgent(const char *traceName, EpollerCore &watcher, int fd = BADFD) : IoSource{traceName, fd}, watcher{watcher} {}
+  EpollerCore &watcher;
   //formerly in a wrapping class, but there is no value to the separation.
   unsigned epollFlags = 0;
   using IoEventHandler = std::function<void()>;
@@ -53,7 +56,7 @@ public:
    *
    */
   void writeInterest(bool postem = true) {
-    setWatching(EPOLLOUT,postem);
+    setWatching(EPOLLOUT, postem);
   }
 
   /** set listeners, was named hookup in a prior incarnation */
@@ -62,7 +65,7 @@ public:
   // write slurpInput() -- calls input function until we run out of input
 
   //epoller doesn't know about objects. Its idea of a callback has just 64 bits of data and that might be the size of a pointer.
-  void operator()(unsigned flags) override{
+  void onEpoll(unsigned flags) override {
     if (flags & EPOLLIN) {
       readAction();
     }
@@ -78,6 +81,4 @@ public:
   }
 
   ~IoAgent() override;
-
-
 };
