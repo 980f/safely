@@ -5,20 +5,9 @@
 
 #include "fildes.h"
 
+struct FileEvent;
 using WatchMarker = int;//from manpages, but unsigned would also work as a negative value is an error code when otherwise a wd handle would be returned.
 
-/** the layout of what gets read from a FileWatcher fd. */
-struct FileEvent {
-  WatchMarker wd; /* Watch descriptor */
-  uint32_t mask; /* Mask describing event */
-  uint32_t cookie; /* Unique cookie associating related events (for rename(2)) */
-  uint32_t len; /* Size of name field */
-  char namestartshere; //[];   //don't access this directly, it may not exist.
-  /** @returns wrapper around null-terminated name */
-  Indexer<char> name();
-
-  /* inotify(7) man page: the length of each inotify_event structure is sizeof(struct inotify_event)+len.*/
-};
 
 /** bits for file watcher function calls.
  * These enums are bit numbers, not masks, ie 2 means 1<<2 at the lower level calls. */
@@ -64,13 +53,7 @@ struct FileWatch:Bundler<FileWatch> {
   Hook<const FileEvent&> handler;
 
   /** @returns whether the event was pertinent, intended for use with @see Bundler::While */
-  bool handle(const FileEvent& ev)  {
-    if (ev.wd==wd) {
-      handler(ev);
-      return false;
-    }
-    return true;
-  }
+  bool handle(const FileEvent& ev);
 };
 
 

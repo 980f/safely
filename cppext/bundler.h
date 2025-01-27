@@ -16,7 +16,7 @@ public:
   }
 
   /** unlink object, this does NOT free them, freeing these calls this. */
-  ~Bundler() {
+  virtual ~Bundler() {
     if (list == this) {
       list = list->next;
     } else {
@@ -30,12 +30,13 @@ public:
   }
 
   /** call a member function on all members of the group using some set of args */
-  template<typename... Args> static void forAll(void (Grouped::*fn)(Args...), Args... args) {
+  template<typename... Args> static void ForAll(void (Grouped::*fn)(Args...) , Args... args) {
     for (Grouped *scan = list; scan; scan = scan->next) {
       scan->*fn(args...);
     }
   }
-
+  // template<typename... Args>
+  // using Booleaner=bool (Grouped::*)(Args...);
   /** call a member function on all members of the group using some set of args,stopping the iteration when a false is returne. */
   template<typename... Args> static void While(bool (Grouped::*fn)(Args...), Args... args) {
     for (Grouped *scan = list; scan; scan = scan->next) {
@@ -46,7 +47,7 @@ public:
   }
 
   /** for each member of the group call a function that takes a member as an argument. */
-  template<typename... Args> static void forAll(void (*fn)(Grouped &groupee, Args...), Args... args) {
+  template<typename... Args> static void ForAll(void (*fn)(Grouped &groupee, Args...), Args... args) {
     for (Grouped *scan = list; scan; scan = scan->next) {
       fn(*scan, args...);
     }
@@ -54,7 +55,7 @@ public:
 
   /** Only call this if all instances of the class are created by new.
  * if this bundle is the sole owner of pointers you need some means to destroy the entities and this is it. */
-  static void freeAll() {
+  static void FreeAll() {
     while (list) {
       delete list; //this has a side effect of altering list. The last entity in the list has a null next which gets assigned to list.
     }
