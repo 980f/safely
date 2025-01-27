@@ -63,7 +63,7 @@ void EpollerCore::processList() {
   }
 }
 
-//this guy gets called when a master epoller has found a change in it, and instantly returns so we don't do all the reactTime and tieout stuff of @see loop()
+//this guy gets called when a master epoller has found a change in it, and instantly returns so we don't do all the reactTime and timeout stuff of @see loop()
 void EpollerCore::onEpoll(unsigned flags) {
   auto list = waitlist.getTail();
   ++waitcount;

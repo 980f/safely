@@ -31,6 +31,12 @@ protected:
   bool amOwner; // determines whether we auto close on destruction.
   int fd;
 
+  /* called when a change to the fd is imminent. You can check the present FD for BADFD to decide whether to actually do something,likewise the @param newFD. */
+  virtual void beforeChange(int newFD) {};
+
+  /* called after a change UNLESS the new value is BADFD */
+  virtual void afterChange() {};
+
   bool assignFd(int anFD);
 
 public:
@@ -129,7 +135,8 @@ public:
     return isOpen() && ok(::ioctl(asInt(), code, datum));
   }
 
-  template<typename Pod> Pod read(const Pod marker) {
+  /** read a copy assignable type as raw bytes from a stream, @return marker if the read fails.*/
+  template<typename Pod> Pod read(const Pod &marker) {
     Pod result; //don't try to make 'marker' a Pod, we might get a partial read and then we would have corruption.
     if (read(reinterpret_cast<uint8_t *>(&result), sizeof(Pod))) {
       if (sizeof(Pod) == lastRead) {
@@ -139,8 +146,8 @@ public:
     return marker;
   }
 
-  template<typename Pod> bool write(Pod &&datum) {
-    if (write(reinterpret_cast<uint8_t *>(&datum), sizeof(Pod))) {
+  template<typename Pod> bool write(const Pod &datum) {
+    if (write(reinterpret_cast<const uint8_t *>(&datum), sizeof(Pod))) {
       if (sizeof(Pod) == lastWrote) {
         return true;;
       }

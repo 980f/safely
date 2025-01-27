@@ -6,6 +6,8 @@
  * man timerfd_create for documentation on the mechanism.
  *
  * todo: use TFD_TIMER_CANCEL_ON_SET  to make it a "one shot"
+ *
+ * an epoll connection is built via extending this outside of this file.
  */
 
 #include "fildes.h"
@@ -18,8 +20,7 @@ class TimerFD : public Fildes {
 
 public:
   /** this value is the minimum to guarantee that the timerFD will indicate a timeout in the next or subsequent poll.*/
- static constexpr NanoSeconds minimum{0.000'000'001};
-
+  static constexpr NanoSeconds minimum{0.000'000'001};
 
   TimerFD(const char *traceName, bool phaseLock = false); //false: legacy default
   /** set period and initial delay to same value
@@ -44,13 +45,13 @@ public:
   void resume(const itimerspec &was);
 
   void cancel() {
-    pause();//cheap to write, costly to run, but not too costly.
+    pause(); //cheap to write, costly to run, but not too costly.
   }
 
   /** automatic resume on object destruction. */
   struct Pauser {
     TimerFD &timerFD;
-    itimerspec was;  //the only access we have is to this type, not the pieces therein.
+    itimerspec was; //the only access we have is to this type, not the pieces therein.
     bool paused = false;
 
     void pause() {

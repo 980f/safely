@@ -70,6 +70,8 @@ target_sources(${safely_target} PUBLIC
   threader.h
   timerfd.cpp
   timerfd.h
+  timedevent.cpp
+  timedevent.h
   #when did this functionality disappear? what was it? vargs.cpp
   worstcase.cpp
   worstcase.h

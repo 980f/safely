@@ -10,23 +10,26 @@
 
 #include "charformatter.h"
 
-Fildes::Fildes(const char *whatfor) :
-    PosixWrapper(whatfor) {
+Fildes::Fildes(const char *whatfor) : PosixWrapper(whatfor) {
   errornumber = 0;
   lastRead = lastWrote = 0;
   fd = BADFD;
   amOwner = false;
 }
 
-Fildes::Fildes(const Fildes &other) :
-    Fildes(other.dbg.prefix) {
+Fildes::Fildes(const Fildes &other) : Fildes(other.dbg.prefix) {
   this->fd = other.fd;
   this->name.copy(other.name); // need independent copy for safety.
 }
 
 bool Fildes::assignFd(int anFD) {
-  this->fd = anFD;
-  lastRead = lastWrote = 0;
+  if (fd != anFD) {
+    beforeChange(anFD);
+    fd = anFD;
+    lastRead = lastWrote = 0;//don't trust overloads to get back to us for this.
+    afterChange();
+  }
+
   // no, might call another member which generates an error while generating the fd: errornumber=0;
   return isOpen();
 }
@@ -40,7 +43,6 @@ Fildes::~Fildes() {
 
 bool Fildes::open(const char *devname, int O_stuff) { // todo:3 expose 3rd argument
   close(); // is a smart close, ignore any errors
-
   amOwner = true;
   int maybefd;
   if (okValue(maybefd, ::open(devname, O_stuff, 0777))) { // 3rd arg is only relevant if O_stuff includes O_Creat. The (3) 7's lets umask provide the argument.)
@@ -89,7 +91,7 @@ Text &Fildes::getName() {
   procself.printNumber(fd);
   procself.next() = 0;
 
-  thread_local char temp[NAME_MAX+1];//+1 COA.
+  thread_local char temp[NAME_MAX + 1]; //+1 COA.
   CharScanner response(temp, sizeof(temp));
   response.zguard();
   auto target = procself.internalBuffer(); // 4 debug
@@ -142,6 +144,7 @@ bool Fildes::getSingleFlag(int bitfield, bool &bit) {
 int Fildes::close() {
   if (amOwner && isOpen()) {
     amOwner = false;
+    beforeChange(BADFD);
     return ::close(postAssign(fd, BADFD)); // when we close an fd someone else can claim it.
   } else {
     return 0; // not an error to close something that isn't open
@@ -276,15 +279,15 @@ int Fildes::moveto(Fildes &other) {
   uint8_t localbuffer[CHUNK];
 
   ByteScanner wrapper(localbuffer, sizeof(localbuffer));
-//todo:00 this is very broken! It has been hacked to compile as we are going to use asynchio instead of polling.
+  //todo:00 this is very broken! It has been hacked to compile as we are going to use asynchio instead of polling.
   if (isOpen()) {
-    int got = read(wrapper)?wrapper.used():0;
+    int got = read(wrapper) ? wrapper.used() : 0;
     if (got > 0) { // write to otherfd, nonblocking!
-      int put = other.isOpen() && other.write(wrapper)?wrapper.used() : false;
-      if (put<0) { // device has a problem.
+      int put = other.isOpen() && other.write(wrapper) ? wrapper.used() : false;
+      if (put < 0) { // device has a problem.
         return -2;
       }
-      if (got >wrapper.used()) { // on incomplete write
+      if (got > wrapper.used()) { // on incomplete write
         return got - wrapper.used(); // note it and proceed, else we would have to add extra buffering herein.
       }
     }

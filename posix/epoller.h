@@ -10,23 +10,24 @@
 struct EpollHandler {
   virtual ~EpollHandler() = default;
 
-  virtual void onEpoll(unsigned flags)=0;
+  virtual void onEpoll(unsigned flags) =0;
+
   //epoll is passed this function and an instance of a handler, the operator () is then called in the handler instance.
-  static void Thunk(const epoll_event& event) {
+  static void Thunk(const epoll_event &event) {
     (*static_cast<EpollHandler *>(event.data.ptr)).onEpoll(event.events);
   }
 
-  EpollHandler* thunker() {
-    return this;
+  EpollHandler &thunker() {
+    return *this;
   }
 
-  operator EpollHandler*() {
+  operator EpollHandler *() {
     return this;
   }
 };
 
 class EpollerCore : public PosixWrapper, EpollHandler {
-  protected:
+protected:
   /* OS handle */
   int epfd;
 
@@ -45,7 +46,7 @@ class EpollerCore : public PosixWrapper, EpollHandler {
   bool close();
 
 public:
-  EpollerCore(const char *tracename) ;
+  EpollerCore(const char *tracename);
 
   ~EpollerCore() override;
 
@@ -65,8 +66,8 @@ public:
 
   /** add to higher level watcher */
   void registerWith(EpollerCore &myWatcher);
-public:
 
+public:
   /** FYI: number of times wait() has been called, will wrap so mostly just for debug.*/
   unsigned waitcount = 0;
 
@@ -77,14 +78,14 @@ public:
 
   /** for debug messages, prints out which flags are active in the epevs mask. */
   static void explain(unsigned epevs, Logger &explainTo = ::dbg); //todo:1 add logger argument defaulted to present hardcoded one.
-
 };
 
 /** for compile-time known maximum reports per call to wait() */
 template<unsigned maxReports> class Epoller : public EpollerCore {
   epoll_event events[maxReports];
-  public:
-  Epoller(const char *tracename="Epoller"):EpollerCore{tracename} {
+
+public:
+  Epoller(const char *tracename = "Epoller"): EpollerCore{tracename} {
     waitlist.wrap(events, maxReports);
   }
 };
