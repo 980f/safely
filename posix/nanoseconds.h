@@ -13,6 +13,7 @@ BEWARE: assigning or constructing from an integer the argument is nanoseconds, f
 
 
 struct NanoSeconds : timespec {
+  static constexpr decltype(tv_nsec) Billion=1'000'000'000;
   static constexpr double from(const timespec &ts) {
     return ts.tv_sec + 1e-9 * ts.tv_nsec;
   }
@@ -68,9 +69,14 @@ struct NanoSeconds : timespec {
       parseTime(*this, seconds);
     } else if constexpr (std::is_integral<Scalar>::value) {
       tv_nsec = seconds;
-      tv_sec = seconds / 1'000'000'000; //truncating divide is desired
+      tv_sec = seconds / Billion; //truncating divide is desired
     }
     return *this;
+  }
+
+  /** @returns integer seconds, rounding the nanoseconds away from zero based on optional argument 'rounder' */
+  decltype(tv_sec) seconds(decltype(tv_nsec) rounder=Billion/2) const {
+    return tv_sec + (tv_nsec+rounder>=Billion);
   }
 
   /** somewhat like a placement new, this adds NanoSeconds logic to an existing timespec */

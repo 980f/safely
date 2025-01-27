@@ -12,11 +12,12 @@ struct EpollHandler {
 
   virtual void onEpoll(unsigned flags) =0;
 
-  //epoll is passed this function and an instance of a handler, the operator () is then called in the handler instance.
+  /* epoll list processor calls this function which then calls the handler for the event which is an object of a class that is derived from EpollHandler */
   static void Thunk(const epoll_event &event) {
     (*static_cast<EpollHandler *>(event.data.ptr)).onEpoll(event.events);
   }
 
+  /* syntactic sugar for the otherwise required reinterpret_cast that c++17 was insisting we supply explicitly rather than inferring a cast to base class. Perhaps public derivation was needed? */
   EpollHandler &thunker() {
     return *this;
   }
