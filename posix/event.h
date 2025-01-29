@@ -6,8 +6,10 @@
 #pragma once
 
 /** libevent wrapper */
+#include <event.h>
 #include <functional>
 #include <microseconds.h>
+#include <system_error>
 #include_next <event2/event.h>
 
 /** libevent insist on dynamically creating event trackers. We wish to be able to statically declare them so our base class is configuration which contains a pointer to the runtime handle.*/
@@ -30,31 +32,9 @@ protected:
   virtual void onErrorEvent(bool onRead, bool onWrite) {}
   virtual void onTimeoutEvent(bool onRead, bool onWrite) {}
 
-  virtual void handle(short evflags) {
-    bool reader = evflags & EV_READ;
-    bool writer = evflags & EV_WRITE;
+  virtual void handle(short evflags);
 
-    if (evflags & EV_TIMEOUT) {
-      onTimeoutEvent(reader, writer);
-    } else {
-      if (reader) {
-        //process some data.
-        onReadEvent();
-      }
-      //# no else here, read and write can be simultaneous.
-      if (writer) {
-        onWriteEvent();
-      }
-    }
-  }
-
-  static void Thunk(evutil_socket_t ignored, short evflags, void *obj) {
-    Event &self = *static_cast<Event *>(obj);
-    if (ignored != self.fd) {
-      //then 980f doesn't understand libevent.
-    }
-    self.handle(evflags);
-  }
+  static void Thunk(evutil_socket_t ignored, short evflags, void *obj);
 
   int del() {
     return event_del(raw);
@@ -64,13 +44,8 @@ protected:
     return event_remove_timer(raw);
   }
 
-  /* this is not useful, other than a sa linkage check.*/
-  bool isPending(MicroSeconds *due) {
-    if (due) {
-      *due= MicroSeconds::Never;
-    }
-    return event_pending(raw,EV_TIMEOUT, due);
-  }
+  /* if @param which is 0 then the configured type is used for the 'pending' check: */
+  bool isPending(decltype(type) which, MicroSeconds *due = nullptr);
 
 public:
   /** the driver, listener, what have you, called "base" but "root" or "list" are better descriptions .
@@ -102,32 +77,24 @@ public:
       raw = event_base_new();
     }
 
+    Looper(event_base *existing) {
+      raw = existing;
+      numPriorities = event_base_get_npriorities(existing);
+      //NB: if we cache more fields on the object we must recover them here for guaranteed functioning.
+    }
+
+    bool operator==(const Looper &other) const {
+      return raw == other.raw;
+    }
+
     ~Looper() {
       event_base_free(raw);
     }
 
     /**if not using defaults call this.*/
-    Looper(bool onething, unsigned numPriorities) { //dummy stuff just to test compile.
-      Configurator config;
-      if (onething) {
-        config.set_flag(EVENT_BASE_FLAG_PRECISE_TIMER);
-      }
-      raw = event_base_new_with_config(config.raw);
+    Looper(bool onething, unsigned numPriorities);
 
-      if (numPriorities > 0) { //todo: check EVENT_MAX_PRIORITIES
-        event_base_priority_init(raw, numPriorities);
-        this->numPriorities = event_base_get_npriorities(raw); //looping through the library
-      }
-    }
-
-    int enroll(Event &ev) {
-      ev.raw = event_new(raw, ev.fd, ev.type, ev.thunker, ev.usuallyThis);
-      if (ev.priority >= numPriorities) {
-        ev.priority = numPriorities - 1;
-      }
-      event_priority_set(ev.raw, ev.priority); //todo: limit to priority max
-      return event_add(ev.raw, nullptr); //todo: timeout argument, convolved with periodic flag which tends to EV_PERSIST flagging.
-    }
+    int enroll(Event &ev) const;
 
     ///////////////////////////////
     /// loop invocation and management
@@ -158,15 +125,7 @@ public:
     }
 
     //get shared timestamp
-    MicroSeconds now(bool fresh = false) {
-      MicroSeconds result(MicroSeconds::Never);
-      if (fresh) {
-        event_base_update_cache_time(raw); //todo: check return
-      }
-      event_base_gettimeofday_cached(raw, &result);
-      //todo: if ok
-      return result;
-    }
+    MicroSeconds now(bool fresh = false) const;
 
 
     // f = event_base_get_features(base);
@@ -178,10 +137,30 @@ public:
     //   printf("  All FD types are supported.");
   }; //end Looper
 
+
+  /* the object returned here is an additional view into a shared object, beware that it is not independent other other references. */
+  Looper owner() {
+    return event_get_base(raw);
+  }
+
+  /** @see Looper::enroll() */
   int attachTo(Looper &myList) {
-    this->thunker = &Event::Thunk;
-    this->usuallyThis = this;
     return myList.enroll(*this);
+  }
+
+  /* fire an event ar random, not from event dispatcher */
+  void misfire() {
+    event_active(raw, 0, 0);
+  }
+
+  /////////////////
+
+  static void exceptInsteadOfExt(int errcode) {
+    throw std::system_error(errcode, std::system_category());//will likely exit, but canbe caught in a main to allow for recording overall state when  libevent croaked.
+  }
+
+  static void libraryInit() {
+    event_set_fatal_callback(&exceptInsteadOfExt);
   }
 };
 
@@ -190,10 +169,18 @@ class TimerEvent : public Event {
 public:
   TimerEvent() {
     //most base class defaults are fine
-    type=EV_TIMEOUT;
+    type = EV_TIMEOUT;
   }
+
   std::function<void()> lambder;
+
   void onTimeoutEvent(bool onRead, bool onWrite) override {
     lambder();
   }
+};
+
+/** wraps libevent bufferevent */
+class FileEvent : public Event {
+  public:
+
 };
