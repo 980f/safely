@@ -2,7 +2,7 @@
 #include "microseconds.h"
 
 
-
+/* a value so large it won't be encountered in real life. (~136 years) */
 const MicroSeconds MicroSeconds::Never(~0, ~0);
 
 bool MicroSeconds::operator >(const MicroSeconds &that) const {
@@ -28,8 +28,7 @@ MicroSeconds &MicroSeconds::operator +=(const MicroSeconds &lesser) {
 }
 
 MicroSeconds MicroSeconds::operator +(const MicroSeconds &lesser) const {
-  MicroSeconds diff;
-  diff = *this;
+  MicroSeconds diff( *this);
   diff += lesser;
   return diff;
 }
@@ -45,8 +44,7 @@ MicroSeconds &MicroSeconds::operator -=(const MicroSeconds &lesser) {
 }
 
 MicroSeconds MicroSeconds::operator -(const MicroSeconds &lesser) const {
-  MicroSeconds diff;
-  diff = *this;
+  MicroSeconds diff (*this);
   diff -= lesser;
   return diff;
 }

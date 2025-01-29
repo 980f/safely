@@ -2,7 +2,7 @@
 #include "nanoseconds.h"
 #include "minimath.h"
 
-static const int OneGig = 1000000000;
+
 static const int OneMeg = 1000000;
 
 
@@ -21,17 +21,14 @@ unsigned NanoSeconds::ms() const noexcept {
 }
 
 MicroSeconds NanoSeconds::us(unsigned rounder){
-  MicroSeconds us;
-  us.tv_sec = tv_sec;
-  us.tv_usec = (tv_nsec + rounder) / 1000;
-  return us;
+  return MicroSeconds {static_cast<unsigned>(tv_sec),static_cast<unsigned>((tv_nsec + rounder) / 1000)};
 }
 
 NanoSeconds& NanoSeconds::operator -=(const NanoSeconds &lesser){
   tv_nsec -= lesser.tv_nsec;
   tv_sec -= lesser.tv_sec;
   if(tv_nsec<0) {//since both values are at most 999999999 their difference is <= -999999999, we have enough spare bits to serve as a carry out.
-    tv_nsec += OneGig;
+    tv_nsec += Billion;
     --tv_sec;
   }
   return *this;
@@ -47,8 +44,8 @@ NanoSeconds NanoSeconds::operator -(const NanoSeconds &lesser) const {
 NanoSeconds& NanoSeconds::operator +=(const NanoSeconds &lesser){
   tv_nsec += lesser.tv_nsec;
   tv_sec += lesser.tv_sec;
-  if(tv_nsec>OneGig) {//since both values are at most 999999999 their difference is <= -999999999, we have enough spare bits to serve as a carry out.
-    tv_nsec -= OneGig;
+  if(tv_nsec>Billion) {//since both values are at most 999999999 their difference is <= -999999999, we have enough spare bits to serve as a carry out.
+    tv_nsec -= Billion;
     ++tv_sec;
   }
   return *this;

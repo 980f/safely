@@ -15,7 +15,7 @@ BEWARE: assigning or constructing from an integer the argument is nanoseconds, f
 struct NanoSeconds : timespec {
   static constexpr decltype(tv_nsec) Billion=1'000'000'000;
   static constexpr double from(const timespec &ts) {
-    return ts.tv_sec + 1e-9 * ts.tv_nsec;
+    return ts.tv_sec + 1.0/Billion * ts.tv_nsec;
   }
 
   static constexpr void parseTime(timespec &ts, double seconds) {
@@ -26,24 +26,9 @@ struct NanoSeconds : timespec {
     }
 
     ts.tv_sec = splitter(seconds);
-    ts.tv_nsec = 1e9 * seconds;
+    ts.tv_nsec = Billion * seconds;
   }
-
-  template<typename Scalar> constexpr NanoSeconds(Scalar something) {
-    this->operator=(something);
-  }
-
-  // constexpr NanoSeconds(double seconds) {
-  //   this->operator=(seconds);
-  // }
-  //
-  // constexpr NanoSeconds(unsigned long long nanoseconds) {
-  //   tv_nsec = nanoseconds;
-  //   tv_sec = nanoseconds / 1'000'000'000;//truncating divide is desired
-  // }
-
-  /** for timerfd we wish to create nonoseconds inline from a seconds value as double. */
-
+public:
   constexpr NanoSeconds(timespec ts) {
     tv_sec = ts.tv_sec;
     tv_nsec = ts.tv_nsec;
@@ -53,8 +38,6 @@ struct NanoSeconds : timespec {
     tv_sec = 0;
     tv_nsec = 0;
   }
-
-  constexpr NanoSeconds(const NanoSeconds &other) = default;
 
   constexpr NanoSeconds(const MicroSeconds us) {
     tv_sec = us.tv_sec;
@@ -74,6 +57,13 @@ struct NanoSeconds : timespec {
     return *this;
   }
 
+  template<typename Scalar> constexpr NanoSeconds(Scalar something) {
+    this->operator=(something);
+  }
+
+  constexpr NanoSeconds(const NanoSeconds &other) = default;
+
+public:
   /** @returns integer seconds, rounding the nanoseconds away from zero based on optional argument 'rounder' */
   decltype(tv_sec) seconds(decltype(tv_nsec) rounder=Billion/2) const {
     return tv_sec + (tv_nsec+rounder>=Billion);
@@ -93,7 +83,9 @@ struct NanoSeconds : timespec {
   /** @returns 0 if negative or 0 else ceiling of value*/
   unsigned ms() const noexcept;
 
-  /** @returns microsecond where rounder=0 for truncation aka 'floor', 500 for nearest 'round', 999 for 'ceil'*/
+  /** @returns microsecond where rounder=0 for truncation aka 'floor', 500 for nearest 'round', 999 for 'ceil'
+   * a value greater than 999 will create a bizarre microseconds value which might lost time, might not.
+   */
   MicroSeconds us(unsigned rounder = 999);
 
   /** @returns whether this is zero */
