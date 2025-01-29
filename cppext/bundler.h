@@ -30,17 +30,18 @@ public:
   }
 
   /** call a member function on all members of the group using some set of args */
-  template<typename... Args> static void ForAll(void (Grouped::*fn)(Args...) , Args... args) {
+  template<typename... Args> static void ForAll(void (Grouped::*fn)(Args...), Args... args) {
     for (Grouped *scan = list; scan; scan = scan->next) {
-      scan->*fn(args...);
+      (scan->*fn)(args...);
     }
   }
+
   // template<typename... Args>
   // using Booleaner=bool (Grouped::*)(Args...);
   /** call a member function on all members of the group using some set of args,stopping the iteration when a false is returne. */
   template<typename... Args> static void While(bool (Grouped::*fn)(Args...), Args... args) {
     for (Grouped *scan = list; scan; scan = scan->next) {
-      if (!(scan->*fn(args...))) {
+      if (!((scan->*fn)(args...))) {
         break;
       }
     }
@@ -61,3 +62,6 @@ public:
     }
   }
 };
+
+//you will need this with the appropriate name replacing Grouped in your Grouped implementation file:
+#define BundlerList(Grouped) template<> Grouped* Bundler<Grouped>::list = nullptr

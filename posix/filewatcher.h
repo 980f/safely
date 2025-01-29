@@ -4,14 +4,22 @@
 #include <hook.h>
 
 #include "fildes.h"
+#include <sys/inotify.h>
+using WatchMarker = decltype(inotify_event::wd);
 
-struct FileEvent;
-using WatchMarker = int;//from manpages, but unsigned would also work as a negative value is an error code when otherwise a wd handle would be returned.
+/* our reconstruction of inotify_event will not have the filename attached to the tail end.
+ * Do not use the name member of the contained inotify_event, only use the filename wrapper object,and note that the FileEvent you get passed is likely to be stack allocated and must be deep copied if you are going to retain it when your handler is called.
+ */
+struct FileEvent {
+  Indexer<uint8_t>filename;
+  //inotify_event must come last as it has a flex array member, which we aren't going to use but must accomodate.
+  inotify_event ent;//reason for name is evident at points of use.
+};
 
-
+struct FileWatch:Bundler<FileWatch> {
+  //being derived from Bundler means that all instances are in a global list, access by static functions of Bundler<> class.
 /** bits for file watcher function calls.
  * These enums are bit numbers, not masks, ie 2 means 1<<2 at the lower level calls. */
-struct FileWatch:Bundler<FileWatch> {
   enum On {
     Accessed, /* File was accessed.  */
     Modified, /* File was modified.  */
@@ -62,7 +70,7 @@ struct FileWatch:Bundler<FileWatch> {
  * The handler you provide would have to keep a list of wd/item handler callbacks.
  * To be useful you will pass this guy's fd to an Epoller waiting for reads.
  *
- * This guy may be a soliton as all FileWatches are in a single list and as such there is no real benefit to having more than one.
+ * This guy may be a soliton as all FileWatches are in a single list in the kernel and as such there is no real benefit to having more than one.
  */
 class FileWatcher {
   /** the fd that does the watching, created by constructor. */

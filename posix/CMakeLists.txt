@@ -27,8 +27,7 @@ target_sources(${safely_target} PUBLIC
   filereader.h
   filer.h
   #fix later: can't work out the syntax for the templated While operator.
-#  filewatcher.cpp
-#  filewatcher.h
+  filewatcher.cpp filewatcher.h
   filewriter.cpp
   filewriter.h
   incrementalfiletransfer.cpp

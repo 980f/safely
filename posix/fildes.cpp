@@ -91,7 +91,7 @@ Text &Fildes::getName() {
   procself.printNumber(fd);
   procself.next() = 0;
 
-  thread_local char temp[NAME_MAX + 1]; //+1 COA.
+  thread_local char temp[PATH_MAX + 1]; //+1 COA.
   CharScanner response(temp, sizeof(temp));
   response.zguard();
   auto target = procself.internalBuffer(); // 4 debug
