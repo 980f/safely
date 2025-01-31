@@ -6,21 +6,22 @@
 /** joint parts of @see Hook and @see Hooker, see those for what this is all about.*/
 template<typename RetType, typename... Args> class Hookbase {
 protected: //this class exists to be extended.
-  using Pointer = std::function<RetType(Args...)>;
+  using Pointer = std::function<RetType(Args...)>;//someday we will try to not use functional here but a lesser closure type if those exist.
 
   Hookbase(Pointer fn = nullptr): pointer(fn) {}
 
   Pointer pointer;
 
-  /** set the function pointer.
-   * Note that the default value remains unchanged. This makes sense as the default is what the owner of the hook chooses, not the individual hoping to use the hook.
-   * @returns the old pointer, for those usages which are 'borrowing' the hook, or nice enough to share with previous one (for which you should consider using sigc library). */
+  /** set the function pointer. */
   Pointer assign(Pointer fn) {
     Pointer was = pointer;
     pointer = fn;
     return was;
   }
 
+  Pointer operator =(Pointer fn) {
+    return assign(fn);
+  }
   /** @returns whether there is any point in calling this hook. (can distinguish between return of default and return that happens to match default)*/
   operator bool() const {
     return pointer != nullptr;
@@ -35,7 +36,7 @@ public:
   Hook(Pointer fn = nullptr): Base(fn) {}
 
   void operator ()(Args... args) const {
-    if (*this) {
+    if (*this) {//invoke operator bool
       Base::pointer(args...);
     }
   }
@@ -59,12 +60,14 @@ public: //expose function's type for use in arguments to be passed to this guy
       return defaultReturn;
     }
   }
-
+  /** Note that the default value remains unchanged. This makes sense as the default is what the owner of the hooker chooses, not the individual hoping to use the hook.
+     * @returns the old pointer, for those usages which are 'borrowing' the hook, or nice enough to share with a previous one (for which you should consider using sigc library). */
   Pointer operator=(Pointer fn) {
     return Base::assign(fn);
   }
 
 private:
+  /* what to return if the hooker hasn't been assigned a function */
   RetType defaultReturn;
 };
 

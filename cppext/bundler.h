@@ -12,7 +12,7 @@ template<class Grouped> class Bundler {
 public:
   Bundler(): next(list) {
     //insert into head of list, the earliest ones formed happen to be most often the last deleted, the newest one formed is likely to be the next deleted.
-    list = this; //start the list
+    list = reinterpret_cast<Grouped *>(this); //start the list
   }
 
   /** unlink object, this does NOT free them, freeing these calls this. */
@@ -27,10 +27,11 @@ public:
         }
       }
     }
+    this->next = nullptr;//in case of use after free.
   }
 
   /** call a member function on all members of the group using some set of args */
-  template<typename... Args> static void ForAll(void (Grouped::*fn)(Args...), Args... args) {
+  template<typename... Args> static void ForEach(void (Grouped::*fn)(Args...), Args... args) {
     for (Grouped *scan = list; scan; scan = scan->next) {
       (scan->*fn)(args...);
     }
@@ -48,12 +49,13 @@ public:
   }
 
   /** for each member of the group call a function that takes a member as an argument. */
-  template<typename... Args> static void ForAll(void (*fn)(Grouped &groupee, Args...), Args... args) {
+  template<typename... Args> static void ForEach(void (*fn)(Grouped &groupee, Args...), Args... args) {
     for (Grouped *scan = list; scan; scan = scan->next) {
       fn(*scan, args...);
     }
   }
 
+#if SafelyHasHeap
   /** Only call this if all instances of the class are created by new.
  * if this bundle is the sole owner of pointers you need some means to destroy the entities and this is it. */
   static void FreeAll() {
@@ -61,7 +63,9 @@ public:
       delete list; //this has a side effect of altering list. The last entity in the list has a null next which gets assigned to list.
     }
   }
+#endif
 };
 
 //you will need this with the appropriate name replacing Grouped in your Grouped implementation file:
 #define BundlerList(Grouped) template<> Grouped* Bundler<Grouped>::list = nullptr
+//the above macro changed between c++17 and c++23: we might have to do some ifdef'ing on c++ versions

@@ -36,3 +36,6 @@ add_subdirectory(rasbpi)
 
 get_target_property(arf ${safely_target} "INCLUDE_DIRECTORIES")
 message("aggregate includes: ${arf}")
+message("IoSource performance tweak: ${SafelyIoSourceEvents})
+#SafelyApplicationEvents=6
+#SafelyHasHeap=1

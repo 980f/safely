@@ -8,6 +8,7 @@
 /** libevent wrapper */
 #include <event.h>
 #include <functional>
+#include <hook.h>
 #include <microseconds.h>
 #include <system_error>
 #include_next <event2/event.h>
@@ -49,7 +50,10 @@ protected:
 
 public:
   /** the driver, listener, what have you, called "base" but "root" or "list" are better descriptions .
+   * This is inside Event for easy access to its members, as it is the prime consumer of those members.
+   *
    * todo:1 use or do something similar to PosixWrapper to handle int returns that are pass/fail.
+   *
    */
   class Looper {
     struct Configurator {
@@ -104,27 +108,34 @@ public:
       return event_base_loop(raw, once | nonBlocking << 1 | ignoreEmpty << 2); //todo:make this formally correct
     }
 
+    /* an event handler might call this to move the list iterator back to a higher priority, so that an event just created gets handled before pending but lower priority ones do*/
     int recheck() const {
       return event_base_loopcontinue(raw);
     }
 
+    /* an event handler can call this to stop event polling */
     void stop() {
       event_base_loopbreak(raw);
     }
 
+    /** @returns whether the loop exited due to a call to stop() */
     bool stopped() {
       return event_base_got_break(raw);
     }
 
+    /** a handler can call this to have the loop terminate soon. Most sensible use is to call this before invoking the loop instead of having a timer event calling stop() */
     void exitAfter(MicroSeconds delay) {
       event_base_loopexit(raw, &delay);
     }
 
+    /** @returns whether the loop terminated due to a timed exit (@see exitAfter) */
     bool exited() const {
       return event_base_got_exit(raw);
     }
 
-    //get shared timestamp
+    /* get shared timestamp, if @param fresh is true then updates it.
+     * The value here is normally updated once per scan of the event list so that all events handled in one pass have a common timestamp.
+     */
     MicroSeconds now(bool fresh = false) const;
 
 
@@ -138,7 +149,7 @@ public:
   }; //end Looper
 
 
-  /* the object returned here is an additional view into a shared object, beware that it is not independent other other references. */
+  /* the object returned here is an additional view into a shared object, beware that it is not independent of other references and most especially is not the same object as the event was enroll with. It works great as a local variable used in the Event's handler, but should not be part of a struct or otherwise static entity */
   Looper owner() {
     return event_get_base(raw);
   }
@@ -148,23 +159,26 @@ public:
     return myList.enroll(*this);
   }
 
-  /* fire an event ar random, not from event dispatcher */
+  /* fire an event ar random, not from event dispatcher.
+   * The humorous name is to get you to think long and hard before calling this, the execution environment isn't the same as when fired by a Looper, especially including that the Looper timestamp is (pootentially) garbage or and NPE depending upon whether this event was ever enrolled */
   void misfire() {
     event_active(raw, 0, 0);
   }
 
   /////////////////
 
+  /** this is designed to convert an attempt by libevent to kill the process into an exception thrown to the code that is either fatally misconfiguring a Looper before starting it, or from whereever a loop poll is invoked */
   static void exceptInsteadOfExt(int errcode) {
     throw std::system_error(errcode, std::system_category());//will likely exit, but canbe caught in a main to allow for recording overall state when  libevent croaked.
   }
 
+  /* sets up Event and Looper independent features of the library, such as how to exit when it gets upset at some error */
   static void libraryInit() {
     event_set_fatal_callback(&exceptInsteadOfExt);
   }
 };
 
-/*an event with no file or data flow, just a handler*/
+/* an event with no file or data flow, just a handler */
 class TimerEvent : public Event {
 public:
   TimerEvent() {
@@ -172,14 +186,20 @@ public:
     type = EV_TIMEOUT;
   }
 
-  std::function<void()> lambder;
+  Hook<> lambder;
 
   void onTimeoutEvent(bool onRead, bool onWrite) override {
     lambder();
   }
 };
 
-/** wraps libevent bufferevent */
+/** wraps libevent bufferevent
+ * First up is file to socket, for http sending,
+ * then socket to application, for http request reception.
+ *
+ * The associated http library will be mined for info, but this is tying libevent to safely and that is best done at a lower level.
+ *
+ */
 class FileEvent : public Event {
   public:
 
