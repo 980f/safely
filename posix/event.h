@@ -7,12 +7,17 @@
 
 /** libevent wrapper */
 #include <event.h>
+#include <fildes.h>
 #include <functional>
 #include <hook.h>
 #include <microseconds.h>
 #include <system_error>
 #include_next <event2/event.h>
 
+// struct SocketAddressRef {
+//   sockaddr *sa;
+//   int len;
+// };
 /** libevent insist on dynamically creating event trackers. We wish to be able to statically declare them so our base class is configuration which contains a pointer to the runtime handle.*/
 class Event {
 protected:
@@ -20,7 +25,7 @@ protected:
 
   /** library's stuff*/
   event *raw = nullptr;
-  /* configuration fields, changes may nottake effect without notifying the event_base (Looper) */
+  /* configuration fields, changes may not take effect without notifying the event_base (Looper) */
   evutil_socket_t fd = ~0; //an fd that is often that of a socket
   unsigned priority = ~0; //~0 will give lowest priority
   short type = 0; //combo of read|write|timeout|signal, and perhaps edge triggered and persistent
@@ -56,6 +61,7 @@ public:
    *
    */
   class Looper {
+  protected:
     struct Configurator {
       event_config *raw;
 
@@ -99,6 +105,10 @@ public:
     Looper(bool onething, unsigned numPriorities);
 
     int enroll(Event &ev) const;
+
+    event_base *getRaw() const {
+      return raw;
+    }
 
     ///////////////////////////////
     /// loop invocation and management
@@ -169,7 +179,7 @@ public:
 
   /** this is designed to convert an attempt by libevent to kill the process into an exception thrown to the code that is either fatally misconfiguring a Looper before starting it, or from whereever a loop poll is invoked */
   static void exceptInsteadOfExt(int errcode) {
-    throw std::system_error(errcode, std::system_category());//will likely exit, but canbe caught in a main to allow for recording overall state when  libevent croaked.
+    throw std::system_error(errcode, std::system_category()); //will likely exit, but canbe caught in a main to allow for recording overall state when  libevent croaked.
   }
 
   /* sets up Event and Looper independent features of the library, such as how to exit when it gets upset at some error */
@@ -198,9 +208,75 @@ public:
  * then socket to application, for http request reception.
  *
  * The associated http library will be mined for info, but this is tying libevent to safely and that is best done at a lower level.
- *
+ * on BEV_OUT_DEFER_CALLBACKS: default to deferred callbacks, it is not clear what "all happening on the stack" means.
+ * optional: close on free, we will default that since we rarely ever free events, this will allow for cleaning up fd's for memory leak detection.
  */
-class FileEvent : public Event {
-  public:
 
+#include <event2/bufferevent.h>
+
+class FileEvent : public Event {
+  bufferevent *raw = nullptr;
+  int options; //vendor's choice of type
+  evutil_socket_t socketfd;
+  int filefd;
+  bool fileSender;
+  // typedef void (*bufferevent_data_cb)(struct bufferevent *bev, void *ctx);
+  // typedef void (*bufferevent_event_cb)(struct bufferevent *bev, short what, void *ctx);
+  auto event() {return  fileSender ? EV_READ : EV_WRITE;}
+public:
+  FileEvent(bool transmitter) : fileSender{transmitter} {
+    options = BEV_OPT_DEFER_CALLBACKS | BEV_OPT_CLOSE_ON_FREE; //we don't bother with thread safe as our goal for libevent is to have a singlethreaded application.
+  }
+
+  ~FileEvent() {
+    bufferevent_free(raw); //let it close the socket or not according to the options
+    //kill stuff in case of USE after FREE
+    filefd = ~0; //todo: discuss whether we should close, in which case we will upgrade this to a FilDes and destruct that.
+    socketfd = ~0;
+  }
+
+  void connect(evutil_socket_t openSocketFd, const Fildes &filer) {
+    socketfd = openSocketFd;
+    filefd = int(filer);
+  }
+
+  void setOption(unsigned bev_opt, bool on = true) {
+    if (on) {
+      options |= bev_opt;
+    } else {
+      options &= ~bev_opt;
+    }
+  }
+
+  /** @param hysterical is the lower and upper levels for hysteresis */
+  void tweak(HalfOpen<size_t> hysterical) {
+    bufferevent_setwatermark(raw,event(),hysterical.lowest,hysterical.highest);
+  }
+
+  /* socket is sourceing bytes */
+  static void reader(bufferevent *raw, void *self) {
+    //todo: process read data
+    auto looper =reinterpret_cast<FileEvent*>(self)->owner();
+    auto timestamp=looper.now();
+    //todo: report bytes per second.
+  }
+
+  /* socket is sinking bytes */
+  static void writer(bufferevent *raw, void *self) {
+    //send soem bytes to socket via
+    // bufferevent_write(raw, ...);
+  }
+
+  static void eventHandler(bufferevent *raw, short what, void *self) {
+    if (what & BEV_EVENT_CONNECTED) {}
+    if (what & BEV_EVENT_ERROR) {}
+  }
+
+  /** @see Looper::enroll() */
+  int startOn(Looper &myList) {
+    // return myList.enroll(*this);
+    raw = bufferevent_socket_new(myList.getRaw(), socketfd, options);
+    bufferevent_setcb(raw, reader, writer, eventHandler, this);
+    bufferevent_enable(raw, event());
+  }
 };
