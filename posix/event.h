@@ -274,9 +274,11 @@ public:
 
   /** @see Looper::enroll() */
   int startOn(Looper &myList) {
+    errno=0;
     // return myList.enroll(*this);
     raw = bufferevent_socket_new(myList.getRaw(), socketfd, options);
     bufferevent_setcb(raw, reader, writer, eventHandler, this);
     bufferevent_enable(raw, event());
+    return errno;
   }
 };
