@@ -32,9 +32,9 @@ struct FullRules :public Rules {
 Text pack(const SegmentedName &pieces, const Rules &rule=Rules(), Converter &&converter=Converter());
 
 /** @returns the size of a buffer that will be needed to pack the path implied by @param indexer */
-unsigned length(ConstChainScanner<Text> indexer, const Rules &rule=Rules(), Converter &&converter=Converter());
+unsigned length(Chain<Text>::ConstScanner indexer, const Rules &rule=Rules(), Converter &&converter=Converter());
 /** build a packed image in the @param given packer buffer, you must allocate that buffer via @see length() */
-void packInto(Indexer<char> &packer, ConstChainScanner<Text> indexer, const Rules &rule=Rules(), Converter &&converter=Converter());
+void packInto(Indexer<char> &packer, Chain<Text>::ConstScanner indexer, const Rules &rule=Rules(), Converter &&converter=Converter());
 
 
 /** @returns whether input was at root (starts with seperator and whether there was a trailing one as well.

@@ -77,7 +77,7 @@ void printNode(unsigned tab, Storable &node, FILE *fp,bool showVolatiles){
   switch (node.getType()) {
   case Storable::Wad:
     fputc(node.isOrdered?'[':'{',fp);
-    for(ChainScanner<Storable> list(node.kinder()); list.hasNext(); ) {
+    for(Chain<Storable>::Scanner list(node.kinder()); list.hasNext(); ) {
       Storable & it(list.next());
       printNode((pretty?  tab + 1 : tab),it,fp,showVolatiles);
       if(list.hasNext()) {

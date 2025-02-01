@@ -67,8 +67,8 @@ Storable *Storable::FindChild(TextKey pathname, bool autocreate){
 using namespace sigc;
 
 //the following macros are only usable within Storable
-#define ForKidsConstly(list) for(ConstChainScanner<Storable> list(wad); list.hasNext(); )
-#define ForKids(list) for(ChainScanner<Storable> list(wad); list.hasNext(); )
+#define ForKidsConstly(list) for(Chain<Storable>::ConstScanner list(wad); list; )
+#define ForKids(list) for(Chain<Storable>::Scanner list(wad); list; )
 
 /** @returns either a number  or the key value BadIndex (way larger than we allow a wad to be) */
 static unsigned numericalName(TextKey name){
@@ -242,7 +242,7 @@ bool Storable::resolve(bool recursively){
 
   if(recursively && is(Wad)) {
     ForKidsConstly(list){
-      list.next().resolve(true);
+      list().resolve(true);
     }
   }
   return false;
@@ -265,13 +265,12 @@ bool Storable::isModified() const {
     return false;
   }
   switch(type) {
-  case Wad:
+    case Wad:
     //investigate all children:
-    ForKidsConstly(list){
-      if(list.next().isModified()) {
+      if (wad.Any(&Storable::isModified)) {
         return true;
       }
-    }
+
     JOIN
   case Numerical:    
   case Textual:
@@ -297,12 +296,13 @@ bool Storable::wasModified(){
 
   case Wad: { //investigate all children:  //need bracing to keep 'changes' local.
     unsigned changes = 0;   //only count node's own changed if no child is changed
-    ForKids(list){
-      if(list.next().wasModified()) {
+    auto changeCounter=[&changes](Storable *that) {
+      if (that->wasModified()) {
         ++changes;
-        //#don't exit early, we want to run wasModified() on all entities to clear their dirty bits.
       }
-    }
+    };
+    wad.forEach(changeCounter);
+
     return changes > 0 || thiswas;
   }
   JOIN;
@@ -372,7 +372,7 @@ void Storable::clone(const Storable&other){ //todo:2 try to not trigger false ch
     break;
   case Wad: //copy preserving order
     ForKidsConstly(list){
-      createChild(list.next());
+      createChild(list());
     }
     break;
   } /* switch */
@@ -416,7 +416,7 @@ void Storable::assignFrom(Storable&other){
     //we can't trust node order, we must name-match to handle classes built with different versions of software.
     //we must pull values from other, other may have stale nodes (in intended use).
     ForKids(list){
-      Storable&kid(list.next());//from datum?
+      Storable&kid(list());//from datum?
       Storable *older(nonTrivial(kid.name) ? other.existingChild(kid.name) : other.wad[kid.ownIndex()]);
       if(older) {
         kid.assignFrom(*older);
@@ -541,7 +541,7 @@ unsigned Storable::numLeaves() const {
   if(type==Wad) {
     unsigned count(0);
     ForKidsConstly(list){
-      count += list.next().numLeaves();
+      count += list().numLeaves();
     }
     return count;
   } else {
@@ -549,25 +549,24 @@ unsigned Storable::numLeaves() const {
   }
 } // Storable::numLeaves
 
-ChainScanner<Storable> Storable::kinder(){
+Chain<Storable>::Scanner Storable::kinder(){
   return {wad};
 }
 
-ConstChainScanner<Storable> Storable::kinder() const {
-  return ConstChainScanner<Storable>(wad);
+Chain<Storable>::ConstScanner Storable::kinder() const {
+  return Chain<Storable>::ConstScanner{wad};
 }
 
-void Storable::forChildren(sigc::slot<void(Storable &)> action){
+void Storable::forChildren(std::function<void(Storable &)> action){
   ForKids(list){
-    Storable&one(list.next());
-    action(one);
+    action(list());
   }
 }
 
 Storable *Storable::existingChild(TextKey childName){
   //nameless nodes might be mixed in with named ones:
   ForKids(list){
-    Storable&one(list.next());
+    Storable&one(list());
     if(one.name.is(childName)) {
       return &one;
     }
@@ -579,7 +578,7 @@ const Storable *Storable::existingChild(TextKey childName) const {
   //nameless nodes might be mixed in with named ones:
   if(nonTrivial(childName)) { //added guard to make assignFrom( a wad) easier to code.
     ForKidsConstly(list){
-      const Storable&one(list.next());
+      const Storable&one(list());
       if(one.name.is(childName)) {
         return &one;
       }
@@ -671,7 +670,7 @@ Storable *Storable::findChild(TextKey path, bool autocreate){
   ONNULLTHIS(nullptr)//detect recursion gone bad
 
   DottedName genealogy(slasher.slash,path);
-  ChainScanner<Text> progeny(genealogy.indexer());
+  Chain<Text>::Scanner progeny(genealogy.indexer());
 
   if(genealogy.bracket.after) {
     storetree("Storable findChild is ignoring trailing separator: [%s]",path);

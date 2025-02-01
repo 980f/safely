@@ -102,14 +102,14 @@ public:
     setSize(indexer.quantity()); //at time of attachment we resize the indexed entity
   }
 
-  using Scanner = ChainScanner<Groupie>;
-  using ConstScanner = ConstChainScanner<Groupie>;
+  using Scanner = Chain<Groupie>::Scanner;
+  using ConstScanner = Chain<Groupie>::ConstScanner;
 
   /** "in class" macros for StoredGroup.
    * outside of the StoredGroup use the iterator factory
    * beware that when using this macro you must invoke list.next() in every body else you will spin forever (ie no conditional invocation of list.next())*/
-#define ForValues(list)   for(Scanner list(pod); list.hasNext(); )
-#define ForValuesConstly(list)   for(ConstScanner list(pod); list.hasNext(); )
+#define ForValues(list)   for(Scanner list(pod); list; )
+#define ForValuesConstly(list)   for(ConstScanner list(pod); list; )
 
   Scanner all(){
     return Scanner(pod);
@@ -230,7 +230,7 @@ public:
   sigc::connection onAddition(Receiver action, bool addAllNow = false){
     if(addAllNow) {
       ForValues(list){
-        action(list.next());
+        action(list());
       }
     }
     return oncreation.connect(action);

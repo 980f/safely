@@ -322,11 +322,11 @@ bool JsonStore::Printer::printName(){
 void JsonStore::Printer::printWad(){
   os << '{' << std::endl;
   ++tablevel;
-  ChainScanner<Storable> scanner(node.p->kinder());
-  while(scanner.hasNext()) {
-    node.p = &scanner.next();
+  Chain<Storable>::Scanner scanner(node.p->kinder());
+  while(scanner) {
+    node.p = &scanner();
     if(printValue()) { //if node actual was emitted into the output stream
-      if(scanner.hasNext()) {
+      if(scanner) {
         os << ',';
       }
       os << std::endl;

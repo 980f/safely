@@ -16,7 +16,7 @@ DelimitingOutputStream &StorageExporter::exportNode(Storable &node, bool header,
     dout(name, node.image());
   } else if(node.is(Storable::Wad)) {
     ForKinder( node){
-      Storable &it(list.next());
+      Storable &it(list());
       DottedName namer('.',name);
       namer.suffix (it.name);
       exportNode(it, header, namer.pack(Converter()));//todo:1 pass in url encoder or the like for Converter.
@@ -28,7 +28,7 @@ DelimitingOutputStream &StorageExporter::exportNode(Storable &node, bool header,
 DelimitingOutputStream &StorageExporter::exportTable(Storable &headers, Storable &rows){
   exportNode(headers).endl();
   ForKinder( rows){
-    exportNode(list.next()).endl();
+    exportNode(list()).endl();
   }
   dos.gs();
   return dos;
@@ -58,7 +58,7 @@ DelimitingOutputStream &StorageExporter::exportGroup(Storable &node, const char 
     dos.endl();
   }
   ForKinder( node){
-    exportNode(list.next());
+    exportNode(list());
     dos.endl();
   }
   return dos;

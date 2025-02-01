@@ -45,8 +45,8 @@ public: //this is a utility class, adding better named functions to its base.
   void transfer(SegmentedName &other);
 
   /** @returns an indexer, that can alter this */
-  ChainScanner<Text> indexer();
+  Chain<Text>::Scanner indexer();
 
   /** @returns an indexer, that can only view this, note that the individual pieces are still mutable. */
-  ConstChainScanner<Text> cindexer() const;
+  Chain<Text>::ConstScanner cindexer() const;
 }; // class SegmentedName

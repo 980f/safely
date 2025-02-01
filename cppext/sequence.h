@@ -1,5 +1,4 @@
-#ifndef SEQUENCE_H
-#define SEQUENCE_H
+#pragma once
 
 /** interfaces like java iterators
  *
@@ -11,62 +10,58 @@ template<typename Content> class Sequence {
 public:
   virtual ~Sequence() = default;
 
-  virtual bool hasNext(void) = 0;
-  virtual Content&next(void) = 0;
+  virtual bool hasNext() = 0;
 
-  virtual void skip(unsigned int qty = 1){
-    while(hasNext() && qty-- > 0) {
+  virtual Content &next() = 0;
+
+  virtual void skip(unsigned int qty = 1) {
+    while (hasNext() && qty-- > 0) {
       next();
     }
   }
-
 }; // class Sequence
 
 /** @deprecated, couldn't figure out how to cast the first use case for this. */
-template<typename Content,typename Wrapped> class ConvertingSequence: public Sequence<Content>{
+template<typename Content, typename Wrapped> class ConvertingSequence : public Sequence<Content> {
   Sequence<Wrapped> &wrapped;
 
 public:
-  ConvertingSequence(Sequence<Wrapped> &wrapped):wrapped(wrapped){
+  ConvertingSequence(Sequence<Wrapped> &wrapped): wrapped(wrapped) {}
 
-  }
-
-  bool hasNext(void) const override {
+  bool hasNext() override {
     return wrapped.hasNext();
-
   }
-  Content&next(void) override {
+
+  Content &next() override {
     return Content(wrapped.next());
   }
-
 };
 
 /** differs from plain Sequence in the next() returns object via copying, not reference */
 template<typename Content> class ReadonlySequence {
 public:
-  virtual bool hasNext() = 0;//const removed so that hasNext's can do caching lookaheads
+  virtual bool hasNext() = 0; //const removed so that hasNext's can do caching lookaheads
   virtual Content next() = 0;
 
-  virtual void skip(unsigned int qty = 1){
-    while(hasNext() && qty-- > 0) {
+  virtual void skip(unsigned int qty = 1) {
+    while (hasNext() && qty-- > 0) {
       next();
     }
   }
-
 }; // class ReadonlySequence
 
 
 template<typename Content> class PeekableSequence : public Sequence<Content> {
 public:
-  virtual Content&peek(void) const = 0; //const'ed, preview with caching wasn't worth the loss of being able to work on const references.
-  virtual void unget(void) = 0;
+  virtual Content &peek() const = 0; //const'ed, preview with caching wasn't worth the loss of being able to work on const references.
+  virtual void unget() = 0;
 };
 
 template<typename Content> class LatentSequence : public PeekableSequence<Content> {
 public:
-  virtual bool hasPrevious(void) const = 0;
-  virtual Content&previous(void) const = 0;
-  virtual unsigned int used(void) const = 0;
-};
+  virtual bool hasPrevious() const = 0;
 
-#endif // SEQUENCE_H
+  virtual Content &previous() const = 0;
+
+  virtual unsigned int used() const = 0;
+};

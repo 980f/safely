@@ -16,7 +16,7 @@ bool SegmentedName::empty() const {
 void SegmentedName::purify(){
   for(auto index(indexer());index.hasNext();){
     if(index.next().empty()){
-      index.removeLastNext();
+      index.removePrior();
     }
   }
 }
@@ -60,10 +60,10 @@ void SegmentedName::suffix(Text &child){
    append(new Text(child));
 }
 
-ChainScanner<Text> SegmentedName::indexer(){
-  return ChainScanner<Text>(*this);
+Chain<Text>::Scanner SegmentedName::indexer(){
+  return Scanner(*this);
 }
 
-ConstChainScanner<Text> SegmentedName::cindexer() const {
-  return ConstChainScanner<Text>(*this);
+Chain<Text>::ConstScanner SegmentedName::cindexer() const {
+  return ConstScanner(*this);
 }

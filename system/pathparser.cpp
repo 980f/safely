@@ -4,7 +4,7 @@
 
 using namespace PathParser;
 
-unsigned PathParser::length(ConstChainScanner<Text> indexer, const Rules &rule, Converter &&converter){
+unsigned PathParser::length(Chain<Text>::ConstScanner indexer, const Rules &rule, Converter &&converter){
   if(!indexer.hasNext()){
     return 0;//don't inspect rules, i.e. rule.before only matters if we have something before
   }
@@ -19,7 +19,7 @@ unsigned PathParser::length(ConstChainScanner<Text> indexer, const Rules &rule, 
   return quantity;
 }
 
-void PathParser::packInto(Indexer<char> &packer,ConstChainScanner<Text>feeder,const Rules &rule, Converter &&converter){
+void PathParser::packInto(Indexer<char> &packer,Chain<Text>::ConstScanner feeder,const Rules &rule, Converter &&converter){
   while(feeder.hasNext()) {
     if(feeder.ordinal()>0 || rule.before){//if not first or if put before first
       packer.next() = rule.slash;
@@ -163,4 +163,3 @@ Rules Chunker::parseInto(SegmentedName &pieces, const Text &packed, char seperat
   }
   return chunker.bracket;
 }
-

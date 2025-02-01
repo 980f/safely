@@ -71,7 +71,7 @@ unsigned FileName::length(Converter &&cvt) const {
 
   unsigned bytesNeeded = pieces - 1 + bracket.before + bracket.after;//number of seperators
 
-  for(ConstChainScanner<DottedName> index(*this); index.hasNext();) {
+  for(Chain<DottedName>::ConstScanner index(*this); index.hasNext();) {
     bytesNeeded += index.next().length(cvt.forward());
   }
   return bytesNeeded;
@@ -83,7 +83,7 @@ Text FileName::pack(Converter &&cvt,unsigned bytesNeeded){
   }
   Indexer<char> packer = Indexer<char>::make(bytesNeeded + 1 /*for null*/,true);//todo:0 local char[maxpath] or pass buffer
 
-  for(ChainScanner<DottedName> feeder(*this); feeder.hasNext();) {
+  for(Chain<DottedName>::Scanner feeder(*this); feeder.hasNext();) {
     if(feeder.ordinal()>0 || bracket.before) {//if not first or if put before first
       packer.next() = bracket.slash;
     }

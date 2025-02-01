@@ -1,8 +1,7 @@
 #pragma once
 
 #include <forward_list>
-#include <list>
-
+#include "sequence.h"
 #include "index.h"
 #include <vector>  //an STL class that is dangerous for naive users (as is all of the STL)
 
@@ -25,26 +24,29 @@ protected:
   bool isOwner;
   /** filters attempted appends, ill use can still put nulls into the chain.*/
   std::vector<T *> v;
-  /* an iterator like thing which handles insertions and removals on the main object by any instance of scanner, not just itself like the prior instantiation of ChainScanner */
-  class Scanner;
-  std::forward_list<Scanner> scanners; //cheapest list, but maybe this should be a Chain itself!
 public:
-  class Scanner {
+  /* an iterator like thing which handles insertions and removals on the main object by any instance of scanner, not just itself like the prior instantiation of ChainScanner */
+  class Scanner:public Sequence<T> {
+    friend class Chain<T>;
+  protected:
     Chain &chain;
     unsigned step;
     bool inReverse;
 
   public:
-    Scanner(Chain &chain, bool inReverse = false) : chain(chain), step(inReverse ? chain.quantity() : 0), inReverse(inReverse) {
-      chain.scanners.push_front(this); //cheapest adder and we don't care what the order is.
+    Scanner(Chain &chain, bool inReverse = false) : chain(chain), step(inReverse ? chain.quantity() : Index{0}), inReverse(inReverse) {
+      chain.scanners.push_front(*this); //cheapest adder and we don't care what the order is.
     }
 
     ~Scanner() {
-      chain.scanners.remove(this);
+      chain.scanners.remove(*this);
     }
 
     operator bool() const {
       return inReverse ? step : step < chain.quantity();
+    }
+    bool hasNext()  override {
+      return operator bool();
     }
 
     /* access next, unconditional increment of pointer.
@@ -52,7 +54,11 @@ public:
      */
     T &operator()() {
       //todo: add idiot guard for those who don't check operator bool()
-      return chain.v[inReverse ? --step : step++];
+      return *chain.v[inReverse ? --step : step++];
+    }
+
+    T &next() override{
+      return operator()();
     }
 
     /** NB: index of the next item that op() will return */
@@ -108,7 +114,7 @@ public:
     //   //if one below and the other above then the caller might want to do something to keep one from being skipped while the other gets done twice?
     // }
   };
-
+  std::forward_list<Scanner> scanners; //cheapest list, but maybe this should be a Chain itself!
 public:
   Chain(bool isOwner = true) : isOwner(isOwner), v(0) {
     //#nada
@@ -309,20 +315,98 @@ public:
     clear();
   }
 
-  /** call a function that uses a member */
-  template<typename... Args> void forEach(void (*user)(Args...), Args... args) {
+  template<typename Functorn, typename... Args> void forEach(Functorn arf,Args... args) {
     for (auto each: v) {
-      (*user)(each, args...);
+      arf(each, args...);
     }
   }
 
-  /** call a member function on each member contained */
-  template<typename... Args> void forEach(void (T::*user)(Args...), Args... args) {
+  //
+  // /** call a function that uses a member */
+  // template<typename... Args> void forEach(void (*user)(T&,Args...),Args... args) {
+  //   for (auto each: v) {
+  //     (*user)(each, args...);
+  //   }
+  // }
+  //
+  // template<typename... Args> void forEach(std::function<void (T&,Args...)> fn, Args... args) {
+  //   for (auto each: v) {
+  //     fn(each, args...);
+  //   }
+  // }
+  //
+  // /** call a member function on each member contained */
+  // template<typename... Args> void forEach(void (T::*user)(Args...), Args... args) {
+  //   for (auto each: v) {
+  //     (each.*user)(args...);
+  //   }
+  // }
+
+  bool Any(bool(T::*predicate)() const) const {
     for (auto each: v) {
-      (each.*user)(args...);
+      if (((*each).*predicate)()) {
+        return true;
+      }
     }
+    return false;
   }
+
+
+public:
+  class ConstScanner:public Sequence<T> {
+    const Chain &chain;//chain not modifiable, but elements within it are.
+    unsigned step;
+    bool inReverse;
+  public:
+    ConstScanner(const Chain &chain, bool inReverse = false) : chain(chain), step(inReverse ? chain.quantity() : Index{0}), inReverse(inReverse) { }
+
+    operator bool() const {
+      return inReverse ? step : step < chain.quantity();
+    }
+
+    /* access next, unconditional increment of pointer.
+     * NB: overloading operator* might seem to make more syntactic sense, but has the expectations of controlling the pointer motion via -- and ++
+     */
+    T &operator()() {
+      //todo: add idiot guard for those who don't check operator bool()
+      return *chain.v[inReverse ? --step : step++];
+    }
+
+    bool hasNext() override {
+      return operator bool();
+    }
+
+    T & next() override {
+      return operator()();
+    }
+
+    /** NB: index of the next item that op() will return */
+    unsigned ordinal() const {
+      return step-inReverse;
+    }
+
+    /** move pointer back. If value is bad then pointer goes to 0!*/
+    void rewind(unsigned backup = BadLength) {
+      if (inReverse) {
+        if (backup < chain.quantity() - step) { //do not swap sides!  backup may be a value that would cause a wrap.
+          step += backup;
+        } else {
+          step = chain.quantity();
+        }
+        return;
+      }
+
+      if (backup <= step) {
+        step -= backup;
+      } else {
+        step = 0;
+      }
+    }
+  };
+
 }; // class Chain
+
+
 #if 0 //deprecating these
 #include "sequence.h"
 /** a cheap-enough to copy java-like iteration aid for vectors of pointers, such as Chain<> is.

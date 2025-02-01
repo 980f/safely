@@ -1,5 +1,7 @@
 #pragma once //(C) Andrew L. Heilveil, 2017-2018
 
+#include <sequence.h>
+
 #include "chain.h" //wrap std::vector to cover its sharp pointy sticks.
 #include "changemonitored.h"
 
@@ -269,13 +271,13 @@ public:
   unsigned numLeaves() const;
 
   /** @returns an iterator over the children, in ascending order*/
-  ChainScanner<Storable> kinder();
+  Chain<Storable>::Scanner kinder();
 
-  /** @returns an iterator over the children, in ascending order*/
-  ConstChainScanner<Storable> kinder() const;
+  // /** @returns an iterator over the children, in ascending order*/
+  Chain<Storable>::ConstScanner kinder() const;
 
   /** experimental, to see if syntax is tolerable: */
-  void forChildren(sigc::slot<void( Storable &)> action);
+  void forChildren(std::function<void( Storable &)> action);
 
   bool has(unsigned ordinal) const {
     return ordinal < numChildren();
@@ -412,8 +414,8 @@ struct StorageWalker {
 };
 
 /** iterate over the children of given node (kinder is german  plural for child, like kindergarten) */
-#define ForKinder(node) for(auto list(node.kinder()); list.hasNext(); )
-#define ForKinderConstly(node) for(auto list(node.kinder()); list.hasNext(); )
+#define ForKinder(node) for(auto list(node.kinder()); list; )
+#define ForKinderConstly(node) for(auto list(node.kinder()); list; )
 
 
 /** auto creating iterator that provides for deleting the unscanned items.
