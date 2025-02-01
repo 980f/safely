@@ -1,5 +1,8 @@
 #pragma once
 
+#include <forward_list>
+#include <list>
+
 #include "index.h"
 #include <vector>  //an STL class that is dangerous for naive users (as is all of the STL)
 
@@ -18,10 +21,93 @@
 
 template<typename T> class Chain {
 protected:
-  /** whether to call delete on things removed from the chain. Almost alaways true (by code instances) */
+  /** whether to call delete on things removed from the chain. Almost always true (by code instances) */
   bool isOwner;
   /** filters attempted appends, ill use can still put nulls into the chain.*/
   std::vector<T *> v;
+  /* an iterator like thing which handles insertions and removals on the main object by any instance of scanner, not just itself like the prior instantiation of ChainScanner */
+  class Scanner;
+  std::forward_list<Scanner> scanners; //cheapest list, but maybe this should be a Chain itself!
+public:
+  class Scanner {
+    Chain &chain;
+    unsigned step;
+    bool inReverse;
+
+  public:
+    Scanner(Chain &chain, bool inReverse = false) : chain(chain), step(inReverse ? chain.quantity() : 0), inReverse(inReverse) {
+      chain.scanners.push_front(this); //cheapest adder and we don't care what the order is.
+    }
+
+    ~Scanner() {
+      chain.scanners.remove(this);
+    }
+
+    operator bool() const {
+      return inReverse ? step : step < chain.quantity();
+    }
+
+    /* access next, unconditional increment of pointer.
+     * NB: overloading operator* might seem to make more syntactic sense, but has the expectations of controlling the pointer motion via -- and ++
+     */
+    T &operator()() {
+      //todo: add idiot guard for those who don't check operator bool()
+      return chain.v[inReverse ? --step : step++];
+    }
+
+    /** NB: index of the next item that op() will return */
+    unsigned ordinal() const {
+      return step-inReverse;
+    }
+
+    /** move pointer back. If value is bad then pointer goes to 0!*/
+    void rewind(unsigned backup = BadLength) {
+      if (inReverse) {
+        if (backup < chain.quantity() - step) { //do not swap sides!  backup may be a value that would cause a wrap.
+          step += backup;
+        } else {
+          step = chain.quantity();
+        }
+        return;
+      }
+
+      if (backup <= step) {
+        step -= backup;
+      } else {
+        step = 0;
+      }
+    }
+
+    /** removes  the item that the last call to operator() gave you, adjusting iteration for its absence */
+    void removePrior() {
+      if (inReverse ? chain.has(step) : step) {
+        chain.removeNth(step-inReverse);
+      }
+    }
+
+  protected:
+    //called by Chain when it is removing an entity
+    void removing(unsigned which) {
+      if (which < step) {
+        --step;
+      }
+    }
+
+    //called by Chain when it is inserting something
+    void adding(unsigned which) {
+      //an item inserted before the pointer doesn't get processed
+      if (which < step) {
+        ++step; //keep the latest item from getting processed twice
+      }
+    }
+
+    //
+    // bool swapping(unsigned from , unsigned to) {
+    //   //if both below step then nothing to do
+    //   //if both at or above step then nothing to do
+    //   //if one below and the other above then the caller might want to do something to keep one from being skipped while the other gets done twice?
+    // }
+  };
 
 public:
   Chain(bool isOwner = true) : isOwner(isOwner), v(0) {
@@ -43,6 +129,9 @@ public:
   T *insert(T *thing, Index location) {
     if (thing) {
       v.insert(v.begin() + location, thing);
+      for (auto scanner: scanners) {
+        scanner.adding(location);
+      }
     }
     return thing;
   }
@@ -103,9 +192,9 @@ public:
 
   /** presizes chain for faster insertions via adding nullptr entries.
    * size() is NOT altered, this is just a hint to the allocator */
- unsigned allocate(unsigned howmany){
-    if(howmany>quantity()) {
-      v.reserve(howmany);//former use of 'resize' here violated too many expectations.
+  unsigned allocate(unsigned howmany) {
+    if (howmany > quantity()) {
+      v.reserve(howmany); //former use of 'resize' here violated too many expectations.
     }
     return howmany;
   }
@@ -126,14 +215,20 @@ public:
       delete v[n];
     }
     v.erase(v.begin() + n);
+    for (auto element: scanners) {
+      element.removing(n);
+    }
     return true;
   }
 
   /** removes @param n th item, 0 removes first in chain. @returns the item. Compared to removeNth this never deletes the object even if this wad claims ownership */
   T *takeNth(unsigned n) {
     T *adoptee = nth(n);
-    if (adoptee) {//if nth actually existed
+    if (adoptee) { //if nth actually existed
       v.erase(v.begin() + n); //syntax like this is sufficient reason to hate the stl.
+      for (auto element: scanners) {
+        element.removing(n);
+      }
     }
     return adoptee;
   }
@@ -150,6 +245,11 @@ public:
       }
     }
     v.erase(v.begin() + mark, v.end());
+    for (auto element: scanners) {
+      if (element.step > mark) {
+        element.step = mark;
+      }
+    }
   }
 
   /** removes item @param thing if present. @returns whether something was actually removed*/
@@ -177,7 +277,7 @@ public:
     if (has(from) && has(to)) {
       int dir = int(to) - int(from); //positive if moving towards end
       if (dir == 0) {
-        return false;//todo:M debate whether this should be true, as a request to not move was successful.
+        return false; //todo:M debate whether this should be true, as a request to not move was successful.
       }
       T *thing = v[from];
       T **p = v.data(); //C++11 addition. If fails compilation then will have to do a loop with iterators
@@ -208,8 +308,22 @@ public:
   virtual ~Chain() {
     clear();
   }
-}; // class Chain
 
+  /** call a function that uses a member */
+  template<typename... Args> void forEach(void (*user)(Args...), Args... args) {
+    for (auto each: v) {
+      (*user)(each, args...);
+    }
+  }
+
+  /** call a member function on each member contained */
+  template<typename... Args> void forEach(void (T::*user)(Args...), Args... args) {
+    for (auto each: v) {
+      (each.*user)(args...);
+    }
+  }
+}; // class Chain
+#if 0 //deprecating these
 #include "sequence.h"
 /** a cheap-enough to copy java-like iteration aid for vectors of pointers, such as Chain<> is.
  * This works better than std::vector::iterator as it properly deals with items being removed during iteration.
@@ -225,11 +339,11 @@ public:
     return steps < list.quantity();
   }
 
-  T &next(void) {
+  T &next() {
     return *list[steps++];
   }
 
-  T &current(void) const {
+  T &current() const {
     return *list[steps];
   }
 
@@ -262,7 +376,6 @@ public:
     list.removeNth(which);
   }
 
-  //todo: detect c++14 and add a forEach
 }; // class ChainScanner
 
 /** scan a const chain, one that doesn't tolerate adds or removes */
@@ -298,7 +411,6 @@ public:
     }
   }
 
-  //todo: detect c++14 and add a forEach
 }; // class ConstChainScanner
 
 /** iterate from end to start */
@@ -341,5 +453,5 @@ public:
     remove(steps);
   }
 
-  //todo: detect c++14 and add a forEach
 }; // class ChainReversed
+#endif
