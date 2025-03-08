@@ -74,6 +74,26 @@ bool Char::isControl() const noexcept{
   return iscntrl(raw);
 }
 
+/** convert to lower case and @return whether that caused a change */
+bool Char::toLower() noexcept {
+  if (isUpper()) {
+    raw |= 0x20;
+    return true;
+  } else {
+    return false;
+  }
+}
+
+/** convert to lower case and @return whether that caused a change */
+bool Char::toUpper() noexcept {
+  if (isLower()) {
+    raw &= ~0x20;
+    return true;
+  } else {
+    return false;
+  }
+}
+
 bool Char::isInNumber() const noexcept {
   return isdigit(raw) || in("+-.Ee");
 }
