@@ -2,38 +2,54 @@
 #include "continuedfractionratiogenerator.h"
 #include "minimath.h"
 
+const double ContinuedFractionRatioGenerator::epsilon = std::pow(2.0, -32);//ContinuedFractionRatioGenerator::maxWorkingBits); //confirmed perfect representation. 0x3df0000000000000
+
 
 ContinuedFractionRatioGenerator::ContinuedFractionRatioGenerator() {
-  restart(0);
+  //confused the pee out of debug, and the thing is not usable anyway restart(0);
+  fraction = 0.0;
+}
+
+static void shift(unsigned hk[3]) {
+  hk[1] = hk[0];
+  hk[2] = hk[1];
 }
 
 bool ContinuedFractionRatioGenerator::restart(double ratio, unsigned limit) {
   this->limit = limit == 0 ? ~0U : limit; //there were too many defective call points, fixing it here.
-  fraction = fabs(ratio);
+  if(!std::isnormal(ratio)){
+    fraction = 0; //should preclude triggering obscure faults
+    return false;
+  }
+  fraction = 1.0 / fabs(ratio);
   h[0] = k[1] = 0; //note that indices here are swap of following ones. h/k 0/1 is a 2x2 matrix that we are initializing to the identity matrix.
   h[1] = k[0] = 1;
-  an = h[2] = k[2] = 0; //4 debug, these values aren't actually used.
-  step(); //gives 1/0
+  //the following should not actually get used, but prevent getting distracted during debug:
+  h[2] = h[1];
+  k[2] = k[1];
+
+  split(); //gives 1/0
+  shift(h);
+  h[0]=an;
+  shift(k);
+  k[0]=1;
   return step(); //gives int(ratio)/1
 }
 
 bool ContinuedFractionRatioGenerator::bump(unsigned hk[3]) {
-  uintmax_t provisional = uintmax_t(an) * hk[1] + hk[0]; //uintmax_t: using extra bits to make the math easier here.
+  uintmax_t provisional = uintmax_t(an) * hk[1] + hk[2]; //uintmax_t: using extra bits to make the math easier here.
   if (provisional <= limit) {
-    hk[2] = unsigned(provisional);
+    hk[0] = unsigned(provisional);
     return true;
   }
   return false;
 }
 
-static void shift(unsigned hk[3]) {
-  hk[0] = hk[1];
-  hk[1] = hk[2];
-}
+
 
 bool ContinuedFractionRatioGenerator::step() {
   if (split()) {
-    if (bump(h) && bump(k)) { //only  if both are in range do we keep the new values
+    if (bump(h) && bump(k)) { //only if both are in range do we keep the new values
       shift(h);
       shift(k);
       return true;
@@ -58,12 +74,11 @@ double ContinuedFractionRatioGenerator::best() {
 }
 
 bool ContinuedFractionRatioGenerator::split() {
-  static const double uint32_tepsilon = pow(2, -maxWorkingBits); //confirmed perfect representation. 0x3df0000000000000
   if (fraction == 0.0) {
     return false;
   }
 
-  if (fraction < uint32_tepsilon) { //subsequent math would overflow without notices.
+  if (fraction < epsilon) { //subsequent math would overflow without notices.
     return false;
   }
 

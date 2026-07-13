@@ -1,4 +1,5 @@
 #pragma once
+#include <cmath>
 #include <limits>
 
 /** find a ratio of integers which best matches a floating point number.
@@ -23,7 +24,8 @@ public:
    * This is usually a power of 2.
    */
   unsigned limit;
-  static constexpr unsigned maxWorkingBits = std::numeric_limits<decltype(h[0])>::digits;
+  static const unsigned maxWorkingBits = 32;//was coming up 0// std::numeric_limits<decltype(h[0])>::digits;
+  static const double epsilon;// = std::pow(2, -maxWorkingBits); //confirmed perfect representation. 0x3df0000000000000
 
   /** create one for learning the algorithm, then call restart followed by looping on step inspecting numerator and denominator as you go. */
   ContinuedFractionRatioGenerator();
@@ -62,5 +64,5 @@ public:
 private:
   bool split();
 
-  bool bump(unsigned hk[]);
+  bool bump(unsigned hk[3]);
 };
