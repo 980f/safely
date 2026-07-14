@@ -1,7 +1,14 @@
 #pragma once
-#include <cmath>
-#include <limits>
 
+
+#ifndef __cpp_lib_bit_cast // C++ >= 20
+  /// copied and compacted from recent <bit>
+  constexpr double  bit_cast( unsigned long __from) noexcept { return __builtin_bit_cast(double, __from); }
+#else
+#include <bit>
+#endif // __cpp_lib_bit_cast
+
+#include <limits>
 /** find a ratio of integers which best matches a floating point number.
  * This is useful for tuning a PWM.
  *
@@ -14,42 +21,45 @@
  */
 class ContinuedFractionRatioGenerator {
 public:
+  using ValueType=unsigned; //could use a template argument, but then the whole of the class would have to be in the header. Instead use a limit appropriate for a shorter unsigned type to get the best ratio for that type.
+  constexpr static const unsigned maxWorkingBits = std::numeric_limits<ValueType>::digits;
+  constexpr static const double epsilon = bit_cast((1023ul-maxWorkingBits)<<52);
+
+public:
   double fraction;
   unsigned an;
   //built by recursion relationship, where each step depends on prior 2, so we need a memory that is 3 deep.
-  unsigned h[3];
-  unsigned k[3];
+  ValueType h[3];
+  ValueType k[3];
   /** how large the numerator or denominator may be.
    * The minimal constraint is to not overflow the computer representation.
    * This is usually a power of 2.
    */
-  unsigned limit;
-  static const unsigned maxWorkingBits = 32;//was coming up 0// std::numeric_limits<decltype(h[0])>::digits;
-  static const double epsilon;// = std::pow(2, -maxWorkingBits); //confirmed perfect representation. 0x3df0000000000000
+  ValueType limit;
 
   /** create one for learning the algorithm, then call restart followed by looping on step inspecting numerator and denominator as you go. */
   ContinuedFractionRatioGenerator();
 
   /** create and iterate. By the time this returns it holds the best ratio. */
-  ContinuedFractionRatioGenerator(double ratio, unsigned limit = 0) {
+  ContinuedFractionRatioGenerator(double ratio, ValueType limit = 0) {
     restart(ratio, limit);
     best();
   }
 
   /** numerator and denominator will be <limit when iteration stops. for hardware use the limit value should be ((1<<numbits)-1)
    * @param ratio is expected to be positive, if not hilarity ensues. @returns an OK to iterate which is not yet sane, ignore it. */
-  bool restart(double ratio, unsigned limit = ~0U);
+  bool restart(double ratio, ValueType limit = ~0U);
 
   /** @returns whether the number format allows a more precise computation, if so then computation is done and has been stored internally.*/
   bool step();
 
   /** @returns a number greater than denominator if input value is greater than 1 */
-  unsigned numerator() {
+  ValueType numerator() {
     return k[1];
   }
 
   /** @returns a number greater than numerator if input value is less than 1 */
-  unsigned denominator() {
+  ValueType denominator() {
     return h[1];
   }
 
@@ -64,5 +74,5 @@ public:
 private:
   bool split();
 
-  bool bump(unsigned hk[3]);
+  bool bump(ValueType hk[3]);
 };
