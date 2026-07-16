@@ -1,8 +1,8 @@
 #include <iostream>
 
-#include "stdio.h"
+#include <cstdio>
 #include <initializer_list>  //for inline test data sets
-
+#include "char.h"
 #include "safestr.h"
 #include "logger.h"
 
@@ -16,10 +16,13 @@ void testStorable(){
 }
 
 #include "numericalvalue.h" //union + type enum
-#include "stddef.h"
+#include <cstddef>
 /** test harness for qtcreator debugger helper*/
 void testPrettyPrinter(unsigned which){
   switch(which) {
+  default:
+    dbg("No test numbered %u",which);
+    break;
   case BadIndex:
     for(which=4;which-->0;){
       testPrettyPrinter(which);
@@ -70,12 +73,9 @@ void testPrettyPrinter(unsigned which){
       mom.addChild("girls").presize(3,Storable::Numerical);
       dad.addChild("boys").presize(ci,Storable::Numerical);
     }
-
   }
   break;
-
   } // switch
-
 } // testPrettyPrinter
 
 static SafeStr<14> fortnight;
@@ -215,11 +215,11 @@ public:
   Weird(int ){}
 
   Weird & operator ()(char see){
-    dbg("%c",see);
+    dbg("see:%c",see);
     return *this;
   }
   Weird & operator ()(unsigned ewe){
-    dbg("%u",ewe);
+    dbg("ewe:%u",ewe);
     return *this;
   }
 
@@ -235,16 +235,21 @@ public:
 };
 
 extern void testJ(unsigned which);
+extern int testCFRG(int which);
 #include "unicodetester.h"
 #include "numberformatter.h"
 #include "testpathparser.h"
 #include "filereadertester.h"
 #include "filewritertester.h"
 #include "application.h"
+
+#if __has_include("SSD1306.h")
 //rpi i2c
 #include "SSD1306.h"
 
 static SSD1306 hat({128,64,true,12});
+#endif
+
 int main(int argc, char *argv[]){
   Text cwd(getcwd(nullptr,0));//we use Text class because it will free what getcwd allocated. Not so critical unless we are using this program to look for memory leaks
                               // in the functions it tests.
@@ -254,10 +259,17 @@ int main(int argc, char *argv[]){
   Application::writepid("tests.pid");
   while(argc-->0) {
     const char*tes = argv[argc];
+    if (Char(*tes).isDigit()){//skip over numbers so that tests can have numerical arguments
+      continue;
+    }
     dbg("%d: %s",argc,tes);
     char group=(*tes++);
     unsigned which=atoi(tes);
-    switch(group){
+    switch(group){ //used: %bdefjknpruwxz
+    case 'r': //test continued fraction generator
+      testCFRG(which);
+
+      break;
     case 'd':
       testNonSigcDemon();
       break;

@@ -1,6 +1,7 @@
 
 message("including cppext")
 
+#Cmake 4.2 saw the PUBLIC as a source.
 target_sources(${safely_target} PUBLIC
   bigendianer.cpp
   bitbanger.cpp

@@ -1,6 +1,7 @@
 #pragma once
 
 
+#include <bit>
 #include <cstdint>
 #ifndef __cpp_lib_bit_cast // C++ >= 20
 /// copied and specialized and compacted from recent <bit>
@@ -8,6 +9,7 @@ constexpr double bit_cast(unsigned long __from) noexcept {
   return __builtin_bit_cast(double, __from); }
 #else
 #include <bit>
+using std::bit_cast;
 #endif // __cpp_lib_bit_cast
 
 #include <limits>  //bits in the working type

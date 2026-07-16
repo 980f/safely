@@ -1,7 +1,7 @@
 
 message("including 'system' ")
 
-add_subdirectory("storable")
+add_safely("system/storable")  #add_safely is relative to project root
 target_sources(${safely_target} PUBLIC
   allocatedindexer.cpp
   allocatedindexer.h

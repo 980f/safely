@@ -12,7 +12,7 @@ public:
     this->raw = raw;
   }
 
-  Char &operator =(const char raw) {
+  Char& operator =(const char raw) {
     this->raw = raw;
     return *this;
   }
@@ -44,10 +44,16 @@ public:
   bool isLower() const noexcept;
 
   char asLower() const noexcept;
+  /** converts to lower case,
+   * @returns whether it actually had to change */
+  bool toLower() noexcept;
 
   bool isUpper() const noexcept;
 
   char asUpper() const noexcept;
+/** converts to upper case,
+ * @returns whether it actually had to change */
+  bool toUpper() noexcept;
 
   bool isControl() const noexcept;
 
@@ -70,13 +76,13 @@ public:
   unsigned hexDigit() const noexcept;
 
   /** append this as hex digit to @param uch such as a utf8 to Unicode assembler. Presumes caller has already checked isHexDigit() */
-  template<typename Intish> void hexDigit(Intish &uch) const noexcept {
+  template <typename Intish> void hexDigit(Intish& uch) const noexcept {
     uch <<= 4;
     uch |= hexDigit();
   }
 
   /** if this is a hexadecimal digit then apply it to @param accumulator, @returns whether it did so */
-  template<typename Intish> bool appliedNibble(Intish &accumulator) const noexcept {
+  template <typename Intish> bool appliedNibble(Intish& accumulator) const noexcept {
     if (isHexDigit()) {
       hexDigit(accumulator);
       return true;
@@ -86,14 +92,14 @@ public:
   }
 
   /** when you are really sure that this is a decimal digit then call this guy, else call @see appliedDigit */
-  template<typename Intish> void applyTo(Intish &accumulator) const noexcept {
+  template <typename Intish> void applyTo(Intish& accumulator) const noexcept {
     unsigned digit = raw - '0';
     accumulator *= 10;
     accumulator += digit;
   }
 
   /** if this is a decimal digit then apply it to @param accumulator, @returns whether it did so */
-  template<typename Intish> bool appliedDigit(Intish &accumulator) const noexcept {
+  template <typename Intish> bool appliedDigit(Intish& accumulator) const noexcept {
     if (isDigit()) {
       applyTo(accumulator);
       return true;
