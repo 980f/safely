@@ -27,7 +27,7 @@ public:
     while (imax > imin) {
       int imid = (imin + imax) / 2; //rounding down, imid might equal imin, imax never will
       T *member = list[imid];
-      if (this == member) { //same item stops search, a pathological case
+      if (this == member) { //## looks weird, should 'this' be 'thing'? same item stops search, a pathological case
         return ~imid; //a place for a breakpoint.
       }
       int cmp = comparator(thing, member);

@@ -15,7 +15,7 @@ public:
   CliScanner(int argc, char **argv) : argc{argc}, argv{argv} {}
 
   bool stillHas(unsigned needed) const {
-    return argi + needed < argc; //test: seems off by one.
+    return (argi + needed) < argc; //test: seems off by one.
   }
 
   char *operator()() {
@@ -24,10 +24,10 @@ public:
 
   template<typename StringAssignable> bool operator>>(StringAssignable &target) {
     if (argi < argc) {
-      if constexpr (std::is_same<StringAssignable, bool>::value) {
+      if constexpr (std::is_same_v<StringAssignable, bool>) {
         auto arg = argv[argi++];
         target == strcasecmp("true", arg) == 0 || strcasecmp("1", arg) == 0;
-      } else if constexpr (std::is_integral<StringAssignable>::value) {
+      } else if constexpr (std::is_integral_v<StringAssignable>) {
         char *end;
         target = strtoll(argv[argi++], &end, 10);
         if (errno == ERANGE) {
@@ -38,7 +38,7 @@ public:
         target = argv[argi++];
       }
       return true;
-    } else if constexpr (std::is_floating_point<StringAssignable>::value) {
+    } else if constexpr (std::is_floating_point_v<StringAssignable>) {
       char *end;
       target = strtod(argv[argi++], &end);
       //todo: test errno

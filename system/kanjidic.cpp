@@ -1,11 +1,11 @@
-#include <cppext/utf8.h>
+#include <utf8.h>  //in cppext project
 #include "kanjidic.h"
 
 #include "storable.h"
 #include "storednumeric.h"
 
 #include "safely.h"
-//#include "l10n.h" //for options that must persist when this guy's artfile is lost.
+
 #include <cstdio>
 #include <filename.h>
 
@@ -43,7 +43,7 @@ static Unichar parseUPlus(const char *&mark){
 /** unicode range for cjk unified characters, we wish to exclude the appendices */
 static const Range<Unichar> CjkUnified(0x9fff,0x4e00);
 
-struct KanjiLookup : public ArtFile {
+struct KanjiLookup : public TreeFile {
   StoredBoolean haveCached;
 
   /** hiragana index. Note: this pushes on our Art file parser as we now have utf8 child names. */
@@ -94,7 +94,7 @@ struct KanjiLookup : public ArtFile {
     addReading(set,yomi.c_str(),kanjicode);
   }
 
-  KanjiLookup() : ArtFile("kanji","l10n"),  //during debug put kanji table in root of l10n. Might use links to share from jp and cn directories.
+  KanjiLookup() : TreeFile("kanji","l10n"),  //during debug put kanji table in root of l10n. Might use links to share from jp and cn directories.
     ConnectChild(haveCached,false),
     ConnectChild(KUN),
     ConnectChild(ON),
@@ -102,7 +102,6 @@ struct KanjiLookup : public ArtFile {
     ConnectChild(simplified),
     ConnectChild(Korean),
     hanziSorter(hanziGroup,&HanziGroup::compare){
-
   }
 
   /// kanjidic specific
@@ -140,7 +139,7 @@ struct KanjiLookup : public ArtFile {
   }
 
   /** @returns a utf8 string for a set of euc-jp characters (jis-208) stopping at either end-of-string OR a period.
-   *@deprecated limited for use in this module, see single char translators for details.*/
+   * @deprecated limited for use in this module, see single char translators for details.*/
   static Text euc2unis(const char* eucp,int length){
     Glib::ustring utf8;
     utf8.reserve(length / 2);//length is odd only when some non-jis 208 punctuation is present, in which case we stop early
@@ -163,7 +162,7 @@ struct KanjiLookup : public ArtFile {
       return;//comment line.
     }
     while(1) {
-      for(term = mark; *term&&*term!=' '; ++term) {//find space or end of line
+      for(term = mark; *term && *term != ' '; ++term) {//find space or end of line
       }
       *term = 0;//terminates the field with a null.
       switch(*mark) {

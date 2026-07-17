@@ -2,9 +2,6 @@ cmake_minimum_required(VERSION 4.2)
 project(tests)
 set (safely_target tests)
 
-
-include (../system/sigc3.cmake)
-
 #suppress a warning about using a default value:
 add_compile_definitions(SafelyApplicationEvents=5)
 
@@ -19,11 +16,8 @@ function (add_safely safelyDir)
 endfunction()
 
 add_safely(cppext)
-
 add_safely(system)
 add_safely(posix)
-
-#ubdirectory(../system/ ${CMAKE_CURRENT_BINARY_DIR}/cppext)
 
 function(print_all_variables)
     message(STATUS "CMake Variables:")

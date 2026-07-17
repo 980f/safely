@@ -1,3 +1,4 @@
+/** this implementation has a maximum size for the dictionary, see parseTreeFile */
 #include "treefile.h"
 #include "logger.h"
 #include "storednumeric.h"  //version number
@@ -28,7 +29,7 @@ bool TreeFile::parseTreeFile(){
   auto fname=filename.pack();
   Filer file("TreeFile");
   if(file.openFile(fname.c_str(),O_RDONLY,false)) {
-    if(file.readall(20000000)) {
+    if(file.readall(20'000'000)) {
       JsonStore parser(root);
       ByteScanner scanner(file.contents());
       bool parsedok = parser.parse(scanner);
@@ -48,7 +49,7 @@ bool TreeFile::parseTreeFile(){
 bool TreeFile::printTree(bool blocking, bool debug){
   PerfTimer perf(Ustring::compose("printTree %1", filename).c_str()); //todo:0 this guy may not function properly, according to the compiler which nonetheless compiled it.
   StoredReal(root("svnnumber")) = ::svn();//update to current svn.
-  FileName temp_path("var/printTree.tmp");
+  FileName temp_path("var/printTree.tmp");//#? missing a leading slash?
   auto temp_name=temp_path.pack();
   std::fstream fs(temp_name, std::fstream::out);
   if(!fs) {
@@ -82,7 +83,7 @@ double TreeFile::svn(){
 
 bool TreeFile::dumpStorage(Storable&root, const char *location){
   FileName rootname("var");
-  rootname.append(location).append(".art");
+  rootname.append(location).append(".tree");
   TreeFile writer(rootname, root);
   return writer.printTree(false);
 }

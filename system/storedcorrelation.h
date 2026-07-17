@@ -13,7 +13,7 @@ class StoredStatistic : public Stored {
   StoredCount count;
 public:
   StoredStatistic(Storable &node,RealStatistic &wrapped);
-  void onPrint();
+  void onPrint() override;
 };
 
 
@@ -25,7 +25,7 @@ class StoredCorrelation : public LinearFit, public Stored {
 
 public:
   StoredCorrelation(Storable &node);
-  void onPrint();
+  void onPrint() override;
 };
 
 

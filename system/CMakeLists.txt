@@ -2,6 +2,10 @@
 message("including 'system' ")
 
 add_safely("system/storable")  #add_safely is relative to project root
+
+#sigc is used in storable, but also in runoncenthtime and watchable
+include (../system/sigc3.cmake)
+
 target_sources(${safely_target} PUBLIC
   allocatedindexer.cpp
   allocatedindexer.h
