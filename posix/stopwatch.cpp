@@ -13,8 +13,8 @@ bool StopWatch::readit(timespec &ts){
 StopWatch::StopWatch(bool beRunning,bool realElseProcess) :
   CLOCK_something(realElseProcess ? CLOCK_MONOTONIC : CLOCK_THREAD_CPUTIME_ID){
   epoch=0;
-  readit(started);
-  epoch = take(started.tv_sec);
+  readit(started.raw);
+  epoch = take(started.raw.tv_sec);
   stopped = started;
   running = beRunning;
 }
@@ -95,7 +95,7 @@ NanoSeconds StopWatch::elapsed(double *absolutely){
     *absolutely = diff;
   }
   diff -= started;
-  if(diff<0) {//clock rolled over
+  if(diff.seconds()<0) {//clock rolled over
     diff.Never();//todo:1 proper value before 2038 happens
   }
   return diff;

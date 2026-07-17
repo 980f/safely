@@ -53,7 +53,7 @@ struct NumericalValue {
 
   /** @returns reference to value as if type Numeric */
   template<typename Numeric> operator const Numeric &() const noexcept {
-    return as<Numeric>();
+    return as<const Numeric>();
   }
 
   /** @returns value converted to given type, without altering this. */

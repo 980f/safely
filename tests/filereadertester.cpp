@@ -1,17 +1,16 @@
 #include "filereadertester.h"
-#include "fcntlflags.h"
+//#include "fcntlflags.h"
 #include "fileinfo.h"
 
-#include <cstdio>
 #include "logger.h"
 
 static Logger info("AIOFILERD",true);
 
-bool FileReaderTester::action(){
-  buf.clearUnused();//low performance method of terminating a string to pass as a char *.
-  info("%s",buf.internalBuffer());
-  return true;
-}
+// bool FileReaderTester::action(){
+//   buf.clearUnused();//low performance method of terminating a string to pass as a char *.
+//   info("%s",buf.internalBuffer());
+//   return true;
+// }
 
 void FileReaderTester::onDone(){
   info("completed");
@@ -28,7 +27,7 @@ static TextKey testfile[]={
 };
 
 void FileReaderTester::run(unsigned which){
-  if(which==BadIndex){
+  if(which==BadIndex){//then do all of them
     for(which=countof(testfile);which-->0;){
       run(which);
     }
@@ -37,13 +36,13 @@ void FileReaderTester::run(unsigned which){
   TextKey fname=testfile[which];
 
   if(process(fname)){
-    info("waiting for about %d events",freader.blocksexpected);
-    while(freader.notDone()){
-      if(freader.block(1)){
-        if(!freader.isOk()){
-          info("While waiting got: %d(%s)",freader.errornumber,freader.errorText());
-          if(freader.errornumber==EINTR){//on read or block shorter than buffer.
-            if(freader.transferred==freader.expected){
+    info("waiting for about %d events",blocksexpected);
+    while(notDone()){
+      if(block(1)){
+        if(!isOk()){
+          info("While waiting got: %d(%s)",errornumber,errorText());
+          if(errornumber==EINTR){//on read or block shorter than buffer.
+            if(transferred==expected){
               info("...which is pointless, happens in last incompletely filled block");
             }
           }

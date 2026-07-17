@@ -12,7 +12,7 @@
 #include <hook.h>
 #include <microseconds.h>
 #include <system_error>
-#include_next <event2/event.h>
+#include <event2/event.h> //event2 dropped out of build, had to: sudo apt-get install libevent-dev
 
 // struct SocketAddressRef {
 //   sockaddr *sa;
@@ -135,7 +135,7 @@ public:
 
     /** a handler can call this to have the loop terminate soon. Most sensible use is to call this before invoking the loop instead of having a timer event calling stop() */
     void exitAfter(MicroSeconds delay) {
-      event_base_loopexit(raw, &delay);
+      event_base_loopexit(raw, &delay.raw);
     }
 
     /** @returns whether the loop terminated due to a timed exit (@see exitAfter) */

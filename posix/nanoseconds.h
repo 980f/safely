@@ -14,7 +14,10 @@ BEWARE: assigning or constructing from an integer the argument is nanoseconds, f
 
 struct NanoSeconds {
   timespec raw; //can no longer cheat and derive from a C struct.
-  static constexpr decltype(raw.tv_nsec) Billion = 1'000'000'000;
+  using Seconds_t = decltype(raw.tv_sec) ;
+  using Nanos_t = decltype(raw.tv_nsec) ;
+
+  static constexpr Nanos_t Billion = 1'000'000'000;
 
   static constexpr double from(const timespec& ts) {
     return ts.tv_sec + 1.0 / (Billion * ts.tv_nsec);
@@ -24,16 +27,17 @@ struct NanoSeconds {
     if (seconds == 0.0) { //frequent case
       return {0, 0};
     }
-    const decltype(raw.tv_sec) tv_sec = splitter(seconds);
-    const decltype(raw.tv_nsec) tv_nsec = Billion * seconds;
+    const Seconds_t tv_sec = splitter(seconds);
+    const Nanos_t tv_nsec = Billion * seconds;
     return {tv_sec, tv_nsec};
   }
 
 public:
-  constexpr NanoSeconds(timespec&& ts): raw(ts) {
+  constexpr NanoSeconds(const timespec&& ts): raw(ts) {
   }
 
-  constexpr NanoSeconds(): raw{0, 0} {
+
+  constexpr NanoSeconds(const Seconds_t seconds=0, const Nanos_t nanos=0): raw{seconds, nanos} {
   }
 
   constexpr NanoSeconds(const MicroSeconds&& us): raw{us.raw.tv_sec, 1000 * us.raw.tv_usec} {
@@ -64,9 +68,18 @@ public:
     return raw.tv_sec + (raw.tv_nsec + rounder) >= Billion;
   }
 
-  /** somewhat like a placement new, this adds NanoSeconds logic to an existing timespec */
-  static NanoSeconds& wrap(timespec& embedded) {
-    return *reinterpret_cast<NanoSeconds*>(&embedded);
+  // can't do this, user would have to pass raw as a timespec instead of converting the other way round
+  // /** somewhat like a placement new, this adds NanoSeconds logic to an existing timespec */
+  // static NanoSeconds& wrap(timespec& embedded) {
+  //   return *reinterpret_cast<NanoSeconds*>(&embedded);
+  // }
+
+  operator timespec*()  {
+    return &raw;
+  }
+
+  operator timespec&()  {
+    return raw;
   }
 
   operator double() const {
@@ -98,13 +111,22 @@ public:
   /** @returns integer divide of this by interval, then sets this to remainder */
   unsigned modulated(const NanoSeconds& interval);
 
+  /* todo: check for c==20 and just create a spaceship operator, until then we write all the usual ones */
   /** @returns whether this comes after @param that */
   bool operator >(const NanoSeconds& that) const;
+  /** @returns whether this comes before @param that */
+  bool operator <(const NanoSeconds& that) const {
+    return that > *this;
+  }
 
   /** @returns whether this comes after @param that */
   bool operator >=(const NanoSeconds& that) const;
+  /** @returns whether this comes before @param that */
+  bool operator <=(const NanoSeconds& that) const {
+    return that >=*this ;
+  }
 
-  /** operator == doesn't make much sense, like for doubles */
+  /** operator == while well-defined doesn't have  much utility, like for doubles */
   bool operator ==(const NanoSeconds& that) const;
 
   /** @returns 1,0,-1,  if @param dub is not null then it is the absolute value of the time in seconds. */
@@ -114,7 +136,7 @@ public:
   NanoSeconds& Never();
 
   /** @returns whether this is the value that Never would set it to */
-  bool isNever();
+  bool isNever() const noexcept;
 
 public: //logical operations that might surprise some people
   /** @returns this after setting it to other if other is larger. This only makes sense when computing a maximum interval, one that is large enough to contain all items presented to it. */

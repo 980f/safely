@@ -7,6 +7,8 @@ class FileWriterTester: public FileWriter{
 //  bool action() override;
 //  void onCompletion() override;
 public:
+  bool action() ;
+  void onCompletion();
   FileWriterTester();
   void run(unsigned which);
 };

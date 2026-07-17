@@ -80,7 +80,7 @@ bool EpollerCore::loop(NanoSeconds timeout) {
 
   auto list = waitlist.getTail();
   ++waitcount;
-  if (okValue(numEvents, unsigned(epoll_pwait2(epfd, list.internalBuffer(), list.allocated(), &timeout, nullptr)))) { //NB: this appends to waitlist
+  if (okValue(numEvents, unsigned(epoll_pwait2(epfd, list.internalBuffer(), list.allocated(), &timeout.raw, nullptr)))) { //NB: this appends to waitlist
     elapsed = eventTime.roll(); //time since last wait, possibly large the first time after app launch.
     reactionTime.stop();
     auto waitedFor = reactionTime.elapsed();

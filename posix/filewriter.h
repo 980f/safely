@@ -3,7 +3,7 @@
 #include "fileasynchio.h"
 
 /** write file in background */
-class FileWriter : FileAsyncAccess {
+class FileWriter : public FileAsyncAccess {
 public:
   FileWriter();
 

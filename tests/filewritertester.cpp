@@ -9,17 +9,15 @@
 
 static Logger info("AIOFILE.WR",true);
 
-/*bool FileWriterTester::action(){
+bool FileWriterTester::action(){
   return true;
 }
 
 void FileWriterTester::onCompletion(){
   info("completed");
-}*/
-
-FileWriterTester::FileWriterTester(){
-
 }
+
+FileWriterTester::FileWriterTester()= default;
 
 //note: 'test all' tests from the bottom up.
 static TextKey testfile[]={
@@ -45,7 +43,7 @@ void FileWriterTester::run(unsigned which){
     Text fname(tempnam(nullptr,nullptr));//#tempnam is good enough for testing, ignore any warning about using it.
     info("will write to: %s",fname.c_str());
     if(process(fname,data)){
-      fmover.loiter();
+      loiter();
     }
   }
 }

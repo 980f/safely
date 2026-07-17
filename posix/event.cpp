@@ -35,7 +35,7 @@ bool Event::isPending(decltype(type) which, MicroSeconds *due) {
   if (due) {
     *due = MicroSeconds::Never; //erase potentially stale value
   }
-  return event_pending(raw, which ? which : type, due); //todo:1 see if we need to mask off mode bits from type.
+  return event_pending(raw, which ? which : type, &due->raw); //todo:1 see if we need to mask off mode bits from type.
 }
 
 Event::Looper::Looper(bool onething, unsigned numPriorities) { //dummy stuff just to test compile.
@@ -65,7 +65,7 @@ MicroSeconds Event::Looper::now(bool fresh) const {
   if (fresh) {
     event_base_update_cache_time(raw); //todo: check return
   }
-  event_base_gettimeofday_cached(raw, &result);
+  event_base_gettimeofday_cached(raw, &result.raw);
   //todo: if ok
   return result;
 }

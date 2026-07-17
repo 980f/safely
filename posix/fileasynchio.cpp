@@ -45,7 +45,7 @@ bool FileAsyncAccess::notDone() const {
 bool FileAsyncAccess::block(double seconds) {
   NanoSeconds ns(seconds);
   aiocb *list = &cb; // make a list of 1 item:
-  return ok(aio_suspend(&list, 1, &ns));
+  return ok(aio_suspend(&list, 1, &ns.raw));
 }
 
 void FileAsyncAccess::loiter() {

@@ -1,5 +1,5 @@
 #pragma once // (C) 2024 Andrew L. Heilveil, aka github/980F
-
+#include "safely.h" //for library options
 #include <epoller.h>
 #include <netinet/in.h> //because we template some stuff else this would have been only in the cpp file.
 // #include <unistd.h>
@@ -14,6 +14,7 @@
 
 /** intermediate class for socket manipulation, mostly adding syntax to int fd usage. */
 struct IoSource : Fildes {
+  // ReSharper disable once CppNonExplicitConvertingConstructor
   IoSource(const char *traceName, int fd = ~0);
 
   /** note: will close the fd if marked as owner. */

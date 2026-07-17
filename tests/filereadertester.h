@@ -3,9 +3,9 @@
 
 #include "filereader.h"
 
-class FileReaderTester: public FileReader{
-  // bool action() override;
-  // void onCompletion() override;
+class FileReaderTester: public FileReader {
+   // bool action() override;
+   void onDone() override;
 public:
   FileReaderTester();
   void run(unsigned which);

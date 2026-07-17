@@ -20,7 +20,7 @@ class TimerFD : public Fildes {
 
 public:
   /** this value is the minimum to guarantee that the timerFD will indicate a timeout in the next or subsequent poll.*/
-  static constexpr NanoSeconds minimum{0.000'000'001};
+  static constexpr NanoSeconds minimum{0,1};
 
   TimerFD(const char *traceName, bool phaseLock = false); //false: legacy default
   /** set period and initial delay to same value

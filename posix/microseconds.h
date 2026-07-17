@@ -7,50 +7,45 @@
 /** manages time as used by older POSIX systems */
 struct MicroSeconds { //deriving from timeval became deprecated as c++ versions got pickier.
   timeval raw;
+  operator timeval *() {
+    return &raw;
+  }
   static const decltype(raw.tv_usec) OneMeg = 1000000;
 
-  static constexpr double from(const timeval &ts) {
-    return ts.tv_sec + (1.0/OneMeg) * ts.tv_usec; //ignores possibility of tv_sec being very large.
+  static constexpr double from(const timeval& ts) {
+    return ts.tv_sec + (1.0 / OneMeg) * ts.tv_usec; //ignores possibility of tv_sec being very large.
   }
 
-  // static constexpr void parseTime(timeval &ts, double seconds) {
-  //   if (seconds == 0.0) { //frequent case
-  //     ts.tv_sec = 0;
-  //     ts.tv_usec = 0;
-  //     return;
-  //   }
-  //   ts.tv_sec = splitter(seconds);//splitter modifies its operand to be a fraction
-  //   ts.tv_usec = round(OneMeg * seconds);
-  // }
-
-  static constexpr timeval parseTime( double seconds) {
+  static constexpr timeval parseTime(double seconds) {
     if (seconds == 0.0) { //frequent case
-      return {0,0};
+      return {0, 0};
     }
-    const decltype(raw.tv_sec) sec = splitter(seconds);//splitter modifies its operand to be a fraction
+    const decltype(raw.tv_sec) sec = splitter(seconds); //splitter modifies its operand to be a fraction
     const decltype(raw.tv_usec) tv_usec = round(OneMeg * seconds);
     return {sec, tv_usec};
   }
+
   /* a floating point value is number of seconds */
-  constexpr explicit MicroSeconds(double seconds) : raw(parseTime(seconds)){
+  constexpr explicit MicroSeconds(double seconds): raw(parseTime(seconds)) {
   }
 
 
   /** two integers is explicit seconns and micros */
-  constexpr MicroSeconds(unsigned sec, unsigned micro): raw{sec, micro} {} //still getting familiar with {} instead of () init, looks weird!
+  constexpr MicroSeconds(unsigned sec, unsigned micro): raw{sec, micro} {
+  } //still getting familiar with {} instead of () init, looks weird!
 
-  constexpr MicroSeconds &operator=(double seconds) {
-    raw=parseTime( seconds);
+  constexpr MicroSeconds& operator=(double seconds) {
+    raw = parseTime(seconds);
     return *this;
   }
 
-  template<typename Scalar> constexpr MicroSeconds &operator=(Scalar seconds) {
+  template <typename Scalar> constexpr MicroSeconds& operator=(Scalar seconds) {
     if constexpr (std::is_same_v<timeval, Scalar>) {
       raw.tv_sec = seconds.tv_sec;
       raw.tv_usec = seconds.tv_usec;
     } else if constexpr (std::is_same_v<timespec, Scalar>) {
       raw.tv_sec = seconds.tv_sec;
-      raw.tv_usec = seconds.tv_nsec/1000;
+      raw.tv_usec = seconds.tv_nsec / 1000;
     } else if constexpr (std::is_floating_point_v<Scalar>) {
       parseTime(raw, seconds);
     } else if constexpr (std::is_integral_v<Scalar>) {
@@ -62,7 +57,7 @@ struct MicroSeconds { //deriving from timeval became deprecated as c++ versions 
 
   /** a single integer argyment is number of microseconds */
   //template is being used to resolve some "ambiguous overloads".
-  template<typename Integrish> constexpr MicroSeconds(Integrish microseconds) {
+  template <typename Integrish> constexpr MicroSeconds(Integrish microseconds) {
     this->operator=(microseconds);
   }
 
@@ -93,23 +88,30 @@ struct MicroSeconds { //deriving from timeval became deprecated as c++ versions 
 
 public: //compares and math
   /** beware that Never is always greater than anything other than Never */
-  bool operator >(const MicroSeconds &that) const;
+  bool operator >(const MicroSeconds& that) const;
 
-  bool operator >=(const MicroSeconds &that) const;
+  bool operator <(const MicroSeconds& that) const {
+    return that > *this;
+  }
 
-  bool operator ==(const MicroSeconds &that) const;
+  bool operator >=(const MicroSeconds& that) const;
+  bool operator <=(const MicroSeconds& that) const {
+    return that>=*this;
+  }
+  /** @returns exact equality, which is rarely a useful thing */
+  bool operator ==(const MicroSeconds& that) const;
 
-  unsigned modulated(const MicroSeconds &interval);
+  unsigned modulated(const MicroSeconds& interval);
 
-  MicroSeconds operator -(const MicroSeconds &lesser) const;
+  MicroSeconds operator -(const MicroSeconds& lesser) const;
 
-  MicroSeconds &operator -=(const MicroSeconds &lesser);
+  MicroSeconds& operator -=(const MicroSeconds& lesser);
 
-  MicroSeconds &operator +=(const MicroSeconds &lesser);
+  MicroSeconds& operator +=(const MicroSeconds& lesser);
 
-  MicroSeconds operator +(const MicroSeconds &lesser) const;
+  MicroSeconds operator +(const MicroSeconds& lesser) const;
 
-  MicroSeconds &atLeast(const MicroSeconds &other);
+  MicroSeconds& atLeast(const MicroSeconds& other);
 
-  MicroSeconds &atMost(const MicroSeconds &other);
+  MicroSeconds& atMost(const MicroSeconds& other);
 };

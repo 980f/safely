@@ -24,28 +24,27 @@ void IncrementalFileTransfer::prepare(unsigned amount) {
   }
 }
 
-bool IncrementalFileTransfer::onChunk(ssize_t amount) {
-  if (amount >= 0) { // then it is # of bytes transferred
-    ++blockstransferred;
-    transferred += amount;
-    buf.skip(amount);
-    // if block receiver doesn't signal to give up and more bytes are expected
-    if (onEachBlock(amount) && (expected > transferred)) {
-      if (amReader) {
-        if (buf.freespace() == 0) {
-          buf.rewind();
-        }
-      }
-      return true;
-    } else {
-      onDone();
-      return false; // normal exit
-    }
-  } else {
+bool IncrementalFileTransfer::onChunk(const ssize_t amount) {
+  if (amount < 0) {
     errornumber = amount; // todo: might need a negation
     dbg("onchunk: %s", errorText());
+
+    return false; // abnormal exit
   }
-  return false; // abnormal exit
+  ++blockstransferred;
+  transferred += amount;
+  buf.skip(amount);
+  // if block manager doesn't signal to give up and more bytes are expected
+  if (onEachBlock(amount) && (expected > transferred)) {
+    if (amReader) {
+      if (buf.freespace() == 0) {
+        buf.rewind();
+      }
+    }
+    return true;
+  }
+  onDone();
+  return false; // normal exit
 }
 
 // stub virtual functions.

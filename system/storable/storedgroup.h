@@ -102,8 +102,8 @@ public:
     setSize(indexer.quantity()); //at time of attachment we resize the indexed entity
   }
 
-  using Scanner = Chain<Groupie>::Scanner;
-  using ConstScanner = Chain<Groupie>::ConstScanner;
+  using Scanner = typename Chain<Groupie>::Scanner;
+  using ConstScanner = typename Chain<Groupie>::ConstScanner;
 
   /** "in class" macros for StoredGroup.
    * outside of the StoredGroup use the iterator factory

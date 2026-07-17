@@ -6,23 +6,23 @@
 const MicroSeconds MicroSeconds::Never(~0, ~0);
 
 bool MicroSeconds::operator >(const MicroSeconds &that) const {
-  return (tv_sec > that.tv_sec) || ((tv_sec == that.tv_sec) && (tv_usec > that.tv_usec));
+  return (raw.tv_sec > that.raw.tv_sec) || ((raw.tv_sec == that.raw.tv_sec) && (raw.tv_usec > that.raw.tv_usec));
 }
 
 bool MicroSeconds::operator >=(const MicroSeconds &that) const {
-  return tv_sec > that.tv_sec || ((tv_sec == that.tv_sec) && tv_usec >= that.tv_usec);
+  return raw.tv_sec > that.raw.tv_sec || ((raw.tv_sec == that.raw.tv_sec) && raw.tv_usec >= that.raw.tv_usec);
 }
 
 bool MicroSeconds::operator ==(const MicroSeconds &that) const {
-  return this->tv_usec == that.tv_usec && this->tv_sec == that.tv_sec; //test ns first as they change more frequently
+  return raw.tv_usec == that.raw.tv_usec && raw.tv_sec == that.raw.tv_sec; //test ns first as they change more frequently
 }
 
 MicroSeconds &MicroSeconds::operator +=(const MicroSeconds &lesser) {
-  tv_usec += lesser.tv_usec;
-  tv_sec += lesser.tv_sec;
-  if (tv_usec > OneMeg) { //since both values are at most 999999999 their difference is <= -999999999, we have enough spare bits to serve as a carry out.
-    tv_usec -= OneMeg;
-    ++tv_sec;
+  raw.tv_usec += lesser.raw.tv_usec;
+  raw.tv_sec += lesser.raw.tv_sec;
+  if (raw.tv_usec > OneMeg) { //since both values are at most 999999999 their difference is <= -999999999, we have enough spare bits to serve as a carry out.
+    raw.tv_usec -= OneMeg;
+    ++raw.tv_sec;
   }
   return *this;
 }
@@ -34,11 +34,11 @@ MicroSeconds MicroSeconds::operator +(const MicroSeconds &lesser) const {
 }
 
 MicroSeconds &MicroSeconds::operator -=(const MicroSeconds &lesser) {
-  tv_usec -= lesser.tv_usec;
-  tv_sec -= lesser.tv_sec;
-  if (tv_usec < 0) { //since both values are at most 999999999 their difference is <= -999999999, we have enough spare bits to serve as a carry out.
-    tv_usec += OneMeg;
-    --tv_sec;
+  raw.tv_usec -= lesser.raw.tv_usec;
+  raw.tv_sec -= lesser.raw.tv_sec;
+  if (raw.tv_usec < 0) { //since both values are at most 999999999 their difference is <= -999999999, we have enough spare bits to serve as a carry out.
+    raw.tv_usec += OneMeg;
+    --raw.tv_sec;
   }
   return *this;
 }
@@ -65,7 +65,7 @@ unsigned MicroSeconds::modulated(const MicroSeconds &interval) {
 
 
 MicroSeconds &MicroSeconds::atLeast(const MicroSeconds &other) {
-  if (*this < other) {
+  if (*this < other) {// NOLINT(*-branch-clone) leave as separate checks for debug
     *this = other;
   } else if (isNever()) {
     *this = other;
@@ -74,7 +74,7 @@ MicroSeconds &MicroSeconds::atLeast(const MicroSeconds &other) {
 }
 
 MicroSeconds &MicroSeconds::atMost(const MicroSeconds &other) {
-  if (isNever()) {
+  if (isNever()) {//NOLINT(*-branch-clone) leave as separate checks for debug
     *this = other;
   } else if (*this > other) {
     *this = other;
