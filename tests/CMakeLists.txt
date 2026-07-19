@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 4.2)
 project(tester)  #don't name a project the same as its directory?
+include(../cmake/helpers.cmake)
 set(safely_target tester)
 
 #suppress a warning about using a default value:
