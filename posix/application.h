@@ -1,6 +1,7 @@
 #pragma once //"(C) Andrew L. Heilveil, 2017-2018"
 
 /** startup and eventloop */
+#include "safely.h"
 #include "buffer.h"
 #include "textpointer.h"
 #include "epoller.h"

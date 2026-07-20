@@ -2,6 +2,8 @@
 #define SAFELY_H
 
 #define SafelyIoSourceEvents 5
+#define SafelyApplicationEvents 5
+
 /** copy this file into your 'safely' project and alter it to suit.
  * each project using the 'safely' lib can put its compile time preferences in this file,
  * code in this library that needs compiletime constants includes this header file.

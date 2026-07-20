@@ -3,8 +3,6 @@ project(tester)  #don't name a project the same as its directory?
 include(../cmake/helpers.cmake)
 set(safely_target tester)
 
-#suppress a warning about using a default value:
-add_compile_definitions(SafelyApplicationEvents=5)
 
 add_executable(${safely_target}
   main.cpp
