@@ -211,7 +211,8 @@ int ilog10(double value);
 /** an integer power of 10. out of bounds arg gets you nothing but trouble ... */
 uint32_t i32pow10(unsigned power);
 
-unsigned digitsAbove(unsigned int value, unsigned numDigits);
+/** @returns digits above @param numDigits removing them from @param value */
+unsigned digitsAbove(unsigned int &value, unsigned numDigits);
 
 /** an integer power of 10. out of bounds arg gets you nothing but trouble ... */
 uint64_t i64pow10(unsigned power);

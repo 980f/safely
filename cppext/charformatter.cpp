@@ -180,7 +180,7 @@ bool CharFormatter::printAtWidth(unsigned int value, unsigned width, char paddin
   if(stillHas(width)) {
     printChar(padding, width-numDigits);
     while(numDigits--> 0) {
-      printDigit(digitsAbove(value,numDigits));
+      printDigit(digitsAbove(value,numDigits));//was broken until 20jul2026
     }
     return true;
   }
