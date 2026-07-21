@@ -1,8 +1,8 @@
 #include "unicodetester.h"
-//#include "eztypes.h"
 #include "utf8text.h"
-#include "stdio.h"
+
 #include "logger.h"
+#include <array>
 
 Text UnicodeTester::escape(const char *testdata)
 {
@@ -41,10 +41,10 @@ const char * unitests[]={
 };
 
 bool UnicodeTester::run(unsigned which){
-  if(Index(which).in(countof(unitests))){
+  if(Index(which).in(std::size(unitests))){
     descape(escape(unitests[which]));
   } else {
-    for(which=countof(unitests);which-->0;){
+    for(which=std::size(unitests);which-->0;){
       descape( escape(unitests[which]));
     }
   }

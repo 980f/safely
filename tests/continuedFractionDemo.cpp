@@ -2,13 +2,12 @@
 #include <cmath>
 
 #include "continuedfractionratiogenerator.h"
-#include "cheaptricks.h"
 
 using namespace std;
 
-int testCFRG(int which) {
-  static const double m[] = {M_PI,M_E,M_SQRT2,M_2_SQRTPI,M_LN10,M_LN2,M_LOG2E};
-  if (unsigned(which) < countof(m)) {
+int testCFRG(unsigned which) {
+  static const double m[] = {M_PI, M_E, M_SQRT2, M_2_SQRTPI, M_LN10, M_LN2, M_LOG2E};
+  if (which < std::size(m)) {
     ContinuedFractionRatioGenerator cg;
     double arg = m[which];
     cout << arg << " was input"
@@ -19,13 +18,17 @@ int testCFRG(int which) {
     for (unsigned step = 0; cg.step() && step++ < ContinuedFractionRatioGenerator::maxWorkingBits;) {
       auto error = cg.better() - arg;
       cout << step
-      << "\t" << cg.numerator() << "/" << cg.denominator()
-      << "\terror:" << error
-      << "\t%err:" << 100.0*error/arg
-      <<"\t9's:" << -log10(fabs(error)/arg)
-      << endl;
+        << "\t" << cg.numerator() << "/" << cg.denominator()
+        << "\terror:" << error
+        << "\t%err:" << 100.0 * error / arg
+        << "\t9's:" << -log10(fabs(error) / arg)
+        << endl;
     }
     return 0;
   }
-  return -which;
+  //else do all.
+  for (unsigned ti = std::size(m); ti-- > 0;) {
+    testCFRG(ti);
+  }
+  return ~which; //false warning, 'complement' operator should not be deemed signed when applied to an unsigned int.
 }

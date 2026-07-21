@@ -26,7 +26,7 @@ const char *testdata[]={
 };
 
 void TestPathParser::run(unsigned which){
-  if(Index(which).in(countof(testdata))){
+  if(Index(which).in(std::size(testdata))){
     TestPathParser ppt;
     ppt.parse(testdata[which]);
     dbg("Parsed:<%s> %c got pre:%u post:%u pieces:%u",testdata[which],ppt.rules.slash,ppt.rules.before,ppt.rules.after,ppt.path.quantity());
@@ -38,7 +38,7 @@ void TestPathParser::run(unsigned which){
     dbg("\tCanonical:%s",canonical.c_str());
 
   } else {
-    for(which=countof(testdata);which-->0;){
+    for(which=std::size(testdata);which-->0;){
       run(which);
     }
   }

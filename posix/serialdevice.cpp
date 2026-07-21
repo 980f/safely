@@ -3,7 +3,7 @@
 
 #include "fcntlflags.h"
 #include <termios.h>
-#include <unistd.h>
+// #include <unistd.h>
 
 #include "logger.h"
 
@@ -15,12 +15,12 @@ speed_t mapBaud(double baud){
   //stupid ancient interface (grumble, whine)
   static unsigned lowset [] = {    0,    50,    75,    110,    134,    150,    200,    300,    600,    1200,    1800,    2400,    4800,    9600,    19200,    38400  };
   static unsigned highset[] = {    57600,    115200,    230400,    460800,    500000,    576000,    921600,    1000000,    1152000,    1500000,    2000000,    2500000,    3000000,   3500000,    4000000  };
-  for(unsigned bi = countof(lowset); bi-->0; ) {
+  for(unsigned bi = std::size(lowset); bi-->0; ) {
     if(baud==lowset[bi]) {
       return bi;
     }
   }
-  for(unsigned bi = countof(highset); bi-->0; ) {
+  for(unsigned bi = std::size(highset); bi-->0; ) {
     if(baud==highset[bi]) {
       return bi + B57600;//0010001;
     }
@@ -35,7 +35,7 @@ bool SerialDevice::connect(const SerialConfiguration &cfg){
     return false;
   }
 
-  struct termios tty;
+  termios tty;
   EraseThing(tty);//tradition, tradition .... tra.di.tion.
 
   if (fd.failed(tcgetattr(fd.asInt(), &tty))) {

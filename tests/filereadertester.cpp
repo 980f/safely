@@ -3,6 +3,7 @@
 #include "fileinfo.h"
 
 #include "logger.h"
+#include <array> //size of an array
 
 static Logger info("AIOFILERD",true);
 
@@ -28,7 +29,7 @@ static TextKey testfile[]={
 
 void FileReaderTester::run(unsigned which){
   if(which==BadIndex){//then do all of them
-    for(which=countof(testfile);which-->0;){
+    for(which=std::size(testfile);which-->0;){
       run(which);
     }
     return;

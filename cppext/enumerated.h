@@ -50,5 +50,4 @@ public:
 //the following should go only in the CPP file creating the symbols:
 #define BEGIN_ENUM(name) const char *name ## _Tokens[] = {
 
-#define END_ENUM(name) }; \
-  SequentialEnumeration name(name ## _Tokens, countof(name ## _Tokens))
+#define END_ENUM(name) }; SequentialEnumeration name(name ## _Tokens, std::size(name ## _Tokens))

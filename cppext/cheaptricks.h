@@ -7,8 +7,8 @@
 //type conversion for when the compiler just won't do it for you.
 #define pun(type, lvalue) (*reinterpret_cast<type *>(&(lvalue)))
 
-//lord it would be nice if C would make a standard operator for this:
-#define countof(array) (sizeof(array) / sizeof((array)[0]))
+//lord it would be nice if C would make a standard operator for this: c++17 did!
+// #define countof(array) std::size(array)
 
 //for when you need an extra step of replacement
 #define MACRO_cat(head,tail) head##tail

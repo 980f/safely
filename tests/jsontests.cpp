@@ -4,6 +4,7 @@
 #include "stopwatch.h"
 
 #include "jsonfile.h"
+#include <array>
 
 static const char*jsontests[] = {
   "{array:[one,{two:blue}]}",
@@ -55,7 +56,7 @@ void testJ(unsigned which){
       fflush(stdout);  //to show up in debugger ASAP.
     }
   } else {
-    for(unsigned which = countof(jsontests); which-->0; ) {
+    for(unsigned which = std::size(jsontests); which-->0; ) {
       testJ(which);
     }
   }
