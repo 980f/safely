@@ -122,7 +122,7 @@ public:
   /** make a new self deleting slot runner */
   static Action makeInstance(Action slot){
     auto dou(new RunOnceSlot(slot));
-    return sigc::mem_fun(dou, &RunOnceSlot::run);
+    return sigc::mem_fun(*dou, &RunOnceSlot::run);
   }
 
 }; // class RunOnceSlot
