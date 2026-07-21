@@ -58,6 +58,7 @@ void testPrettyPrinter(unsigned which) {
     en.setto(false);
     en.changeInto(NumericalValue::Floating);
     en.setto(3.14159);
+    dbg("en ends as %g",en.as<double>());
   }
   break;
   case 0: {
