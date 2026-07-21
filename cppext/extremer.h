@@ -10,10 +10,10 @@
 
 
 /** negatory is whether we are seeking smallest else largest
- * preferLatter exists for use by Extremer class, so that it can share more code with this one even though the concept is only slightly interesting in this class.
- * If preferlatter is true then the compare includes '==' as a reason to update the value.
+ * preferEarlier exists for use by Extremer class, so that it can share more code with this one even though the concept is only slightly interesting in this class.
+ * If preferEarlier is true then the compare excludes '==' as a reason to update the value. This is a change to the names to match what the execution was (fix the spec to deal with a bug ;)
  */
-template<typename Scalar, bool negatory , bool preferLatter > class SimpleExtremer {
+template<typename Scalar, bool negatory , bool preferEarlier > class SimpleExtremer {
 public: //for convenience.
   /** whether any data has been inspected (else extremum is not valid)
    * This is easier than trying to come up with a type independent initial value of extremum.
@@ -27,9 +27,9 @@ public:
   /** @returns whether the extremum was updated */
   bool inspect(Scalar value) {
     if (started) {
-      //if preferLatter we want '=' to fall through and return true, not return false
+      //if preferEarlier we want '=' to fall through and return true, not return false
       if constexpr (negatory) {
-        if constexpr (preferLatter) {
+        if constexpr (preferEarlier) {
           if (extremum <= value) {
             return false;
           }
@@ -37,7 +37,7 @@ public:
           return false;
         }
       } else {
-        if constexpr (preferLatter) {
+        if constexpr (preferEarlier) {
           if (value <= extremum) {
             return false;
           }
@@ -60,7 +60,7 @@ public:
 }; // class Extremer
 
 /** negatory is whether we are seeking smallest else largest
- * preferLatter is how to deal with ties between new value and reigning champion, whether to have the latest one take the crown.
+ * preferEarlier is how to deal with ties between new value and reigning champion, whether to have the latest one take the crown.
  */
 template<typename Scalar, bool negatory , bool preferLatter > class Extremer : public SimpleExtremer<Scalar, negatory, preferLatter> {
   using Simple = SimpleExtremer<Scalar, negatory, preferLatter>; //compiler would NOT recognize the base class references without this aid.
