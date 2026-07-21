@@ -2,7 +2,7 @@
 #define POSIXLOGGER_H
 
 #include "logger.h"
-#include "stdio.h"  //va_list
+#include <cstdio>  //va_list
 #include "nanoseconds.h"
 /** implement logging to stdout or stderr */
 

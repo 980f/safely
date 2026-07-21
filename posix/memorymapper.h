@@ -45,20 +45,20 @@ template<typename Any> class Mapped {
   bool simulated;
 
 public:
-  Mapped(unsigned physical, unsigned quantity): ptr(nullptr), quantity(quantity) {
+  Mapped(unsigned physical, unsigned quantity): ptr(nullptr), quantity(quantity) ,simulated(true){
     if (MemoryMapper::init()) {
       ptr = reinterpret_cast<Any *>(MemoryMapper::Mmap->map(physical, quantity * sizeof(Any)));
-      simulated = false;
-    } else {
+      simulated = ptr==nullptr;
+    } 
+    if(simulated){
       ptr = new Any[quantity];
-      simulated = true;
     }
   }
 
   ~Mapped() {
     if (simulated) {
       delete [] ptr;
-    } else {
+    } else {//not checking Mmap or ptr as the simulated flag will be false only if they were 
       MemoryMapper::Mmap->free(ptr, quantity * sizeof(Any));
     }
     ptr = nullptr; //in case someone explicitly calls delete, or uses a stale reference

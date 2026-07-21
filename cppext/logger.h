@@ -44,12 +44,13 @@ public:
     return Combiner(*this);
   }
 public:
-  /** 1st implementation coupled to a json file for enabling/disbling by logger name.
+  /** 1st implementation coupled to a json file for enabling/disabling by logger name.
    * Logger construction and destruction call these members if a global one exists. */
   struct Manager {
     virtual void onCreation(Logger &logger) = 0;
     virtual void onDestruction(Logger &logger) = 0;
     virtual ~Manager() = default;
+    virtual void list(Logger&lister)=0;
   };
   static Manager *manager;
 }; // class Logger
@@ -64,6 +65,4 @@ extern Logger wtf;
 #define IgnoreGlib(err) dbg("%s ignoring %s",__PRETTY_FUNCTION__, err.what().c_str())
 
 //typical allocation of a managed logger, deals with concern of warning non-POD static
-#define SafeLogger(loggerName,deflevel) \
-  __attribute__((init_priority(202)))  \
-  static Logger loggerName( #loggerName, deflevel )
+#define SafeLogger(loggerName,deflevel)  __attribute__((init_priority(202)))  static Logger loggerName( #loggerName, deflevel )
