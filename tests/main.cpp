@@ -9,43 +9,44 @@
 #include "unistd.h" //getcwd
 
 #include "storable.h"
-void testStorable(){
+
+void testStorable() {
   Storable node("safely system library");
   node.child("a chld").setNumber(15.678);
-  printf("Stored: %s",node.image().c_str());
+  printf("Stored: %s", node.image().c_str());
 }
 
 #include "numericalvalue.h" //union + type enum
 #include <cstddef>
 /** test harness for qtcreator debugger helper*/
-void testPrettyPrinter(unsigned which){
-  switch(which) {
+void testPrettyPrinter(unsigned which) {
+  switch (which) {
   default:
-    dbg("No test numbered %u",which);
+    dbg("No test numbered %u", which);
     break;
   case BadIndex:
-    for(which=4;which-->0;){
+    for (which = 4; which-- > 0;) {
       testPrettyPrinter(which);
     }
     break;
   case 3: {
     Index eye;
-    eye=3;
-    eye=BadIndex;
+    eye = 3;
+    eye = BadIndex;
     eye++;
-    dbg("printing eye so that compiler doesn't drop it before we can see it with the debugger: %u",eye.raw);
-  } break;
+    dbg("printing eye so that compiler doesn't drop it before we can see it with the debugger: %u", eye.raw);
+  }
+  break;
   case 2: {
     Text forlabelling;
     forlabelling = "hi dad!";
-
   }
   break;
   case 1: {
     NumericalValue en;
     en.setto(12.34);
 
-    dbg("is:%u for %u, storage:%u len:%u",offsetof(NumericalValue,is),sizeof(NumericalValue::is),offsetof(NumericalValue,storage),sizeof(NumericalValue::storage));
+    dbg("is:%u for %u, storage:%u len:%u",offsetof(NumericalValue, is), sizeof(NumericalValue::is),offsetof(NumericalValue, storage), sizeof(NumericalValue::storage));
 
     en.changeInto(NumericalValue::Counting);
     en.setto(43);
@@ -67,11 +68,11 @@ void testPrettyPrinter(unsigned which){
     node.setType(Storable::Textual);
     node.setType(Storable::Numerical);
     node.setNumber(en);
-    Storable &mom=node.child("mommy");
-    Storable &dad=node.child("daddy");
-    for(unsigned ci=3;ci-->0;){
-      mom.addChild("girls").presize(3,Storable::Numerical);
-      dad.addChild("boys").presize(ci,Storable::Numerical);
+    Storable& mom = node.child("mommy");
+    Storable& dad = node.child("daddy");
+    for (unsigned ci = 3; ci-- > 0;) {
+      mom.addChild("girls").presize(3, Storable::Numerical);
+      dad.addChild("boys").presize(ci, Storable::Numerical);
     }
   }
   break;
@@ -87,146 +88,154 @@ static Indexer<SafeStr<10>> pressure;
 
 static Watchable<int> demonic;
 
-void demonWatcher(int newvalue){
-  dbg("\ndemonic: %d",newvalue);
+void demonWatcher(int newvalue) {
+  dbg("\ndemonic: %d", newvalue);
 }
 
-void justOnce(int newvalue){
-  dbg("\njustOnce: %d",newvalue);
+void justOnce(int newvalue) {
+  dbg("\njustOnce: %d", newvalue);
 }
 
-void justOnceLater(int newvalue){
-  dbg("\njustOnceLater: %d",newvalue);
+void justOnceLater(int newvalue) {
+  dbg("\njustOnceLater: %d", newvalue);
 }
 
 #include "runoncenthtime.h"
 
-void testdemonic(){
-#if 0   //sigc inscrutable error in makeInstance, invoked mem_fun tries to bind a member function of some other class to the object passed.
+void testdemonic() {
+#if 1   //was a wrong level of indirection: sigc inscrutable error in makeInstance, invoked mem_fun tries to bind a member function of some other class to the object passed.
 
   demonic.onAnyChange(RunOnceSlot<int>::makeInstance(&justOnce));
   demonic.onAnyChange(&demonWatcher);
   //run once on second change
-  demonic.onAnyChange(RunOnceNthTime<int>::makeInstance(&justOnceLater,2));
+  demonic.onAnyChange(RunOnceNthTime<int>::makeInstance(&justOnceLater, 2));
 
-  demonic = 0;//should be no change
+  demonic = 0; //should be no change
   //should print justOnce: 17
-  demonic = 17;//should print 17
-  demonic = 0;//should print 0
+  demonic = 17; //should print 17
+  demonic = 0; //should print 0
   //should print justOnceLater:0
-  demonic = 22;//should print 0
+  demonic = 22; //should print 0
   //nothing else should print.
 #endif
 } // testdemonic
 
 
 #include "demonic.h"
-static Demonic<int> demonical(39);
-void testNonSigcDemon(){
-  demonical.onAnyChange([](auto is,auto was){
-    printf("\nDemonic<int>:%d -> %d",was,is);
-  },true);
-  demonical=12;
-  demonical=3;
+static Demonic demonical(39);
+
+void testNonSigcDemon() {
+  demonical.onAnyChange([](auto is, auto was) {
+    printf("\nDemonic<int>:%d -> %d", was, is);
+  }, true);
+  demonical = 12;
+  demonical = 3;
   printf("\nnon sigc demon testing done\n");
-  demonical.onAnyChange([](auto is){
-    printf("\nDemonic<int>:set to %d",is);
-  },true);
-  demonical=79;
-  demonical=35;
+  demonical.onAnyChange([](auto is) {
+    printf("\nDemonic<int>:set to %d", is);
+  }, true);
+  demonical = 79;
+  demonical = 35;
   printf("\nnon sigc demon testing done\n");
 }
 
 #include "cheaptricks.h"
-void coe(int &shouldclear){
-  ClearOnExit<int> raii(shouldclear);
+
+void coe(int& shouldclear) {
+  ClearOnExit raii(shouldclear);
   shouldclear *= 5;
 }
 
 #include "textpointer.h"
+
 class DeleteOnExitTestData {
   Text message;
+
 public:
-  DeleteOnExitTestData(TextKey msg) : message(msg){
+  explicit DeleteOnExitTestData(TextKey msg): message(msg) {
   }
 
-  ~DeleteOnExitTestData(){
-    dbg("\nDeleteOnExitTestData.%s",TextKey(message));
+  ~DeleteOnExitTestData() {
+    dbg("\nDeleteOnExitTestData.%s", TextKey(message));
   }
 
-  static void testme(){
-    DeleteOnExitTestData &doe(*new DeleteOnExitTestData("I'm dying here!"));
-    DeleteOnExit<DeleteOnExitTestData> dor(doe);
+  static void testme() {
+    DeleteOnExitTestData& doe(*new DeleteOnExitTestData("I'm dying here!")); //hehe: compiler can't figure out that DeleteOnExit will delete what is allocated here
+    DeleteOnExit dor(doe);
     dbg("this should be followed with another printout");
   }
-
 }; // class DeleteOnExitTestData
 
 
 #include "extremer.h"
-void extremely(){
+
+void extremely() {
   MaxDoubleFinder maxish;
   MinDoubleFinder minish;
-  Extremer<double,true,true> lastish;
+  Extremer<double, true, true> firstish;
 
   unsigned which = 0;
-  for(auto x:{1.0,4.2,-2.71828,3.7,8.9,-2.71828,9.5,3.4}) {
-    minish.inspect(which,x);
-    lastish.inspect(which,x);
-    maxish.inspect(which++,x);
+  for (auto x: {1.0, 4.2, -2.71828, 3.7, 8.9, -2.71828, 9.5, 3.4}) {
+    minish.inspect(which, x);
+    firstish.inspect(which, x);
+    maxish.inspect(which++, x);
   }
-  dbg("\nMax %g at %u",maxish.extremum,maxish.location);
-  dbg("\nMin %g at %u",minish.extremum,minish.location);
-  dbg("\nLastish %g at %u",lastish.extremum,lastish.location);
-
+  dbg("\nMax %g at %u", maxish.extremum, maxish.location);
+  dbg("\nMin %g at %u", minish.extremum, minish.location);
+  dbg("\nFirstish %g at %u", firstish.extremum, firstish.location);
 } // extremely
 
 #include "bufferformatter.h"
 
-void testBufferFormatter(){
+void testBufferFormatter() {
   char bigenough[200];
 
-  CharFormatter buffer(bigenough,sizeof (bigenough));
+  CharFormatter buffer(bigenough, sizeof (bigenough));
   //nonzero number less than 400 with sigfic 0 printed all 000's
-  buffer.clearUnused();//the printers don't presume to know where the end of the string is.
-  for(int ipow = 4; ipow-->-4; ) {
+  buffer.clearUnused(); //the printers don't presume to know where the end of the string is.
+  for (int ipow = 4; ipow-- > -4;) {
     buffer.rewind();
     double d = dpow10(ipow);
-    auto ok = buffer.printNumber(d,0);
+    auto ok = buffer.printNumber(d, 0);
     buffer.next() = 0;
-    dbg("CF[10^%d]->%d:%s",ipow,ok,bigenough);
+    dbg("CF[10^%d]->%d:%s", ipow, ok, bigenough);
   }
   buffer.rewind();
-  BufferFormatter::composeInto(buffer,"One $1",1984);
-  dbg("\nShould be <One 1984>:<%s>",bigenough);
+  BufferFormatter::composeInto(buffer, "One $1", 1984);
+  dbg("\nShould be <One 1984>:<%s>", bigenough);
 } // testBufferFormatter
 
 #include "fildes.h"
 #include <functional>
-void showSizes(){
-  dbg("Size of fildes: %d",sizeof (Fildes));
+
+void showSizes() {
+  dbg("Size of fildes: %d", sizeof(Fildes));
   std::function<void()> *nullfunctor;
-  dbg("Size of minimal functor: %d",sizeof (nullfunctor));
+  dbg("Size of minimal functor: %d", sizeof (nullfunctor));
 }
 
 /** testing chained operator() use, as alternative to varargs template */
 class Weird {
 public:
-  Weird(int ){}
-
-  Weird & operator ()(char see){
-    dbg("see:%c",see);
-    return *this;
-  }
-  Weird & operator ()(unsigned ewe){
-    dbg("ewe:%u",ewe);
-    return *this;
+  Weird(int) {
+    //this exists to tell if constructor () object gets printed.
+    //It does not.
   }
 
-  static int test(){
+  Weird& operator ()(char see) {
+    dbg("see:%c", see);
+    return *this;
+  }
+
+  Weird& operator ()(unsigned ewe) {
+    dbg("ewe:%u", ewe);
+    return *this;
+  }
+
+  static int test() {
     Weird thing(0);
-    char see='A';
-    unsigned ewe=42;
+    char see = 'A';
+    unsigned ewe = 42;
     thing(see)(ewe);
 
     Weird(3)('d')(1984U);
@@ -235,7 +244,7 @@ public:
 };
 
 extern void testJ(unsigned which);
-extern int testCFRG(int which);
+extern int testCFRG(unsigned which); //continuedFractonDemo.cpp
 #include "unicodetester.h"
 #include "numberformatter.h"
 #include "testpathparser.h"
@@ -247,28 +256,34 @@ extern int testCFRG(int which);
 //rpi i2c
 #include "SSD1306.h"
 
-static SSD1306 hat({128,64,true,12});
+static SSD1306 hat({128, 64, true, 12});
 #endif
 
-int main(int argc, char *argv[]){
-  Text cwd(getcwd(nullptr,0));//we use Text class because it will free what getcwd allocated. Not so critical unless we are using this program to look for memory leaks
-                              // in the functions it tests.
-  dbg("Working directory is: %s",cwd.c_str());
-//  dbg("Static loggers list:");
-//  Logger::listLoggers(dbg);
+int main(int argc, char *argv[]) {
+  Text cwd(getcwd(nullptr, 0)); //we use Text class because it will free what getcwd allocated. Not so critical unless we are using this program to look for memory leaks
+  // in the functions it tests.
+  dbg("Working directory is: %s", cwd.c_str());
+
   Application::writepid("tests.pid");
-  while(argc-->0) {
-    const char*tes = argv[argc];
-    if (Char(*tes).isDigit()){//skip over numbers so that tests can have numerical arguments
+  while (argc-- > 1) {
+    const char *tes = argv[argc];
+    if (Char(*tes).isDigit()) { //skip over numbers so that tests can have numerical arguments
       continue;
     }
-    dbg("%d: %s",argc,tes);
-    char group=(*tes++);
-    unsigned which=atoi(tes);
-    switch(group){ //used: %bdefjknpruwxz
+    dbg("%d: %s", argc, tes);
+    char group = (*tes++);
+    unsigned which = atoi(tes); // NOLINT(*-err34-c)
+    switch (group) {
+    default:
+      dbg("Known test letters: %s", "%bdefjknpruwxzL");
+      break;
+    case 'L':
+        dbg("Static loggers list:");
+        if (Logger::manager!=nullptr) {
+          Logger::manager->list(dbg);
+        }
     case 'r': //test continued fraction generator
       testCFRG(which);
-
       break;
     case 'd':
       testNonSigcDemon();
@@ -283,18 +298,18 @@ int main(int argc, char *argv[]){
       showSizes();
       break;
     case 'w':
-        FileWriterTester().run(which);
-     break;
+      FileWriterTester().run(which);
+      break;
     case 'f':
-        FileReaderTester().run(which);
-     break;
-    case 'b'://buffer formatting
+      FileReaderTester().run(which);
+      break;
+    case 'b': //buffer formatting
       testBufferFormatter();
       break;
     case 'j': //json tests
-      testJ(which);//newer implementation
+      testJ(which); //newer implementation
       break;
-    case 'p'://pathparser tests
+    case 'p': //pathparser tests
       TestPathParser::run(which);
       break;
     case 'u':
@@ -304,7 +319,7 @@ int main(int argc, char *argv[]){
       extremely();
       break;
     case 'n':
-      dbg("NumberFormatter: %s",NumberFormatter::makeNumber(14.5).c_str());
+      dbg("NumberFormatter: %s", NumberFormatter::makeNumber(14.5).c_str());
       break;
     case 'x':
       DeleteOnExitTestData::testme();
@@ -312,7 +327,7 @@ int main(int argc, char *argv[]){
       {
         int coedata(42);
         coe(coedata);
-        dbg("coe: %d should be 0",coedata);
+        dbg("coe: %d should be 0", coedata);
       }
       break;
     } // switch
